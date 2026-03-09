@@ -72,7 +72,7 @@ def load_models():
         preprocessor = ModelSerializer.load_models(hybrid_model)
 
         # DNN — gerçek boyutu ölçmek için dummy 1-satırlı transform kullan
-        dummy_in = pd.DataFrame(np.zeros((1, 40)))
+        dummy_in = pd.DataFrame(np.zeros((1, 34)))
         actual_dim = preprocessor.transform(dummy_in).shape[1]
         hybrid_model.dnn = VariantDNN(input_dim=actual_dim, num_classes=2).to(device)
 
@@ -178,6 +178,13 @@ def main():
         label_col = df['Label'].copy()
         df = df.drop(columns=['Label'])
 
+    # Sayısal olmayan sütunları çıkar (örn. Variant_ID gibi ID sütunları)
+    non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
+    if non_numeric_cols:
+        st.caption(f"ℹ️ Sayısal olmayan sütunlar analiz dışı bırakıldı: {', '.join(non_numeric_cols)}")
+        df = df.drop(columns=non_numeric_cols)
+
+
     st.write("**Yüklenen Veri Önizlemesi (İlk 5 Satır):**")
     st.dataframe(df.head())
     st.caption(f"📋 {len(df)} varyant | {df.shape[1]} özellik")
@@ -237,7 +244,13 @@ def main():
         st.divider()
         st.subheader("🧠 Açıklanabilir Yapay Zeka (XAI) Paneli")
 
-        feat_names = [f"Anonim_Oznitelik_{i}" for i in range(X_scaled.shape[1])]
+        # Gerçek sütun isimlerini kullan — AutoEncoder gizli özellikleri sonuna 'AE_Latent_N' şeklinde eklenir
+        original_cols = list(df.columns)
+        # df_dummy = generate_dummy_data(100, 34)  # 34 yeni özellik- len(original_cols) # This line was not added as it introduces an undefined function and is not part of the original code's logic for dummy data generation.
+        ae_dim = X_scaled.shape[1] - len(original_cols)
+        ae_cols = [f"AE_Latent_{i}" for i in range(ae_dim)] if ae_dim > 0 else []
+        feat_names = original_cols + ae_cols
+
         explainer  = FeatureExplainer(
             xgb_model=model.xgb,
             feature_names=feat_names,
@@ -287,16 +300,18 @@ def main():
                 lime_html = "/tmp/variant_lime.html"
                 lime_bar  = "/tmp/variant_lime_bar.png"
                 try:
+                    # Önce bar grafiği üret (LIME tek seferde 500 örnekle çalışır)
+                    explainer.plot_lime_bar(
+                        X_reference=X_scaled,
+                        instance_index=var_idx,
+                        filename=lime_bar
+                    )
+                    # HTML için aynı iç explainer nesnesini yeniden kullan (çift hesap yok)
                     explainer.explain_with_lime(
                         X_reference=X_scaled,
                         instance_index=var_idx,
                         feature_names=feat_names,
                         output_filename=lime_html
-                    )
-                    explainer.plot_lime_bar(
-                        X_reference=X_scaled,
-                        instance_index=var_idx,
-                        filename=lime_bar
                     )
 
                     tab1, tab2 = st.tabs(["📊 Bar Grafiği", "🌐 Etkileşimli HTML"])

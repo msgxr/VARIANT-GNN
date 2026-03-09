@@ -41,7 +41,8 @@ def evaluate_gnn_epoch(model, loader, device):
             out = model(data)
             probs = F.softmax(out, dim=1)
             pred = out.argmax(dim=1)
-            correct += int((pred == data.y).sum())
+            if hasattr(data, 'y') and data.y is not None:
+                correct += int((pred == data.y).sum())
             all_preds.extend(pred.cpu().numpy())
             all_probs.extend(probs.cpu().numpy())
             
@@ -56,38 +57,15 @@ class ModelTrainer:
     def __init__(self, device='cpu'):
         self.device = device
 
-    def train_gnn(self, train_loader, val_loader, model=None, epochs=20, lr=0.001):
-        if model is None:
-            model = FeatureGNN(in_channels=1, hidden_dim=64, num_classes=2).to(self.device)
-            
-        # Düzenlileştirme (Weight Decay) ve Öğrenim oranı ile overfitting baskısı
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
-        best_acc = 0
-        best_model_wts = copy.deepcopy(model.state_dict())
-        
-        for epoch in range(1, epochs + 1):
-            loss = train_gnn_epoch(model, train_loader, optimizer, self.device)
-            val_acc, _, _ = evaluate_gnn_epoch(model, val_loader, self.device)
-            
-            # Eğitim döngüsünde anlık validasyon modelini saklama
-            if val_acc > best_acc:
-                best_acc = val_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
-                
-        model.load_state_dict(best_model_wts)
-        return model, best_acc
-
     def fine_tune_for_panel(self, pretrained_model, panel_train_loader, epochs=5, lr=0.0001):
         """
         Şartnamede küçük olacağı belirtilen özel paneller (örn. CFTR: 70/70 varyant)
         bu fonksiyondan geçirilerek ezberlemeden (Transfer Learning ile) fine-tune edilir.
         """
         pretrained_model.train()
-        # Çok düşük öğrenme oranı ile ince ayar (Fine tuning)
         optimizer = torch.optim.Adam(pretrained_model.parameters(), lr=lr, weight_decay=1e-3)
         for epoch in range(1, epochs + 1):
             train_gnn_epoch(pretrained_model, panel_train_loader, optimizer, self.device)
-            
         return pretrained_model
 
     def train_gnn(self, train_loader, val_loader, model=None, epochs=20, lr=0.001):

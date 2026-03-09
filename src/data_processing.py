@@ -260,6 +260,7 @@ def load_and_prepare_data(csv_path, target_col='Label', separator=','):
     """
     Yarışma formatındaki potansiyel csv veya excel verilerini yükler.
     Label sütunu: 'Pathogenic' -> 1, 'Benign' -> 0 şeklinde dönüştürülür.
+    Variant_ID gibi sayısal olmayan ID sütunları otomatik olarak çıkarılır.
     """
     df = pd.read_csv(csv_path, sep=separator)
     
@@ -279,6 +280,12 @@ def load_and_prepare_data(csv_path, target_col='Label', separator=','):
         # Test seti (etiketsiz veri)
         X_df = df
         y = None
+
+    # Sayısal olmayan sütunları çıkar (Variant_ID, gene adı vb.)
+    non_numeric = X_df.select_dtypes(exclude=[np.number]).columns.tolist()
+    if non_numeric:
+        logging.info(f"Sayısal olmayan sütunlar çıkarıldı: {non_numeric}")
+        X_df = X_df.drop(columns=non_numeric)
         
     return X_df, y
 

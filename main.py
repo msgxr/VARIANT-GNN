@@ -23,22 +23,38 @@ def get_data(data_path=None):
     """
     Veri yükleyici:
     - Eğer gerçek bir CSV yolu verilirse onu kullanır.
-    - Yoksa sentetik dummy veri üretir (geliştirme/test için).
+    - data/train_variants.csv varsa onu kullanır (gerçekçi sentetik veri).
+    - Hiçbiri yoksa eski rastgele dummy veri üretir (geliştirme için).
     """
+    # 1. Kullanıcının belirttiği dosya
     if data_path and os.path.exists(data_path):
         logging.info(f"Gerçek veri seti yükleniyor: {data_path}")
         X_df, y = load_and_prepare_data(data_path)
         if y is None:
             raise ValueError("Etiketli veri seti bekleniyor. CSV dosyasında 'Label' sütunu bulunamadı.")
         return X_df, y
-    else:
-        logging.warning("Gerçek veri seti bulunamadı. Sentetik veri ile devam ediliyor (40 özellik, 2500 örnek).")
-        df = generate_dummy_data(n_samples=2500, n_features=40)
-        df_labels_mapped = df.copy()
-        df_labels_mapped['Label'] = df_labels_mapped['Label'].map({'Pathogenic': 1, 'Benign': 0})
-        y = df_labels_mapped['Label'].values
-        X_df = df_labels_mapped.drop(columns=['Label'])
+
+    # 2. Varsayılan gerçekçi sentetik veri (generate_realistic_data.py ile üretildi)
+    default_path = os.path.join(Config.DATA_DIR, "train_variants.csv")
+    if os.path.exists(default_path):
+        logging.info(f"Gerçekçi sentetik veri yükleniyor: {default_path}")
+        X_df, y = load_and_prepare_data(default_path)
+        if y is None:
+            raise ValueError("'Label' sütunu bulunamadı.")
+        # Variant_ID sütununu çıkar (sayısal değil)
+        if 'Variant_ID' in X_df.columns:
+            X_df = X_df.drop(columns=['Variant_ID'])
         return X_df, y
+
+    # 3. Son çare: tamamen rastgele dummy veri
+    logging.warning("Gerçek veri seti bulunamadı. Tamamen rastgele dummy veri kullanılıyor (40 özellik, 2500 örnek).")
+    df = generate_dummy_data(n_samples=2500, n_features=40)
+    df_labels_mapped = df.copy()
+    df_labels_mapped['Label'] = df_labels_mapped['Label'].map({'Pathogenic': 1, 'Benign': 0})
+    y = df_labels_mapped['Label'].values
+    X_df = df_labels_mapped.drop(columns=['Label'])
+    return X_df, y
+
 
 
 def build_dnn_loaders(X_train_scaled, y_train, X_test_scaled, y_test, batch_size=32):

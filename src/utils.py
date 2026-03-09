@@ -1,48 +1,79 @@
 import torch
 import joblib
 import logging
+import os
 from .config import Config
 
 class ModelSerializer:
     """Araçların seri hale getirilip (kayıt) geri yüklenmesi içindir."""
-    
+
     @staticmethod
     def save_models(hybrid_model, preprocessor):
         logging.info("Modeller artifacts (kayıt) klasörüne yazılıyor...")
         Config.create_dirs()
-        
+
         # XGBoost Kaydı
         if hybrid_model.xgb is not None:
             hybrid_model.xgb.save_model(Config.XGB_MODEL_PATH)
-            
+            logging.info(f"  XGBoost → {Config.XGB_MODEL_PATH}")
+
         # GNN Kaydı
         if hybrid_model.gnn is not None:
             torch.save(hybrid_model.gnn.state_dict(), Config.GNN_MODEL_PATH)
-            
-        # DNN Kaydı (Kullanıcı Vizyonu Model 3)
+            logging.info(f"  GNN     → {Config.GNN_MODEL_PATH}")
+
+        # DNN Kaydı
         if hybrid_model.dnn is not None:
             torch.save(hybrid_model.dnn.state_dict(), Config.DNN_MODEL_PATH)
-            
-        # AutoEncoder ve Preprocessor Kaydı
+            logging.info(f"  DNN     → {Config.DNN_MODEL_PATH}")
+
+        # AutoEncoder Kaydı — preprocessor ile birlikte tutarlılık için ayrıca kaydedilir
+        if hasattr(preprocessor, 'autoencoder') and preprocessor.autoencoder is not None:
+            torch.save(preprocessor.autoencoder.state_dict(), Config.AUTOENCODER_PATH)
+            logging.info(f"  AutoEncoder → {Config.AUTOENCODER_PATH}")
+
+        # Preprocessor (Scaler + Imputer + Graph bilgisi) Kaydı
         joblib.dump(preprocessor, Config.SCALER_PATH)
+        logging.info(f"  Preprocessor → {Config.SCALER_PATH}")
         logging.info("✅ Tüm model ağırlıkları ve scaler dosyaları kaydedildi.")
 
     @staticmethod
     def load_models(hybrid_model):
         logging.info("Modeller kayıtlı kaynaklardan geri yükleniyor...")
-        if hybrid_model.xgb is not None:
+
+        # XGBoost Yükleme
+        if hybrid_model.xgb is not None and os.path.exists(Config.XGB_MODEL_PATH):
             hybrid_model.xgb.load_model(Config.XGB_MODEL_PATH)
-            
-        if hybrid_model.gnn is not None:
-            # CPU/GPU aktarımıyla weight loading
+            logging.info(f"  XGBoost yüklendi ← {Config.XGB_MODEL_PATH}")
+
+        # GNN Yükleme
+        if hybrid_model.gnn is not None and os.path.exists(Config.GNN_MODEL_PATH):
             device = next(hybrid_model.gnn.parameters()).device
             state_dict = torch.load(Config.GNN_MODEL_PATH, map_location=device)
             hybrid_model.gnn.load_state_dict(state_dict)
+            logging.info(f"  GNN yüklendi ← {Config.GNN_MODEL_PATH}")
 
-        if hybrid_model.dnn is not None:
+        # DNN Yükleme
+        if hybrid_model.dnn is not None and os.path.exists(Config.DNN_MODEL_PATH):
             device = next(hybrid_model.dnn.parameters()).device
             state_dict = torch.load(Config.DNN_MODEL_PATH, map_location=device)
             hybrid_model.dnn.load_state_dict(state_dict)
-            
+            logging.info(f"  DNN yüklendi ← {Config.DNN_MODEL_PATH}")
+
+        # Preprocessor Yükleme
         preprocessor = joblib.load(Config.SCALER_PATH)
+
+        # AutoEncoder Yükleme — preprocessor içinde autoencoder varsa ağırlıklarını geri yükle
+        if (hasattr(preprocessor, 'autoencoder') and
+                preprocessor.autoencoder is not None and
+                os.path.exists(Config.AUTOENCODER_PATH)):
+            from .config import Config as Cfg
+            device_str = getattr(preprocessor, 'device', 'cpu')
+            preprocessor.autoencoder.load_state_dict(
+                torch.load(Config.AUTOENCODER_PATH, map_location=device_str)
+            )
+            preprocessor.autoencoder.eval()
+            logging.info(f"  AutoEncoder yüklendi ← {Config.AUTOENCODER_PATH}")
+
+        logging.info("✅ Tüm modeller başarıyla yüklendi.")
         return preprocessor
