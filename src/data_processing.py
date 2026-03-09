@@ -5,6 +5,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader as TorchDataLoader, TensorDataset
 from sklearn.preprocessing import RobustScaler
 from sklearn.impute import SimpleImputer
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, mutual_info_classif
 from torch_geometric.data import Data
 import logging
 from imblearn.over_sampling import SMOTE
@@ -47,18 +49,39 @@ class TabularGraphPreprocessor:
     ilişkilerine dayalı bir "Öznitelik-Etkileşim Grafı" (Feature-Interaction Graph)
     oluşturur. AutoEncoder ile gizli özellikleri zenginleştirir.
     """
-    def __init__(self, corr_threshold=0.25, use_autoencoder=True, encoding_dim=16, device='cpu'):
+    def __init__(self, corr_threshold=0.25, use_autoencoder=True, encoding_dim=16,
+                 use_pca=False, pca_components=0.95,
+                 use_feature_selection=False, k_best_features=30,
+                 device='cpu'):
+        """
+        Args:
+            corr_threshold: Graf kenarı oluşturmak için minimum korelasyon eşiği
+            use_autoencoder: Gizli özellik sintezi için AutoEncoder kullanımı
+            encoding_dim: AutoEncoder gizli boyutu
+            use_pca: PCA boyut indirgeme aktif/pasif (AutoEncoder ile birlikte kullanılmaz)
+            pca_components: PCA bileşen sayısı veya açıklanan varyans oranı (0-1 arası float)
+            use_feature_selection: VarianceThreshold + mutual_info tabanlı feature selection
+            k_best_features: Feature selection sonrası tutulacak en iyi k özellik
+            device: 'cpu' veya 'cuda'
+        """
         # Aykırı değerlere (outliers) karşı standart StandardScaler yerine RobustScaler tercih edilir.
         self.scaler = RobustScaler()
         self.imputer = SimpleImputer(strategy='median')
         self.corr_threshold = corr_threshold
         self.use_autoencoder = use_autoencoder
         self.encoding_dim = encoding_dim
+        self.use_pca = use_pca
+        self.pca_components = pca_components
+        self.use_feature_selection = use_feature_selection
+        self.k_best_features = k_best_features
         self.device = device
-        
+
         self.edge_index = None
         self.edge_attr = None
         self.autoencoder = None
+        self.pca_ = None
+        self.var_selector_ = None
+        self.kbest_selector_ = None
         self.is_fitted = False
 
     def _train_autoencoder(self, X_scaled):
@@ -86,40 +109,95 @@ class TabularGraphPreprocessor:
                 total_loss += loss.item()
         logging.info(f"AutoEncoder Loss: {total_loss / len(loader):.4f}")
 
+    def _apply_feature_selection(self, X_scaled, label_y=None, fit=True):
+        """
+        VarianceThreshold ile sabit/düşük varyanslı özellikleri eler,
+        ardından mutual_info_classif ile en anlamlı k özelliği seçer.
+        fit=True → eğitim (selector oluştur), fit=False → transform (mevcut selector uygula)
+        """
+        if fit:
+            # Adım 1: Variance Threshold — varyansı sıfıra yakın özellikleri at
+            self.var_selector_ = VarianceThreshold(threshold=0.01)
+            X_var = self.var_selector_.fit_transform(X_scaled)
+            logging.info(f"VarianceThreshold sonrası özellik sayısı: {X_scaled.shape[1]} → {X_var.shape[1]}")
+
+            # Adım 2: SelectKBest (mutual_info) — yalnızca etiket varsa
+            if label_y is not None and X_var.shape[1] > self.k_best_features:
+                k = min(self.k_best_features, X_var.shape[1])
+                self.kbest_selector_ = SelectKBest(mutual_info_classif, k=k)
+                X_sel = self.kbest_selector_.fit_transform(X_var, label_y)
+                logging.info(f"SelectKBest sonrası özellik sayısı: {X_var.shape[1]} → {X_sel.shape[1]}")
+            else:
+                self.kbest_selector_ = None
+                X_sel = X_var
+        else:
+            # Transform modu
+            X_var = self.var_selector_.transform(X_scaled) if self.var_selector_ else X_scaled
+            X_sel = self.kbest_selector_.transform(X_var) if self.kbest_selector_ else X_var
+
+        return X_sel
+
+    def _apply_pca(self, X_scaled, fit=True):
+        """
+        PCA ile boyut indirgeme.
+        fit=True → PCA oluştur ve dönüştür, fit=False → mevcut PCA uygula.
+        """
+        if fit:
+            self.pca_ = PCA(n_components=self.pca_components, random_state=42)
+            X_pca = self.pca_.fit_transform(X_scaled)
+            explained = sum(self.pca_.explained_variance_ratio_) * 100
+            logging.info(f"PCA: {X_scaled.shape[1]} → {X_pca.shape[1]} bileşen | Açıklanan Varyans: {explained:.1f}%")
+        else:
+            X_pca = self.pca_.transform(X_scaled)
+        return X_pca
+
     def fit_transform(self, X_df, label_y=None):
         """
         Model eğitimi için veri setindeki özellik istatistiklerini hesaplar.
-        Talebe göre AutoEncoder eğitimini yapar ve Graf bağlantılarını dizer.
+        Adım sırası:
+          1. Impute (medyan)
+          2. Scale (RobustScaler)
+          3. SMOTE dengeleme (etiket varsa)
+          4. Feature Selection (opsiyonel)
+          5. AutoEncoder gizli özellik sentezi (opsiyonel)
+          6. PCA boyut indirgeme (opsiyonel, AutoEncoder ile birlikte kullanılmaz)
+          7. Korelasyon bazlı GNN Graf oluşturma
         """
         X = X_df.values if isinstance(X_df, pd.DataFrame) else X_df
         X_imputed = self.imputer.fit_transform(X)
         X_scaled = self.scaler.fit_transform(X_imputed)
 
-        # SMOTE ile veri dengeleme (Yalnızca eğitim modunda ve label varsa)
-        # Not: Etiketlerin 0/1 olması gerekir.
+        # SMOTE ile veri dengeleme (yalnızca eğitim modunda ve label varsa)
         if label_y is not None:
             logging.info("SMOTE ile veri dengeleme (Data Balancing) uygulanıyor...")
             smote = SMOTE(random_state=42)
-            X_balanced, y_balanced = smote.fit_resample(X_scaled, label_y)
-            X_scaled, label_y = X_balanced, y_balanced
+            X_scaled, label_y = smote.fit_resample(X_scaled, label_y)
 
+        # Feature Selection
+        if self.use_feature_selection:
+            X_scaled = self._apply_feature_selection(X_scaled, label_y=label_y, fit=True)
+
+        # AutoEncoder
         if self.use_autoencoder:
             self._train_autoencoder(X_scaled)
             self.autoencoder.eval()
             with torch.no_grad():
                 tensor_X = torch.FloatTensor(X_scaled).to(self.device)
                 encoded_feats, _ = self.autoencoder(tensor_X)
-                # Orijinal özellikler ile AutoEncoder özelliklerini birleştiriyoruz
                 X_scaled = np.hstack((X_scaled, encoded_feats.cpu().numpy()))
 
-        # GNN için Öznitelikler arası kovaryans matrisi oluşturma
+        # PCA (AutoEncoder ile aynı anda kullanılmaz)
+        if self.use_pca and not self.use_autoencoder:
+            X_scaled = self._apply_pca(X_scaled, fit=True)
+
+        # GNN için Öznitelikler arası korelasyon bazlı Graf oluşturma
         corr_matrix = np.corrcoef(X_scaled, rowvar=False)
         corr_matrix = np.nan_to_num(corr_matrix, 0)
-        
+
         num_features = X_scaled.shape[1]
         edges = []
         edge_weights = []
-        
+
         for i in range(num_features):
             for j in range(num_features):
                 if i != j and abs(corr_matrix[i, j]) >= self.corr_threshold:
@@ -130,31 +208,40 @@ class TabularGraphPreprocessor:
             self.edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
             self.edge_attr = torch.tensor(edge_weights, dtype=torch.float)
         else:
-            # Yedek boş grafik yapısı
             self.edge_index = torch.empty((2, 0), dtype=torch.long)
             self.edge_attr = torch.empty((0,), dtype=torch.float)
-        
+
         self.is_fitted = True
         return X_scaled
 
     def transform(self, X_df):
         """
-        Test ve validasyon testleri için (data leakage önlenerek) ölçeklendirme uygular.
+        Test ve validasyon setleri için (data leakage önlenerek) aynı dönüşümü uygular.
+        fit_transform() ile öğrenilen parametreler kullanılır.
         """
         if not self.is_fitted:
             raise ValueError("Preprocessor öncelikle fit_transform ile eğitilmelidir.")
-        
+
         X = X_df.values if isinstance(X_df, pd.DataFrame) else X_df
         X_imputed = self.imputer.transform(X)
         X_scaled = self.scaler.transform(X_imputed)
-        
+
+        # Feature Selection (fit sırasında oluşturuldu)
+        if self.use_feature_selection and self.var_selector_ is not None:
+            X_scaled = self._apply_feature_selection(X_scaled, label_y=None, fit=False)
+
+        # AutoEncoder
         if self.use_autoencoder and self.autoencoder is not None:
             self.autoencoder.eval()
             with torch.no_grad():
                 tensor_X = torch.FloatTensor(X_scaled).to(self.device)
                 encoded_feats, _ = self.autoencoder(tensor_X)
                 X_scaled = np.hstack((X_scaled, encoded_feats.cpu().numpy()))
-                
+
+        # PCA
+        if self.use_pca and self.pca_ is not None:
+            X_scaled = self._apply_pca(X_scaled, fit=False)
+
         return X_scaled
 
     def row_to_graph(self, x_row, label=None):
