@@ -182,3 +182,18 @@ def load_and_prepare_data(csv_path, target_col='Label', separator=','):
         y = None
         
     return X_df, y
+
+def generate_dummy_data(n_samples=1000, n_features=30):
+    """Eğitim ve test için sentetik varyant verisi üretir."""
+    np.random.seed(42)
+    X = np.random.randn(n_samples, n_features)
+    # Patojenite etkileyen rastgele bir doğrusal ağırlık kombinasyonu
+    logits = 2.5 * X[:, 0] - 1.2 * X[:, 5] + 0.8 * X[:, 12]
+    probs = 1 / (1 + np.exp(-logits))
+    y = (probs > 0.5).astype(int)
+    
+    df = pd.DataFrame(X, columns=[f"Anonim_Kolon_{i}" for i in range(n_features)])
+    df['Label'] = y
+    df['Label'] = df['Label'].map({1: 'Pathogenic', 0: 'Benign'})
+    return df
+

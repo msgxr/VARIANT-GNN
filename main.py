@@ -18,18 +18,6 @@ from src.utils import ModelSerializer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def generate_dummy_data(n_samples=1000, n_features=30):
-    np.random.seed(42)
-    X = np.random.randn(n_samples, n_features)
-    logits = 2.5 * X[:, 0] - 1.2 * X[:, 5] + 0.8 * X[:, 12]
-    probs = 1 / (1 + np.exp(-logits))
-    y = (probs > 0.5).astype(int)
-    
-    df = pd.DataFrame(X, columns=[f"Anonim_Kolon_{i}" for i in range(n_features)])
-    df['Label'] = y
-    df['Label'] = df['Label'].map({1: 'Pathogenic', 0: 'Benign'})
-    return df
-
 def get_data():
     """Mock veri üreten jenerik yükleyici (Şartname gerçeğine en yakın simulasyon)"""
     df = generate_dummy_data(n_samples=2500, n_features=40)
