@@ -107,7 +107,7 @@ def main():
         preprocessor = TabularGraphPreprocessor(
             corr_threshold=Config.CORR_THRESHOLD, use_autoencoder=False, device=device
         )
-        X_train_scaled = preprocessor.fit_transform(X_train_df, label_y=y_train)
+        X_train_scaled, y_train = preprocessor.fit_transform(X_train_df, label_y=y_train)
 
         tuner = ModelTuner(X_train_scaled, y_train, n_trials=20)
         best_xgb_params = tuner.optimize_xgboost()
@@ -131,7 +131,7 @@ def main():
             encoding_dim=16,
             device=device
         )
-        X_train_scaled = preprocessor.fit_transform(X_train_df, label_y=y_train)
+        X_train_scaled, y_train = preprocessor.fit_transform(X_train_df, label_y=y_train)
         X_test_scaled  = preprocessor.transform(X_test_df)
 
         # 2. PyTorch Geometric DataLoaderlar
@@ -227,7 +227,7 @@ def main():
             encoding_dim=16,
             device=device
         )
-        X_scaled = preprocessor.fit_transform(X_df, label_y=y)
+        X_scaled, y = preprocessor.fit_transform(X_df, label_y=y)
         all_graphs = [preprocessor.row_to_graph(row, label=int(l)) for row, l in zip(X_scaled, y)]
 
         trainer = ModelTrainer(device=device)

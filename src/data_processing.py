@@ -212,7 +212,7 @@ class TabularGraphPreprocessor:
             self.edge_attr = torch.empty((0,), dtype=torch.float)
 
         self.is_fitted = True
-        return X_scaled
+        return X_scaled if label_y is None else (X_scaled, label_y)
 
     def transform(self, X_df):
         """
@@ -290,7 +290,7 @@ def generate_dummy_data(n_samples=1000, n_features=30):
     logits = 2.5 * X[:, 0] - 1.2 * X[:, 5] + 0.8 * X[:, 12]
     probs = 1 / (1 + np.exp(-logits))
     y = (probs > 0.5).astype(int)
-    
+
     df = pd.DataFrame(X, columns=[f"Anonim_Kolon_{i}" for i in range(n_features)])
     df['Label'] = y
     df['Label'] = df['Label'].map({1: 'Pathogenic', 0: 'Benign'})
