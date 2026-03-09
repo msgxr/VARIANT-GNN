@@ -32,4 +32,4 @@ repos:
         name: '__pycache__ dizini commit edilmesin'
         language: system
         entry: bash -c 'git diff --cached --name-only | grep -q "__pycache__" && echo "ERROR: __pycache__ commit edilmeye çalışılıyor!" && exit 1 || exit 0'
-        pass_filenames: false
+        pass_filenames: false # Python

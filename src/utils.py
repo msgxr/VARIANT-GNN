@@ -77,3 +77,18 @@ class ModelSerializer:
 
         logging.info("✅ Tüm modeller başarıyla yüklendi.")
         return preprocessor
+
+import sys
+
+def setup_logging(level=logging.INFO, log_file=None):
+    handlers = [logging.StreamHandler(sys.stdout)]
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
+    
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s | %(name)s | %(levelname)s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=handlers
+    )
+    return logging.getLogger('variant_gnn')

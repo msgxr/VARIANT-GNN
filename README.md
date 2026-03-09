@@ -3,43 +3,37 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TEKNOFEST 2026](https://img.shields.io/badge/TEKNOFEST-2026%20Sağlıkta%20AI-red.svg)](https://teknofest.org)
-[![Araştırma Prototipi](https://img.shields.io/badge/Durum-Araştırma%20Prototipi-orange.svg)](MODEL_CARD.md)
 
-> ⚠️ **Araştırma Amaçlıdır — Klinik Kullanım Dışı.**  
-> Bu sistem yalnızca araştırma ve yarışma demonstrasyonu amacıyla tasarlanmıştır. Tıbbi karar almada kullanılmamalıdır.
-
----
-
-## 🧬 Proje Özeti
-
-VARIANT-GNN, genomik varyantların **patojenik / benign** olarak sınıflandırılması için geliştirilmiş çok modelli (multi-modal) bir yapay zeka sistemidir.
-
-**Temel bileşenler:**
-- 🌳 **XGBoost** — Gradient boosted decision tree (tabular özellikler)
-- 🕸️ **GNN (Graph Convolutional Network)** — Özellik-korelasyon grafı üzerinde mesaj geçişi
-- 🧠 **DNN (Deep Neural Network)** — Derin tabular öğrenme
-- 🔍 **XAI Modülü** — SHAP + LIME + GNNExplainer açıklamaları
-
-**Giriş:** 34 genomik özellik (SIFT, CADD, REVEL, PolyPhen2, gnomAD AF, GERP++, ...)  
-**Çıkış:** Pathogenic / Benign tahmini + 0-100 Risk Skoru + SHAP açıklaması
+> **Araştırma Prototipi — Klinik Kullanım Dışı.**  
+> Bu sistem yalnızca araştırma ve geliştirme amacıyla tasarlanmıştır.  
+> Tıbbi karar alma için kullanılmamalıdır.
 
 ---
 
-## 🏗️ Mimari
+## Proje Özeti
+
+VARIANT-GNN, genomik varyantların patojenik/benign olarak sınıflandırılması için geliştirilmiş çok modelli (multi-modal) bir yapay zeka sistemidir. XGBoost, Graph Neural Network (GNN) ve Deep Neural Network (DNN) modellerini bir ensemble içinde birleştirerek SIFT, CADD, REVEL, gnomAD ve 31 ek özellik üzerinden tahmin yapar.
+
+**Önemli Not:** Mevcut sürüm gerçekçi sentetik veri üzerinde çalışmaktadır. Klinik geçerlilik için gerçek ClinVar/gnomAD verisi ile doğrulama gereklidir.
+
+---
+
+## Mimari
 
 ```
-Giriş: 34 Genomik Özellik
+Giriş: 34 Genomik Özellik (SIFT, CADD, REVEL, gnomAD AF, ...)
           │
-    Ön İşleme (RobustScaler + Imputer + SMOTE)
+          ▼
+    Ön İşleme (RobustScaler + SimpleImputer + SMOTE)
           │
     ┌─────┴──────┬───────────────┐
     ▼            ▼               ▼
- XGBoost    GNN (GCNConv)    DNN (MLP)
- [%40]        [%40]           [%20]
+ XGBoost      GNN (GCN)       DNN (MLP)
+ (Model 1)  (Model 2)       (Model 3)
     │            │               │
     └─────┬──────┴───────────────┘
           ▼
-   Ağırlıklı Ensemble
+   Weighted Ensemble [0.4, 0.4, 0.2]
           │
           ▼
    Risk Skoru + SHAP/LIME Açıklama
@@ -47,20 +41,59 @@ Giriş: 34 Genomik Özellik
 
 ---
 
-## ⚡ Hızlı Başlangıç
+## Kurulum
 
-### Windows (Tek Tıkla)
-```bat
+### Gereksinimler
+- Python 3.10+
+- CUDA 11.8+ (opsiyonel, GPU için)
+
+### Hızlı Kurulum
+
+```bash
+# Repoyu klonla
+git clone https://github.com/msgxr/VARIANT-GNN.git
+cd VARIANT-GNN
+
+# Sanal ortam oluştur
+python -m venv .venv
+.venv\Scripts\activate   # Windows
+# source .venv/bin/activate  # Linux/macOS
+
+# Bağımlılıkları yükle
+pip install -r requirements.txt
+```
+
+### Windows Hızlı Başlatıcı
+```bash
 baslat.bat
 ```
 
-### Manuel Kurulum
+---
+
+## Kullanım
+
+### Model Eğitimi
 ```bash
-git clone https://github.com/msgxr/VARIANT-GNN.git
-cd VARIANT-GNN
-python -m venv .venv && .venv\Scripts\activate
-pip install -r requirements.txt
-python main.py --mode train
+python main.py --mode train --data_file data/train_variants.csv
+```
+
+### Hiperparametre Optimizasyonu
+```bash
+python main.py --mode tune --data_file data/train_variants.csv
+```
+
+### Cross-Validation
+```bash
+python main.py --mode crossval --data_file data/train_variants.csv
+```
+
+### Tahmin (Kör Test)
+```bash
+python main.py --mode predict --test_file data/test_variants_blind.csv
+```
+
+### Web Arayüzü
+```bash
 streamlit run app.py
 ```
 
@@ -68,93 +101,57 @@ streamlit run app.py
 ```bash
 docker build -t variant-gnn .
 docker run -p 8501:8501 variant-gnn
-# http://localhost:8501 adresini açın
 ```
 
 ---
 
-## 📋 Kullanım
+## Veri Formatı
 
-| Komut | Açıklama |
-|-------|---------|
-| `python main.py --mode train` | Model eğitimi (sentetik veri) |
-| `python main.py --mode train --data_file data/train_variants.csv` | Gerçek CSV ile eğitim |
-| `python main.py --mode crossval` | Leakage-free 5-fold cross-validation |
-| `python main.py --mode eval` | Kaydedilmiş modelleri değerlendirme |
-| `python main.py --mode predict --test_file data/test_variants_blind.csv` | Yarışma submission tahmini |
-| `python main.py --mode tune` | Optuna hiperparametre optimizasyonu |
-| `streamlit run app.py` | Web arayüzü |
-| `pytest tests/ -v` | Testleri çalıştır |
-
----
-
-## 📊 Veri Formatı
-
-Giriş CSV dosyası aşağıdaki 34 özelliği içermelidir (bkz. [`data_contracts/input_schema.json`](data_contracts/input_schema.json)):
+Giriş CSV dosyası aşağıdaki 34 özelliği içermelidir:
 
 | Kategori | Özellikler |
 |----------|-----------|
-| Fonksiyon Etki | SIFT_score, PolyPhen2_HDIV/HVAR_score, CADD_phred, REVEL_score, MutPred2_score, VEST4_score, PROVEAN_score, MutationTaster_score |
+| Fonksiyon Etki Skorları | SIFT_score, PolyPhen2_HDIV_score, PolyPhen2_HVAR_score, CADD_phred, REVEL_score, MutPred2_score, VEST4_score, PROVEAN_score, MutationTaster_score |
 | Evrimsel Korunmuşluk | GERP_RS, PhyloP100way_vertebrate, phastCons100way_vertebrate, SiPhy_29way_logOdds |
-| Popülasyon Frekansı | gnomAD_exomes_AF, gnomAD_exomes_AF_afr/eur/eas, ExAC_AF |
+| Popülasyon Frekansı | gnomAD_exomes_AF, gnomAD_exomes_AF_afr, gnomAD_exomes_AF_eur, gnomAD_exomes_AF_eas, ExAC_AF |
 | Biyokimyasal | AA_polarity_change, AA_hydrophobicity_diff, AA_size_diff, Protein_impact_score, Secondary_structure_disruption |
-| Varyant Tipi | Variant_type (0=missense,1=nonsense,2=frameshift,3=synonymous), In_critical_protein_domain, Splice_site_distance, Is_exonic, Exon_conservation_ratio |
+| Varyant Tipi | Variant_type, In_critical_protein_domain, Splice_site_distance, Is_exonic, Exon_conservation_ratio |
 | Klinik | ClinVar_review_status, ClinVar_submitter_count, OMIM_disease_gene |
 | Meta Skorlar | MetaSVM_score, MetaLR_score, MCAP_score |
 
-Opsiyonel: `Variant_ID` sütunu (tahmin çıktısında korunur)  
-Eğitim için: `Label` sütunu → `Pathogenic` / `Benign` / `Likely Pathogenic` / `Likely Benign`
+Etiket sütunu: `Label` → `Pathogenic` / `Benign`  
+Opsiyonel ID sütunu: `Variant_ID`
 
 ---
 
-## 🧪 Test
+## Test
 
 ```bash
-pytest tests/ -v --tb=short
+# Tüm testler
+pytest tests/ -v
+
+# Sadece unit testler
+pytest tests/unit/ -v
 ```
 
 ---
 
-## ⚠️ Bilinen Sınırlamalar
+## Sınırlamalar
 
-| Sınırlama | Durum |
-|-----------|-------|
-| Gerçek klinik veri | ❌ Mevcut sürüm sentetik veri kullanıyor |
-| ACMG 5-sınıf uyumluluk | ❌ Yalnızca binary P/B |
-| Risk skoru kalibrasyonu | ⚠️ Ham prob×100 — kalibrasyonsuz |
-| VUS (belirsiz sınıf) | ❌ Desteklenmiyor |
-
-Detaylı sınırlamalar için: [MODEL_CARD.md](MODEL_CARD.md)
+1. **Gerçek Klinik Veri:** Mevcut sürüm istatistiksel sentetik veri üzerinde eğitilmiştir.
+2. **ACMG Uyumu:** Sistem yalnızca binary (P/B) sınıflandırma yapar; ACMG 5 sınıfını desteklemez.
+3. **Kalibrasyon:** Risk skoru kalibre edilmemiştir; olasılık değerleri klinik karar için kullanılmamalıdır.
+4. **VUS:** Belirsizlik sınıfı desteklenmemektedir.
 
 ---
 
-## 📁 Proje Yapısı
-
-```
-VARIANT-GNN/
-├── src/              # Kaynak kod modülleri
-├── data/             # Veri dosyaları (sentetik)
-├── data_contracts/   # Giriş/çıkış şema tanımları
-├── configs/          # Konfigürasyon dosyaları
-├── models/           # Eğitilmiş model ağırlıkları (gitignore)
-├── reports/          # Üretilen raporlar ve görseller
-├── tests/            # Unit testler
-├── .github/workflows/ # CI/CD pipeline
-├── app.py            # Streamlit web arayüzü
-├── main.py           # CLI giriş noktası
-├── MODEL_CARD.md     # Model kartı
-└── CITATION.cff      # Atıf dosyası
-```
-
----
-
-## 📄 Lisans
+## Lisans
 
 MIT License — Bkz. [LICENSE](LICENSE)
 
 ---
 
-## 🔖 Atıf
+## Atıf
 
 ```bibtex
 @software{variant_gnn_2026,
@@ -167,6 +164,6 @@ MIT License — Bkz. [LICENSE](LICENSE)
 
 ---
 
-## ⚕️ Tıbbi Sorumluluk Reddi
+## Uyarı
 
-Bu yazılım tıbbi cihaz, tanı aracı veya klinik karar destek sistemi değildir. Genetik varyantların klinik yorumu için akredite tıbbi genetik uzmanına başvurunuz.
+Bu yazılım tıbbi cihaz, tanı aracı veya klinik karar destek sistemi değildir. Yanlış sınıflandırma hasta sağlığını etkileyebilir. Genetik varyantların klinik yorumu için akredite genetik uzmanına başvurunuz.

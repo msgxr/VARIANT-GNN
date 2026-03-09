@@ -12,7 +12,8 @@ from torch_geometric.loader import DataLoader
 from src.config import Config
 from src.models import FeatureGNN, VariantHybridModel, VariantDNN
 from src.train import ModelTrainer, evaluate_gnn_epoch
-from src.data_processing import TabularGraphPreprocessor, generate_dummy_data, load_and_prepare_data, plot_performance_curves
+from src.data.loader import load_and_prepare_data
+from src.data_processing import TabularGraphPreprocessor, generate_dummy_data, plot_performance_curves
 from src.evaluate import evaluate_predictions, plot_confusion_matrix
 from src.explain import FeatureExplainer
 from src.tune import ModelTuner
@@ -45,22 +46,22 @@ def get_data(data_path=None):
     # 1. Kullanıcının belirttiği dosya
     if data_path and os.path.exists(data_path):
         logging.info(f"Gerçek veri seti yükleniyor: {data_path}")
-        X_df, y = load_and_prepare_data(data_path)
+        X_df, y, var_ids = load_and_prepare_data(data_path)
         if y is None:
             raise ValueError("Etiketli veri seti bekleniyor. CSV dosyasında 'Label' sütunu bulunamadı.")
-        return X_df, y
+        return X_df, y, var_ids
 
     # 2. Varsayılan gerçekçi sentetik veri (generate_realistic_data.py ile üretildi)
     default_path = os.path.join(Config.DATA_DIR, "train_variants.csv")
     if os.path.exists(default_path):
         logging.info(f"Gerçekçi sentetik veri yükleniyor: {default_path}")
-        X_df, y = load_and_prepare_data(default_path)
+        X_df, y, var_ids = load_and_prepare_data(default_path)
         if y is None:
             raise ValueError("'Label' sütunu bulunamadı.")
         # Variant_ID sütununu çıkar (sayısal değil)
         if 'Variant_ID' in X_df.columns:
             X_df = X_df.drop(columns=['Variant_ID'])
-        return X_df, y
+        return X_df, y, var_ids
 
     # 3. Son çare: tamamen rastgele dummy veri
     logging.warning("Gerçek veri seti bulunamadı. Tamamen rastgele dummy veri kullanılıyor (40 özellik, 2500 örnek).")
@@ -69,7 +70,7 @@ def get_data(data_path=None):
     df_labels_mapped['Label'] = df_labels_mapped['Label'].map({'Pathogenic': 1, 'Benign': 0})
     y = df_labels_mapped['Label'].values
     X_df = df_labels_mapped.drop(columns=['Label'])
-    return X_df, y
+    return X_df, y, None
 
 
 
@@ -135,7 +136,7 @@ def main():
     # ─────────────────────────────────────────────────────────────
     if args.mode == "tune":
         logging.info("🔍 Hiperparametre Optimizasyonu (Optuna) Başlatılıyor...")
-        X_df, y = get_data(args.data_file)
+        X_df, y, _ = get_data(args.data_file)
         X_train_df, _, y_train, _ = train_test_split(X_df, y, test_size=0.2, stratify=y, random_state=42)
 
         preprocessor = TabularGraphPreprocessor(
@@ -153,7 +154,7 @@ def main():
     elif args.mode == "train":
         logging.info("🏋️ Modeller Eğitiliyor (AutoEncoder + GNN + XGBoost + DNN)...")
 
-        X_df, y = get_data(args.data_file)
+        X_df, y, _ = get_data(args.data_file)
         X_train_df, X_test_df, y_train, y_test = train_test_split(
             X_df, y, test_size=0.2, stratify=y, random_state=42
         )
@@ -254,7 +255,7 @@ def main():
         logging.info("🔄 Stratified K-Fold Cross-Validation Moduna Geçiliyor...")
         logging.info("[NOT] LEAKAGE-FREE mod: Her fold için bağımsız preprocessor oluşturulacak.")
 
-        X_df, y = get_data(args.data_file)
+        X_df, y, _ = get_data(args.data_file)
         X_raw = X_df.values  # Ham numpy array — preprocessing fold içinde yapilacak
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         fold_results = []
@@ -304,7 +305,7 @@ def main():
     # ─────────────────────────────────────────────────────────────
     elif args.mode == "eval":
         logging.info("📈 Eval Modu — Kaydedilmiş Modeller Yükleniyor...")
-        X_df, y = get_data(args.data_file)
+        X_df, y, _ = get_data(args.data_file)
         _, X_test_df, _, y_test = train_test_split(X_df, y, test_size=0.2, stratify=y, random_state=42)
 
         try:
@@ -358,11 +359,12 @@ def main():
 
             # Gerçek CSV veya dummy veri
             if test_file and os.path.exists(test_file):
-                inference_df, _ = load_and_prepare_data(test_file)
+                inference_df, _, infer_var_ids = load_and_prepare_data(test_file)
             else:
                 logging.warning("Test dosyası bulunamadı. Sentetik veri kullanılıyor.")
                 raw_df = generate_dummy_data(n_samples=500, n_features=40)
                 inference_df = raw_df.drop(columns=['Label'], errors='ignore')
+                infer_var_ids = None
 
             X_infer_scaled = preprocessor.transform(inference_df)
             infer_graphs   = [preprocessor.row_to_graph(row) for row in X_infer_scaled]
@@ -380,9 +382,8 @@ def main():
 
             # Submission dosyası
             # DÜZELTME (P1): Variant_ID orijinal CSV'den alınıyor
-            raw_test_df = pd.read_csv(test_file) if (test_file and os.path.exists(test_file)) else None
-            if raw_test_df is not None and 'Variant_ID' in raw_test_df.columns:
-                variant_ids = raw_test_df['Variant_ID'].values[:len(ensemble_preds)]
+            if infer_var_ids is not None:
+                variant_ids = infer_var_ids.values[:len(ensemble_preds)]
             else:
                 variant_ids = [f"VAR_{i:05d}" for i in range(len(ensemble_preds))]
 

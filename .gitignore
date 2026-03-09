@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -35,11 +34,6 @@ models/*.pkl
 models/*.json
 models/autoencoder.pth
 
-# Bu satırlar .gitignore'da vardı ama dosyalar commit edilmişti
-# Mevcut commit'leri temizlemek için:
-# git rm --cached models/gnn_model.pth models/scaler.pkl models/xgb_model.json
-# git rm -r --cached src/__pycache__ tests/__pycache__
-
 # Raporlar (üretilmiş çıktılar)
 reports/*.png
 reports/*.csv
@@ -63,6 +57,3 @@ temp/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-# Lock files (sonradan generate_edilmeli, commit edilebilir)
-# requirements.lock — commit edilmeli, bu satırı yoruma alın
