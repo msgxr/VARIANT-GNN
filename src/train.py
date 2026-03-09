@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 import copy
-from .models import FeatureGNN, VariantHybridModel
+from .models import FeatureGNN, VariantHybridModel, VariantDNN
 
 def train_gnn_epoch(model, loader, optimizer, device):
     """
@@ -85,3 +85,39 @@ class ModelTrainer:
             train_gnn_epoch(pretrained_model, panel_train_loader, optimizer, self.device)
             
         return pretrained_model
+    def train_dnn(self, train_loader, val_loader, model, epochs=20, lr=0.001):
+        """
+        Kullanıcı vizyonundaki Model 3 (DNN) eğitimi.
+        """
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+        criterion = nn.CrossEntropyLoss()
+        best_acc = 0
+        best_model_wts = copy.deepcopy(model.state_dict())
+
+        for epoch in range(1, epochs + 1):
+            model.train()
+            for X_batch, y_batch in train_loader:
+                X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
+                optimizer.zero_grad()
+                out = model(X_batch)
+                loss = criterion(out, y_batch)
+                loss.backward()
+                optimizer.step()
+
+            # Eval
+            model.eval()
+            correct = 0
+            with torch.no_grad():
+                for X_batch, y_batch in val_loader:
+                    X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
+                    out = model(X_batch)
+                    pred = out.argmax(dim=1)
+                    correct += int((pred == y_batch).sum())
+            
+            acc = correct / len(val_loader.dataset)
+            if acc > best_acc:
+                best_acc = acc
+                best_model_wts = copy.deepcopy(model.state_dict())
+
+        model.load_state_dict(best_model_wts)
+        return model, best_acc

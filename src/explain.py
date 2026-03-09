@@ -1,6 +1,9 @@
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
+import lime
+import lime.lime_tabular
+import os
 
 class FeatureExplainer:
     """

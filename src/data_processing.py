@@ -7,6 +7,10 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.impute import SimpleImputer
 from torch_geometric.data import Data
 import logging
+from imblearn.over_sampling import SMOTE
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
+import os
 
 class TabularAutoEncoder(nn.Module):
     """
@@ -82,7 +86,7 @@ class TabularGraphPreprocessor:
                 total_loss += loss.item()
         logging.info(f"AutoEncoder Loss: {total_loss / len(loader):.4f}")
 
-    def fit_transform(self, X_df):
+    def fit_transform(self, X_df, label_y=None):
         """
         Model eğitimi için veri setindeki özellik istatistiklerini hesaplar.
         Talebe göre AutoEncoder eğitimini yapar ve Graf bağlantılarını dizer.
@@ -90,6 +94,14 @@ class TabularGraphPreprocessor:
         X = X_df.values if isinstance(X_df, pd.DataFrame) else X_df
         X_imputed = self.imputer.fit_transform(X)
         X_scaled = self.scaler.fit_transform(X_imputed)
+
+        # SMOTE ile veri dengeleme (Yalnızca eğitim modunda ve label varsa)
+        # Not: Etiketlerin 0/1 olması gerekir.
+        if label_y is not None:
+            logging.info("SMOTE ile veri dengeleme (Data Balancing) uygulanıyor...")
+            smote = SMOTE(random_state=42)
+            X_balanced, y_balanced = smote.fit_resample(X_scaled, label_y)
+            X_scaled, label_y = X_balanced, y_balanced
 
         if self.use_autoencoder:
             self._train_autoencoder(X_scaled)
@@ -196,4 +208,36 @@ def generate_dummy_data(n_samples=1000, n_features=30):
     df['Label'] = y
     df['Label'] = df['Label'].map({1: 'Pathogenic', 0: 'Benign'})
     return df
+
+def plot_performance_curves(y_true, y_probs, output_dir):
+    """
+    Roc-AUC ve Precision-Recall eğrilerini profesyonel formata üretir.
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
+    # ROC Curve
+    fpr, tpr, _ = roc_curve(y_true, y_probs)
+    roc_auc = auc(fpr, tpr)
+    
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend(loc="lower right")
+    
+    # PR Curve
+    precision, recall, _ = precision_recall_curve(y_true, y_probs)
+    plt.subplot(1, 2, 2)
+    plt.plot(recall, precision, color='blue', lw=2)
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "performance_curves.png"))
+    plt.close()
 

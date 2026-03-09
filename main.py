@@ -8,9 +8,9 @@ from sklearn.model_selection import train_test_split
 from torch_geometric.loader import DataLoader
 
 from src.config import Config
-from src.data_processing import TabularGraphPreprocessor, generate_dummy_data # Note: moved dummy to processing or keep it here
-from src.models import FeatureGNN, VariantHybridModel
+from src.models import FeatureGNN, VariantHybridModel, VariantDNN
 from src.train import ModelTrainer, evaluate_gnn_epoch
+from src.data_processing import TabularGraphPreprocessor, generate_dummy_data, plot_performance_curves
 from src.evaluate import evaluate_predictions, plot_confusion_matrix
 from src.explain import FeatureExplainer
 from src.tune import ModelTuner
@@ -75,20 +75,34 @@ def main():
         train_loader = DataLoader(train_graphs, batch_size=32, shuffle=True)
         test_loader = DataLoader(test_graphs, batch_size=32, shuffle=False)
         
-        # 3. XGBoost Dalı
+        # 3. XGBoost Dalı (Model 1)
         logging.info("XGBoost Modeli Eğitiliyor...")
-        hybrid_model = VariantHybridModel(xgb_params=Config.XGB_PARAMS, gnn_weight=Config.GNN_ENSEMBLE_WEIGHT)
+        hybrid_model = VariantHybridModel(
+            xgb_params=Config.XGB_PARAMS, 
+            weights=Config.ENSEMBLE_WEIGHTS
+        )
         hybrid_model.fit_xgb(X_train_scaled, y_train)
         
-        # 4. GNN Dalı
-        logging.info("GNN Modeli Eğitiliyor...")
+        # 4. GNN ve DNN Dalları (Model 2 & 3)
+        logging.info("GNN ve DNN Modelleri Eğitiliyor...")
         trainer = ModelTrainer(device=device)
-        gnn_in_channels = X_train_scaled.shape[1]
-        gnn_model = FeatureGNN(in_channels=1, hidden_dim=Config.GNN_HIDDEN_DIM, num_classes=2).to(device)
         
-        # GNN Node Özellik boyutu 1, ama kanal sayısı feature sayısı değil o yüzden in_channels=1
-        trained_gnn, best_acc = trainer.train_gnn(train_loader, test_loader, model=gnn_model, epochs=Config.GNN_EPOCHS, lr=Config.GNN_LR)
+        # GNN
+        gnn_model = FeatureGNN(in_channels=1, hidden_dim=Config.GNN_HIDDEN_DIM, num_classes=2).to(device)
+        trained_gnn, gnn_acc = trainer.train_gnn(train_loader, test_loader, model=gnn_model, epochs=Config.GNN_EPOCHS, lr=Config.GNN_LR)
         hybrid_model.gnn = trained_gnn
+        
+        # DNN
+        dnn_model = VariantDNN(input_dim=X_train_scaled.shape[1], hidden_dim=Config.DNN_HIDDEN_DIM, num_classes=2).to(device)
+        
+        # DNN için düz tabular loader
+        train_dnn_ds = torch.utils.data.TensorDataset(torch.FloatTensor(X_train_scaled), torch.LongTensor(y_train))
+        test_dnn_ds = torch.utils.data.TensorDataset(torch.FloatTensor(X_test_scaled), torch.LongTensor(y_test))
+        train_dnn_loader = torch.utils.data.DataLoader(train_dnn_ds, batch_size=32, shuffle=True)
+        test_dnn_loader = torch.utils.data.DataLoader(test_dnn_ds, batch_size=32, shuffle=False)
+        
+        trained_dnn, dnn_acc = trainer.train_dnn(train_dnn_loader, test_dnn_loader, model=dnn_model, epochs=Config.DNN_EPOCHS, lr=Config.DNN_LR)
+        hybrid_model.dnn = trained_dnn
         
         # 5. Kayıt
         ModelSerializer.save_models(hybrid_model, preprocessor)
@@ -96,14 +110,24 @@ def main():
         # 6. Evalüasyon
         logging.info("✅ Eğitim Tamamlandı. Sonuçlar Hesaplanıyor...")
         xgb_probs = hybrid_model.predict_xgb_proba(X_test_scaled)
+        
         _, _, gnn_probs_list = evaluate_gnn_epoch(trained_gnn, test_loader, device)
         gnn_probs = np.array(gnn_probs_list)
         
-        ensemble_probs = hybrid_model.predict_ensemble(xgb_probs, gnn_probs)
+        # DNN Probs
+        trained_dnn.eval()
+        with torch.no_grad():
+            dnn_out = trained_dnn(torch.FloatTensor(X_test_scaled).to(device))
+            dnn_probs = torch.softmax(dnn_out, dim=1).cpu().numpy()
+        
+        ensemble_probs = hybrid_model.predict_ensemble(xgb_probs, gnn_probs, dnn_probs)
         ensemble_preds = np.argmax(ensemble_probs, axis=1)
         
+        # Klinik Risk Skorları
+        risk_scores = hybrid_model.get_clinical_risk_score(ensemble_probs)
+        
         evaluate_predictions(y_test, ensemble_preds, ensemble_probs)
-        plot_confusion_matrix(y_test, ensemble_preds, filename=os.path.join(Config.REPORTS_DIR, "train_confusion_matrix.png"))
+        plot_performance_curves(y_test, ensemble_probs[:, 1], Config.REPORTS_DIR)
         
         # XAI
         explainer = FeatureExplainer(hybrid_model.xgb)

@@ -54,13 +54,35 @@ class FeatureGNN(nn.Module):
         
         return logits
 
+class VariantDNN(nn.Module):
+    """
+    Kullanıcı vizyonundaki 'Model 3: Deep Neural Network' bileşeni.
+    Tablo verileri üzerinde derinlemesine özellik analizi yapar.
+    """
+    def __init__(self, input_dim, hidden_dim=128, num_classes=2):
+        super(VariantDNN, self).__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 2, num_classes)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
 class VariantHybridModel:
     """
-    XGBoost ve GNN'i birleştiren Meta Ensemble sınıfı.
-    Geleneksel tablo modelleyici gücüyle derin grafik gösterim öğrenimlerini hibridize eder.
+    XGBoost, GNN ve DNN'i birleştiren Multi-Modal Meta Ensemble sınıfı.
+    Geleneksel tablo modelleyici gücüyle derin grafik gösterim 
+    ve klasik derin öğrenimi hibridize eder.
     """
-    def __init__(self, gnn_model=None, xgb_params=None, gnn_weight=0.5):
+    def __init__(self, gnn_model=None, dnn_model=None, xgb_params=None, weights=None):
         self.gnn = gnn_model
+        self.dnn = dnn_model
         
         if xgb_params is None:
             self.xgb_params = {
@@ -77,7 +99,9 @@ class VariantHybridModel:
             self.xgb_params = xgb_params
             
         self.xgb = xgb.XGBClassifier(**self.xgb_params)
-        self.gnn_weight = gnn_weight # Ensemble tahmini için GNN ağırlığı
+        
+        # Ensemble ağırlıkları: [XGB, GNN, DNN]
+        self.weights = weights if weights is not None else [0.4, 0.4, 0.2]
 
     def fit_xgb(self, X_train_scaled, y_train):
         """XGBoost eğitim fonksiyonu"""
@@ -87,12 +111,20 @@ class VariantHybridModel:
         """XGBoost Olasılık Tahmini"""
         return self.xgb.predict_proba(X_scaled) 
 
-    def predict_ensemble(self, xgb_probs, gnn_probs_normalized):
+    def predict_ensemble(self, xgb_probs, gnn_probs, dnn_probs):
         """
-        İki modelin olasılık tahminlerini normalize ederek birleştirir.
-        Tahmin: 1 (Pathogenic), 0 (Benign)
-        gnn_probs_normalized: (N, 2) softmax olasılıkları.
-        xgb_probs: (N, 2) olasılıkları.
+        Üç modelin olasılık tahminlerini ağırlıklı olarak birleştirir.
+        Kullanıcı vizyonundaki 'Multi-Modal AI' yaklaşımını uygular.
         """
-        combined_probs = (self.gnn_weight * gnn_probs_normalized) + ((1 - self.gnn_weight) * xgb_probs)
+        combined_probs = (self.weights[0] * xgb_probs) + \
+                         (self.weights[1] * gnn_probs) + \
+                         (self.weights[2] * dnn_probs)
         return combined_probs
+
+    def get_clinical_risk_score(self, combined_probs):
+        """
+        Olasılığı 0-100 arası bir Klinik Risk Skoruna dönüştürür.
+        """
+        # Patojenik sınıf (indeks 1) olasılığını al
+        risk_score = combined_probs[:, 1] * 100
+        return risk_score

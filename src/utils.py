@@ -19,6 +19,10 @@ class ModelSerializer:
         if hybrid_model.gnn is not None:
             torch.save(hybrid_model.gnn.state_dict(), Config.GNN_MODEL_PATH)
             
+        # DNN Kaydı (Kullanıcı Vizyonu Model 3)
+        if hybrid_model.dnn is not None:
+            torch.save(hybrid_model.dnn.state_dict(), Config.DNN_MODEL_PATH)
+            
         # AutoEncoder ve Preprocessor Kaydı
         joblib.dump(preprocessor, Config.SCALER_PATH)
         logging.info("✅ Tüm model ağırlıkları ve scaler dosyaları kaydedildi.")
@@ -34,6 +38,11 @@ class ModelSerializer:
             device = next(hybrid_model.gnn.parameters()).device
             state_dict = torch.load(Config.GNN_MODEL_PATH, map_location=device)
             hybrid_model.gnn.load_state_dict(state_dict)
+
+        if hybrid_model.dnn is not None:
+            device = next(hybrid_model.dnn.parameters()).device
+            state_dict = torch.load(Config.DNN_MODEL_PATH, map_location=device)
+            hybrid_model.dnn.load_state_dict(state_dict)
             
         preprocessor = joblib.load(Config.SCALER_PATH)
         return preprocessor
