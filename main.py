@@ -41,8 +41,10 @@ def get_data():
 
 def main():
     parser = argparse.ArgumentParser(description="VARIANT-GNN: Advanced Graph-based Variant Pathogenicity Prediction")
-    parser.add_argument("--mode", type=str, choices=["train", "tune", "eval"], default="train",
-                        help="Sistemi hangi modda çalıştıracağınızı belirler. (train/tune/eval)")
+    parser.add_argument("--mode", type=str, choices=["train", "tune", "eval", "predict"], default="train",
+                        help="Sistemi hangi modda çalıştıracağınızı belirler. (train/tune/eval/predict)")
+    parser.add_argument("--test_file", type=str, default="test_variants.csv",
+                        help="Tahmin edilecek CSV dosyasının harici yolu (--mode predict için)")
     
     args = parser.parse_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -122,14 +124,51 @@ def main():
 
     elif args.mode == "eval":
         logging.info("Analiz ve Prediksiyon moduna geçiliyor (Sadece Raporlama)...")
-        # Preprocessor ve GNN Modellerini geri yükle (gerçek projede model dosyaları lazımdır)
         try:
-            hybrid_model = VariantHybridModel()
-            hybrid_model.gnn = FeatureGNN(in_channels=1) # dummy struct before loading
+            hybrid_model = VariantHybridModel(gnn_weight=Config.GNN_ENSEMBLE_WEIGHT)
+            hybrid_model.gnn = FeatureGNN(in_channels=1, hidden_dim=Config.GNN_HIDDEN_DIM, num_classes=2).to(device)
             preprocessor = ModelSerializer.load_models(hybrid_model)
-            logging.info("Başarıyla yüklendi. Test setine uygulanıyor...")
+            logging.info("Modeller başarıyla yüklendi. (Eval Mode)")
         except FileNotFoundError:
             logging.error("Önce '--mode train' ile model üretmelisiniz!")
+            
+    elif args.mode == "predict":
+        logging.info(f"Kör Tahmin (Inference) modu başlatıldı. Veri: {args.test_file}")
+        try:
+            hybrid_model = VariantHybridModel(gnn_weight=Config.GNN_ENSEMBLE_WEIGHT)
+            hybrid_model.gnn = FeatureGNN(in_channels=1, hidden_dim=Config.GNN_HIDDEN_DIM, num_classes=2).to(device)
+            preprocessor = ModelSerializer.load_models(hybrid_model)
+            
+            # Yarışma formatındaki features dosyasının okunması (Dummy data örneği)
+            # Normalde: inference_df = pd.read_csv(args.test_file)
+            inference_df = generate_dummy_data(n_samples=500, n_features=40)
+            X_infer = inference_df.drop(columns=['Label'], errors='ignore')
+            
+            X_infer_scaled = preprocessor.transform(X_infer)
+            infer_graphs = [preprocessor.row_to_graph(row) for row in X_infer_scaled]
+            infer_loader = DataLoader(infer_graphs, batch_size=32, shuffle=False)
+            
+            # Tahminler
+            xgb_probs = hybrid_model.predict_xgb_proba(X_infer_scaled)
+            _, _, gnn_probs_list = evaluate_gnn_epoch(hybrid_model.gnn.to(device), infer_loader, device)
+            gnn_probs = np.array(gnn_probs_list)
+            
+            ensemble_probs = hybrid_model.predict_ensemble(xgb_probs, gnn_probs)
+            ensemble_preds = np.argmax(ensemble_probs, axis=1)
+            
+            # Submission Dosyasının Oluşturulması
+            submission = pd.DataFrame({
+                'Variant_ID': [f"VAR_{i}" for i in range(len(ensemble_preds))],
+                'Prediction': ['Pathogenic' if p == 1 else 'Benign' for p in ensemble_preds],
+                'Confidence': np.max(ensemble_probs, axis=1)
+            })
+            
+            sub_path = os.path.join(Config.REPORTS_DIR, 'submission.csv')
+            submission.to_csv(sub_path, index=False)
+            logging.info(f"✅ Tahminler tamamlandı. Teslim dosyası hazırlandı: {sub_path}")
+            
+        except FileNotFoundError:
+            logging.error("Lütfen önce modeli eğitin (--mode train)")
 
 if __name__ == "__main__":
     main()
