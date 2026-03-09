@@ -121,10 +121,33 @@ class VariantHybridModel:
                          (self.weights[2] * dnn_probs)
         return combined_probs
 
-    def get_clinical_risk_score(self, combined_probs):
+    def get_clinical_risk_score(self, combined_probs, calibrated: bool = False):
         """
-        Olasılığı 0-100 arası bir Klinik Risk Skoruna dönüştürür.
+        Ensemble olasılığını 0-100 arasında Risk Skoru'na dönüştürür.
+
+        ⚠️  KLİNİK UYARI (P0):
+        Bu skor ham softmax olasılığının 100 ile çarpımıdır.
+        Olasılık kalibrasyonu (Platt Scaling / Isotonic Regression) uygulanmamıştır.
+        Bu nedenle:
+          - Skor sistematik olarak aşırı güvenli (overconfident) davranabilir.
+          - Klinik karar destek sistemi olarak KULLANILAMAZ.
+          - Yalnızca araştırma ve sıralama amacıyla kullanınız.
+        Kalibrasyon eklemek için: sklearn.calibration.CalibratedClassifierCV
+        veya isotonic regression arayüzünü kullanınız.
+
+        Args:
+            combined_probs: Ensemble olasılık matrisi (N x 2)
+            calibrated: True ise kalibratör uygulanmıştır (dış bileşen tarafından)
+        Returns:
+            risk_score: 0-100 arası float array
         """
+        import logging as _logging
+        if not calibrated:
+            _logging.warning(
+                "[RİSK SKORU] Kalibrasyon uygulanmadı. "
+                "Ham prob*100 değeri klinik karar için kullanılamaz. "
+                "Araştırma amaçlı kullanım için uygundur."
+            )
         # Patojenik sınıf (indeks 1) olasılığını al
         risk_score = combined_probs[:, 1] * 100
         return risk_score

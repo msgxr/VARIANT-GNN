@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VARIANT-GNN Input Schema",
+  "description": "Giriş CSV dosyasının beklenen özellik şeması. Tüm sütunlar float/int olmalıdır.",
+  "type": "object",
+  "required": [
+    "SIFT_score", "PolyPhen2_HDIV_score", "PolyPhen2_HVAR_score", "CADD_phred",
+    "REVEL_score", "MutPred2_score", "VEST4_score", "PROVEAN_score",
+    "MutationTaster_score", "GERP_RS", "PhyloP100way_vertebrate",
+    "phastCons100way_vertebrate", "SiPhy_29way_logOdds",
+    "gnomAD_exomes_AF", "gnomAD_exomes_AF_afr", "gnomAD_exomes_AF_eur",
+    "gnomAD_exomes_AF_eas", "ExAC_AF",
+    "AA_polarity_change", "AA_hydrophobicity_diff", "AA_size_diff",
+    "Protein_impact_score", "Secondary_structure_disruption",
+    "Variant_type", "In_critical_protein_domain", "Splice_site_distance",
+    "Is_exonic", "Exon_conservation_ratio",
+    "ClinVar_review_status", "ClinVar_submitter_count", "OMIM_disease_gene",
+    "MetaSVM_score", "MetaLR_score", "MCAP_score"
+  ],
+  "properties": {
+    "Variant_ID": {
+      "type": ["string", "number"],
+      "description": "Varyant kimlik kodu (opsiyonel, model tarafından kullanılmaz)"
+    },
+    "SIFT_score": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "SIFT fonksiyon tahmini. 0=zarar verici, 1=tolere edilir"
+    },
+    "PolyPhen2_HDIV_score": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "PolyPhen-2 HumDiv skoru"
+    },
+    "PolyPhen2_HVAR_score": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "PolyPhen-2 HumVar skoru"
+    },
+    "CADD_phred": {
+      "type": "number", "minimum": 0, "maximum": 100,
+      "description": "CADD Phred skoru. Genel kural: >20 zararlı"
+    },
+    "REVEL_score": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "REVEL nadir missense değerlendirme skoru"
+    },
+    "MutPred2_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "VEST4_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "PROVEAN_score": {
+      "type": "number",
+      "description": "Negatif değer bozucu. Kesim: -2.5"
+    },
+    "MutationTaster_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "GERP_RS": {
+      "type": "number",
+      "description": "Genomic Evolutionary Rate Profiling RS skoru"
+    },
+    "PhyloP100way_vertebrate": {
+      "type": "number"
+    },
+    "phastCons100way_vertebrate": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "SiPhy_29way_logOdds": {
+      "type": "number", "minimum": 0
+    },
+    "gnomAD_exomes_AF": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "gnomAD tüm nüfus allel frekansı"
+    },
+    "gnomAD_exomes_AF_afr": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "gnomAD_exomes_AF_eur": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "gnomAD_exomes_AF_eas": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "ExAC_AF": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "AA_polarity_change": {
+      "type": "number", "minimum": 0, "maximum": 2,
+      "description": "0=değişim yok, 1=kısmi, 2=tam polarite değişimi"
+    },
+    "AA_hydrophobicity_diff": {
+      "type": "number", "minimum": 0
+    },
+    "AA_size_diff": {
+      "type": "number", "minimum": 0
+    },
+    "Protein_impact_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "Secondary_structure_disruption": {
+      "type": "number", "enum": [0, 1],
+      "description": "0=bozulma yok, 1=sekonder yapı bozuldu"
+    },
+    "Variant_type": {
+      "type": "number", "enum": [0, 1, 2, 3],
+      "description": "0=missense, 1=nonsense, 2=frameshift, 3=synonymous"
+    },
+    "In_critical_protein_domain": {
+      "type": "number", "enum": [0, 1]
+    },
+    "Splice_site_distance": {
+      "type": "number", "minimum": 0,
+      "description": "Splice site'a mesafe (bp)"
+    },
+    "Is_exonic": {
+      "type": "number", "enum": [0, 1]
+    },
+    "Exon_conservation_ratio": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "ClinVar_review_status": {
+      "type": "number", "enum": [0, 1, 2],
+      "description": "0=tek kayıt, 1=çok kayıt, 2=uzman panel"
+    },
+    "ClinVar_submitter_count": {
+      "type": "number", "minimum": 0
+    },
+    "OMIM_disease_gene": {
+      "type": "number", "enum": [0, 1]
+    },
+    "MetaSVM_score": {
+      "type": "number"
+    },
+    "MetaLR_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "MCAP_score": {
+      "type": "number", "minimum": 0, "maximum": 1
+    },
+    "Label": {
+      "type": "string",
+      "enum": ["Pathogenic", "Benign", "Likely Pathogenic", "Likely Benign"],
+      "description": "Eğitim için zorunlu, tahmin için opsiyonel"
+    }
+  }
+}

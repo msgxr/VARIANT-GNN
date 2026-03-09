@@ -1,10 +1,12 @@
 import argparse
 import logging
 import os
+import random
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.metrics import f1_score
 from torch_geometric.loader import DataLoader
 
 from src.config import Config
@@ -17,6 +19,20 @@ from src.tune import ModelTuner
 from src.utils import ModelSerializer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def set_seeds(seed: int = 42):
+    """
+    DÜZELTME (P2): Tüm rastgelelik kaynaklarını sabitle.
+    Sonuçların her çalıştırmada aynı üretilmesini garanti eder.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    logging.info(f"Deterministik mod aktif | Seed: {seed}")
 
 
 def get_data(data_path=None):
@@ -105,6 +121,8 @@ def main():
                         help="Tahmin edilecek CSV dosyasının yolu (--mode predict için).")
 
     args = parser.parse_args()
+    # DÜZELTME (P2): Deterministik seed — tüm modeller aynı sonucu üretir
+    set_seeds(42)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     Config.create_dirs()
 
@@ -234,28 +252,52 @@ def main():
     # ─────────────────────────────────────────────────────────────
     elif args.mode == "crossval":
         logging.info("🔄 Stratified K-Fold Cross-Validation Moduna Geçiliyor...")
+        logging.info("[NOT] LEAKAGE-FREE mod: Her fold için bağımsız preprocessor oluşturulacak.")
 
         X_df, y = get_data(args.data_file)
+        X_raw = X_df.values  # Ham numpy array — preprocessing fold içinde yapilacak
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        fold_results = []
 
-        preprocessor = TabularGraphPreprocessor(
-            corr_threshold=Config.CORR_THRESHOLD,
-            use_autoencoder=True,
-            encoding_dim=16,
-            device=device
-        )
-        X_scaled, y = preprocessor.fit_transform(X_df, label_y=y)
-        all_graphs = [preprocessor.row_to_graph(row, label=int(l)) for row, l in zip(X_scaled, y)]
+        for fold, (train_idx, val_idx) in enumerate(skf.split(X_raw, y), 1):
+            X_train_fold = X_df.iloc[train_idx]
+            X_val_fold   = X_df.iloc[val_idx]
+            y_train_fold = y[train_idx]
+            y_val_fold   = y[val_idx]
 
-        trainer = ModelTrainer(device=device)
-        cv_results = trainer.cross_validate_gnn(
-            all_graphs=all_graphs,
-            all_labels=list(y),
-            n_splits=5,
-            hidden_dim=Config.GNN_HIDDEN_DIM,
-            epochs=Config.GNN_EPOCHS,
-            lr=Config.GNN_LR
-        )
-        logging.info(f"📊 Cross-Validation Sonucu: {cv_results}")
+            # DÜZELTME (P0): HER FOLD İÇİN YENİ PREPROCESSOR
+            # Sebep: Scaler ve SMOTE yalnızca train fold üzerinden fit edilmeli;
+            # val fold bilgisi train parametrelerine sizmamalı (veri sızıntısı önlemi)
+            fold_preprocessor = TabularGraphPreprocessor(
+                corr_threshold=Config.CORR_THRESHOLD,
+                use_autoencoder=False,  # CV'de AE kapalı — hız için
+                device=device
+            )
+            X_tr, y_tr = fold_preprocessor.fit_transform(X_train_fold, label_y=y_train_fold)
+            X_val      = fold_preprocessor.transform(X_val_fold)
+
+            train_graphs_fold = [fold_preprocessor.row_to_graph(r, int(l)) for r, l in zip(X_tr, y_tr)]
+            val_graphs_fold   = [fold_preprocessor.row_to_graph(r, int(l)) for r, l in zip(X_val, y_val_fold)]
+
+            train_loader = DataLoader(train_graphs_fold, batch_size=32, shuffle=True)
+            val_loader   = DataLoader(val_graphs_fold,   batch_size=32, shuffle=False)
+
+            gnn_model = FeatureGNN(in_channels=1, hidden_dim=Config.GNN_HIDDEN_DIM, num_classes=2).to(device)
+            trainer   = ModelTrainer(device=device)
+            trained_gnn, _ = trainer.train_gnn(
+                train_loader, val_loader, model=gnn_model,
+                epochs=Config.GNN_EPOCHS, lr=Config.GNN_LR
+            )
+
+            _, preds, _ = evaluate_gnn_epoch(trained_gnn, val_loader, device)
+            fold_f1 = f1_score(y_val_fold, preds[:len(y_val_fold)], average='macro', zero_division=0)
+            fold_results.append(fold_f1)
+            logging.info(f"  Fold {fold}/5 | Val F1-Macro: {fold_f1:.4f}")
+
+        mean_f1 = np.mean(fold_results)
+        std_f1  = np.std(fold_results)
+        logging.info(f"📊 Cross-Validation Tamamlandı | Mean F1: {mean_f1:.4f} ± {std_f1:.4f}")
+        logging.info(f"   Fold skorları: {[f'{s:.4f}' for s in fold_results]}")
 
     # ─────────────────────────────────────────────────────────────
     # EVAL MODU
@@ -337,8 +379,15 @@ def main():
             )
 
             # Submission dosyası
+            # DÜZELTME (P1): Variant_ID orijinal CSV'den alınıyor
+            raw_test_df = pd.read_csv(test_file) if (test_file and os.path.exists(test_file)) else None
+            if raw_test_df is not None and 'Variant_ID' in raw_test_df.columns:
+                variant_ids = raw_test_df['Variant_ID'].values[:len(ensemble_preds)]
+            else:
+                variant_ids = [f"VAR_{i:05d}" for i in range(len(ensemble_preds))]
+
             submission = pd.DataFrame({
-                'Variant_ID':  [f"VAR_{i:05d}" for i in range(len(ensemble_preds))],
+                'Variant_ID':  variant_ids,
                 'Prediction':  ['Pathogenic' if p == 1 else 'Benign' for p in ensemble_preds],
                 'Risk_Score':  risk_scores.round(2),
                 'Confidence':  np.max(ensemble_probs, axis=1).round(4)

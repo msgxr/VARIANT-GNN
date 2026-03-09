@@ -9,38 +9,11 @@ dist/
 build/
 .eggs/
 
-# Virtual environments
+# Sanal Ortamlar
 venv/
 .venv/
 env/
 ENV/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Logs
-*.log
-app.log
-logs/
-
-# Model dosyaları (büyük binary dosyalar — LFS veya ayrı repo)
-models/*.pth
-models/*.pkl
-models/*.json
-models/autoencoder.pth
-
-# Raporlar (üretilmiş çıktılar)
-reports/*.png
-reports/*.csv
-reports/*.html
-
-# Test geçici dosyaları
-/tmp/
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
 
 # IDE
 .idea/
@@ -48,6 +21,48 @@ reports/*.html
 *.swp
 *.swo
 
-# Ortam değişkenlери
+# Jupyter
+.ipynb_checkpoints/
+
+# Loglar
+*.log
+app.log
+logs/
+
+# Model ağırlıkları (büyük binary — LFS veya ayrı storage kullan)
+models/*.pth
+models/*.pkl
+models/*.json
+models/autoencoder.pth
+
+# Bu satırlar .gitignore'da vardı ama dosyalar commit edilmişti
+# Mevcut commit'leri temizlemek için:
+# git rm --cached models/gnn_model.pth models/scaler.pkl models/xgb_model.json
+# git rm -r --cached src/__pycache__ tests/__pycache__
+
+# Raporlar (üretilmiş çıktılar)
+reports/*.png
+reports/*.csv
+reports/*.html
+
+# Geçici dosyalar
+/tmp/
+temp/
+
+# Ortam değişkenleri
 .env
 .env.local
+.env.*.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Lock files (sonradan generate_edilmeli, commit edilebilir)
+# requirements.lock — commit edilmeli, bu satırı yoruma alın

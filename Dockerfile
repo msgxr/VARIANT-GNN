@@ -22,5 +22,12 @@ RUN mkdir -p data models reports
 # Set python path
 ENV PYTHONPATH=/app
 
-# Default command to run help
-CMD ["python", "main.py", "--help"]
+# Web arayüzü portu
+EXPOSE 8501
+
+# Sağlık kontrolü
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+
+# Varsayılan komut: Streamlit web arayüzünü başlat
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

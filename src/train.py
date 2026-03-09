@@ -73,30 +73,33 @@ class ModelTrainer:
             model = FeatureGNN(in_channels=1, hidden_dim=64, num_classes=2).to(self.device)
             
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
-        best_acc = 0
+        # DÜZELTME (P0): Model seçimi val_acc yerine val_f1_macro ile yapılıyor
+        # Sebep: Ana yarışma metriği F1-Macro; accuracy ile seçim metrik tutarsızlığı yaratır
+        best_f1 = 0.0
         best_model_wts = copy.deepcopy(model.state_dict())
         
-        logging.info(f"GNN Eğitimi başlatıldı | Epoch: {epochs} | LR: {lr}")
+        logging.info(f"GNN Eğitimi başlatıldı | Epoch: {epochs} | LR: {lr} | Model seçim metriği: F1-Macro")
         for epoch in range(1, epochs + 1):
             loss = train_gnn_epoch(model, train_loader, optimizer, self.device)
             val_acc, val_preds, _ = evaluate_gnn_epoch(model, val_loader, self.device)
             val_labels = [d.y.item() for batch in val_loader for d in batch.to_data_list() if d.y is not None]
-            # F1 score hesapla
+            # F1 score hesapla (model seçim metriği)
             try:
                 val_f1 = f1_score(val_labels, val_preds[:len(val_labels)], average='macro', zero_division=0)
             except Exception:
                 val_f1 = 0.0
 
             if epoch % 5 == 0 or epoch == epochs:
-                logging.info(f"  [GNN] Epoch {epoch:03d}/{epochs} | Loss: {loss:.4f} | Val Acc: {val_acc:.4f} | Val F1: {val_f1:.4f}")
+                logging.info(f"  [GNN] Epoch {epoch:03d}/{epochs} | Loss: {loss:.4f} | Val Acc: {val_acc:.4f} | Val F1-Macro: {val_f1:.4f} {'⭐' if val_f1 > best_f1 else ''}")
             
-            if val_acc > best_acc:
-                best_acc = val_acc
+            # F1-Macro ile model seçimi (val_acc değil)
+            if val_f1 > best_f1:
+                best_f1 = val_f1
                 best_model_wts = copy.deepcopy(model.state_dict())
                 
         model.load_state_dict(best_model_wts)
-        logging.info(f"GNN Eğitimi tamamlandı | En iyi Val Acc: {best_acc:.4f}")
-        return model, best_acc
+        logging.info(f"GNN Eğitimi tamamlandı | En iyi Val F1-Macro: {best_f1:.4f}")
+        return model, best_f1
 
     def train_dnn(self, train_loader, val_loader, model, epochs=20, lr=0.001):
         """
@@ -104,10 +107,11 @@ class ModelTrainer:
         """
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
         criterion = nn.CrossEntropyLoss()
-        best_acc = 0
+        # DÜZELTME (P0): DNN de val_f1_macro ile model seçimi
+        best_f1 = 0.0
         best_model_wts = copy.deepcopy(model.state_dict())
 
-        logging.info(f"DNN Eğitimi başlatıldı | Epoch: {epochs} | LR: {lr}")
+        logging.info(f"DNN Eğitimi başlatıldı | Epoch: {epochs} | LR: {lr} | Model seçim metriği: F1-Macro")
         for epoch in range(1, epochs + 1):
             model.train()
             total_loss = 0
@@ -140,15 +144,16 @@ class ModelTrainer:
                 val_f1 = 0.0
 
             if epoch % 5 == 0 or epoch == epochs:
-                logging.info(f"  [DNN] Epoch {epoch:03d}/{epochs} | Loss: {total_loss:.4f} | Val Acc: {acc:.4f} | Val F1: {val_f1:.4f}")
+                logging.info(f"  [DNN] Epoch {epoch:03d}/{epochs} | Loss: {total_loss:.4f} | Val Acc: {acc:.4f} | Val F1-Macro: {val_f1:.4f} {'⭐' if val_f1 > best_f1 else ''}")
 
-            if acc > best_acc:
-                best_acc = acc
+            # F1-Macro ile model seçimi (val_acc değil)
+            if val_f1 > best_f1:
+                best_f1 = val_f1
                 best_model_wts = copy.deepcopy(model.state_dict())
 
         model.load_state_dict(best_model_wts)
-        logging.info(f"DNN Eğitimi tamamlandı | En iyi Val Acc: {best_acc:.4f}")
-        return model, best_acc
+        logging.info(f"DNN Eğitimi tamamlandı | En iyi Val F1-Macro: {best_f1:.4f}")
+        return model, best_f1
 
     def cross_validate_gnn(self, all_graphs, all_labels, n_splits=5,
                            hidden_dim=64, epochs=20, lr=0.001, batch_size=32):
