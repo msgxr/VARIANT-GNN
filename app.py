@@ -771,7 +771,7 @@ def clinvar_lookup(query: str) -> dict | None:
             f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
             f"?db=clinvar&term={urllib.parse.quote(query)}&retmax=1&retmode=json"
         )
-        with urllib.request.urlopen(search_url, timeout=6) as r:
+        with urllib.request.urlopen(search_url, timeout=6) as r:  # nosec B310
             search_data = json.loads(r.read())
         ids = search_data.get('esearchresult', {}).get('idlist', [])
         if not ids:
@@ -782,7 +782,7 @@ def clinvar_lookup(query: str) -> dict | None:
             f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
             f"?db=clinvar&id={ids[0]}&retmode=json"
         )
-        with urllib.request.urlopen(summary_url, timeout=6) as r:
+        with urllib.request.urlopen(summary_url, timeout=6) as r:  # nosec B310
             summary_data = json.loads(r.read())
         result = summary_data.get('result', {})
         record = result.get(ids[0], {})
