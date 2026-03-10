@@ -130,8 +130,13 @@ class InferencePipeline:
         Run inference directly on a DataFrame (e.g., from Streamlit).
 
         Metadata / label columns are automatically separated.
+        If the uploaded CSV has anonymous / unknown column names but the
+        correct number of numeric features, the columns are automatically
+        mapped to the expected training-time feature names.
         """
         cfg = self.cfg
+        expected_n = self._preprocessor._imputer.n_features_in_
+
         # Separate metadata cols
         id_cols  = [c for c in cfg.schema.id_columns if c in df.columns]
         drop     = id_cols + (
@@ -139,6 +144,17 @@ class InferencePipeline:
         )
         metadata = df[id_cols].copy() if id_cols else pd.DataFrame(index=df.index)
         feature_df = df.drop(columns=drop).select_dtypes(include=[np.number])
+
+        # Auto-remap anonymous columns when count matches
+        if feature_df.shape[1] != expected_n:
+            numeric_all = df.select_dtypes(include=[np.number])
+            if numeric_all.shape[1] == expected_n:
+                feature_df = numeric_all
+            else:
+                raise ValueError(
+                    f"X has {feature_df.shape[1]} features, but "
+                    f"the model expects {expected_n} features."
+                )
 
         dummy_dataset = LoadedDataset(
             features       = feature_df,
