@@ -914,96 +914,164 @@ def _hex_to_rgb(hex_color: str) -> str:
     return f"{r},{g},{b}"
 
 # ─────────────────────────────────────────────
-# PDF RAPOR ÜRETME
+# PDF RAPOR URETME
 # ─────────────────────────────────────────────
 def generate_pdf_report(df_result: pd.DataFrame, cfg) -> bytes:
-    """Analiz sonuçlarını matplotlib PdfPages ile PDF'e dönüştürür."""
-    from matplotlib.backends.backend_pdf import PdfPages
+    """Analiz sonuclarini fpdf2 ile PDF'e donusturur."""
+    from fpdf import FPDF
+    from datetime import datetime
+
+    class _PDF(FPDF):
+        def header(self):
+            if self.page_no() > 1:
+                self.set_font("Helvetica", "I", 8)
+                self.set_text_color(120, 120, 120)
+                self.cell(0, 6, "VARIANT-GNN  |  Genetik Varyant Analiz Raporu",
+                          new_x="LMARGIN", new_y="NEXT", align="C")
+                self.line(10, 12, self.w - 10, 12)
+                self.ln(4)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font("Helvetica", "I", 8)
+            self.set_text_color(150, 150, 150)
+            self.cell(0, 10, f"Sayfa {self.page_no()}/{{nb}}",
+                      new_x="RIGHT", new_y="TOP", align="C")
+
+    pdf = _PDF(orientation="P", unit="mm", format="A4")
+    pdf.alias_nb_pages()
+    pdf.set_auto_page_break(auto=True, margin=20)
+
+    total       = len(df_result)
+    pathogenic  = int((df_result["Prediction"] == "Pathogenic").sum())
+    benign      = total - pathogenic
+    pct         = 100 * pathogenic / max(total, 1)
+
+    # ── Kapak Sayfasi ─────────────────────
+    pdf.add_page()
+    pdf.ln(50)
+    pdf.set_font("Helvetica", "B", 28)
+    pdf.set_text_color(30, 60, 120)
+    pdf.cell(0, 14, "VARIANT-GNN", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.set_font("Helvetica", "", 14)
+    pdf.set_text_color(80, 80, 80)
+    pdf.cell(0, 10, "Genetik Varyant Patojenite Analiz Raporu",
+             new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(10)
+    pdf.set_draw_color(30, 60, 120)
+    pdf.line(60, pdf.get_y(), 150, pdf.get_y())
+    pdf.ln(10)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(60, 60, 60)
+    pdf.cell(0, 8, f"Toplam Varyant: {total}   |   Patojenik: {pathogenic}   |   "
+                    f"Benign: {benign}   |   Oran: {pct:.1f}%",
+             new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(30)
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_text_color(130, 130, 130)
+    pdf.cell(0, 8,
+             f"TEKNOFEST 2026 | Saglikta Yapay Zeka  -  {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+             new_x="LMARGIN", new_y="NEXT", align="C")
+
+    # ── Ozet Karti ────────────────────────
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_text_color(30, 60, 120)
+    pdf.cell(0, 10, "Analiz Ozeti", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(50, 50, 50)
+
+    summary_rows = [
+        ("Toplam Varyant", str(total)),
+        ("Patojenik", str(pathogenic)),
+        ("Benign", str(benign)),
+        ("Patojenite Orani", f"{pct:.1f}%"),
+    ]
+    if "Calibrated_Risk" in df_result.columns:
+        mean_risk = df_result["Calibrated_Risk"].mean()
+        summary_rows.append(("Ortalama Risk Skoru", f"{mean_risk:.1f}"))
+    if "High_Risk" in df_result.columns:
+        hr = int(df_result["High_Risk"].sum())
+        summary_rows.append(("Yuksek Riskli Varyant", str(hr)))
+
+    col_w = [70, 50]
+    pdf.set_fill_color(235, 240, 250)
+    for i, (k, v) in enumerate(summary_rows):
+        fill = i % 2 == 0
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(col_w[0], 8, k, border=1, fill=fill,
+                 new_x="RIGHT", new_y="TOP")
+        pdf.set_font("Helvetica", "", 10)
+        pdf.cell(col_w[1], 8, v, border=1, fill=fill,
+                 new_x="LMARGIN", new_y="NEXT")
+
+    # ── Sonuc Tablosu ─────────────────────
+    pdf.ln(10)
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_text_color(30, 60, 120)
+    pdf.cell(0, 10, "Varyant Sonuclari", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+
+    show_cols = ["Variant_ID", "Prediction", "Calibrated_Risk", "Confidence", "High_Risk"]
+    show_cols = [c for c in show_cols if c in df_result.columns]
+    if not show_cols:
+        show_cols = list(df_result.columns[:5])
+
+    n_cols   = len(show_cols)
+    usable_w = pdf.w - 20
+    col_widths = [usable_w / n_cols] * n_cols
+
+    # Header
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_fill_color(30, 60, 120)
+    pdf.set_text_color(255, 255, 255)
+    for j, col in enumerate(show_cols):
+        pdf.cell(col_widths[j], 7, col, border=1, fill=True,
+                 new_x="RIGHT", new_y="TOP", align="C")
+    pdf.ln()
+
+    # Rows (ilk 50)
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(40, 40, 40)
+    for i, (_, row) in enumerate(df_result[show_cols].head(50).iterrows()):
+        if pdf.get_y() > 270:
+            pdf.add_page()
+            pdf.set_font("Helvetica", "B", 8)
+            pdf.set_fill_color(30, 60, 120)
+            pdf.set_text_color(255, 255, 255)
+            for j, col in enumerate(show_cols):
+                pdf.cell(col_widths[j], 7, col, border=1, fill=True,
+                         new_x="RIGHT", new_y="TOP", align="C")
+            pdf.ln()
+            pdf.set_font("Helvetica", "", 7)
+            pdf.set_text_color(40, 40, 40)
+        fill = i % 2 == 0
+        pdf.set_fill_color(245, 247, 252)
+        for j, col in enumerate(show_cols):
+            val = row[col]
+            txt = f"{val:.2f}" if isinstance(val, float) else str(val)
+            pdf.cell(col_widths[j], 6, txt, border=1, fill=fill,
+                     new_x="RIGHT", new_y="TOP", align="C")
+        pdf.ln()
+
+    # ── Egitim Grafikleri ─────────────────
+    for img_path, title in [
+        ("reports/confusion_matrix.png", "Confusion Matrix (Test Seti)"),
+        ("reports/roc_curve.png",        "ROC Egrisi"),
+        ("reports/pr_curve.png",         "Precision-Recall Egrisi"),
+        ("reports/calibration.png",      "Kalibrasyon Grafigi"),
+    ]:
+        if Path(img_path).exists():
+            pdf.add_page()
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.set_text_color(30, 60, 120)
+            pdf.cell(0, 10, title, new_x="LMARGIN", new_y="NEXT", align="C")
+            pdf.ln(4)
+            pdf.image(img_path, x=15, w=180)
 
     buf = io.BytesIO()
-    with PdfPages(buf) as pdf:
-        # ── Kapak Sayfası ─────────────────────────
-        fig, ax = plt.subplots(figsize=(11, 8.5))
-        ax.set_facecolor('#0a0e1a')
-        fig.patch.set_facecolor('#0a0e1a')
-        ax.axis('off')
-        ax.text(0.5, 0.72, '🧬 VARIANT-GNN', ha='center', va='center',
-                fontsize=32, fontweight='bold', color='#63b3ed', transform=ax.transAxes)
-        ax.text(0.5, 0.60, 'Genetik Varyant Patojenite Analizi\nOtomatik Raporu',
-                ha='center', va='center', fontsize=16, color='#94a3b8',
-                transform=ax.transAxes, linespacing=1.6)
-        total = len(df_result)
-        pathogenic = int((df_result['Prediction'] == 'Pathogenic').sum())
-        benign = total - pathogenic
-        summary = (
-            f"Toplam Varyant: {total}  |  "
-            f"Patojenik: {pathogenic}  |  "
-            f"Benign: {benign}  |  "
-            f"Oran: {100*pathogenic/max(total,1):.1f}%"
-        )
-        ax.text(0.5, 0.44, summary, ha='center', va='center',
-                fontsize=12, color='#cbd5e0', transform=ax.transAxes)
-        from datetime import datetime
-        ax.text(0.5, 0.08,
-                f"TEKNOFEST 2026 | Sağlıkta Yapay Zeka  ·  {datetime.now().strftime('%d.%m.%Y %H:%M')}",
-                ha='center', va='center', fontsize=10, color='#4a5568', transform=ax.transAxes)
-        pdf.savefig(fig, bbox_inches='tight', facecolor='#0a0e1a')
-        plt.close()
-
-        # ── Risk Skoru Histogramı ─────────────────
-        if 'Calibrated_Risk' in df_result.columns:
-            fig, ax = plt.subplots(figsize=(11, 5))
-            ax.set_facecolor('#1a2744')
-            fig.patch.set_facecolor('#1a2744')
-            n, bins, patches = ax.hist(df_result['Calibrated_Risk'], bins=30, edgecolor='none')
-            for patch, left in zip(patches, bins[:-1]):
-                patch.set_facecolor('#68d391' if left < 50 else '#f6ad55' if left < 75 else '#fc8181')
-                patch.set_alpha(0.9)
-            ax.axvline(50, color='#f6ad55', linestyle='--', linewidth=1.2, label='Orta Risk')
-            ax.axvline(75, color='#fc8181', linestyle='--', linewidth=1.2, label='Yüksek Risk')
-            ax.set_xlabel('Kalibre Edilmiş Risk Skoru (%)', color='#94a3b8')
-            ax.set_ylabel('Varyant Sayısı', color='#94a3b8')
-            ax.set_title('Risk Skoru Dağılımı', fontsize=14, fontweight='bold', color='#e2e8f0')
-            ax.tick_params(colors='#94a3b8')
-            ax.legend(facecolor='#1a2744', labelcolor='#94a3b8')
-            for sp in ax.spines.values():
-                sp.set_edgecolor((0.388, 0.702, 0.929, 0.2))
-            pdf.savefig(fig, bbox_inches='tight', facecolor='#1a2744')
-            plt.close()
-
-        # ── Eğitim Metrikleri (varsa) ─────────────
-        for img_path, title in [
-            ('reports/confusion_matrix.png', 'Confusion Matrix (Test Seti)'),
-            ('reports/roc_curve.png',        'ROC Eğrisi'),
-            ('reports/pr_curve.png',         'Precision-Recall Eğrisi'),
-        ]:
-            if Path(img_path).exists():
-                img = plt.imread(img_path)
-                fig, ax = plt.subplots(figsize=(10, 7))
-                ax.imshow(img)
-                ax.axis('off')
-                ax.set_title(title, fontsize=13, fontweight='bold', color='#1a202c', pad=12)
-                pdf.savefig(fig, bbox_inches='tight')
-                plt.close()
-
-        # ── Sonuç Tablosu (ilk 30 satır) ─────────
-        fig, ax = plt.subplots(figsize=(14, min(0.4 * min(30, len(df_result)) + 1.5, 12)))
-        ax.axis('off')
-        show_cols = ['Variant_ID', 'Prediction', 'Calibrated_Risk', 'Confidence', 'High_Risk']
-        show_cols = [c for c in show_cols if c in df_result.columns]
-        table_data = df_result[show_cols].head(30)
-        tbl = ax.table(
-            cellText=table_data.values,
-            colLabels=table_data.columns,
-            cellLoc='center', loc='center',
-        )
-        tbl.auto_set_font_size(True)
-        tbl.scale(1, 1.4)
-        ax.set_title('Analiz Sonuçları (İlk 30 Varyant)', fontsize=13,
-                     fontweight='bold', color='#1a202c', pad=12)
-        pdf.savefig(fig, bbox_inches='tight')
-        plt.close()
-
+    pdf.output(buf)
     buf.seek(0)
     return buf.read()
 
