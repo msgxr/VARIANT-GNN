@@ -85,7 +85,6 @@ class XGBSettings:
             "colsample_bytree": self.colsample_bytree,
             "n_estimators": self.n_estimators,
             "n_jobs": self.n_jobs,
-            "use_label_encoder": False,
             "random_state": 42,
         }
 

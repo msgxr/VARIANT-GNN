@@ -267,7 +267,7 @@ class VariantTrainer:
 
         # --- XGBoost ---
         xgb_model = xgb.XGBClassifier(
-            **cfg.xgb.as_dict(), random_state=cfg.seed
+            **cfg.xgb.as_dict()
         )
         xgb_model.fit(X_proc, y_resampled)
         logger.info("XGBoost fitted: n_features_in=%d", X_proc.shape[1])
@@ -330,7 +330,7 @@ class VariantTrainer:
             X_val_proc           = preprocessor.transform(X_val)
 
             # --- XGBoost ---
-            xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict(), random_state=cfg.seed)
+            xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
             xgb_model.fit(X_tr_proc, y_tr_res)
             xgb_preds   = xgb_model.predict(X_val_proc)
             xgb_f1      = float(f1_score(y_val, xgb_preds, average="macro", zero_division=0))

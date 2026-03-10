@@ -1,0 +1,53 @@
+{
+  "mean_cv_macro_f1": 1.0,
+  "std_cv_macro_f1": 0.0,
+  "folds": [
+    {
+      "fold": 1,
+      "f1": 1.0,
+      "xgb_f1": 0.9984373130574702,
+      "gnn_f1": 1.0,
+      "dnn_f1": 1.0
+    },
+    {
+      "fold": 2,
+      "f1": 1.0,
+      "xgb_f1": 0.9984371909484053,
+      "gnn_f1": 1.0,
+      "dnn_f1": 1.0
+    },
+    {
+      "fold": 3,
+      "f1": 1.0,
+      "xgb_f1": 1.0,
+      "gnn_f1": 1.0,
+      "dnn_f1": 1.0
+    },
+    {
+      "fold": 4,
+      "f1": 1.0,
+      "xgb_f1": 1.0,
+      "gnn_f1": 1.0,
+      "dnn_f1": 1.0
+    },
+    {
+      "fold": 5,
+      "f1": 1.0,
+      "xgb_f1": 0.9984373130574702,
+      "gnn_f1": 1.0,
+      "dnn_f1": 1.0
+    }
+  ],
+  "test_metrics": {
+    "macro_f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "brier_score": 0.0,
+    "ece": 0.0,
+    "mcc": 1.0,
+    "threshold": 0.01
+  },
+  "best_threshold": 0.01
+}
