@@ -641,6 +641,146 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
             with open(html_path) as fh:
                 st.components.v1.html(fh.read(), height=600, scrolling=True)
 
+    # ──────────────────────────────────────────────────────────────
+    # 🏥 KLİNİK KARAR DESTEK ASISTANI
+    # ──────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">🏥</div>
+        <h3>Klinik Karar Destek Asistanı (Otomatik Yorum)</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        from src.explainability.clinical_insight import generate_clinical_insight
+        top_feats = explainer.get_top_features(X_scaled[idx:idx+1], top_n=8)
+        probs_row  = xgb_model.predict_proba(X_scaled[idx:idx+1])[0]
+        prob_val   = float(probs_row[1])
+        risk_val   = prob_val * 100
+        prediction = "Pathogenic" if prob_val >= 0.5 else "Benign"
+        v_id = None
+        if "Variant_ID" in df_features.columns and idx < len(df_features):
+            v_id = str(df_features["Variant_ID"].iloc[idx])
+
+        insight = generate_clinical_insight(
+            risk_score=risk_val,
+            prediction=prediction,
+            top_features=top_feats if top_feats else [],
+            probability=prob_val,
+            variant_id=v_id,
+        )
+
+        # ── Risk rozeti
+        st.markdown(f"""
+        <div style="background:rgba(99,179,237,0.06); border:1px solid rgba(99,179,237,0.2);
+                    border-radius:14px; padding:22px 26px; margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+                <div style="font-size:1.8rem; font-weight:800; color:{insight['zone_color']};">{insight['zone_label']}</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#e2e8f0;">{risk_val:.1f} / 100</div>
+            </div>
+            <div style="color:#cbd5e0; font-size:0.92rem; line-height:1.8;">{insight['summary']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── Kilit bulgular
+        if insight["key_findings"]:
+            st.markdown("#### 🔑 Kilit Biyolojik Bulgular")
+            for fi, finding in enumerate(insight["key_findings"], 1):
+                dir_icon  = "⬆️" if finding["direction"] == "artırdı" else "⬇️"
+                dir_color = "#fc8181" if finding["direction"] == "artırdı" else "#68d391"
+                st.markdown(f"""
+                <div style="background:rgba(26,39,68,0.7); border:1px solid rgba(99,179,237,0.15);
+                            border-left:4px solid {dir_color}; border-radius:10px;
+                            padding:14px 18px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+                        <div style="font-weight:600; color:#e2e8f0; font-size:0.88rem;">
+                            {fi}. <code style="color:#63b3ed;">{finding['feature']}</code>
+                            &nbsp;–&nbsp;<span style="color:#94a3b8;">{finding['group']}</span>
+                        </div>
+                        <div style="font-size:0.78rem; color:{dir_color}; font-weight:600;">
+                            {dir_icon} Riski {finding['direction']} (SHAP: {finding['shap']:.4f})
+                        </div>
+                    </div>
+                    <div style="margin-top:8px; color:#94a3b8; font-size:0.83rem; line-height:1.65;">
+                        {finding['insight']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # ── Klinik öneri
+        st.markdown(f"""
+        <div style="background:rgba(66,153,225,0.08); border:1px solid rgba(66,153,225,0.25);
+                    border-radius:10px; padding:14px 18px; margin-top:8px;">
+            <div style="color:#cbd5e0; font-size:0.87rem; line-height:1.75;">
+                {insight['recommendation']}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    except Exception as exc:
+        st.info(f"ℹ️ Klinik yorum üretilemedi: {exc}")
+
+    # ──────────────────────────────────────────────────────────────
+    # 🧬 GNN ETKİLEŞİM GRAFI
+    # ──────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">🧬</div>
+        <h3>Genetik Etkileşim Grafı (GNN Mimarisi)</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.15);
+                border-radius:10px; padding:12px 16px; margin-bottom:14px;
+                font-size:0.82rem; color:#94a3b8; line-height:1.7;">
+        Bu grafik, <strong style="color:#63b3ed;">Graph Neural Network (GNN)</strong>'in girdi katmanını oluşturan
+        özellik düğümlerini ve korelasyon bağlarını (kenarları) göstermektedir.
+        GNN bu ilişkileri öğrenerek varyantlar arası biyolojik bağlamı modeller.
+        Sağ panelde ise GNN kenar oluşumunun temelini oluşturan korelasyon ısı haritası yer almaktadır.
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_gnn1, col_gnn2 = st.columns(2)
+
+    with col_gnn1:
+        st.markdown("**🕸️ Özellik Etkileşim Ağı**")
+        try:
+            from src.explainability.graph_viz import plot_variant_graph
+            preprocessor = pipeline._preprocessor
+            if hasattr(preprocessor, 'edge_index') and preprocessor.edge_index is not None:
+                fig_gnn = plot_variant_graph(
+                    edge_index=preprocessor.edge_index,
+                    node_features=X_scaled,
+                    feature_names=feature_names,
+                    top_n_nodes=20,
+                    figsize=(8, 6),
+                )
+                if fig_gnn is not None:
+                    st.pyplot(fig_gnn)
+                    plt.close()
+                else:
+                    st.info("networkx kurulu değil. `pip install networkx` ile yükleyin.")
+            else:
+                st.info("Graf bilgisi bulunamadı. Modeli eğitin: `python3 main.py --mode train`")
+        except Exception as exc:
+            st.warning(f"GNN Grafı çizilemedi: {exc}")
+
+    with col_gnn2:
+        st.markdown("**🌡️ Korelasyon Isı Haritası (GNN Kenar Temeli)**")
+        try:
+            from src.explainability.graph_viz import plot_feature_correlation_heatmap
+            fig_heat = plot_feature_correlation_heatmap(
+                node_features=X_scaled,
+                feature_names=feature_names,
+                top_n=20,
+                figsize=(8, 6),
+            )
+            if fig_heat is not None:
+                st.pyplot(fig_heat)
+                plt.close()
+        except Exception as exc:
+            st.warning(f"Korelasyon ısı haritası çizilemedi: {exc}")
 
 def render_results_table(df_result: pd.DataFrame):
     """Renk kodlu sonuç tablosu."""
