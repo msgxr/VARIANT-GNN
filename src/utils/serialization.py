@@ -1,4 +1,4 @@
-"""
+﻿"""
 src/utils/serialization.py
 Secure, forward-compatible model serialisation and deserialisation.
 
@@ -66,6 +66,8 @@ class ModelStore:
     @property
     def _gnn_path(self)          -> Path: return self.model_dir / "gnn_model.pth"
     @property
+    def _gnn_arch_path(self)     -> Path: return self.model_dir / "gnn_arch.json"
+    @property
     def _dnn_path(self)          -> Path: return self.model_dir / "dnn_model.pth"
     @property
     def _autoenc_path(self)      -> Path: return self.model_dir / "autoencoder.pth"
@@ -95,22 +97,33 @@ class ModelStore:
         self._save_ensemble_cfg(ensemble)
         if calibrator is not None:
             self._save_calibrator(calibrator)
-        logger.info("All artefacts saved → %s", self.model_dir)
+        logger.info("All artefacts saved -> %s", self.model_dir)
 
     def _save_xgb(self, model) -> None:
         if model is not None:
             model.save_model(str(self._xgb_path))
-            logger.info("XGBoost → %s", self._xgb_path)
+            logger.info("XGBoost -> %s", self._xgb_path)
 
     def _save_gnn(self, model) -> None:
-        if model is not None:
-            torch.save(model.state_dict(), str(self._gnn_path))
-            logger.info("GNN → %s", self._gnn_path)
+        if model is None:
+            return
+        torch.save(model.state_dict(), str(self._gnn_path))
+        # Save architecture metadata so load_all can reconstruct correctly
+        import json as _json
+        from src.models.gnn import VariantSAGEGNN as _VSGNN
+        arch: dict = {"type": type(model).__name__}
+        if isinstance(model, _VSGNN):
+            arch["numeric_dim"]    = model.input_proj.in_features
+            arch["hidden_dim"]     = model.classifier.in_features
+            arch["use_multimodal"] = bool(model.use_multimodal)
+        with open(self._gnn_arch_path, "w") as _fh:
+            _json.dump(arch, _fh)
+        logger.info("GNN -> %s  (arch=%s)", self._gnn_path, arch["type"])
 
     def _save_dnn(self, model) -> None:
         if model is not None:
             torch.save(model.state_dict(), str(self._dnn_path))
-            logger.info("DNN → %s", self._dnn_path)
+            logger.info("DNN -> %s", self._dnn_path)
 
     def _save_autoencoder(self, preprocessor) -> None:
         if (
@@ -121,11 +134,11 @@ class ModelStore:
             torch.save(
                 preprocessor._autoenc._net.state_dict(), str(self._autoenc_path)
             )
-            logger.info("AutoEncoder → %s", self._autoenc_path)
+            logger.info("AutoEncoder -> %s", self._autoenc_path)
 
     def _save_preprocessor(self, preprocessor) -> None:
         joblib.dump(preprocessor, str(self._preprocessor_path))
-        logger.info("Preprocessor → %s", self._preprocessor_path)
+        logger.info("Preprocessor -> %s", self._preprocessor_path)
 
     def _save_ensemble_cfg(self, ensemble) -> None:
         import json
@@ -135,7 +148,7 @@ class ModelStore:
 
     def _save_calibrator(self, calibrator) -> None:
         joblib.dump(calibrator, str(self._calibrator_path))
-        logger.info("Calibrator → %s", self._calibrator_path)
+        logger.info("Calibrator -> %s", self._calibrator_path)
 
     # ------------------------------------------------------------------
     # Load
@@ -186,17 +199,33 @@ class ModelStore:
 
         n_features = preprocessor.n_output_features
 
-        # --- GNN ---
-        gnn_model = FeatureGNN(
-            in_channels = 1,
-            hidden_dim  = cfg.gnn.hidden_dim,
-            num_classes = 2,
-            use_gat     = cfg.gnn.use_gat,
-        ).to(device)
+        # --- GNN: detect saved architecture (VariantSAGEGNN vs legacy FeatureGNN) ---
+        import json as _json
+        _gnn_arch: dict = {"type": "FeatureGNN"}
+        if self._gnn_arch_path.exists():
+            with open(self._gnn_arch_path) as _fh:
+                _gnn_arch = _json.load(_fh)
+
+        _gnn_type = _gnn_arch.get("type", "FeatureGNN")
+        if _gnn_type == "VariantSAGEGNN":
+            from src.models.gnn import VariantSAGEGNN
+            gnn_model = VariantSAGEGNN(
+                numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
+                hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
+                use_multimodal = _gnn_arch.get("use_multimodal", False),
+            ).to(device)
+        else:
+            gnn_model = FeatureGNN(
+                in_channels = 1,
+                hidden_dim  = cfg.gnn.hidden_dim,
+                num_classes = 2,
+                use_gat     = cfg.gnn.use_gat,
+            ).to(device)
+
         if self._gnn_path.exists():
             gnn_model.load_state_dict(_safe_torch_load(self._gnn_path, device))
             gnn_model.eval()
-            logger.info("GNN ← %s", self._gnn_path)
+            logger.info("GNN ← %s  (type=%s)", self._gnn_path, _gnn_type)
 
         # --- DNN ---
         dnn_model = VariantDNN(

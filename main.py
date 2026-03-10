@@ -108,10 +108,11 @@ def mode_train(args, cfg):
     best_thr, _ = find_best_threshold(y_test, cal_test_proba[:, 1], metric="f1")
     report       = evaluate(y_test, cal_test_proba, threshold=best_thr)
     report.log(prefix="TEST")
-    save_all_plots(report, y_test, raw_test_proba, cfg.paths.reports_dir)
 
     store = ModelStore(cfg.paths.models_dir)
     store.save_all(preprocessor, ensemble, calibrator)
+
+    save_all_plots(report, y_test, raw_test_proba, cfg.paths.reports_dir)
 
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:

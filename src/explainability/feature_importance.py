@@ -1,4 +1,4 @@
-"""
+﻿"""
 src/explainability/feature_importance.py
 Feature Importance analysis for VARIANT-GNN pathogenicity predictions.
 
@@ -232,7 +232,7 @@ class FeatureImportanceAnalyzer:
 
         out = self.reports_dir / filename
         self._merged_scores.to_csv(out, index=False)
-        logger.info("Feature importance CSV saved → %s", out)
+        logger.info("Feature importance CSV saved -> %s", out)
         return out
 
     def export_plot(
@@ -270,7 +270,7 @@ class FeatureImportanceAnalyzer:
         plt.tight_layout()
         plt.savefig(out, dpi=150, bbox_inches="tight")
         plt.close(fig)
-        logger.info("Feature importance plot saved → %s", out)
+        logger.info("Feature importance plot saved -> %s", out)
         return out
 
     def explain_sample(
@@ -315,7 +315,7 @@ class FeatureImportanceAnalyzer:
 
         out = self.reports_dir / f"{fname}.csv"
         df.to_csv(out, index=False)
-        logger.info("Sample explanation saved → %s", out)
+        logger.info("Sample explanation saved -> %s", out)
         return df
 
     # ------------------------------------------------------------------
@@ -333,7 +333,7 @@ class FeatureImportanceAnalyzer:
         device:  Optional[torch.device] = None,
     ) -> Dict[str, Path]:
         """
-        Full pipeline: compute SHAP + GNN gradients → merge → export CSV + plot.
+        Full pipeline: compute SHAP + GNN gradients -> merge -> export CSV + plot.
 
         Returns
         -------

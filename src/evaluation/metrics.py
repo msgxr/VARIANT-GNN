@@ -1,4 +1,4 @@
-"""
+﻿"""
 src/evaluation/metrics.py
 Comprehensive evaluation metrics:
   - Macro F1, Precision, Recall (primary competition metric: Macro F1)
@@ -156,7 +156,7 @@ def find_best_threshold(
             best_score = score
             best_thr   = float(thr)
 
-    logger.info("Best threshold: %.3f → %s=%.4f", best_thr, metric, best_score)
+    logger.info("Best threshold: %.3f -> %s=%.4f", best_thr, metric, best_score)
     return best_thr, float(best_score)
 
 

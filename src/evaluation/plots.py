@@ -51,7 +51,7 @@ def plot_confusion_matrix(
     plt.tight_layout()
     plt.savefig(path, dpi=120)
     plt.close()
-    logger.info("Saved confusion matrix → %s", path)
+    logger.info("Saved confusion matrix -> %s", path)
 
 
 # ---------------------------------------------------------------------------
@@ -61,8 +61,9 @@ def plot_roc_curve(
     output_path: str | Path = "reports/roc_curve.png",
 ) -> None:
     path = _ensure_dir(Path(output_path))
+    from sklearn.metrics import auc as _sk_auc
     fpr, tpr, _ = roc_curve(y_true, y_prob[:, 1])
-    auc_val      = np.trapz(tpr, fpr)
+    auc_val      = _sk_auc(fpr, tpr)
 
     plt.figure(figsize=(6, 5))
     plt.plot(fpr, tpr, label=f"ROC (AUC={auc_val:.3f})", color="steelblue")
@@ -74,7 +75,7 @@ def plot_roc_curve(
     plt.tight_layout()
     plt.savefig(path, dpi=120)
     plt.close()
-    logger.info("Saved ROC curve → %s", path)
+    logger.info("Saved ROC curve -> %s", path)
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +95,7 @@ def plot_pr_curve(
     plt.tight_layout()
     plt.savefig(path, dpi=120)
     plt.close()
-    logger.info("Saved PR curve → %s", path)
+    logger.info("Saved PR curve -> %s", path)
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +137,7 @@ def plot_calibration(
     plt.tight_layout()
     plt.savefig(path, dpi=120)
     plt.close()
-    logger.info("Saved calibration plot → %s", path)
+    logger.info("Saved calibration plot -> %s", path)
 
 
 # ---------------------------------------------------------------------------

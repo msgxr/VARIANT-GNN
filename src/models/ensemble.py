@@ -71,7 +71,7 @@ class HybridEnsemble:
     def __init__(
         self,
         xgb_model:   Optional[xgb.XGBClassifier] = None,
-        gnn_model:   Optional[FeatureGNN]         = None,
+        gnn_model:   Optional[nn.Module]          = None,  # FeatureGNN or VariantSAGEGNN
         dnn_model:   Optional[VariantDNN]         = None,
         weights:     Optional[List[float]]        = None,
         device:      Optional[torch.device]       = None,
@@ -96,19 +96,45 @@ class HybridEnsemble:
     def predict_proba_all(
         self,
         X_scaled:   np.ndarray,
-        gnn_loader: DataLoader,
+        gnn_loader: Optional[DataLoader] = None,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return (xgb_proba, gnn_proba, dnn_proba) each shape (N, C)."""
         if self.xgb is None or self.gnn is None or self.dnn is None:
             raise RuntimeError("All three sub-models must be set before inference.")
 
         xgb_probs = self.xgb.predict_proba(X_scaled)
-        gnn_probs = _gnn_predict_proba(
-            self.gnn.to(self.device), gnn_loader, self.device
-        )
+
+        # Dispatch: VariantSAGEGNN uses its own sample-graph inference
+        from src.models.gnn import VariantSAGEGNN
+        if isinstance(self.gnn, VariantSAGEGNN):
+            gnn_probs = self._sage_predict_proba(X_scaled)
+        else:
+            gnn_probs = _gnn_predict_proba(
+                self.gnn.to(self.device), gnn_loader, self.device
+            )
+
         dnn_probs = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device)
 
         return xgb_probs, gnn_probs, dnn_probs
+
+    def _sage_predict_proba(self, X_scaled: np.ndarray) -> np.ndarray:
+        """
+        Run VariantSAGEGNN inference on the full feature matrix.
+
+        Builds a coordinate-free cosine k-NN sample graph (all N variants as
+        nodes) and returns per-node softmax probabilities of shape [N, 2].
+        """
+        from src.config import get_settings
+        from src.graph.builder import SampleKNNGraphBuilder
+        knn_k = getattr(get_settings().gnn, "knn_k", 5)
+        data  = SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
+        model = self.gnn.to(self.device)
+        model.eval()
+        data  = data.to(self.device)
+        with torch.no_grad():
+            logits = model(data.x, data.edge_index)
+            probs  = F.softmax(logits, dim=1).cpu().numpy()   # [N, 2]
+        return probs
 
     # ------------------------------------------------------------------
     # Ensemble combination
@@ -142,15 +168,22 @@ class HybridEnsemble:
         Two call modes:
           - ``predict(proba)``                     → class-index array (for testing / simple use)
           - ``predict(X_scaled, gnn_loader, thr)`` → (predictions, proba) tuple (inference pipeline)
+
+        When the GNN member is a ``VariantSAGEGNN``, the loader argument is
+        accepted but ignored — SAGE builds its own sample graph from X_scaled.
         """
-        if gnn_loader is None:
+        from src.models.gnn import VariantSAGEGNN
+        is_sage = isinstance(self.gnn, VariantSAGEGNN)
+
+        if gnn_loader is None and not is_sage:
             # Pre-computed (N, 2) probability array supplied directly
             proba = X_scaled_or_proba
             return (proba[:, 1] >= threshold).astype(int)
+
         # Full prediction: collect proba from all sub-models
-        xp, gp, dp    = self.predict_proba_all(X_scaled_or_proba, gnn_loader)
-        proba          = self.combine(xgb_proba=xp, gnn_proba=gp, dnn_proba=dp)
-        preds          = (proba[:, 1] >= threshold).astype(int)
+        xp, gp, dp = self.predict_proba_all(X_scaled_or_proba, gnn_loader)
+        proba       = self.combine(xgb_proba=xp, gnn_proba=gp, dnn_proba=dp)
+        preds       = (proba[:, 1] >= threshold).astype(int)
         return preds, proba
 
     # ------------------------------------------------------------------

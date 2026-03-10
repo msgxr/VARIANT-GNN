@@ -85,9 +85,14 @@ class InferencePipeline:
         X_np     = dataset.features.values
         X_scaled = self._preprocessor.transform(X_np)
 
-        loader   = _build_gnn_loader(
-            self._preprocessor, X_scaled, cfg.training.batch_size
-        )
+        # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
+        from src.models.gnn import VariantSAGEGNN
+        if isinstance(self._ensemble.gnn, VariantSAGEGNN):
+            loader = None
+        else:
+            loader = _build_gnn_loader(
+                self._preprocessor, X_scaled, cfg.training.batch_size
+            )
 
         threshold = cfg.thresholds.classification
         preds, raw_proba = self._ensemble.predict(X_scaled, loader, threshold)
