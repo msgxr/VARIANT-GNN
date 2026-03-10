@@ -2,8 +2,9 @@
 tests/unit/test_config.py
 Unit tests for the configuration loader.
 """
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 class TestSettings:

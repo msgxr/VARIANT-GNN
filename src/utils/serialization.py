@@ -30,7 +30,7 @@ def _safe_torch_load(path: Path, device: torch.device) -> dict:
     except TypeError:
         # PyTorch < 2.0 does not support weights_only
         logger.warning("weights_only not supported; falling back to legacy load.")
-        return torch.load(str(path), map_location=device)
+        return torch.load(str(path), map_location=device)  # nosec B614
 
 
 def _sha256(path: Path) -> str:
@@ -149,12 +149,11 @@ class ModelStore:
         -------
         (preprocessor, ensemble, calibrator)  where calibrator may be None.
         """
-        from src.features.preprocessing import VariantPreprocessor
-        from src.models.gnn      import FeatureGNN
-        from src.models.dnn      import VariantDNN
-        from src.models.ensemble import HybridEnsemble
-        from src.calibration.calibrator import EnsembleCalibrator
         from src.config import get_settings
+        from src.features.preprocessing import VariantPreprocessor
+        from src.models.dnn import VariantDNN
+        from src.models.ensemble import HybridEnsemble
+        from src.models.gnn import FeatureGNN
 
         cfg    = get_settings()
         device = torch.device(

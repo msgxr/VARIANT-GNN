@@ -1,4 +1,4 @@
-from .builder import GraphBuilder, CorrelationGraphBuilder, KNNGraphBuilder, get_graph_builder
+from .builder import CorrelationGraphBuilder, GraphBuilder, KNNGraphBuilder, get_graph_builder
 
 __all__ = [
     "GraphBuilder",

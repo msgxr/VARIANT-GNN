@@ -10,12 +10,12 @@ import logging
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-import torch
 
 from src.config import get_settings
 from src.inference.pipeline import InferencePipeline
@@ -134,7 +134,6 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict) -> None:
     if not (opts["show_shap"] or opts["show_waterfall"] or opts["show_lime"]):
         return
 
-    cfg = get_settings()
     try:
         X_scaled = pipeline._preprocessor.transform(df_features.values)
     except Exception as exc:

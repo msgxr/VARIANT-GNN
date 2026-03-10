@@ -1,6 +1,4 @@
 # src/data/schema.py
-from pydantic import BaseModel, validator, Field
-from typing import Optional
 import pandas as pd
 
 REQUIRED_COLUMNS = [

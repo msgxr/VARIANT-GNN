@@ -8,14 +8,13 @@ import numpy as np
 import pytest
 import torch
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 def _make_pyg_batch(n_nodes: int = 8, n_samples: int = 4, in_channels: int = 1):
     """Return a simple PyG Data batch suitable for FeatureGNN forward pass."""
-    from torch_geometric.data import Data, Batch
+    from torch_geometric.data import Batch, Data
 
     graphs = []
     for _ in range(n_samples):
@@ -74,7 +73,7 @@ class TestFeatureGNN:
         model = FeatureGNN(in_channels=1, hidden_dim=32, num_classes=2, dropout=0.9)
         batch = _make_pyg_batch(n_nodes=8, n_samples=10)
         model.train()
-        out_train = model(batch).detach()
+        model(batch)  # exercise training mode
         model.eval()
         out_eval  = model(batch).detach()
         # Eval output should be deterministic across two runs

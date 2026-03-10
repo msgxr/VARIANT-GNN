@@ -14,24 +14,25 @@ from __future__ import annotations
 import copy
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import xgboost as xgb
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from torch.utils.data import DataLoader as TorchDataLoader, TensorDataset
+from torch.utils.data import DataLoader as TorchDataLoader
+from torch.utils.data import TensorDataset
 from torch_geometric.loader import DataLoader as GeoDataLoader
 
 from src.config import get_settings
 from src.features.preprocessing import VariantPreprocessor, build_preprocessor_from_config
-from src.models.gnn import FeatureGNN
 from src.models.dnn import VariantDNN
 from src.models.ensemble import HybridEnsemble
+from src.models.gnn import FeatureGNN
 from src.utils.seeds import set_global_seed
-import xgboost as xgb
 
 logger = logging.getLogger(__name__)
 

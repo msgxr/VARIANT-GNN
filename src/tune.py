@@ -1,10 +1,11 @@
+import logging
+
+import numpy as np
 import optuna
 import xgboost as xgb
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
-import numpy as np
+from sklearn.model_selection import StratifiedKFold
 
-import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class ModelTuner:

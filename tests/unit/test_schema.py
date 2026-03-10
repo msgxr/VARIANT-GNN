@@ -2,8 +2,8 @@
 tests/unit/test_schema.py
 Unit tests for the Pydantic schema validation layer.
 """
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
 
 from data_contracts.variant_schema import validate_dataset

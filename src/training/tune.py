@@ -10,9 +10,9 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import optuna
+import xgboost as xgb
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-import xgboost as xgb
 
 from src.config import get_settings
 from src.features.preprocessing import build_preprocessor_from_config

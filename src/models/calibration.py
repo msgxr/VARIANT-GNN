@@ -1,7 +1,8 @@
 # src/models/calibration.py
-from sklearn.calibration import CalibratedClassifierCV, calibration_curve
-from sklearn.metrics import brier_score_loss
 import numpy as np
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import brier_score_loss
+
 
 class EnsembleCalibrator:
     def __init__(self, method='isotonic'):

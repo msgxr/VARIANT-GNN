@@ -18,9 +18,9 @@ from scipy.optimize import minimize
 from sklearn.metrics import f1_score
 from torch_geometric.loader import DataLoader
 
-from src.models.gnn import FeatureGNN
-from src.models.dnn import VariantDNN
 from src.config import get_settings
+from src.models.dnn import VariantDNN
+from src.models.gnn import FeatureGNN
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +163,6 @@ class HybridEnsemble:
             return -f1_score(y_val, preds, average="macro", zero_division=0)
 
         x0     = np.array(self.weights)
-        bounds = [(0.0, 1.0)] * 3
         result = minimize(neg_f1, x0, method="Nelder-Mead")
         w_opt  = result.x / result.x.sum()
         self.weights = w_opt.tolist()

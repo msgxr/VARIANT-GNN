@@ -1,8 +1,9 @@
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, confusion_matrix
-import numpy as np
+import warnings
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-import warnings
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
+
 warnings.filterwarnings('ignore')
 
 def evaluate_predictions(y_true, y_pred, y_prob=None):
@@ -24,7 +25,7 @@ def evaluate_predictions(y_true, y_pred, y_prob=None):
         except Exception:
             pass
 
-    print(f"--- FİNAL DEĞERLENDİRME METRİKLERİ ---")
+    print("--- FİNAL DEĞERLENDİRME METRİKLERİ ---")
     print(f"[ANA METRİK] F1 Score (Macro)  : {f1:.4f}")
     print(f"[YARDIMCI ]  Precision (Macro) : {prec:.4f}")
     print(f"[YARDIMCI ]  Recall (Macro)    : {rec:.4f}")

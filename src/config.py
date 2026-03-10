@@ -1,5 +1,6 @@
 import os
 
+
 class Config:
     """Merkezi Konfigürasyon Yönetim Dosyası"""
     

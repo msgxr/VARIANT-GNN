@@ -1,9 +1,10 @@
-import torch
+import warnings
+
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv, global_mean_pool, GATConv
 import xgboost as xgb
-import warnings
+from torch_geometric.nn import GATConv, GCNConv, global_mean_pool
+
 warnings.filterwarnings("ignore")
 
 class FeatureGNN(nn.Module):

@@ -5,13 +5,11 @@ exposes a frozen Settings dataclass.
 """
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
-
 
 _BASE_DIR = Path(__file__).resolve().parents[2]
 _DEFAULT_CONFIG = _BASE_DIR / "configs" / "default.yaml"

@@ -6,12 +6,11 @@ and target labels (when present) are in a known set.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator, model_validator
-
+from pydantic import BaseModel, Field, field_validator
 
 # ---------------------------------------------------------------------------
 # Row-level model (used for single-sample validation)

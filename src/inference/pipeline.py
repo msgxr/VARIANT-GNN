@@ -20,7 +20,6 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-import torch
 from torch_geometric.loader import DataLoader as GeoDataLoader
 
 from src.calibration.calibrator import EnsembleCalibrator
@@ -82,7 +81,6 @@ class InferencePipeline:
             raise RuntimeError("Call .load() before predict_from_dataset().")
 
         cfg       = self.cfg
-        device    = self._ensemble.device
 
         X_np     = dataset.features.values
         X_scaled = self._preprocessor.transform(X_np)

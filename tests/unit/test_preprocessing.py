@@ -66,8 +66,9 @@ class TestVariantPreprocessor:
         assert pre.edge_index is not None
 
     def test_row_to_graph(self):
-        from src.features.preprocessing import VariantPreprocessor
         import torch
+
+        from src.features.preprocessing import VariantPreprocessor
         X, y = _make_xy(n=50, f=6)
         pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False)
         pre.fit_resample_train(X, y)

@@ -12,8 +12,8 @@ Comprehensive evaluation metrics:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import (
@@ -22,7 +22,6 @@ from sklearn.metrics import (
     confusion_matrix,
     f1_score,
     matthews_corrcoef,
-    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,

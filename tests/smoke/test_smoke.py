@@ -6,8 +6,8 @@ These should pass even without any trained models on disk.
 from __future__ import annotations
 
 import importlib
-import pytest
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Import checks
@@ -98,6 +98,7 @@ class TestSmokeModels:
 
     def test_trainer_instantiates(self):
         import torch
+
         from src.training.trainer import VariantTrainer
         trainer = VariantTrainer(device=torch.device("cpu"))
         assert trainer is not None
@@ -111,6 +112,7 @@ class TestSmokeSchema:
     def test_validate_minimal_dataframe(self):
         import numpy as np
         import pandas as pd
+
         from data_contracts.variant_schema import validate_dataset
 
         df = pd.DataFrame({
@@ -120,7 +122,7 @@ class TestSmokeSchema:
             "Label":      [0, 1, 0, 1],
         })
         result = validate_dataset(df)
-        assert result.valid, f"Smoke schema failed: {result.errors}"
+        assert result.is_valid, f"Smoke schema failed: {result.errors}"
 
 
 # ---------------------------------------------------------------------------
@@ -137,7 +139,7 @@ class TestSmokeUtils:
         set_global_seed(42)
 
     def test_evaluation_metrics_importable(self):
-        from src.evaluation.metrics import evaluate, find_best_threshold, expected_calibration_error
+        from src.evaluation.metrics import evaluate, expected_calibration_error, find_best_threshold
         assert callable(evaluate)
         assert callable(find_best_threshold)
         assert callable(expected_calibration_error)

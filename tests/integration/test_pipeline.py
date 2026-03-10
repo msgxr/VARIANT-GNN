@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Shared fixture
 # ---------------------------------------------------------------------------
@@ -150,7 +149,7 @@ class TestSchemaLoaderIntegration:
         synthetic_dataset.to_csv(csv_path, index=False)
 
         result = validate_dataset(synthetic_dataset)
-        assert result.valid, f"Expected valid, got errors: {result.errors}"
+        assert result.is_valid, f"Expected valid, got errors: {result.errors}"
 
         loaded = load_csv(str(csv_path))
         assert loaded.labels is not None

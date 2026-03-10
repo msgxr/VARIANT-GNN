@@ -2,21 +2,19 @@
 VARIANT-GNN — Kapsamlı Unit Testleri
 Çalıştırmak için: pytest tests/ -v
 """
-import pytest
-import numpy as np
-import pandas as pd
 import os
 import sys
+
+import numpy as np
+import pandas as pd
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.config import Config
-from src.data_processing import (
-    generate_dummy_data, TabularGraphPreprocessor, TabularAutoEncoder,
-    load_and_prepare_data
-)
+from src.data_processing import TabularAutoEncoder, TabularGraphPreprocessor, generate_dummy_data, load_and_prepare_data
 from src.models import FeatureGNN, VariantDNN, VariantHybridModel
 from src.utils import ModelSerializer
-
 
 # ─────────────────────────────────────────────────────────────
 # Config Testleri

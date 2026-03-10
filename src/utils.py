@@ -1,8 +1,12 @@
-import torch
-import joblib
 import logging
 import os
+import sys
+
+import joblib
+import torch
+
 from .config import Config
+
 
 class ModelSerializer:
     """Araçların seri hale getirilip (kayıt) geri yüklenmesi içindir."""
@@ -49,14 +53,14 @@ class ModelSerializer:
         # GNN Yükleme
         if hybrid_model.gnn is not None and os.path.exists(Config.GNN_MODEL_PATH):
             device = next(hybrid_model.gnn.parameters()).device
-            state_dict = torch.load(Config.GNN_MODEL_PATH, map_location=device)
+            state_dict = torch.load(Config.GNN_MODEL_PATH, map_location=device, weights_only=True)
             hybrid_model.gnn.load_state_dict(state_dict)
             logging.info(f"  GNN yüklendi ← {Config.GNN_MODEL_PATH}")
 
         # DNN Yükleme
         if hybrid_model.dnn is not None and os.path.exists(Config.DNN_MODEL_PATH):
             device = next(hybrid_model.dnn.parameters()).device
-            state_dict = torch.load(Config.DNN_MODEL_PATH, map_location=device)
+            state_dict = torch.load(Config.DNN_MODEL_PATH, map_location=device, weights_only=True)
             hybrid_model.dnn.load_state_dict(state_dict)
             logging.info(f"  DNN yüklendi ← {Config.DNN_MODEL_PATH}")
 
@@ -67,10 +71,9 @@ class ModelSerializer:
         if (hasattr(preprocessor, 'autoencoder') and
                 preprocessor.autoencoder is not None and
                 os.path.exists(Config.AUTOENCODER_PATH)):
-            from .config import Config as Cfg
             device_str = getattr(preprocessor, 'device', 'cpu')
             preprocessor.autoencoder.load_state_dict(
-                torch.load(Config.AUTOENCODER_PATH, map_location=device_str)
+                torch.load(Config.AUTOENCODER_PATH, map_location=device_str, weights_only=True)
             )
             preprocessor.autoencoder.eval()
             logging.info(f"  AutoEncoder yüklendi ← {Config.AUTOENCODER_PATH}")
@@ -78,7 +81,6 @@ class ModelSerializer:
         logging.info("✅ Tüm modeller başarıyla yüklendi.")
         return preprocessor
 
-import sys
 
 def setup_logging(level=logging.INFO, log_file=None):
     handlers = [logging.StreamHandler(sys.stdout)]

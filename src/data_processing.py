@@ -1,18 +1,21 @@
-import pandas as pd
+import logging
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader as TorchDataLoader, TensorDataset
-from sklearn.preprocessing import RobustScaler
-from sklearn.impute import SimpleImputer
-from sklearn.decomposition import PCA
-from sklearn.feature_selection import VarianceThreshold, SelectKBest, mutual_info_classif
-from torch_geometric.data import Data
-import logging
 from imblearn.over_sampling import SMOTE
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc, precision_recall_curve
-import os
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, mutual_info_classif
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import auc, precision_recall_curve, roc_curve
+from sklearn.preprocessing import RobustScaler
+from torch.utils.data import DataLoader as TorchDataLoader
+from torch.utils.data import TensorDataset
+from torch_geometric.data import Data
+
 
 class TabularAutoEncoder(nn.Module):
     """

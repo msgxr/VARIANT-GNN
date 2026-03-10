@@ -1,13 +1,16 @@
+import copy
+import logging
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import logging
-from torch_geometric.loader import DataLoader
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
-import copy
-from .models import FeatureGNN, VariantHybridModel, VariantDNN
+from sklearn.model_selection import StratifiedKFold
+from torch_geometric.loader import DataLoader
+
+from .models import FeatureGNN
+
 
 def train_gnn_epoch(model, loader, optimizer, device):
     """

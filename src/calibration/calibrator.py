@@ -14,7 +14,7 @@ Usage pattern:
 from __future__ import annotations
 
 import logging
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from sklearn.calibration import calibration_curve

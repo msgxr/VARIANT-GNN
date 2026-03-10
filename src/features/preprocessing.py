@@ -10,19 +10,18 @@ Graph edge information is derived from training-fold correlation only.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
-import pandas as pd
+import torch
 from imblearn.over_sampling import SMOTE
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, mutual_info_classif
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import RobustScaler
-import torch
 
-from src.features.autoencoder import AutoEncoderTransformer
 from src.config import get_settings
+from src.features.autoencoder import AutoEncoderTransformer
 
 logger = logging.getLogger(__name__)
 
