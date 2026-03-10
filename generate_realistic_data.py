@@ -21,8 +21,8 @@ np.random.seed(42)
 # ─────────────────────────────────────────────────────────────
 # Parametreler
 # ─────────────────────────────────────────────────────────────
-N_PATHOGENIC = 2500   # Patojenik varyant sayısı
-N_BENIGN     = 2500   # Benign varyant sayısı
+N_PATHOGENIC = 5000   # Patojenik varyant sayısı
+N_BENIGN     = 5000   # Benign varyant sayısı
 OUTPUT_DIR   = "data"
 TRAIN_FILE   = os.path.join(OUTPUT_DIR, "train_variants.csv")
 TEST_FILE    = os.path.join(OUTPUT_DIR, "test_variants.csv")
