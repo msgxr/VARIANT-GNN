@@ -8,6 +8,13 @@ Key guarantees:
   - Graph topology is computed from training-fold correlation.
   - Model selection metric: Macro F1 (consistent with reporting metric).
   - Deterministic seeds applied at every fold.
+
+TEKNOFEST 2026 additions:
+  - WeightedBCELoss: dynamically computes class weights from training
+    distribution to handle Pathogenic / Benign imbalance.
+  - VariantSAGEGNN training via _train_sage(): full-batch node classification
+    on a coordinate-free cosine k-NN sample graph.
+  - Early stopping driven by Validation Macro F1 (not accuracy).
 """
 from __future__ import annotations
 
@@ -31,16 +38,110 @@ from src.config import get_settings
 from src.features.preprocessing import VariantPreprocessor, build_preprocessor_from_config
 from src.models.dnn import VariantDNN
 from src.models.ensemble import HybridEnsemble
-from src.models.gnn import FeatureGNN
+from src.models.gnn import FeatureGNN, VariantSAGEGNN
 from src.utils.seeds import set_global_seed
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Small helpers
+# WeightedBCELoss — Module 4
 # ---------------------------------------------------------------------------
 
+class WeightedBCELoss(nn.Module):
+    """
+    Weighted binary cross-entropy for 2-class pathogenicity prediction.
+
+    Dynamically computes per-class weights from the label distribution so
+    that the minority class (often Pathogenic) receives proportionally
+    higher loss signal.
+
+    Formula per class c:
+        weight[c] = N_total / (N_classes * count[c])
+
+    This is equivalent to sklearn's ``compute_class_weight('balanced', ...)``.
+    """
+
+    def __init__(self, class_weights: torch.Tensor) -> None:
+        super().__init__()
+        self.register_buffer("weight", class_weights)   # [num_classes]
+
+    @staticmethod
+    def from_labels(y: np.ndarray, num_classes: int = 2) -> "WeightedBCELoss":
+        """Factory: compute balanced weights from a label array."""
+        counts  = np.bincount(y, minlength=num_classes).astype(float)
+        weights = len(y) / (num_classes * counts)
+        return WeightedBCELoss(torch.tensor(weights, dtype=torch.float))
+
+    def forward(
+        self, logits: torch.Tensor, targets: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Parameters
+        ----------
+        logits  : [N, num_classes] raw model output.
+        targets : [N] integer class indices.
+        """
+        return F.cross_entropy(logits, targets, weight=self.weight)
+
+
+def _compute_class_weights(y: np.ndarray) -> torch.Tensor:
+    """Return balanced class weight tensor from label array."""
+    counts  = np.bincount(y, minlength=2).astype(float)
+    weights = len(y) / (2.0 * counts)
+    return torch.tensor(weights, dtype=torch.float)
+
+
+# ---------------------------------------------------------------------------
+# SAGE training helpers — Module 3 & 4
+# ---------------------------------------------------------------------------
+
+def _build_sample_graph(
+    preprocessor: VariantPreprocessor,
+    X: np.ndarray,
+    y: Optional[np.ndarray],
+    knn_k: int = 5,
+):
+    """Build a cosine kNN sample graph; returns a single PyG Data object."""
+    return preprocessor.build_sample_graph(X, y, k=knn_k)
+
+
+def _sage_epoch(
+    model: VariantSAGEGNN,
+    data,
+    optimizer: torch.optim.Optimizer,
+    criterion: WeightedBCELoss,
+    device: torch.device,
+) -> float:
+    """One full-batch training step on the sample graph."""
+    model.train()
+    data = data.to(device)
+    optimizer.zero_grad()
+    logits = model(data.x, data.edge_index)
+    loss   = criterion(logits, data.y)
+    loss.backward()
+    optimizer.step()
+    return loss.item()
+
+
+def _sage_eval(
+    model: VariantSAGEGNN,
+    data,
+    device: torch.device,
+) -> Tuple[List[int], np.ndarray]:
+    """Return (preds, probs) for all nodes in a sample graph."""
+    model.eval()
+    data = data.to(device)
+    with torch.no_grad():
+        logits = model(data.x, data.edge_index)
+        probs  = F.softmax(logits, dim=1).cpu().numpy()
+        preds  = logits.argmax(dim=1).cpu().tolist()
+    return preds, probs
+
+
+# ---------------------------------------------------------------------------
+# Legacy feature-graph helpers (FeatureGNN / CorrelationGraph path)
+# ---------------------------------------------------------------------------
 
 def _make_geo_loader(
     preprocessor: VariantPreprocessor,
@@ -272,19 +373,20 @@ class VariantTrainer:
         xgb_model.fit(X_proc, y_resampled)
         logger.info("XGBoost fitted: n_features_in=%d", X_proc.shape[1])
 
-        # --- GNN ---
-        n_features = X_proc.shape[1]
-        gnn_model  = FeatureGNN(
-            in_channels = 1,
+        # --- GNN (VariantSAGEGNN — coordinate-free cosine kNN graph) ---
+        knn_k     = getattr(cfg.gnn, "knn_k", 5)
+        patience  = getattr(cfg.gnn, "early_stopping_patience", 5)
+        gnn_model = VariantSAGEGNN(
+            numeric_dim = X_proc.shape[1],
             hidden_dim  = cfg.gnn.hidden_dim,
             num_classes = 2,
-            use_gat     = cfg.gnn.use_gat,
         ).to(self.device)
-
-        train_loader = _make_geo_loader(
-            preprocessor, X_proc, y_resampled, cfg.training.batch_size, shuffle=True
+        gnn_model = self._train_sage(
+            gnn_model, preprocessor,
+            X_proc, y_resampled,
+            X_val=None, y_val=None,
+            knn_k=knn_k, patience=patience,
         )
-        gnn_model = self._train_gnn(gnn_model, train_loader, val_loader=None)
 
         # --- DNN ---
         dnn_model = VariantDNN(
@@ -335,18 +437,25 @@ class VariantTrainer:
             xgb_preds   = xgb_model.predict(X_val_proc)
             xgb_f1      = float(f1_score(y_val, xgb_preds, average="macro", zero_division=0))
 
-            # --- GNN ---
-            gnn_model    = FeatureGNN(1, cfg.gnn.hidden_dim, 2, cfg.gnn.use_gat).to(self.device)
-            train_loader = _make_geo_loader(
-                preprocessor, X_tr_proc, y_tr_res, cfg.training.batch_size, shuffle=True
+            # --- GNN (VariantSAGEGNN — coordinate-free cosine kNN graph) ---
+            knn_k    = getattr(cfg.gnn, "knn_k", 5)
+            patience = getattr(cfg.gnn, "early_stopping_patience", 5)
+            sage_model = VariantSAGEGNN(
+                numeric_dim = X_tr_proc.shape[1],
+                hidden_dim  = cfg.gnn.hidden_dim,
+                num_classes = 2,
+            ).to(self.device)
+            sage_model = self._train_sage(
+                sage_model, preprocessor,
+                X_tr_proc, y_tr_res,
+                X_val_proc, y_val,
+                knn_k=knn_k, patience=patience,
             )
-            val_loader   = _make_geo_loader(
-                preprocessor, X_val_proc, y_val, cfg.training.batch_size, shuffle=False
-            )
-            gnn_model    = self._train_gnn(gnn_model, train_loader, val_loader)
-            gnn_preds, _ = _gnn_eval(gnn_model, val_loader, self.device)
-            gnn_f1       = float(f1_score(y_val, gnn_preds[:len(y_val)],
-                                          average="macro", zero_division=0))
+            # Evaluate SAGE on validation graph
+            val_graph = _build_sample_graph(preprocessor, X_val_proc, y_val, knn_k)
+            gnn_preds, gnn_probs_fold = _sage_eval(sage_model, val_graph, self.device)
+            gnn_f1 = float(f1_score(y_val, gnn_preds[:len(y_val)],
+                                    average="macro", zero_division=0))
 
             # --- DNN ---
             dnn_model     = VariantDNN(X_tr_proc.shape[1], cfg.dnn.hidden_dim, 2).to(self.device)
@@ -358,9 +467,9 @@ class VariantTrainer:
                                            average="macro", zero_division=0))
 
             # --- Ensemble ---
-            w = cfg.ensemble.weights
+            w         = cfg.ensemble.weights
             xgb_probs = xgb_model.predict_proba(X_val_proc)
-            gnn_probs = np.array(_gnn_eval(gnn_model, val_loader, self.device)[1])
+            gnn_probs = np.array(gnn_probs_fold)
             dnn_probs = np.array(_dnn_eval(dnn_model, dnn_val_loader, self.device)[1])
             ens_probs = w[0] * xgb_probs + w[1] * gnn_probs + w[2] * dnn_probs
             ens_preds = np.argmax(ens_probs, axis=1)
@@ -375,7 +484,106 @@ class VariantTrainer:
         return results
 
     # ------------------------------------------------------------------
-    # GNN training loop
+    # VariantSAGEGNN training loop — Module 3 & 4
+    # ------------------------------------------------------------------
+
+    def _train_sage(
+        self,
+        model:       VariantSAGEGNN,
+        preprocessor: VariantPreprocessor,
+        X_tr:        np.ndarray,
+        y_tr:        np.ndarray,
+        X_val:       Optional[np.ndarray],
+        y_val:       Optional[np.ndarray],
+        knn_k:       int = 5,
+        patience:    int = 5,
+    ) -> VariantSAGEGNN:
+        """
+        Full-batch node-classification training on a cosine k-NN sample graph.
+
+        Loss function:  WeightedBCELoss (class-balanced cross-entropy).
+        Early stopping: monitored on Validation Macro F1.  Restores best
+                        checkpoint when validation F1 stops improving.
+
+        Parameters
+        ----------
+        model        : Uninitialised VariantSAGEGNN.
+        preprocessor : Fitted VariantPreprocessor (for kNN graph builder).
+        X_tr / y_tr  : Training features and labels.
+        X_val / y_val: Validation features and labels (None → no early stop).
+        knn_k        : k for k-NN graph construction.
+        patience     : Early-stopping patience (epochs without improvement).
+        """
+        cfg = self.cfg
+
+        # Dynamically compute class weights from training distribution
+        criterion = WeightedBCELoss.from_labels(y_tr).to(self.device)
+        logger.info(
+            "WeightedBCELoss class_weights: %s",
+            criterion.weight.tolist(),
+        )
+
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr           = cfg.gnn.lr,
+            weight_decay = cfg.gnn.weight_decay,
+        )
+
+        # Build full-batch training graph (coordinate-free, cosine kNN)
+        train_graph = _build_sample_graph(preprocessor, X_tr, y_tr, knn_k)
+
+        val_graph: Optional[object] = None
+        if X_val is not None and y_val is not None:
+            val_graph = _build_sample_graph(preprocessor, X_val, y_val, knn_k)
+
+        best_val_f1   = -1.0
+        best_weights  = copy.deepcopy(model.state_dict())
+        patience_cnt  = 0
+
+        for epoch in range(1, cfg.gnn.epochs + 1):
+            loss = _sage_epoch(model, train_graph, optimizer, criterion, self.device)
+
+            if val_graph is not None:
+                preds, _ = _sage_eval(model, val_graph, self.device)
+                val_f1   = float(f1_score(
+                    y_val, preds[:len(y_val)], average="macro", zero_division=0
+                ))
+
+                if val_f1 > best_val_f1:
+                    best_val_f1  = val_f1
+                    best_weights = copy.deepcopy(model.state_dict())
+                    patience_cnt = 0
+                else:
+                    patience_cnt += 1
+
+                if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
+                    logger.debug(
+                        "SAGE epoch %d/%d | loss=%.4f | val_macro_f1=%.4f "
+                        "(patience %d/%d)",
+                        epoch, cfg.gnn.epochs, loss, val_f1,
+                        patience_cnt, patience,
+                    )
+
+                if patience > 0 and patience_cnt >= patience:
+                    logger.info(
+                        "Early stopping triggered at epoch %d "
+                        "(best val Macro F1 = %.4f)", epoch, best_val_f1,
+                    )
+                    break
+            else:
+                if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
+                    logger.debug(
+                        "SAGE epoch %d/%d | loss=%.4f", epoch, cfg.gnn.epochs, loss
+                    )
+
+        if val_graph is not None:
+            model.load_state_dict(best_weights)
+            logger.info("SAGE restored best checkpoint (val Macro F1 = %.4f)", best_val_f1)
+
+        return model
+
+    # ------------------------------------------------------------------
+    # GNN training loop (legacy FeatureGNN path)
     # ------------------------------------------------------------------
 
     def _train_gnn(

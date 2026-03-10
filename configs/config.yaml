@@ -33,11 +33,12 @@ preprocessing:
 
 gnn:
   hidden_dim: 64
-  epochs: 20
+  epochs: 30
   learning_rate: 0.005
   weight_decay: 1.0e-4
-  use_gat: false               # false=GCN, true=GAT
-  early_stopping_patience: 5  # 0 ise early stopping kapalı
+  use_gat: false               # false=SAGEConv (varsayılan), true=GAT (legacy)
+  knn_k: 5                     # Koordinatsız cosine k-NN graf — k komşu sayısı
+  early_stopping_patience: 7   # Validation Macro F1 erken durdurma
   model_selection_metric: "f1_macro"  # "accuracy" DEĞİL
 
 xgboost:

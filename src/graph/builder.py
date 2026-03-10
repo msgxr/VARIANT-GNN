@@ -2,11 +2,14 @@
 src/graph/builder.py
 Pluggable graph construction layer.
 
-Two strategies:
-  - CorrelationGraphBuilder : Feature-interaction graph based on Pearson correlation.
-  - KNNGraphBuilder         : k-nearest-neighbour sample graph (alternative).
+Strategies:
+  - CorrelationGraphBuilder : Feature-interaction graph (features as nodes).
+  - KNNGraphBuilder         : Legacy k-NN sample graph via sklearn.
+  - SampleKNNGraphBuilder   : TEKNOFEST 2026 — coordinate-free, cosine-similarity
+                             k-NN graph where each VARIANT is a node.
+                             Uses torch_geometric.nn.knn_graph with cosine=True.
 
-Both implement the ``GraphBuilder`` protocol so they can be swapped in config.
+All builders implement the ``GraphBuilder`` protocol so they can be swapped.
 """
 from __future__ import annotations
 
@@ -194,11 +197,149 @@ def get_graph_builder(strategy: str = "correlation", **kwargs) -> GraphBuilder:
 
     Supported strategies:
         - ``"correlation"`` (default): feature-correlation graph.
-        - ``"knn"``                  : sample k-NN graph.
+        - ``"knn"``                  : legacy sample k-NN graph.
+        - ``"sample_knn"``           : TEKNOFEST 2026 coordinate-free cosine kNN.
     """
     strategy = strategy.lower()
     if strategy == "correlation":
         return CorrelationGraphBuilder(**kwargs)
     if strategy == "knn":
         return KNNGraphBuilder(**kwargs)
+    if strategy == "sample_knn":
+        return SampleKNNGraphBuilder(**kwargs)
     raise ValueError(f"Unknown graph strategy: {strategy!r}")
+
+
+# ---------------------------------------------------------------------------
+# SampleKNNGraphBuilder — TEKNOFEST 2026 primary builder
+# ---------------------------------------------------------------------------
+
+
+class SampleKNNGraphBuilder:
+    """
+    Coordinate-free, feature-similarity k-NN graph builder.
+
+    Per TEKNOFEST 2026 spec, chromosome/position identifiers are hidden to
+    prevent label leakage.  This builder connects variants purely based on
+    their biochemical/evolutionary feature similarity using cosine distance.
+
+    Each VARIANT becomes a node whose feature vector is the full numeric
+    feature vector after preprocessing.  torch_geometric.nn.knn_graph is
+    used to connect each node to its k=5 nearest neighbours in feature space.
+
+    Typical usage
+    -------------
+    >>> builder = SampleKNNGraphBuilder(k=5)
+    >>> data = builder.build(X_scaled, y)   # train graph
+    >>> test_data = builder.build(X_test)   # inference — fully inductive
+    """
+
+    def __init__(self, k: int = 5) -> None:
+        self.k = k
+
+    # ------------------------------------------------------------------
+    def build(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+    ) -> Data:
+        """
+        Build a PyG ``Data`` object where every sample is a node.
+
+        Parameters
+        ----------
+        X : [N_samples, N_features] scaled feature matrix.
+        y : Optional integer label array of length N_samples.
+
+        Returns
+        -------
+        PyG Data with:
+          - ``x``          : [N, N_features] node feature matrix
+          - ``edge_index`` : [2, E] kNN edges built with cosine similarity
+          - ``edge_attr``  : [E] cosine similarities for each edge
+          - ``y``          : [N] or None
+        """
+        N = X.shape[0]
+        x_tensor = torch.tensor(X, dtype=torch.float)
+        k_actual  = min(self.k, N - 1)
+
+        edge_index, cos_sim = self._knn_cosine(x_tensor, k_actual)
+
+        y_tensor: Optional[torch.Tensor] = None
+        if y is not None:
+            y_tensor = torch.tensor(y, dtype=torch.long)
+
+        logger.info(
+            "SampleKNNGraph: %d nodes, k=%d, %d edges (cosine similarity)",
+            N, k_actual, edge_index.shape[1],
+        )
+
+        return Data(
+            x          = x_tensor,
+            edge_index = edge_index,
+            edge_attr  = cos_sim,
+            y          = y_tensor,
+        )
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _knn_cosine(
+        x: torch.Tensor,
+        k: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Build directed k-NN edges using cosine similarity.
+
+        Tries torch_geometric.nn.knn_graph (requires torch-cluster); falls
+        back to a pure-PyTorch batched cosine matrix when that package is
+        unavailable.
+
+        Returns
+        -------
+        edge_index : [2, N*k] long tensor
+        cos_sim    : [N*k] float tensor of cosine similarities
+        """
+        try:
+            from torch_geometric.nn import knn_graph as _knn_graph
+            edge_index = _knn_graph(x, k=k, cosine=True)
+            src, dst   = edge_index
+            x_norm     = torch.nn.functional.normalize(x, p=2, dim=1)
+            cos_sim    = (x_norm[src] * x_norm[dst]).sum(dim=1).clamp(-1.0, 1.0)
+            return edge_index, cos_sim
+        except ImportError:
+            pass  # fall through to pure-PyTorch implementation
+
+        # Pure-PyTorch fallback (no torch-cluster dependency)
+        # Compute full cosine similarity matrix and pick top-k per row
+        x_norm  = torch.nn.functional.normalize(x, p=2, dim=1)
+        sim_mat = x_norm @ x_norm.t()               # [N, N]
+        # Exclude self-loops by setting diagonal to -2
+        sim_mat.fill_diagonal_(-2.0)
+
+        topk_sim, topk_idx = sim_mat.topk(k, dim=1)   # [N, k]
+        N = x.shape[0]
+
+        src = torch.arange(N, dtype=torch.long).unsqueeze(1).expand(-1, k).reshape(-1)
+        dst = topk_idx.reshape(-1)
+        edge_index = torch.stack([src, dst], dim=0)    # [2, N*k]
+        cos_sim    = topk_sim.reshape(-1)
+
+        return edge_index, cos_sim
+
+    # Stub to satisfy GraphBuilder protocol if needed
+    def fit(self, X_train: np.ndarray) -> "SampleKNNGraphBuilder":
+        return self
+
+    def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
+        raise NotImplementedError(
+            "SampleKNNGraphBuilder works on the full sample matrix. "
+            "Call build(X, y) instead."
+        )
+
+    @property
+    def edge_index(self) -> torch.Tensor:
+        raise NotImplementedError("Call build(X) to get the full graph.")
+
+    @property
+    def edge_attr(self) -> torch.Tensor:
+        raise NotImplementedError("Call build(X) to get the full graph.")

@@ -6,6 +6,7 @@ torch>=2.0.0
 torch-geometric>=2.5.0
 torch-scatter>=2.1.2
 torch-sparse>=0.6.18
+torch-cluster>=1.6.3   # optional: knn_graph GPU acceleration; pure-PyTorch fallback used when unavailable
 shap>=0.45.0
 lime>=0.2.0
 matplotlib>=3.7.0

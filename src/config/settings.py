@@ -54,6 +54,8 @@ class GNNSettings:
     lr: float = 0.005
     weight_decay: float = 1e-4
     use_gat: bool = False
+    knn_k: int = 5                    # k for cosine k-NN sample graph
+    early_stopping_patience: int = 5  # 0 = disabled
 
 
 @dataclass
@@ -175,11 +177,13 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_gnn = raw.get("gnn", {})
     gnn = GNNSettings(
-        hidden_dim   = raw_gnn.get("hidden_dim", 64),
-        epochs       = raw_gnn.get("epochs", 20),
-        lr           = raw_gnn.get("lr", 0.005),
-        weight_decay = raw_gnn.get("weight_decay", 1e-4),
-        use_gat      = raw_gnn.get("use_gat", False),
+        hidden_dim               = raw_gnn.get("hidden_dim", 64),
+        epochs                   = raw_gnn.get("epochs", 20),
+        lr                       = raw_gnn.get("lr", 0.005),
+        weight_decay             = raw_gnn.get("weight_decay", 1e-4),
+        use_gat                  = raw_gnn.get("use_gat", False),
+        knn_k                    = raw_gnn.get("knn_k", 5),
+        early_stopping_patience  = raw_gnn.get("early_stopping_patience", 5),
     )
 
     raw_dnn = raw.get("dnn", {})

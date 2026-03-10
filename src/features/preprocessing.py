@@ -217,7 +217,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     # ------------------------------------------------------------------
 
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None):
-        """Convert a single processed feature vector to a PyG Data object."""
+        """Convert a single processed feature vector to a PyG Data object (legacy feature-graph)."""
         from torch_geometric.data import Data
 
         x_tensor = torch.tensor(x_row, dtype=torch.float).unsqueeze(1)  # [N, 1]
@@ -228,6 +228,34 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             edge_attr=self.edge_attr,
             y=y_tensor,
         )
+
+    def build_sample_graph(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        k: int = 5,
+    ):
+        """
+        Build a coordinate-free cosine k-NN sample graph.
+
+        Each variant in X becomes a node; k nearest neighbours in FEATURE
+        space (cosine similarity) are connected.  Chromosome/position columns
+        are not used — complies with TEKNOFEST 2026 labelling constraints.
+
+        Parameters
+        ----------
+        X : Already-preprocessed [N_samples, N_features] matrix.
+        y : Optional integer label array.
+        k : Number of nearest neighbours (default 5).
+
+        Returns
+        -------
+        torch_geometric.data.Data with x, edge_index, edge_attr, y.
+        """
+        from src.graph.builder import SampleKNNGraphBuilder
+
+        builder = SampleKNNGraphBuilder(k=k)
+        return builder.build(X, y)
 
 
 def build_preprocessor_from_config() -> VariantPreprocessor:
