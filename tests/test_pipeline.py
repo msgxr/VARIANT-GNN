@@ -11,10 +11,10 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from src.config import Config
+from src.config import Settings, get_settings
 from src.data_processing import TabularAutoEncoder, TabularGraphPreprocessor, generate_dummy_data, load_and_prepare_data
-from src.models import FeatureGNN, VariantDNN, VariantHybridModel
-from src.utils import ModelSerializer
+from src.models import FeatureGNN, HybridEnsemble, VariantDNN
+from src.utils import ModelStore
 
 # ─────────────────────────────────────────────────────────────
 # Config Testleri
@@ -22,24 +22,29 @@ from src.utils import ModelSerializer
 
 def test_config_has_required_attributes():
     """Gerekli konfigürasyon attribute'larının var olduğunu doğrular."""
-    assert hasattr(Config, 'MODELS_DIR')
-    assert hasattr(Config, 'DATA_DIR')
-    assert hasattr(Config, 'REPORTS_DIR')
-    assert hasattr(Config, 'GNN_MODEL_PATH')
-    assert hasattr(Config, 'DNN_MODEL_PATH')
-    assert hasattr(Config, 'AUTOENCODER_PATH')
+    cfg = get_settings()
+    assert hasattr(cfg, 'paths')
+    assert hasattr(cfg.paths, 'data_dir')
+    assert hasattr(cfg.paths, 'models_dir')
+    assert hasattr(cfg.paths, 'reports_dir')
+    assert hasattr(cfg.paths, 'gnn_model_path')
+    assert hasattr(cfg.paths, 'dnn_model_path')
+    assert hasattr(cfg.paths, 'autoencoder_path')
 
 def test_ensemble_weights_sum_to_one():
     """Ensemble ağırlıklarının toplamının 1 olduğunu test eder."""
-    total = sum(Config.ENSEMBLE_WEIGHTS)
+    cfg = get_settings()
+    total = sum(cfg.ensemble.weights)
     assert abs(total - 1.0) < 1e-6, f"Ensemble ağırlıkları toplamı 1 olmalı, şu an: {total}"
 
 def test_config_create_dirs(tmp_path, monkeypatch):
     """create_dirs() çağrısının gerekli dizinleri oluşturduğunu test eder."""
-    monkeypatch.setattr(Config, 'DATA_DIR', str(tmp_path / 'data'))
-    monkeypatch.setattr(Config, 'MODELS_DIR', str(tmp_path / 'models'))
-    monkeypatch.setattr(Config, 'REPORTS_DIR', str(tmp_path / 'reports'))
-    Config.create_dirs()
+    cfg = get_settings()
+    from pathlib import Path
+    monkeypatch.setattr(cfg.paths, 'data_dir', Path(tmp_path) / 'data')
+    monkeypatch.setattr(cfg.paths, 'models_dir', Path(tmp_path) / 'models')
+    monkeypatch.setattr(cfg.paths, 'reports_dir', Path(tmp_path) / 'reports')
+    cfg.paths.create_dirs()
     assert os.path.isdir(str(tmp_path / 'data'))
     assert os.path.isdir(str(tmp_path / 'models'))
     assert os.path.isdir(str(tmp_path / 'reports'))
@@ -106,7 +111,7 @@ def test_preprocessor_transform_dimension_consistency():
 def test_row_to_graph():
     """Tek satırın PyTorch Geometric Data nesnesine dönüştürüldüğünü test eder."""
     import torch
-    df = generate_dummy_data(n_samples=100, n_features=10)
+    df = generate_dummy_data(n_samples=100, n_features=15)
     y = (df['Label'] == 'Pathogenic').astype(int).values
     X_df = df.drop(columns=['Label'])
 
@@ -121,7 +126,7 @@ def test_row_to_graph():
 
 def test_load_and_prepare_data_csv(tmp_path):
     """CSV dosyasından veri yüklemenin doğru çalıştığını test eder."""
-    df = generate_dummy_data(n_samples=50, n_features=10)
+    df = generate_dummy_data(n_samples=50, n_features=15)
     csv_path = str(tmp_path / "test_data.csv")
     df.to_csv(csv_path, index=False)
 
@@ -149,7 +154,6 @@ def test_gnn_forward_pass():
 
     model = FeatureGNN(in_channels=1, hidden_dim=32, num_classes=2)
     model.eval()
-    import torch.no_grad
     with torch.no_grad():
         out = model(data)
     assert out.shape == (1, 2), f"Beklenen (1,2), alınan {out.shape}"
@@ -166,18 +170,18 @@ def test_dnn_forward_pass():
 
 def test_hybrid_ensemble_probabilities_sum():
     """Ensemble olasılıklarının satır toplamlarının 1 olduğunu test eder."""
-    model = VariantHybridModel(weights=[0.4, 0.4, 0.2])
+    model = HybridEnsemble(weights=[0.4, 0.4, 0.2])
     n = 5
     xgb_probs = np.random.dirichlet([1, 1], n)
     gnn_probs = np.random.dirichlet([1, 1], n)
     dnn_probs = np.random.dirichlet([1, 1], n)
 
-    ensemble = model.predict_ensemble(xgb_probs, gnn_probs, dnn_probs)
+    ensemble = model.combine(xgb_probs, gnn_probs, dnn_probs)
     np.testing.assert_allclose(ensemble.sum(axis=1), np.ones(n), atol=1e-5)
 
 def test_clinical_risk_score_range():
     """Klinik risk skorunun 0-100 aralığında olduğunu test eder."""
-    model = VariantHybridModel()
+    model = HybridEnsemble()
     probs = np.array([[0.8, 0.2], [0.3, 0.7], [0.5, 0.5]])
-    scores = model.get_clinical_risk_score(probs)
+    scores = model.pathogenic_risk_score(probs)
     assert np.all(scores >= 0) and np.all(scores <= 100)

@@ -12,9 +12,10 @@ import urllib.request
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -478,7 +479,9 @@ def render_risk_histogram(df_result: pd.DataFrame):
 
     colors = ['#68d391' if v < 50 else '#f6ad55' if v < 75 else '#fc8181'
               for v in df_result["Calibrated_Risk"]]
-    n, bins, patches = ax.hist(df_result["Calibrated_Risk"], bins=30, edgecolor='none', color='#63b3ed')
+    n, bins, patches = ax.hist(df_result["Calibrated_Risk"], bins=30, edgecolor='none')
+    for patch, c in zip(patches, colors):
+        patch.set_facecolor(c)
     for patch, left in zip(patches, bins[:-1]):
         if left < 50:
             patch.set_facecolor('#68d391')
@@ -517,7 +520,7 @@ def render_chromosome_map(df_result: pd.DataFrame):
     plot_dark(fig, ax)
 
     colors = ['#fc8181' if r > 75 else '#f6ad55' if r > 50 else '#68d391' for r in risks]
-    scatter = ax.scatter(range(n), risks, c=colors, s=40, alpha=0.8, zorder=3)
+    ax.scatter(range(n), risks, c=colors, s=40, alpha=0.8, zorder=3)
     ax.fill_between(range(n), risks, alpha=0.08, color='#63b3ed')
     ax.axhline(75, color='#fc8181', linestyle='--', linewidth=1, alpha=0.6, label='Yüksek Risk Eşiği (75)')
     ax.axhline(50, color='#f6ad55', linestyle='--', linewidth=1, alpha=0.6, label='Orta Risk Eşiği (50)')
@@ -853,7 +856,6 @@ def render_performance_tab():
 # CLINVAR SEKMESİ
 # ─────────────────────────────────────────────
 def render_clinvar_tab():
-    import urllib.parse
     st.markdown("""
     <div class="section-header">
         <div class="section-icon">🔍</div>
