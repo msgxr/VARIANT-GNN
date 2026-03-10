@@ -804,6 +804,106 @@ def render_results_table(df_result: pd.DataFrame):
         height=380,
     )
 
+    # ──────────────────────────────────────────────────────────────
+    # 🚨 VARYANT ÖNCELİKLENDİRME TABLOSU
+    # ──────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">🚨</div>
+        <h3>Önce İncele — Yüksek Riskli Varyant Sıralaması</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:rgba(252,129,129,0.06); border:1px solid rgba(252,129,129,0.2);
+                border-radius:10px; padding:12px 16px; margin-bottom:16px;
+                font-size:0.82rem; color:#94a3b8; line-height:1.7;">
+        Bu tablo, <strong style="color:#fc8181;">en yüksek riskli varyantları</strong> öncelik
+        sırasına göre listeler. Klinik pratik için: Kırmızı varyantları önce inceleyin,
+        sonra turuncu ve sarılara geçin. Yeşil varyantlar acil müdahale gerektirmez.
+    </div>
+    """, unsafe_allow_html=True)
+
+    if "Calibrated_Risk" not in df_result.columns:
+        st.info("Risk skoru sütunu bulunamadı. Sayısal risk sütunu için analizi yeniden çalıştırın.")
+        return
+
+    # Risk'e göre sırala, en üst 20'yi al
+    df_sorted = (
+        df_result
+        .sort_values("Calibrated_Risk", ascending=False)
+        .reset_index(drop=True)
+        .head(20)
+    )
+
+    for sira, (_, row) in enumerate(df_sorted.iterrows(), 1):
+        risk = float(row.get("Calibrated_Risk", 0))
+        pred = str(row.get("Prediction", "?"))
+        v_id = str(row.get("Variant_ID", f"Varyant #{sira}"))
+        prob = float(row.get("Probability", 0))
+        conf = str(row.get("Confidence", "?"))
+
+        # Risk zonu renklerini belirle
+        if risk >= 75:
+            zone_color = "#fc8181"; zone_label = "🔴 KRİTİK"; bg_alpha = "0.12"
+            border_color = "rgba(252,129,129,0.35)"
+        elif risk >= 50:
+            zone_color = "#f6ad55"; zone_label = "🟠 YÜKSEK"; bg_alpha = "0.08"
+            border_color = "rgba(246,173,85,0.3)"
+        elif risk >= 25:
+            zone_color = "#faf089"; zone_label = "🟡 ORTA"; bg_alpha = "0.06"
+            border_color = "rgba(250,240,137,0.25)"
+        else:
+            zone_color = "#68d391"; zone_label = "🟢 DÜŞÜK"; bg_alpha = "0.05"
+            border_color = "rgba(104,211,145,0.2)"
+
+        sira_badge = f"#{sira:02d}"
+
+        st.markdown(f"""
+        <div style="background:rgba({_hex_to_rgb(zone_color)},{bg_alpha});
+                    border:1px solid {border_color}; border-left:5px solid {zone_color};
+                    border-radius:10px; padding:14px 20px; margin-bottom:10px;
+                    display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div style="font-size:1.3rem; font-weight:800; color:{zone_color}; min-width:38px;">
+                {sira_badge}
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <div style="font-weight:700; color:#e2e8f0; font-size:0.9rem;">{v_id}</div>
+                <div style="color:#94a3b8; font-size:0.78rem; margin-top:2px;">
+                    Tahmin: <strong style="color:{zone_color};">{pred}</strong>
+                    &nbsp;|&nbsp; Güven: {conf}
+                    &nbsp;|&nbsp; Olasılık: {prob:.2%}
+                </div>
+            </div>
+            <div style="text-align:right; min-width:120px;">
+                <div style="font-size:1.5rem; font-weight:800; color:{zone_color};">{risk:.1f}</div>
+                <div style="font-size:0.7rem; color:#94a3b8;">/ 100 Risk Skoru</div>
+                <div style="font-size:0.72rem; font-weight:700; color:{zone_color}; margin-top:2px;">
+                    {zone_label}
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Yalnızca ilk 20 varyant için satır oluştur, ötesini topla
+        if sira >= 20:
+            break
+
+    remaining = len(df_result) - 20
+    if remaining > 0:
+        st.markdown(
+            f"<div style='text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:8px;'>"
+            f"... ve {remaining} varyant daha (tümü Analiz Sonuçları tablosunda görünüyor)"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+
+def _hex_to_rgb(hex_color: str) -> str:
+    """'#fc8181' → '252,129,129' formatına dönüştürür."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"{r},{g},{b}"
 
 # ─────────────────────────────────────────────
 # PDF RAPOR ÜRETME
