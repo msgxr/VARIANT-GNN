@@ -390,7 +390,7 @@ class VariantTrainer:
 
         # --- DNN ---
         dnn_model = VariantDNN(
-            input_dim  = n_features,
+            input_dim  = X_proc.shape[1],
             hidden_dim = cfg.dnn.hidden_dim,
             num_classes= 2,
         ).to(self.device)
