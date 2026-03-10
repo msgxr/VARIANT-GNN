@@ -4,7 +4,11 @@ TEKNOFEST 2026 | Sağlıkta Yapay Zeka
 """
 from __future__ import annotations
 
+import io
+import json
 import logging
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import matplotlib
@@ -659,8 +663,301 @@ def render_results_table(df_result: pd.DataFrame):
 
 
 # ─────────────────────────────────────────────
-# MAIN
+# PDF RAPOR ÜRETME
 # ─────────────────────────────────────────────
+def generate_pdf_report(df_result: pd.DataFrame, cfg) -> bytes:
+    """Analiz sonuçlarını matplotlib PdfPages ile PDF'e dönüştürür."""
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    buf = io.BytesIO()
+    with PdfPages(buf) as pdf:
+        # ── Kapak Sayfası ─────────────────────────
+        fig, ax = plt.subplots(figsize=(11, 8.5))
+        ax.set_facecolor('#0a0e1a')
+        fig.patch.set_facecolor('#0a0e1a')
+        ax.axis('off')
+        ax.text(0.5, 0.72, '🧬 VARIANT-GNN', ha='center', va='center',
+                fontsize=32, fontweight='bold', color='#63b3ed', transform=ax.transAxes)
+        ax.text(0.5, 0.60, 'Genetik Varyant Patojenite Analizi\nOtomatik Raporu',
+                ha='center', va='center', fontsize=16, color='#94a3b8',
+                transform=ax.transAxes, linespacing=1.6)
+        total = len(df_result)
+        pathogenic = int((df_result['Prediction'] == 'Pathogenic').sum())
+        benign = total - pathogenic
+        summary = (
+            f"Toplam Varyant: {total}  |  "
+            f"Patojenik: {pathogenic}  |  "
+            f"Benign: {benign}  |  "
+            f"Oran: {100*pathogenic/max(total,1):.1f}%"
+        )
+        ax.text(0.5, 0.44, summary, ha='center', va='center',
+                fontsize=12, color='#cbd5e0', transform=ax.transAxes)
+        from datetime import datetime
+        ax.text(0.5, 0.08,
+                f"TEKNOFEST 2026 | Sağlıkta Yapay Zeka  ·  {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+                ha='center', va='center', fontsize=10, color='#4a5568', transform=ax.transAxes)
+        pdf.savefig(fig, bbox_inches='tight', facecolor='#0a0e1a')
+        plt.close()
+
+        # ── Risk Skoru Histogramı ─────────────────
+        if 'Calibrated_Risk' in df_result.columns:
+            fig, ax = plt.subplots(figsize=(11, 5))
+            ax.set_facecolor('#1a2744')
+            fig.patch.set_facecolor('#1a2744')
+            n, bins, patches = ax.hist(df_result['Calibrated_Risk'], bins=30, edgecolor='none')
+            for patch, left in zip(patches, bins[:-1]):
+                patch.set_facecolor('#68d391' if left < 50 else '#f6ad55' if left < 75 else '#fc8181')
+                patch.set_alpha(0.9)
+            ax.axvline(50, color='#f6ad55', linestyle='--', linewidth=1.2, label='Orta Risk')
+            ax.axvline(75, color='#fc8181', linestyle='--', linewidth=1.2, label='Yüksek Risk')
+            ax.set_xlabel('Kalibre Edilmiş Risk Skoru (%)', color='#94a3b8')
+            ax.set_ylabel('Varyant Sayısı', color='#94a3b8')
+            ax.set_title('Risk Skoru Dağılımı', fontsize=14, fontweight='bold', color='#e2e8f0')
+            ax.tick_params(colors='#94a3b8')
+            ax.legend(facecolor='#1a2744', labelcolor='#94a3b8')
+            for sp in ax.spines.values():
+                sp.set_edgecolor((0.388, 0.702, 0.929, 0.2))
+            pdf.savefig(fig, bbox_inches='tight', facecolor='#1a2744')
+            plt.close()
+
+        # ── Eğitim Metrikleri (varsa) ─────────────
+        for img_path, title in [
+            ('reports/confusion_matrix.png', 'Confusion Matrix (Test Seti)'),
+            ('reports/roc_curve.png',        'ROC Eğrisi'),
+            ('reports/pr_curve.png',         'Precision-Recall Eğrisi'),
+        ]:
+            if Path(img_path).exists():
+                img = plt.imread(img_path)
+                fig, ax = plt.subplots(figsize=(10, 7))
+                ax.imshow(img)
+                ax.axis('off')
+                ax.set_title(title, fontsize=13, fontweight='bold', color='#1a202c', pad=12)
+                pdf.savefig(fig, bbox_inches='tight')
+                plt.close()
+
+        # ── Sonuç Tablosu (ilk 30 satır) ─────────
+        fig, ax = plt.subplots(figsize=(14, min(0.4 * min(30, len(df_result)) + 1.5, 12)))
+        ax.axis('off')
+        show_cols = ['Variant_ID', 'Prediction', 'Calibrated_Risk', 'Confidence', 'High_Risk']
+        show_cols = [c for c in show_cols if c in df_result.columns]
+        table_data = df_result[show_cols].head(30)
+        tbl = ax.table(
+            cellText=table_data.values,
+            colLabels=table_data.columns,
+            cellLoc='center', loc='center',
+        )
+        tbl.auto_set_font_size(True)
+        tbl.scale(1, 1.4)
+        ax.set_title('Analiz Sonuçları (İlk 30 Varyant)', fontsize=13,
+                     fontweight='bold', color='#1a202c', pad=12)
+        pdf.savefig(fig, bbox_inches='tight')
+        plt.close()
+
+    buf.seek(0)
+    return buf.read()
+
+
+# ─────────────────────────────────────────────
+# CLINVaR API (NCBI E-utilities)
+# ─────────────────────────────────────────────
+def clinvar_lookup(query: str) -> dict | None:
+    """NCBI ClinVar'da verilen terimi arar, ilk kaydın özetini döndürür."""
+    try:
+        # Step 1: esearch
+        search_url = (
+            f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+            f"?db=clinvar&term={urllib.parse.quote(query)}&retmax=1&retmode=json"
+        )
+        with urllib.request.urlopen(search_url, timeout=6) as r:
+            search_data = json.loads(r.read())
+        ids = search_data.get('esearchresult', {}).get('idlist', [])
+        if not ids:
+            return None
+
+        # Step 2: esummary
+        summary_url = (
+            f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+            f"?db=clinvar&id={ids[0]}&retmode=json"
+        )
+        with urllib.request.urlopen(summary_url, timeout=6) as r:
+            summary_data = json.loads(r.read())
+        result = summary_data.get('result', {})
+        record = result.get(ids[0], {})
+        return record
+    except Exception:
+        return None
+
+
+# ─────────────────────────────────────────────
+# PERFORMANS DASHBOARD
+# ─────────────────────────────────────────────
+def render_performance_tab():
+    """Model eğitiminden kaydedilmiş grafikleri ve CV sonuçlarını gösterir."""
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">📊</div>
+        <h3>Model Eğitim Metrikleri</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # CV raporu
+    cv_path = Path('reports/cv_report.json')
+    if cv_path.exists():
+        with open(cv_path) as f:
+            cv = json.load(f)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric('Ortalama CV F1', f"{cv.get('mean_cv_macro_f1', 0):.4f}")
+        c2.metric('Std CV F1',      f"±{cv.get('std_cv_macro_f1', 0):.4f}")
+        test = cv.get('test_metrics', {})
+        c3.metric('Test Macro F1',  f"{test.get('macro_f1', test.get('f1', 0)):.4f}")
+        c4.metric('ROC-AUC',        f"{test.get('roc_auc', 0):.4f}")
+
+    # Grafikler — 2x2 grid
+    plots = [
+        ('reports/confusion_matrix.png', 'Confusion Matrix'),
+        ('reports/roc_curve.png',        'ROC Eğrisi'),
+        ('reports/pr_curve.png',         'Precision-Recall Eğrisi'),
+        ('reports/calibration.png',      'Kalibrasyon Grafiği'),
+    ]
+    row1 = st.columns(2)
+    row2 = st.columns(2)
+    grids = [row1[0], row1[1], row2[0], row2[1]]
+    for (img_path, title), col in zip(plots, grids):
+        with col:
+            if Path(img_path).exists():
+                st.markdown(f"""
+                <div class="chart-container" style="text-align:center;">
+                    <div style="font-size:0.85rem; font-weight:600; color:#63b3ed;
+                                margin-bottom:10px;">{title}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.image(img_path, use_column_width=True)
+            else:
+                st.info(f"{title} — Henüz mevcut değil. `python3 main.py --mode train` çalıştırın.")
+
+    # Fold detayları
+    if cv_path.exists():
+        folds = cv.get('folds', [])
+        if folds:
+            st.markdown("""
+            <div class="section-header">
+                <div class="section-icon">🔁</div>
+                <h3>Cross-Validation — Fold Detayları</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            df_folds = pd.DataFrame(folds)
+            st.dataframe(df_folds, use_container_width=True)
+
+
+# ─────────────────────────────────────────────
+# CLINVAR SEKMESİ
+# ─────────────────────────────────────────────
+def render_clinvar_tab():
+    import urllib.parse
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">🔍</div>
+        <h3>ClinVar Veritabanı Araması</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.2);
+                border-radius:10px; padding:16px; margin-bottom:20px;">
+        <div style="color:#63b3ed; font-weight:600; margin-bottom:6px;">📡 NCBI ClinVar API Entegrasyonu</div>
+        <div style="color:#94a3b8; font-size:0.85rem; line-height:1.6;">
+            Gen adı, varyant adı veya rsID ile NCBI ClinVar veritabanında gerçek zamanlı arama yapabilirsiniz.<br>
+            Örnek: <code>BRCA1</code>, <code>CFTR</code>, <code>rs28897672</code>, <code>NM_007294.4:c.5266dupC</code>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_inp, col_btn = st.columns([4, 1])
+    with col_inp:
+        query = st.text_input(
+            'Arama Terimi',
+            placeholder='Örnek: BRCA1 pathogenic  veya  rs28897672',
+            label_visibility='collapsed'
+        )
+    with col_btn:
+        search_btn = st.button('🔍 Ara', type='primary', use_container_width=True)
+
+    # Hızlı Örnek Butonları
+    st.markdown("**Hızlı örnekler:**")
+    col_e1, col_e2, col_e3, col_e4 = st.columns(4)
+    examples = [
+        ('BRCA1 pathogenic', col_e1),
+        ('CFTR p.Phe508del', col_e2),
+        ('TP53 missense',    col_e3),
+        ('LDLR familial',    col_e4),
+    ]
+    for label, col in examples:
+        with col:
+            if st.button(label, use_container_width=True):
+                query = label
+                search_btn = True
+
+    if search_btn and query:
+        with st.spinner(f'🔎 ClinVar\'da "{query}" aranıyor...'):
+            record = clinvar_lookup(query)
+
+        if record:
+            st.success('✅ Kayıt bulundu!')
+
+            # Temel bilgiler
+            title_      = record.get('title', 'Bilinmiyor')
+            clin_sig    = record.get('clinical_significance', {}).get('description', 'Bilinmiyor')
+            review_stat = record.get('review_status', 'Bilinmiyor')
+            gene_sort   = record.get('gene_sort', 'Bilinmiyor')
+            variation_id= record.get('variation_set', [{}])
+            variation_id = variation_id[0].get('variation_id', 'N/A') if variation_id else 'N/A'
+
+            # Klinik önemi badge rengi
+            sig_color = {
+                'Pathogenic': '#fc8181', 'Likely pathogenic': '#f6ad55',
+                'Benign': '#68d391', 'Likely benign': '#9ae6b4',
+            }.get(clin_sig, '#63b3ed')
+
+            st.markdown(f"""
+            <div class="model-card">
+                <h4 style="font-size:1rem; text-transform:none;">{title_}</h4>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">KLİNİK ANLAM</div>
+                        <div style="font-weight:700; color:{sig_color}; font-size:0.95rem;">{clin_sig}</div>
+                    </div>
+                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">GEN</div>
+                        <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">{gene_sort}</div>
+                    </div>
+                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">İNCELEME DURUMU</div>
+                        <div style="font-weight:600; color:#e2e8f0; font-size:0.9rem;">{review_stat}</div>
+                    </div>
+                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">VARIATION ID</div>
+                        <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">{variation_id}</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Ham veri (isteğe bağlı)
+            with st.expander('📄 Ham ClinVar Verisi (JSON)'):
+                st.json(record)
+
+            # ClinVar linkine git
+            clinvar_uid = record.get('uid', '')
+            if clinvar_uid:
+                st.markdown(
+                    f"🔗 [ClinVar'da Görüntüle](https://www.ncbi.nlm.nih.gov/clinvar/variation/{clinvar_uid}/)"
+                )
+        else:
+            st.warning(
+                f'❌ "{query}" için ClinVar\'da kayıt bulunamadı.\n\n'
+                'Gen adı, rsID veya HGVS notasyonu gibi farklı bir terim deneyin.'
+            )
+
 def main():
     cfg = get_settings()
     render_hero()
@@ -669,9 +966,11 @@ def main():
     opts     = render_sidebar(cfg)
 
     # ── Tabs ──────────────────────────────────
-    tab_analyze, tab_xai, tab_about = st.tabs([
+    tab_analyze, tab_xai, tab_perf, tab_clinvar, tab_about = st.tabs([
         "🔬 Varyant Analizi",
         "🧠 Açıklanabilir YZ",
+        "📊 Model Performansı",
+        "🔍 ClinVar Araması",
         "ℹ️ Proje Hakkında",
     ])
 
@@ -748,6 +1047,16 @@ def main():
                     mime="text/csv",
                     use_container_width=True,
                 )
+            with col_dl2:
+                with st.spinner('📄 PDF hazırlanıyor...'):
+                    pdf_bytes = generate_pdf_report(df_result, cfg)
+                st.download_button(
+                    "📄 PDF Rapor İndir",
+                    data=pdf_bytes,
+                    file_name="variant_analiz_raporu.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
 
             render_risk_histogram(df_result)
             render_chromosome_map(df_result)
@@ -767,6 +1076,12 @@ def main():
                     include=[np.number]
                 )
                 render_xai(pipeline, df_features, opts)
+
+    with tab_perf:
+        render_performance_tab()
+
+    with tab_clinvar:
+        render_clinvar_tab()
 
     with tab_about:
         st.markdown("""
