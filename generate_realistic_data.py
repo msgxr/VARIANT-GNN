@@ -12,9 +12,10 @@ Gerçek yarışma verisi geldiğinde bu script yerine gerçek CSV kullanılır.
     python generate_realistic_data.py
 """
 
+import os
+
 import numpy as np
 import pandas as pd
-import os
 
 np.random.seed(42)
 
@@ -275,10 +276,10 @@ def main():
     print(f"✅ Eğitim seti  → {TRAIN_FILE}  ({len(df_train)} varyant)")
     print(f"✅ Test seti    → {TEST_FILE}    ({len(df_test)} varyant)")
     print(f"✅ Kör test     → {OUTPUT_DIR}/test_variants_blind.csv (Label yok)")
-    print(f"\n📊 Etiket Dağılımı (Train):")
+    print("\n📊 Etiket Dağılımı (Train):")
     print(df_train['Label'].value_counts())
     print(f"\n📋 Özellik Sayısı: {df_train.shape[1] - 2} (Variant_ID ve Label hariç)")
-    print(f"\n🔍 Temel İstatistikler:")
+    print("\n🔍 Temel İstatistikler:")
     print(df_train.drop(columns=['Variant_ID', 'Label']).describe().round(3))
 
 

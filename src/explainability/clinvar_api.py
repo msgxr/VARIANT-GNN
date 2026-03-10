@@ -7,9 +7,7 @@ ClinVar klinik yorumlarını ve sınıflandırmasını çeken modül.
 
 from __future__ import annotations
 
-import time
 import requests
-from typing import Optional
 
 NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 ESEARCH   = f"{NCBI_BASE}/esearch.fcgi"

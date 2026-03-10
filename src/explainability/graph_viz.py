@@ -6,7 +6,10 @@ Preprocessor'dan gelen edge_index ve feature matrisini kullanır.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    import torch
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -23,7 +26,7 @@ except ImportError:
 
 
 def _build_graph(
-    edge_index: "torch.Tensor",
+    edge_index: torch.Tensor,
     node_features: np.ndarray,
     feature_names: List[str],
     risk_scores: Optional[np.ndarray] = None,

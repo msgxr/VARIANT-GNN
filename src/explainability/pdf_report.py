@@ -9,7 +9,6 @@ Gereksinim: fpdf2  (pip install fpdf2)
 
 from __future__ import annotations
 
-import io
 from datetime import datetime
 from typing import Optional
 

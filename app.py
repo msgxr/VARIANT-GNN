@@ -845,16 +845,24 @@ def render_results_table(df_result: pd.DataFrame):
 
         # Risk zonu renklerini belirle
         if risk >= 75:
-            zone_color = "#fc8181"; zone_label = "🔴 KRİTİK"; bg_alpha = "0.12"
+            zone_color = "#fc8181"
+            zone_label = "🔴 KRİTİK"
+            bg_alpha = "0.12"
             border_color = "rgba(252,129,129,0.35)"
         elif risk >= 50:
-            zone_color = "#f6ad55"; zone_label = "🟠 YÜKSEK"; bg_alpha = "0.08"
+            zone_color = "#f6ad55"
+            zone_label = "🟠 YÜKSEK"
+            bg_alpha = "0.08"
             border_color = "rgba(246,173,85,0.3)"
         elif risk >= 25:
-            zone_color = "#faf089"; zone_label = "🟡 ORTA"; bg_alpha = "0.06"
+            zone_color = "#faf089"
+            zone_label = "🟡 ORTA"
+            bg_alpha = "0.06"
             border_color = "rgba(250,240,137,0.25)"
         else:
-            zone_color = "#68d391"; zone_label = "🟢 DÜŞÜK"; bg_alpha = "0.05"
+            zone_color = "#68d391"
+            zone_label = "🟢 DÜŞÜK"
+            bg_alpha = "0.05"
             border_color = "rgba(104,211,145,0.2)"
 
         sira_badge = f"#{sira:02d}"
