@@ -1,109 +1,127 @@
-# Model Kartı — VARIANT-GNN
+# Model Card — VARIANT-GNN
 
-## Model Kimliği
+## Model Overview
 
-| Alan | Değer |
-|------|-------|
-| **Model Adı** | VARIANT-GNN v0.1.0 |
-| **Model Versiyonu** | 0.1.0 |
-| **Geliştiren** | VARIANT-GNN Ekibi — TEKNOFEST 2026 |
-| **Geliştirme Tarihi** | Mart 2026 |
-| **Kullanım Amacı** | Genomik varyant patojenite sınıflandırması (Araştırma) |
-| **Model Lisansı** | MIT |
-
----
-
-## Model Açıklaması
-
-VARIANT-GNN, 34 genomik özellik üzerinden en iyi olasılık tahmini yapan bir ensemble sınıflandırıcıdır:
-
-- **Model 1 — XGBoost:** Geleneksel gradient-boosted decision tree
-- **Model 2 — GNN (Graph Convolutional Network):** Özellik korelasyon grafı üzerinde mesaj geçişi
-- **Model 3 — DNN (Deep Neural Network):** Tabular özellikler üzerinde derin öğrenme
-
-Ensemble ağırlıkları: [XGB: 0.4, GNN: 0.4, DNN: 0.2]
+| Field | Value |
+|---|---|
+| **Model name** | VARIANT-GNN Hybrid Ensemble |
+| **Version** | 2.0.0 |
+| **Architecture** | XGBoost + Graph Neural Network (GCN/GAT) + Deep Neural Network (DNN) |
+| **Task** | Binary classification — Variant pathogenicity prediction (Benign / Pathogenic) |
+| **License** | MIT |
 
 ---
 
-## Amaçlanan Kullanım
+## Intended Use
 
-### Birincil Kullanım
-- Araştırma ortamında varyant sınıflandırma deneyleri
-- Biyoinformatik pipeline prototipleme
-- Makine öğrenmesi metodoloji karşılaştırmaları
+- **Primary use case:** Predicting whether a genomic variant (SNP/indel) is Benign or Pathogenic, using pre-computed functional annotation scores as features.
+- **Target users:** Computational biologists, clinical geneticists, and bioinformatics researchers.
+- **Expected input:** A CSV file with one row per variant and numeric annotation features (CADD, SIFT, PolyPhen2, GERP, gnomAD allele frequencies, etc.). See `data_contracts/sample_input.csv` for a working example.
+- **Expected output:** Per-variant predictions with calibrated probability scores. See `data_contracts/sample_output.csv`.
 
-### Amaçlanmayan Kullanım (Kırmızı Çizgiler)
-- ❌ Klinik karar destek sistemi olarak kullanım
-- ❌ Hasta tanı/tedavi kararlarında kullanım
-- ❌ Regüle edilmiş tıbbi cihaz olarak sınıflandırma
-- ❌ ACMG sınıflandırma standardının yerini alma
-
----
-
-## Eğitim Verisi
-
-> ⚠️ **UYARI:** Bu model sürümü gerçekçi istatistiksel sentetik veri üzerinde eğitilmiştir. Gerçek klinik veri kullanılmamıştır.
-
-| Özellik | Değer |
-|---------|-------|
-| Veri Kaynağı | Sentetik (generate_realistic_data.py) |
-| Eğitim Seti | 4000 varyant (2000 Pathogenic, 2000 Benign) |
-| Test Seti | 1000 varyant |
-| Gerçek Klinik Veri | 0 varyant |
-| Eksik Değer Oranı | ~3% (simüle edilmiş) |
+### Out-of-scope use
+- De novo variant discovery
+- Structural variant classification
+- Clinical diagnostic decisions without independent validation
 
 ---
 
-## Performans Metrikleri (Sentetik Test Seti)
+## Architecture
 
-> **NOT:** Aşağıdaki metrikler sentetik veri üzerindeki performansı gösterir. Gerçek ClinVar verisi üzerindeki performans bilinmemektedir.
+### XGBoost Component
+- Gradient-boosted trees on the tabular feature matrix
+- Handles non-linear feature interactions efficiently
+- Hyperparameters tuned via Optuna (`src/training/tune.py`)
 
-| Metrik | Değer | Not |
-|--------|-------|-----|
-| F1-Macro | ~0.90+ | Sentetik veri — gerçek performans yok |
-| ROC-AUC | ~0.95+ | Sentetik veri |
-| Brier Score | Hesaplanmadı | Kalibrasyon belirsiz |
-| ECE | Hesaplanmadı | Kalibrasyon belirsiz |
+### GNN Component
+- Treats each feature as a graph node
+- Edges connect features with correlation > `corr_threshold` (default 0.25), built from **training fold only** (no leakage)
+- Supports GCNConv or GATConv (configurable in `configs/default.yaml`)
 
----
+### DNN Component
+- Feed-forward neural network with BatchNorm + Dropout
+- Input dimension is dynamic — inferred from the feature matrix after preprocessing
 
-## Sınırlamalar ve Riskler
+### Ensemble
+- Configurable linear interpolation of the three model probability outputs
+- Default weights: `[0.4 XGB, 0.4 GNN, 0.2 DNN]`
+- Optional weight optimization via `scipy.optimize.minimize` (Nelder-Mead) on held-out validation set
 
-### Teknik Sınırlamalar
-1. **Veri Sızıntısı Riski:** Cross-validation akışında preprocessing leakage riski mevcut (v0.2'de düzeltilecek)
-2. **Kalibrasyon Eksikliği:** Risk skoru = prob × 100 kalibre edilmemiş; olasılık değerleri güvenilir değil
-3. **Metrik Tutarsızlığı:** Model seçimi accuracy ile yapılıyor; ana metrik F1 (v0.2'de düzeltilecek)
-4. **VUS Desteği Yok:** Belirsizlik kategorisi sınıflandırılamamaktadır
-
-### Önyargı ve Adalet
-- Popülasyon çeşitliliği yetersiz (gnomAD popülasyon skorları basitleştirilmiş simülasyon)
-- Nadir hastalık varyantları temsil edilmemiş
-
-### Genel Uyarı
-Bu model, klinik kullanım için doğrulanmamıştır. Tıbbi karar almada kullanılmamalıdır.
+### Calibration
+- Post-hoc calibration using **Isotonic Regression** on a held-out calibration set (separate from training and test)
+- Converts raw ensemble probabilities to well-calibrated risk scores
+- Evaluated with ECE (Expected Calibration Error) and Brier Score
 
 ---
 
-## Açıklanabilirlik
+## Preprocessing
 
-| Yöntem | Uygulandığı Model | Durum |
-|--------|------------------|-------|
-| SHAP TreeExplainer | XGBoost | ✅ Aktif |
-| LIME Tabular | XGBoost | ✅ Aktif |
-| GNNExplainer | GNN | ⚠️ Opsiyonel (torch-geometric versiyonuna bağlı) |
-| Ensemble SHAP | Ensemble | ❌ Mevcut değil |
-
----
-
-## Etik ve Regülasyon
-
-- Bu model CE İşaretleme veya FDA 510(k) onayına sahip değildir
-- GDPR kapsamında kişisel genetik veri işlenmesi için izin alınmalıdır
-- Klinik kullanım öncesi prospektif klinik validasyon çalışması gerekmektedir
+All preprocessing steps are **fit only on training data** within each CV fold:
+1. Median imputation (`SimpleImputer`)
+2. Robust scaling (`RobustScaler`)
+3. Optional: Variance threshold + SelectKBest (mutual information)
+4. Optional: AutoEncoder latent feature concatenation
+5. SMOTE oversampling (applied **inside** each fold to avoid leakage)
+6. Graph topology derived from training-fold Pearson correlation
 
 ---
 
-## İletişim ve Atıf
+## Training Details
 
-GitHub: https://github.com/msgxr/VARIANT-GNN  
-Yarışma: TEKNOFEST 2026 Sağlıkta Yapay Zeka
+| Setting | Value |
+|---|---|
+| Cross-validation | Stratified K-Fold (k=5 default) |
+| Model selection metric | **Macro F1** (not accuracy) |
+| Calibration split | 15% of training data |
+| Test split | 20% of dataset |
+| Seed | 42 (all components) |
+
+---
+
+## Evaluation Metrics
+
+All reported on the held-out test set after calibration:
+
+| Metric | Description |
+|---|---|
+| Macro F1 | Primary metric; class-balanced F1 |
+| ROC-AUC | Area under ROC curve |
+| PR-AUC | Area under Precision-Recall curve |
+| MCC | Matthews Correlation Coefficient |
+| Brier Score | Mean squared probability error (↓ is better) |
+| ECE | Expected Calibration Error (↓ is better) |
+
+---
+
+## Data Requirements
+
+### Input columns
+- `Variant_ID` (string) — unique identifier, **preserved through pipeline, never used as feature**
+- Numeric annotation features (arbitrary count — no hardcoded feature dimensionality)
+- `Label` (0 = Benign, 1 = Pathogenic) — required for training, optional for prediction
+
+### Data contract
+See `data_contracts/variant_schema.py` for the Pydantic v2 schema.
+Validate your dataset with:
+```python
+from data_contracts.variant_schema import validate_dataset
+result = validate_dataset(df)
+if not result.valid:
+    print(result.errors)
+```
+
+---
+
+## Limitations
+
+- Class imbalance is handled by SMOTE but performance may degrade on highly imbalanced datasets
+- Requires pre-computed variant annotation scores — does not perform raw sequence analysis
+- VUS (Variants of Unknown Significance) support is architecturally present (`LABEL_MAP` in `HybridEnsemble`) but requires annotated VUS training data for multi-class operation
+
+---
+
+## Ethical Considerations
+
+- This model is a **research tool** and should not be used as the sole basis for clinical diagnostic decisions
+- Predictions should be interpreted alongside clinical data, family history, and expert clinical genetics review
+- Performance may vary across ancestry groups depending on the composition of gnomAD allele frequency features

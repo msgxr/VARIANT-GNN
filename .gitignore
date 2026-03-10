@@ -57,3 +57,8 @@ temp/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

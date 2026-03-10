@@ -1,38 +1,141 @@
-# src/data/loader.py
-import pandas as pd
-import numpy as np
-import logging
+"""
+src/data/loader.py
+Safe, schema-validated CSV loader.  Separates metadata from numeric features
+and returns structured objects that carry Variant_ID alongside feature matrices.
+"""
+from __future__ import annotations
 
-def load_and_prepare_data(csv_path, target_col='Label'):
-    df = pd.read_csv(csv_path)
-    
-    # Variant_ID'yi kaydet — drop etme
-    variant_ids = df['Variant_ID'].copy() if 'Variant_ID' in df.columns else None
-    
-    if target_col in df.columns:
-        df[target_col] = df[target_col].str.lower()
-        map_labels = {
-            'pathogenic': 1, 'likely pathogenic': 1,
-            'benign': 0, 'likely benign': 0,
-            'vus': -1,  # ← VUS ayrı kategori
-            '1': 1, '0': 0
-        }
-        df['target'] = df[target_col].map(map_labels)
-        vus_mask = df['target'] == -1
-        if vus_mask.sum() > 0:
-            logging.warning(f"{vus_mask.sum()} VUS varyant eğitimden çıkarılıyor.")
-        df = df[df['target'] != -1]
-        
-        y = df['target'].values
-        X_df = df.drop(columns=[target_col, 'target'])
-    else:
-        X_df = df
-        y = None
-    
-    # Sayısal olmayan — Variant_ID hariç drop
-    non_numeric = X_df.select_dtypes(exclude=[np.number]).columns.tolist()
-    meta_cols = [c for c in non_numeric if c != 'Variant_ID']
-    if meta_cols:
-        X_df = X_df.drop(columns=meta_cols)
-    
-    return X_df, y, variant_ids
+import logging
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+
+from data_contracts.variant_schema import validate_dataset
+from src.config import get_settings
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Public result types
+# ---------------------------------------------------------------------------
+
+
+class LoadedDataset:
+    """Container separating metadata, feature matrix, and optional labels."""
+
+    def __init__(
+        self,
+        features: pd.DataFrame,
+        labels: Optional[np.ndarray],
+        metadata: pd.DataFrame,
+        feature_columns: List[str],
+    ) -> None:
+        self.features = features          # numeric features only
+        self.labels   = labels            # int array or None
+        self.metadata = metadata          # id + any non-feature cols
+        self.feature_columns = feature_columns
+
+    def __len__(self) -> int:
+        return len(self.features)
+
+    def __repr__(self) -> str:
+        return (
+            f"LoadedDataset(n={len(self)}, "
+            f"n_features={len(self.feature_columns)}, "
+            f"has_labels={self.labels is not None})"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Core loader
+# ---------------------------------------------------------------------------
+
+
+def load_csv(
+    csv_path: str | Path,
+    separator: str = ",",
+    target_column: Optional[str] = None,
+    id_columns: Optional[List[str]] = None,
+    label_mapping: Optional[dict] = None,
+) -> LoadedDataset:
+    """
+    Load a variant CSV file, validate its schema, and separate metadata
+    from numerical feature columns.
+
+    Args:
+        csv_path:      Path to CSV file.
+        separator:     Column delimiter.
+        target_column: Label column name (optional — inferred from config).
+        id_columns:    Columns treated as identifiers, not features.
+        label_mapping: Dict mapping raw label strings to integers.
+
+    Returns:
+        A ``LoadedDataset`` with separated features, labels, and metadata.
+
+    Raises:
+        ValueError: if schema validation fails with errors.
+    """
+    cfg = get_settings()
+    target_column = target_column or cfg.schema.target_column
+    id_columns    = id_columns    or cfg.schema.id_columns
+    label_mapping = label_mapping or cfg.schema.label_mapping
+
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"CSV not found: {path}")
+
+    df = pd.read_csv(path, sep=separator, low_memory=False)
+    logger.info("Loaded %d rows × %d cols from %s", len(df), df.shape[1], path)
+
+    result = validate_dataset(df, target_column=target_column, id_columns=id_columns)
+
+    for w in result.warnings:
+        logger.warning("Schema warning: %s", w)
+    if not result.is_valid:
+        raise ValueError("Schema validation failed:\n" + "\n".join(result.errors))
+
+    # Build metadata frame (preserve original id columns intact)
+    meta_cols = [c for c in id_columns if c in df.columns]
+    metadata  = df[meta_cols].reset_index(drop=True) if meta_cols else pd.DataFrame(index=df.index)
+
+    # Feature matrix
+    feature_df = df[result.numeric_feature_columns].reset_index(drop=True)
+
+    # Labels
+    labels: Optional[np.ndarray] = None
+    if result.label_column is not None:
+        raw_labels = df[result.label_column].astype(str).str.strip().str.lower()
+        mapped = raw_labels.map(label_mapping)
+        unmapped = mapped.isna().sum()
+        if unmapped:
+            logger.warning("%d rows have unmappable labels — set to NaN then dropped.", unmapped)
+            valid_mask = ~mapped.isna()
+            feature_df = feature_df[valid_mask].reset_index(drop=True)
+            metadata   = metadata[valid_mask].reset_index(drop=True) if len(metadata) else metadata
+            mapped     = mapped[valid_mask]
+        labels = mapped.astype(int).values
+
+    logger.info(
+        "Dataset ready: %d samples, %d features, labels=%s",
+        len(feature_df),
+        len(result.numeric_feature_columns),
+        labels is not None,
+    )
+
+    return LoadedDataset(
+        features       = feature_df,
+        labels         = labels,
+        metadata       = metadata,
+        feature_columns= result.numeric_feature_columns,
+    )
+
+
+def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDataset:
+    """
+    Convenience wrapper for unlabelled prediction CSVs.
+    Label column is ignored even if present.
+    """
+    return load_csv(csv_path, separator=separator)

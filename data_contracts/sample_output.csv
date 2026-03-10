@@ -1,0 +1,7 @@
+Variant_ID,Prediction,Probability,Calibrated_Risk,Confidence,High_Risk
+VAR_0001,Pathogenic,0.9312,0.9187,0.9312,True
+VAR_0002,Benign,0.0721,0.0834,0.9279,False
+VAR_0003,Pathogenic,0.8145,0.8023,0.8145,True
+VAR_0004,Benign,0.1237,0.1389,0.8763,False
+VAR_0005,Pathogenic,0.9781,0.9714,0.9781,True
+VAR_0006,Benign,0.0431,0.0512,0.9569,False

@@ -1,0 +1,70 @@
+seed: 42
+device: auto  # auto | cpu | cuda
+
+paths:
+  data_dir: data
+  models_dir: models
+  reports_dir: reports
+
+gnn:
+  hidden_dim: 64
+  epochs: 20
+  lr: 0.005
+  weight_decay: 1.0e-4
+  use_gat: false
+
+dnn:
+  hidden_dim: 128
+  epochs: 20
+  lr: 0.001
+  weight_decay: 1.0e-4
+
+xgb:
+  objective: binary:logistic
+  eval_metric: logloss
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  n_estimators: 150
+  n_jobs: -1
+
+ensemble:
+  weights: [0.4, 0.4, 0.2]   # [XGB, GNN, DNN]
+  optimize_weights: false     # true: validation-set optimisation
+
+preprocessing:
+  corr_threshold: 0.25
+  use_autoencoder: true
+  autoencoder_encoding_dim: 16
+  autoencoder_epochs: 10
+  use_feature_selection: false
+  k_best_features: 30
+  smote_enabled: true
+
+calibration:
+  enabled: true
+  method: isotonic            # isotonic | sigmoid
+
+training:
+  test_size: 0.2
+  cv_folds: 5
+  batch_size: 32
+
+thresholds:
+  classification: 0.5
+  high_risk: 0.7
+
+schema:
+  target_column: Label
+  id_columns:
+    - Variant_ID
+  label_mapping:
+    pathogenic: 1
+    "likely pathogenic": 1
+    benign: 0
+    "likely benign": 0
+    "1": 1
+    "1.0": 1
+    "0": 0
+    "0.0": 0
