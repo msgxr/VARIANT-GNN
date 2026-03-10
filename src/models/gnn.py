@@ -18,12 +18,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import (
     BatchNorm as PyGBatchNorm,
+)
+from torch_geometric.nn import (
     GATConv,
     GCNConv,
     SAGEConv,
     global_mean_pool,
 )
-
 
 # ===========================================================================
 # FeatureGNN — legacy (features-as-nodes, unchanged)

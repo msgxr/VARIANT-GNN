@@ -17,17 +17,17 @@ All results are exported as:
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
+
+matplotlib.use("Agg")
 
 logger = logging.getLogger(__name__)
 
