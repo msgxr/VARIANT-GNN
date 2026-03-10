@@ -133,7 +133,7 @@ class TestEvaluationIntegration:
         y_true = rng.integers(0, 2, size=60)
         proba  = rng.dirichlet([1, 1], size=60)
         report = evaluate(y_true, proba)
-        assert report.confusion_matrix.shape == (2, 2)
+        assert report.conf_matrix.shape == (2, 2)
 
 
 # ---------------------------------------------------------------------------
