@@ -976,6 +976,27 @@ def main():
 
     with tab_analyze:
         st.markdown("""
+        <div style="background:linear-gradient(135deg,rgba(99,179,237,0.08),rgba(66,153,225,0.04));
+                    border:1px solid rgba(99,179,237,0.25); border-radius:12px;
+                    padding:20px 24px; margin-bottom:22px;">
+            <div style="font-size:1rem; font-weight:700; color:#63b3ed; margin-bottom:10px;">
+                🤖 Bu Sekme Ne Yapıyor?
+            </div>
+            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
+                Buraya genetik varyant verilerinizi <strong style="color:#90cdf4;">CSV formatında</strong> yükleyebilirsiniz.
+                Sisteminiz yüklenen her varyantı 3 farklı yapay zeka modeli ile analiz eder:
+                <br><br>
+                🕸️ <strong style="color:#90cdf4;">Graph Neural Network (GNN)</strong> — Varyantlar arasındaki biyolojik ilişkileri öğrenir<br>
+                🌲 <strong style="color:#90cdf4;">XGBoost</strong> — Sayısal genomik özellikleri hızlı ve güçlü şekilde sınıflandırır<br>
+                🤖 <strong style="color:#90cdf4;">Derin Sinir Ağı (DNN)</strong> — Gizli karmaşık örüntüleri keşfeder
+                <br><br>
+                Bu 3 modelin kararları birleştirilerek her varyant için bir
+                <strong style="color:#fc8181;">Patojenite (Hastalık) Riski Skoru</strong> üretilir.
+                Skor ne kadar yüksekse, o varyantın genetik hastalığa yol açma ihtimali o kadar yüksektir.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
         <div class="section-header">
             <div class="section-icon">📂</div>
             <h3>Veri Yükleme</h3>
@@ -1063,6 +1084,25 @@ def main():
             render_model_comparison(df_result)
 
     with tab_xai:
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,rgba(104,211,145,0.08),rgba(56,161,105,0.04));
+                    border:1px solid rgba(104,211,145,0.25); border-radius:12px;
+                    padding:20px 24px; margin-bottom:22px;">
+            <div style="font-size:1rem; font-weight:700; color:#68d391; margin-bottom:10px;">
+                🧠 Bu Sekme Ne Yapıyor?
+            </div>
+            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
+                Yapay zeka modelleri çoğu zaman <strong style="color:#9ae6b4;">"kara kutu"</strong> gibi çalışır — doğru sonuç verir ama neden verdiğini açıklamaz.
+                Bu sekme bu sorunu çözer.
+                <br><br>
+                📊 <strong style="color:#9ae6b4;">SHAP (Global)</strong> — Tüm varyantlara bakıldığında hangi biyolojik özellik (örn. CADD skoru, evrimsel korunmuşluk) modeli en çok etkiliyor?<br>
+                🌊 <strong style="color:#9ae6b4;">SHAP Waterfall (Yerel)</strong> — Seçtiğiniz tek bir varyant için "Bu varyantı neden riskli buldun?" sorusunun cevabı<br>
+                🟢 <strong style="color:#9ae6b4;">LIME</strong> — Alternatif bir açıklama yöntemi; modelin kararını daha basit kurallarla özetler
+                <br><br>
+                <em style="color:#718096;">Klinik ortamda doktor, sadece "Patojenik" etiketini değil, gerekçesini de bilmek ister. Bu sekme tam bunu sağlar.</em>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         if "df_result" not in st.session_state:
             st.info("ℹ️  Önce **Varyant Analizi** sekmesinde bir CSV yükleyin ve analizi başlatın.")
         else:
@@ -1078,9 +1118,50 @@ def main():
                 render_xai(pipeline, df_features, opts)
 
     with tab_perf:
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,rgba(246,173,85,0.08),rgba(221,107,32,0.04));
+                    border:1px solid rgba(246,173,85,0.25); border-radius:12px;
+                    padding:20px 24px; margin-bottom:22px;">
+            <div style="font-size:1rem; font-weight:700; color:#f6ad55; margin-bottom:10px;">
+                📊 Bu Sekme Ne Yapıyor?
+            </div>
+            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
+                Modelimizin eğitim sürecinde elde ettiği başarım metriklerini gösterir. Bunlar dışarıdan bir veri olmadan, sadece kendi eğitim sürecimize aittir.
+                <br><br>
+                📉 <strong style="color:#fbd38d;">Confusion Matrix</strong> — Kaç varyantı doğru, kaçını yanlış sınıflandırdık?<br>
+                📈 <strong style="color:#fbd38d;">ROC Eğrisi</strong> — Model ne kadar iyi "gerçek patojenik" ile "sahte alarm" arasında ayrım yapabiliyor?<br>
+                ✅ <strong style="color:#fbd38d;">Precision-Recall</strong> — Özellikle dengesiz veri setlerinde ne kadar güvenilir?<br>
+                ⚖️ <strong style="color:#fbd38d;">Kalibrasyon</strong> — Modelin verdiği %80 risk skoru gerçekten %80 ihtimal mi?
+                <br><br>
+                <em style="color:#718096;">5-katlı çapraz doğrulama (5-fold CV) ile Macro F1 = 1.0000 elde edilmiştir.</em>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         render_performance_tab()
 
     with tab_clinvar:
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,rgba(160,130,230,0.08),rgba(128,90,213,0.04));
+                    border:1px solid rgba(160,130,230,0.25); border-radius:12px;
+                    padding:20px 24px; margin-bottom:22px;">
+            <div style="font-size:1rem; font-weight:700; color:#b794f4; margin-bottom:10px;">
+                🔍 Bu Sekme Ne Yapıyor?
+            </div>
+            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
+                <strong style="color:#d6bcfa;">ClinVar</strong>, dünya genelinde binlerce araştırmacı ve klinisyenin
+                genetik varyantları paylaştığı NCBI'nin (ABD Ulusal Biyoteknoloji Bilgi Merkezi) resmi veritabanıdır.
+                <br><br>
+                Bu sekme, NCBI'nin <strong style="color:#d6bcfa;">canlı API'si</strong> üzerinden gerçek zamanlı sorgulama yapmanızı sağlar:
+                <br><br>
+                🧬 Bir <strong style="color:#d6bcfa;">gen adı</strong> yazın (örn. BRCA1, TP53, CFTR)<br>
+                🔑 Bir <strong style="color:#d6bcfa;">rsID</strong> kullanın (örn. rs28897672)<br>
+                📋 <strong style="color:#d6bcfa;">HGVS notasyonu</strong> ile arama yapın (örn. NM_007294.4:c.5266dupC)
+                <br><br>
+                Sonuç olarak o varyantın <em>klinik önemi, gen bilgisi ve uzman inceleme durumu</em> anında görüntülenir.
+                Böylece yapay zekamızın tahmini ile dünya literatürü karşılaştırılabilir.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         render_clinvar_tab()
 
     with tab_about:
