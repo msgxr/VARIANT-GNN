@@ -53,7 +53,7 @@ class TestFeatureGNN:
         model = FeatureGNN(in_channels=1, hidden_dim=16, num_classes=2)
         batch = _make_pyg_batch(n_nodes=6, n_samples=2)
         out = model(batch)
-        row_sums = out.sum(dim=1).detach().numpy()
+        row_sums = np.array(out.sum(dim=1).detach().cpu().tolist())
         # logits should NOT sum to 1.0
         assert not np.allclose(row_sums, 1.0, atol=0.01), "Forward should return logits, not probabilities"
 

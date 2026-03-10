@@ -133,7 +133,7 @@ class AutoEncoderTransformer(BaseEstimator, TransformerMixin):
         with torch.no_grad():
             tensor_X = torch.FloatTensor(X).to(self._device_obj)
             encoded, _ = self._net(tensor_X)
-            encoded_np = encoded.cpu().numpy()
+            encoded_np = np.array(encoded.cpu().detach().tolist(), dtype=np.float32)
 
         if self.append:
             return np.hstack([X, encoded_np])

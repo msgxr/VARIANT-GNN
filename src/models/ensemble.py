@@ -83,11 +83,11 @@ class HybridEnsemble:
         self.device = device or torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
-        # Read weights from config, allow override
-        self.weights = list(weights) if weights is not None else list(cfg.ensemble.weights)
-        assert len(self.weights) == 3 and abs(sum(self.weights) - 1.0) < 0.01, (
-            "Ensemble weights must be a 3-element list summing to 1.0"
-        )
+        # Read weights from config, allow override; normalise automatically
+        raw_w = list(weights) if weights is not None else list(cfg.ensemble.weights)
+        assert len(raw_w) == 3, "Ensemble requires exactly 3 weights"
+        w_sum = sum(raw_w)
+        self.weights = [w / w_sum for w in raw_w]
 
     # ------------------------------------------------------------------
     # Probability collection
@@ -116,26 +116,40 @@ class HybridEnsemble:
 
     def combine(
         self,
-        xgb_probs: np.ndarray,
-        gnn_probs: np.ndarray,
-        dnn_probs: np.ndarray,
+        xgb_proba: Optional[np.ndarray],
+        gnn_proba: Optional[np.ndarray],
+        dnn_proba: Optional[np.ndarray],
     ) -> np.ndarray:
-        """Weighted average of three probability matrices."""
-        w = self.weights
-        return w[0] * xgb_probs + w[1] * gnn_probs + w[2] * dnn_probs
+        """Weighted average of available probability matrices (None entries are skipped)."""
+        pairs = [
+            (xgb_proba, self.weights[0]),
+            (gnn_proba, self.weights[1]),
+            (dnn_proba, self.weights[2]),
+        ]
+        available = [(p, w) for p, w in pairs if p is not None]
+        if not available:
+            raise ValueError("At least one probability array must be provided to combine().")
+        total_w = sum(w for _, w in available)
+        return sum((w / total_w) * p for p, w in available)
 
     def predict(
         self,
-        X_scaled:    np.ndarray,
-        gnn_loader:  DataLoader,
-        threshold:   float = 0.5,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        X_scaled_or_proba: np.ndarray,
+        gnn_loader:        Optional[DataLoader] = None,
+        threshold:         float = 0.5,
+    ) -> "np.ndarray | Tuple[np.ndarray, np.ndarray]":
         """
-        Returns (predictions, ensemble_proba).
-        ``threshold`` applied to the Pathogenic class (index 1).
+        Two call modes:
+          - ``predict(proba)``                     → class-index array (for testing / simple use)
+          - ``predict(X_scaled, gnn_loader, thr)`` → (predictions, proba) tuple (inference pipeline)
         """
-        xp, gp, dp    = self.predict_proba_all(X_scaled, gnn_loader)
-        proba          = self.combine(xp, gp, dp)
+        if gnn_loader is None:
+            # Pre-computed (N, 2) probability array supplied directly
+            proba = X_scaled_or_proba
+            return (proba[:, 1] >= threshold).astype(int)
+        # Full prediction: collect proba from all sub-models
+        xp, gp, dp    = self.predict_proba_all(X_scaled_or_proba, gnn_loader)
+        proba          = self.combine(xgb_proba=xp, gnn_proba=gp, dnn_proba=dp)
         preds          = (proba[:, 1] >= threshold).astype(int)
         return preds, proba
 

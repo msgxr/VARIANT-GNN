@@ -39,6 +39,8 @@ class EnsembleCalibrator:
     """
 
     def __init__(self, method: CalibrationMethod = "isotonic") -> None:
+        if method not in ("isotonic", "sigmoid"):
+            raise ValueError(f"Unknown calibration method: {method!r}. Use 'isotonic' or 'sigmoid'.")
         self.method = method
         self._calibrator = None
         self._is_fitted  = False
