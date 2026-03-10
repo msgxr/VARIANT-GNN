@@ -14,9 +14,14 @@
 
 ## Overview
 
-VARIANT-GNN predicts whether a human genomic variant is **Pathogenic** or **Benign** using a hybrid ensemble of XGBoost, a Graph Neural Network (GNN), and a Deep Neural Network (DNN). Predictions are calibrated and explained via SHAP, LIME, and GNNExplainer.
+VARIANT-GNN predicts whether a human genomic variant is **Pathogenic** or **Benign** using a hybrid ensemble of XGBoost, a Graph Neural Network (GNN), and a Deep Neural Network (DNN). 
 
-**v2.0** fixes all known data leakage, hardcoded-feature, and calibration deficiencies from v1. See [SECURITY.md](SECURITY.md) and [MODEL_CARD.md](MODEL_CARD.md) for full details.
+**New in v2.0 (TEKNOFEST 2026 Ready):**
+- **Clinical Decision Support Assistant:** Analyzes SHAP feature importance to generate automated, NLP-based clinical interpretations in Turkish.
+- **Genetic Interaction Graph Visualization:** Renders the underlying GNN correlation edges using NetworkX, explicitly demonstrating the graph mechanics to users.
+- **Strict Data Pipeline:** Fixes all known data leakage, hardcoded-feature, and calibration deficiencies from v1.
+
+See [SECURITY.md](SECURITY.md) and [MODEL_CARD.md](MODEL_CARD.md) for full details.
 
 ---
 
@@ -97,6 +102,8 @@ VARIANT-GNN/
        shap_explainer.py
        lime_explainer.py
        gnn_explainer.py
+       clinical_insight.py   # Otomatik Türkçe Klinik Karar Destek Raporlayıcı
+       graph_viz.py          # NetworkX tabanlı GNN Etkileşim Grafı ve Isı Haritası
     utils/
         __init__.py
         logging_cfg.py        Centralized logging
