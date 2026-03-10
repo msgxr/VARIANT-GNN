@@ -356,8 +356,8 @@ def plot_dark(fig, ax):
     ax.yaxis.label.set_color('#94a3b8')
     ax.title.set_color('#e2e8f0')
     for spine in ax.spines.values():
-        spine.set_edgecolor('rgba(99,179,237,0.15)')
-    ax.grid(True, color='rgba(255,255,255,0.05)', linewidth=0.5)
+        spine.set_edgecolor((0.388, 0.702, 0.929, 0.15))
+    ax.grid(True, color=(1.0, 1.0, 1.0, 0.05), linewidth=0.5)
 
 
 def render_hero():
@@ -489,7 +489,7 @@ def render_risk_histogram(df_result: pd.DataFrame):
     ax.set_xlabel("Kalibre Edilmiş Risk Skoru (%)")
     ax.set_ylabel("Varyant Sayısı")
     ax.set_title("Risk Skoru Dağılımı", fontsize=12, fontweight='bold', pad=14)
-    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor='rgba(99,179,237,0.3)',
+    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor=(0.388, 0.702, 0.929, 0.3),
               labelcolor='#94a3b8')
     plt.tight_layout()
     st.pyplot(fig)
@@ -521,13 +521,13 @@ def render_chromosome_map(df_result: pd.DataFrame):
     ax.set_ylabel("Risk Skoru (%)")
     ax.set_title("Varyant Risk Haritası (İlk 200)", fontsize=12, fontweight='bold', pad=14)
     ax.set_ylim(0, 105)
-    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor='rgba(99,179,237,0.3)', labelcolor='#94a3b8')
+    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor=(0.388, 0.702, 0.929, 0.3), labelcolor='#94a3b8')
 
     low_p  = mpatches.Patch(color='#68d391', label=f'Benign ({sum(1 for r in risks if r<=50)})')
     mid_p  = mpatches.Patch(color='#f6ad55', label=f'Orta Risk ({sum(1 for r in risks if 50<r<=75)})')
     high_p = mpatches.Patch(color='#fc8181', label=f'Yüksek Risk ({sum(1 for r in risks if r>75)})')
     ax.legend(handles=[low_p, mid_p, high_p], fontsize=9, facecolor='#1a2744',
-              edgecolor='rgba(99,179,237,0.3)', labelcolor='white', loc='upper right')
+              edgecolor=(0.388, 0.702, 0.929, 0.3), labelcolor='white', loc='upper right')
 
     plt.tight_layout()
     st.pyplot(fig)
