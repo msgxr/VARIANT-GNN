@@ -39,10 +39,12 @@ class MCDropoutEstimator:
         model: torch.nn.Module,
         n_forward: int = 30,
         device: Optional[torch.device] = None,
+        seed: int = 42,
     ) -> None:
         self.model = model
         self.n_forward = n_forward
         self.device = device or torch.device("cpu")
+        self.seed = seed
 
     def _enable_dropout(self) -> None:
         """Tüm Dropout katmanlarını train moduna al (inference'da da drop yapar)."""
@@ -64,7 +66,8 @@ class MCDropoutEstimator:
         edge_index = edge_index.to(self.device)
 
         with torch.no_grad():
-            for _ in range(self.n_forward):
+            for i in range(self.n_forward):
+                torch.manual_seed(self.seed + i)
                 logits = self.model(x, edge_index)
                 probs = F.softmax(logits, dim=1).cpu().numpy()
                 all_probs.append(probs)
@@ -88,7 +91,8 @@ class MCDropoutEstimator:
         x = x.to(self.device)
 
         with torch.no_grad():
-            for _ in range(self.n_forward):
+            for i in range(self.n_forward):
+                torch.manual_seed(self.seed + i)
                 logits = self.model(x)
                 probs = F.softmax(logits, dim=1).cpu().numpy()
                 all_probs.append(probs)

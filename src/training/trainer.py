@@ -39,6 +39,7 @@ from src.features.preprocessing import VariantPreprocessor, build_preprocessor_f
 from src.models.dnn import VariantDNN
 from src.models.ensemble import HybridEnsemble
 from src.models.gnn import FeatureGNN, VariantSAGEGNN
+from src.training.focal_loss import FocalLoss
 from src.utils.seeds import set_global_seed
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,20 @@ def _compute_class_weights(y: np.ndarray) -> torch.Tensor:
     counts  = np.bincount(y, minlength=2).astype(float)
     weights = len(y) / (2.0 * counts)
     return torch.tensor(weights, dtype=torch.float)
+
+
+def _make_criterion(y: np.ndarray, device: torch.device) -> nn.Module:
+    """Select loss function based on config: 'focal' or 'weighted_bce'."""
+    cfg = get_settings()
+    loss_type = getattr(cfg.training, "loss_function", "weighted_bce")
+    if loss_type == "focal":
+        gamma = getattr(cfg.training, "focal_gamma", 2.0)
+        criterion = FocalLoss.from_labels(y, gamma=gamma)
+        logger.info("Using FocalLoss (gamma=%.1f)", gamma)
+    else:
+        criterion = WeightedBCELoss.from_labels(y)
+        logger.info("Using WeightedBCELoss")
+    return criterion.to(device)
 
 
 # ---------------------------------------------------------------------------
@@ -516,11 +531,11 @@ class VariantTrainer:
         """
         cfg = self.cfg
 
-        # Dynamically compute class weights from training distribution
-        criterion = WeightedBCELoss.from_labels(y_tr).to(self.device)
+        # Dynamically select criterion from config (FocalLoss or WeightedBCE)
+        criterion = _make_criterion(y_tr, self.device)
         logger.info(
-            "WeightedBCELoss class_weights: %s",
-            criterion.weight.tolist(),
+            "SAGE loss class_weights: %s",
+            getattr(criterion, 'weight', getattr(criterion, 'alpha', 'N/A')),
         )
 
         optimizer = torch.optim.Adam(
@@ -637,9 +652,9 @@ class VariantTrainer:
         optimizer = torch.optim.Adam(
             model.parameters(), lr=cfg.dnn.lr, weight_decay=cfg.dnn.weight_decay
         )
-        # WeightedBCELoss for class-balanced training (TEKNOFEST: imbalanced panels)
+        # Configurable loss function (FocalLoss or WeightedBCE)
         if y_train is not None:
-            criterion = WeightedBCELoss.from_labels(y_train).to(self.device)
+            criterion = _make_criterion(y_train, self.device)
         else:
             criterion = nn.CrossEntropyLoss()
         best_f1      = -1.0

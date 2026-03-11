@@ -88,8 +88,18 @@ _ZONE_LABELS = {
 
 
 def _find_group(feature_name: str) -> Optional[str]:
-    """Özellik adını analiz edip hangi biyolojik gruba ait olduğunu belirler."""
+    """Özellik adını analiz edip hangi biyolojik gruba ait olduğunu belirler.
+
+    Anonymous/numeric column names (e.g. Col_0, 0, feature_12) are mapped to
+    'computational' as a safe fallback so that the clinical insight engine
+    always produces meaningful output.
+    """
     name_lower = feature_name.lower()
+
+    # Anonymous column detection: Col_0, 0, feature_12, etc.
+    if name_lower.startswith(("col_", "feature_")) or name_lower.isdigit():
+        return "computational"
+
     for group_key, group_info in _FEATURE_GROUPS.items():
         for kw in group_info["keywords"]:
             if kw in name_lower:

@@ -7,6 +7,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -348,7 +349,7 @@ def _load_pipeline() -> InferencePipeline | None:
     except FileNotFoundError as exc:
         st.error(f"⚠️ Model dosyaları bulunamadı: {exc}\n\n`python3 main.py --mode train` çalıştırın.")
         return None
-    except Exception as exc:
+    except (RuntimeError, OSError, ValueError, KeyError) as exc:
         st.error(f"⚠️ Model yükleme hatası: {exc}")
         return None
 
@@ -576,7 +577,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
 
     try:
         X_scaled = pipeline._preprocessor.transform(df_features.values)
-    except Exception as exc:
+    except (ValueError, RuntimeError) as exc:
         st.warning(f"XAI önişleme hatası: {exc}")
         return
 
@@ -717,7 +718,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
         </div>
         """, unsafe_allow_html=True)
 
-    except Exception as exc:
+    except (KeyError, ValueError, IndexError, RuntimeError) as exc:
         st.info(f"ℹ️ Klinik yorum üretilemedi: {exc}")
 
     # ──────────────────────────────────────────────────────────────
@@ -763,7 +764,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
                     st.info("networkx kurulu değil. `pip install networkx` ile yükleyin.")
             else:
                 st.info("Graf bilgisi bulunamadı. Modeli eğitin: `python3 main.py --mode train`")
-        except Exception as exc:
+        except (ImportError, ValueError, RuntimeError) as exc:
             st.warning(f"GNN Grafı çizilemedi: {exc}")
 
     with col_gnn2:
@@ -779,7 +780,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
             if fig_heat is not None:
                 st.pyplot(fig_heat)
                 plt.close()
-        except Exception as exc:
+        except (ImportError, ValueError, RuntimeError) as exc:
             st.warning(f"Korelasyon ısı haritası çizilemedi: {exc}")
 
 def render_results_table(df_result: pd.DataFrame):
@@ -1103,7 +1104,7 @@ def clinvar_lookup(query: str) -> dict | None:
         result = summary_data.get('result', {})
         record = result.get(ids[0], {})
         return record
-    except Exception:
+    except (urllib.error.URLError, json.JSONDecodeError, KeyError, OSError):
         return None
 
 
@@ -1362,7 +1363,7 @@ def main():
             with st.spinner("⚡ GNN + XGBoost + DNN modelleri çalışıyor..."):
                 try:
                     df_result = pipeline.predict_from_dataframe(df_raw)
-                except Exception as exc:
+                except (ValueError, RuntimeError, KeyError) as exc:
                     st.error(f"⚠️ İnferans hatası: {exc}")
                     st.stop()
 

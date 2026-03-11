@@ -1,4 +1,4 @@
-﻿"""
+"""
 main.py — VARIANT-GNN entry point.
 
 Modes:
@@ -33,7 +33,7 @@ from sklearn.model_selection import train_test_split
 from src.calibration.calibrator import EnsembleCalibrator
 from src.config import get_settings, reset_settings
 from src.data.loader import load_csv
-from src.evaluation.metrics import evaluate, find_best_threshold
+from src.evaluation.metrics import evaluate, evaluate_per_panel, find_best_threshold
 from src.evaluation.plots import save_all_plots
 from src.features.preprocessing import build_preprocessor_from_config
 from src.inference.pipeline import InferencePipeline
@@ -75,6 +75,20 @@ def _get_labelled_data(data_file, cfg):
 
 def mode_train(args, cfg):
     ds  = _get_labelled_data(args.data_file, cfg)
+
+    # Panel filtresi (isteğe bağlı)
+    panel = getattr(args, "panel", None)
+    if panel and "Panel" in ds.metadata.columns:
+        mask = ds.metadata["Panel"] == panel
+        from src.data.loader import LoadedDataset
+        ds = LoadedDataset(
+            features        = ds.features[mask].reset_index(drop=True),
+            labels          = ds.labels[mask.values],
+            metadata        = ds.metadata[mask].reset_index(drop=True),
+            feature_columns = ds.feature_columns,
+        )
+        logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))
+
     X   = ds.features.values
     y   = ds.labels
     set_global_seed(cfg.seed)
@@ -102,6 +116,13 @@ def mode_train(args, cfg):
     X_tr, X_test, y_tr, y_test = train_test_split(
         X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
     )
+
+    # Track metadata indices for per-panel evaluation
+    all_indices = np.arange(len(X))
+    _, test_indices = train_test_split(
+        all_indices, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
+    )
+
     X_test_proc = preprocessor.transform(X_test)
     test_loader = _make_geo_loader(
         preprocessor, X_test_proc, None, cfg.training.batch_size, shuffle=False
@@ -118,6 +139,15 @@ def mode_train(args, cfg):
 
     save_all_plots(report, y_test, raw_test_proba, cfg.paths.reports_dir)
 
+    # Per-panel evaluation (if Panel metadata available)
+    panel_reports_dict = {}
+    if "Panel" in ds.metadata.columns:
+        test_panels = ds.metadata["Panel"].values[test_indices]
+        panel_reports = evaluate_per_panel(y_test, cal_test_proba, test_panels, threshold=best_thr)
+        for pname, prep in panel_reports.items():
+            prep.log(prefix=f"PANEL_{pname}")
+            panel_reports_dict[pname] = prep.as_dict()
+
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:
         json.dump({
@@ -126,6 +156,7 @@ def mode_train(args, cfg):
             "folds": [vars(r) for r in result.fold_results],
             "test_metrics": report.as_dict(),
             "best_threshold": best_thr,
+            "panel_metrics": panel_reports_dict,
         }, fh, indent=2)
     logging.info("CV report saved -> %s", report_path)
     logging.info("Training complete.")

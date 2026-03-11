@@ -119,6 +119,8 @@ class TrainingSettings:
     test_size: float = 0.2
     cv_folds: int = 5
     batch_size: int = 32
+    loss_function: str = "weighted_bce"  # weighted_bce | focal
+    focal_gamma: float = 2.0
 
 
 @dataclass
@@ -256,9 +258,11 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_tr = raw.get("training", {})
     training = TrainingSettings(
-        test_size  = raw_tr.get("test_size", 0.2),
-        cv_folds   = raw_tr.get("cv_folds", 5),
-        batch_size = raw_tr.get("batch_size", 32),
+        test_size     = raw_tr.get("test_size", 0.2),
+        cv_folds      = raw_tr.get("cv_folds", 5),
+        batch_size    = raw_tr.get("batch_size", 32),
+        loss_function = raw_tr.get("loss_function", "weighted_bce"),
+        focal_gamma   = raw_tr.get("focal_gamma", 2.0),
     )
 
     raw_thr = raw.get("thresholds", {})
