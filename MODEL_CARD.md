@@ -1,162 +1,471 @@
-# Model Card — VARIANT-GNN
+# Model Karti — VARIANT-GNN
 
-## Model Overview
+## Model Genel Bakis
 
-| Field | Value |
+| Alan | Deger |
 |---|---|
-| **Model name** | VARIANT-GNN Hybrid Ensemble |
-| **Version** | 3.0.0 (TEKNOFEST 2026) |
-| **Architecture** | XGBoost + VariantSAGEGNN (GraphSAGE) + DNN — Multimodal Ensemble |
-| **Task** | Binary classification — Variant pathogenicity prediction (Benign / Pathogenic) |
-| **License** | MIT |
+| **Model adi** | VARIANT-GNN Hibrit Topluluk (Hybrid Ensemble) |
+| **Surum** | 3.0.0 (TEKNOFEST 2026 Finale Surumu) |
+| **Mimari** | XGBoost + VariantSAGEGNN (GraphSAGE) + DNN — Cok Modlu Topluluk Modeli |
+| **Gorev** | Ikili siniflandirma — Genomik varyant patojenisite tahmini (Benign / Patojenik) |
+| **Lisans** | MIT |
+| **Calistirma ortami** | Python 3.10+, PyTorch 2.x, PyTorch Geometric 2.5.3 |
+| **Egitim suresi** | ~5-15 dakika (CPU), ~2-5 dakika (GPU) |
 
 ---
 
-## Intended Use
+## Amac ve Kullanim Alani
 
-- **Primary use case:** Predicting whether a genomic variant (SNP/indel) is Benign or Pathogenic, using pre-computed functional annotation scores as features.
-- **Target users:** Computational biologists, clinical geneticists, and bioinformatics researchers.
-- **Expected input:** A CSV file with one row per variant and numeric annotation features (CADD, SIFT, PolyPhen2, GERP, gnomAD allele frequencies, etc.). Optionally includes ±5 nucleotide/amino-acid context strings for multimodal encoding.
-- **Expected output:** Per-variant predictions with calibrated probability scores.
+### Birincil Kullanim
 
-### Out-of-scope use
-- De novo variant discovery
-- Structural variant classification
-- Clinical diagnostic decisions without independent validation
+- **Ana amac:** Bir genomik varyantin (SNP/indel) Benign (zararsiz) veya Patojenik (hastaliga neden olan) olup olmadigini, onceden hesaplanmis fonksiyonel anotasyon skorlari kullanarak tahmin etmek.
+- **Hedef kullanicilar:** Hesaplamali biyologlar, klinik genetikciler, biyoinformatik arastirmacilari ve TEKNOFEST 2026 yarismasi juri uyeleri.
+- **Beklenen girdi:** Her satiri bir varyanti temsil eden ve sayisal anotasyon ozelliklerini (CADD, SIFT, PolyPhen2, GERP, gnomAD alel frekanslari vb.) iceren bir CSV dosyasi. Istege bagli olarak ±5 nukleotid/amino asit baglam dizeleri de icerebilir.
+- **Beklenen cikti:** Her varyant icin kalibre edilmis olasilik skoru (0-100 araliginda risk skoru), guven seviyesi, yuksek riskli varyant isareti ve klinik karar destek bilgileri.
 
----
+### Kapsam Disi Kullanimlar
 
-## Architecture
+| Kullanim | Neden Kapsam Disinda |
+|---|---|
+| De novo varyant kesfi | Model yalnizca onceden tanimlanmis varyantlari siniflandirir |
+| Yapisal varyant siniflandirmasi | Yalnizca SNP ve kucuk indeller desteklenir |
+| Bagimsiz dogrulama olmadan klinik tani kararlari | Model bir arastirma aracidir, tek basina tani araci degildir |
+| Ham sekans analizi | Onceden hesaplanmis anotasyon skorlari gereklidir |
 
-### XGBoost Component
-- Gradient-boosted trees on the tabular feature matrix
-- Handles non-linear feature interactions efficiently
-- Hyperparameters tuned via Optuna (`src/training/tune.py`)
-
-### VariantSAGEGNN Component (TEKNOFEST 2026 Primary Model)
-- **Inductive, node-level classifier** using GraphSAGE convolutions
-- Each variant is a node; edges are built via coordinate-free cosine k-NN in feature space
-- 3 SAGEConv blocks with BatchNorm + skip connections + Dropout(0.3)
-- **Multimodal fusion:** optionally concatenates nucleotide and amino-acid sequence features from the SequenceEncoder
-- **WeightedBCELoss:** dynamically computes class weights for balanced training
-
-### Multimodal Sequence Encoder
-- Dual-branch CNN encoder for ±5 nucleotide and ±5 amino-acid context
-- Embedding → Conv1d(3,pad=1) → ReLU → Conv1d → ReLU → AdaptiveAvgPool1d
-- Output: 32-dim feature vector concatenated to numeric features
-
-### DNN Component
-- Feed-forward neural network with BatchNorm + Dropout
-- Input dimension is dynamic — inferred from the feature matrix after preprocessing
-- Also uses **WeightedBCELoss** for class-balanced training
-
-### Ensemble
-- Configurable linear interpolation of the three model probability outputs
-- Default weights: `[0.4 XGB, 0.4 GNN, 0.2 DNN]`
-- Optional weight optimization via `scipy.optimize.minimize` (Nelder-Mead) on held-out validation set
-
-### Calibration
-- Post-hoc calibration using **Isotonic Regression** on a held-out calibration set
-- Converts raw ensemble probabilities to well-calibrated risk scores
-- Evaluated with ECE (Expected Calibration Error) and Brier Score
+> **Uyari:** Bu model klinik tani amacli degildir. Tahminler, klinik veriler, aile oykusu ve uzman genetik degerlendirmesi ile birlikte yorumlanmalidir.
 
 ---
 
-## Panel-Based Data (TEKNOFEST 2026)
+## Mimari Detaylari
 
-The model supports four distinct genomic panels as specified by the competition:
+### Genel Mimari Sema
 
-| Panel | Train (P+B) | Test (P+B) |
+```
+CSV Girdi → Pydantic Dogrulama → On Isleme Pipeline
+                                        |
+                    ┌───────────────────┼───────────────────┐
+                    │                   │                   │
+              ┌─────┴─────┐     ┌──────┴──────┐     ┌─────┴─────┐
+              │  XGBoost  │     │ VariantSAGE │     │    DNN    │
+              │  (%40)    │     │   GNN (%40) │     │   (%20)   │
+              └─────┬─────┘     └──────┬──────┘     └─────┬─────┘
+                    │                   │                   │
+                    └───────────────────┼───────────────────┘
+                                        │
+                          Agirlikli Topluluk Birlesimi
+                                        │
+                          Izotonik Kalibrasyon
+                                        │
+                          Kalibre Edilmis Risk Skoru (0-100)
+```
+
+### XGBoost Bileseni
+
+| Ozellik | Aciklama |
+|---|---|
+| **Tur** | Gradyan guclendirilmis karar agaclari |
+| **Girdi** | Tablo formatinda ozellik matrisi (43 ozellik) |
+| **Guc** | Dogrusal olmayan ozellik etkilesimlerini verimli sekilde yakalar |
+| **Hiperparametre ayari** | Optuna ile Bayes optimizasyonu (`src/training/tune.py`) |
+| **Serializasyon** | JSON formati (guvenli, pickle yok) |
+
+### VariantSAGEGNN Bileseni (TEKNOFEST 2026 Birincil Model)
+
+Bu bilesen, projenin en yenilikci parcasidir ve TEKNOFEST 2026 sartnamesine ozel olarak tasarlanmistir:
+
+| Ozellik | Aciklama |
+|---|---|
+| **Tur** | Induktif, dugum seviyesinde siniflandirici (GraphSAGE) |
+| **Graf yapisi** | Her varyant bir dugum; kenarlar ozellik uzayinda koordinatsiz kosinüs k-NN ile olusturulur |
+| **Konvolusyon katmanlari** | 3 SAGEConv blogu: BatchNorm + skip connection + Dropout(0.3) |
+| **Cok modlu birlestirme** | Istege bagli olarak nukleotid ve amino asit sekans ozelliklerini SequenceEncoder'dan birlestirme |
+| **Kayip fonksiyonu** | WeightedBCELoss — sinif dagilimindan dinamik olarak agirlik hesaplar |
+| **Induktivlik** | Yeni, gorulmemis varyantlar icin graf yeniden olusturmadan tahmin yapabilir |
+
+**Neden GraphSAGE?**
+- Geleneksel GNN'ler (GCN, GAT) transduktiftir — yeni dugumler icin tum grafi yeniden egitmek gerekir
+- GraphSAGE induktiftir — komsuluk orneklemesi ile yeni varyantlari ogrenilmis agirliklarla siniflandirir
+- Kucuk panellerde (CFTR: 70+70 ornek) bile kararlı performans gosterir
+
+### Cok Modlu Sekans Kodlayici (SequenceEncoder)
+
+±5 nukleotid ve ±5 amino asit baglamini isleyen ikili dallanmali CNN kodlayicisi:
+
+```
+Nukleotid Dizesi (±5)  →  Embedding(5,16) → Conv1d(3,pad=1) → ReLU → Conv1d → ReLU → AdaptiveAvgPool1d → 16-dim
+                                                                                                              |
+Amino Asit Dizesi (±5) →  Embedding(21,16) → Conv1d(3,pad=1) → ReLU → Conv1d → ReLU → AdaptiveAvgPool1d → 16-dim
+                                                                                                              |
+                                                                                                    Birlestirme → 32-dim cikti
+```
+
+- **Cikti:** 32 boyutlu ozellik vektoru, sayisal ozelliklerle birlestirilerek toplam girdi boyutunu arttirir
+- **Biyolojik motivasyon:** Varyant cevresimdeki nukleotid/amino asit baglami, mutasyonun fonksiyonel etkisi hakkinda onemli bilgi tasir
+
+### DNN Bileseni
+
+| Ozellik | Aciklama |
+|---|---|
+| **Tur** | Ileri beslemeli sinir agi (Feed-Forward NN) |
+| **Normalizasyon** | BatchNorm katmanlari |
+| **Regularizasyon** | Dropout katmanlari |
+| **Girdi boyutu** | Dinamik — on islemeden sonra ozellik matrisinden cikarilir |
+| **Kayip fonksiyonu** | WeightedBCELoss (sinif dengeli egitim) |
+
+### Topluluk Birlesimi (Ensemble)
+
+Uc modelden gelen olasilik ciktilarinin yapilandırılabilir dogrusal enterpolasyonu:
+
+| Parametre | Varsayilan Deger | Aciklama |
 |---|---|---|
-| General | 1500+1500 | 1000+1000 |
-| Hereditary Cancer | 200+200 | 100+100 |
-| PAH (Fenilketonüri) | 200+200 | 100+100 |
-| CFTR (Kistik Fibrozis) | 70+70 | 30+30 |
+| XGBoost agirligi | 0.40 | Tablo verilerinde guclu performans |
+| GNN agirligi | 0.40 | Varyantlar arasi iliskileri yakalama |
+| DNN agirligi | 0.20 | Tamamlayici dogrusal olmayan ogrenme |
 
-Panel-specific training and evaluation is supported via `--panel` CLI flag.
+- Agirliklar `scipy.optimize.minimize` (Nelder-Mead) ile dogrulama seti uzerinde optimize edilebilir
+- Optimizasyon, bireysel modellerin zayif yonlerini telafi ederek macro F1'i maksimize eder
 
----
+### Kalibrasyon
 
-## Feature Groups (43 numeric features)
-
-1. **Sekans ve Değişim Bilgisi:** Ref/Alt nucleotide encoding, codon change type, Grantham score
-2. **Yerel Sekans Bağlamı:** GC-content window, CpG site, motif disruption score
-3. **Biyokimyasal/Yapısal Etkiler:** Polarity change, hydrophobicity, molecular weight, protein impact, solvent accessibility
-4. **Evrimsel Korunmuşluk:** GERP++, PhyloP, phastCons, SiPhy
-5. **Popülasyon Verileri:** gnomAD AF (5 population), ExAC AF
-6. **In Silico Risk Skorları:** SIFT, PolyPhen2, CADD, REVEL, MutPred2, VEST4, PROVEAN, MutationTaster, MetaSVM/LR, M-CAP
-
----
-
-## Preprocessing
-
-All preprocessing steps are **fit only on training data** within each CV fold:
-1. Median imputation (`SimpleImputer`)
-2. Robust scaling (`RobustScaler`)
-3. Optional: Variance threshold + SelectKBest (mutual information)
-4. Optional: AutoEncoder latent feature concatenation (43 → 43+16 = 59 dim)
-5. SMOTE oversampling (applied **inside** each fold to avoid leakage)
-6. Cosine k-NN sample graph construction for VariantSAGEGNN
-
----
-
-## Training Details
-
-| Setting | Value |
+| Ozellik | Aciklama |
 |---|---|
-| Cross-validation | Stratified K-Fold (k=5 default) |
-| Model selection metric | **Macro F1** (not accuracy) |
-| Calibration split | 15% of training data |
-| Test split | 20% of dataset |
-| Seed | 42 (all components) |
-| Loss function | WeightedBCELoss (class-balanced, for SAGE + DNN) |
-| Early stopping | Validation Macro F1 (patience=5) |
+| **Yontem** | Izotonik Regresyon (birincil) veya Sigmoid/Platt Olcekleme (alternatif) |
+| **Veri** | Ayri tutulan kalibrasyon seti (egitim verisinin %15'i) |
+| **Amac** | Ham topluluk olasilarini iyi kalibre edilmis risk skorlarina donusturme |
+| **Degerlendirme** | ECE (Beklenen Kalibrasyon Hatasi) ve Brier Skoru |
 
 ---
 
-## Evaluation Metrics
+## Panel Tabanli Veri (TEKNOFEST 2026)
 
-All reported on the held-out test set after calibration:
+Model, yarisma sartnamesinde belirtilen dort farkli genomik paneli desteklemektedir:
 
-| Metric | Description |
+| Panel | Egitim (P+B) | Test (P+B) | Toplam | Aciklama |
+|---|---|---|---|---|
+| **General** (Genel) | 1500+1500 | 1000+1000 | 5000 | Genel populasyon varyantlari |
+| **Hereditary Cancer** (Kalitsal Kanser) | 200+200 | 100+100 | 600 | Kanser yatkinlik genleri (BRCA1, BRCA2 vb.) |
+| **PAH** (Fenilketonuri) | 200+200 | 100+100 | 600 | Fenilalanin hidroksilaz geni varyantlari |
+| **CFTR** (Kistik Fibrozis) | 70+70 | 30+30 | 200 | CFTR geni varyantlari (en kucuk panel) |
+
+- Panel bazli egitim ve degerlendirme `--panel` CLI bayragı ile desteklenir
+- Her panel icin ayri egitim/test veri setleri `data/` klasorunde bulunur
+- Kucuk panellerde (CFTR) WeightedBCELoss ve SMOTE ozellikle kritik oneme sahiptir
+
+---
+
+## Ozellik Gruplari (43 Sayisal Ozellik)
+
+### 1. Sekans ve Degisim Bilgisi
+| Ozellik | Aciklama |
 |---|---|
-| Macro F1 | Primary metric; class-balanced F1 |
-| ROC-AUC | Area under ROC curve |
-| PR-AUC | Area under Precision-Recall curve |
-| MCC | Matthews Correlation Coefficient |
-| Brier Score | Mean squared probability error (↓ is better) |
-| ECE | Expected Calibration Error (↓ is better) |
+| Ref/Alt nukleotid kodlamasi | Referans ve alternatif alel bilgisi |
+| Kodon degisim tipi | Missense, nonsense, synonymous vb. |
+| Grantham skoru | Amino asit degisiminin fizikokimyasal mesafesi |
 
-### External Validation
+### 2. Yerel Sekans Baglami
+| Ozellik | Aciklama |
+|---|---|
+| GC-content penceresi | Varyant cevresindeki GC orani |
+| CpG bolgesi | Varyant bir CpG adasinda mi? |
+| Motif bozulma skoru | Transkripsiyon faktoru baglama motifi uzerindeki etki |
 
-External validation mode (`python main.py --mode external_val`) loads a pre-trained model and evaluates on new test data, computing F1 / ROC-AUC / Brier Score / Precision / Recall and exporting a JSON report.
+### 3. Biyokimyasal ve Yapisal Etkiler
+| Ozellik | Aciklama |
+|---|---|
+| Polarite degisimi | Amino asit polarite farki |
+| Hidrofobiklik | Hidrofobiklik indeks degisimi |
+| Molekuler agirlik | Amino asit molekuler agirlik farki |
+| Protein etkisi | Protein yapisina tahmini etki |
+| Cozucu erisilebilirligi | Protein yuzeyindeki konumlandirma |
+
+### 4. Evrimsel Korunmusluk
+| Ozellik | Aciklama |
+|---|---|
+| GERP++ | Genomik Evrimsel Oran Profili — korunum skoru |
+| PhyloP | Filogenetik p-degeri — pozisyon bazli korunum |
+| phastCons | Filogenetik korunum olasiligi |
+| SiPhy | Taranan bolgedeki korunum sinyali |
+
+### 5. Populasyon Verileri
+| Ozellik | Aciklama |
+|---|---|
+| gnomAD AF (5 populasyon) | Farkli etnik gruplardaki alel frekanslari |
+| ExAC AF | Exon aglama konsorsiyumu alel frekansı |
+
+> **Not:** Populasyon frekanslari, nadir varyantlarin patojenik olma olasiligiyla ters orantilidir.
+
+### 6. In Silico Risk Skorlari
+| Ozellik | Aciklama |
+|---|---|
+| SIFT | Amino asit degisiminin protein fonksiyonuna etkisi (dusuk = zarar) |
+| PolyPhen2 | Polimorfizm fenotipi tahmincisi (yuksek = zarar) |
+| CADD | Birlesik Anotasyon Bagimli Tukenisenlik skoru (yuksek = zarar) |
+| REVEL | Nadir ekzomik varyantlar icin topluluk skoru |
+| MutPred2 | Mutasyon patolojiklik tahmincisi |
+| VEST4 | Varyant Etki Skor Araci |
+| PROVEAN | Protein Varyasyon Etki Analizcisi |
+| MutationTaster | Mutasyon hastalik potansiyeli tahmincisi |
+| MetaSVM/LR | Meta-siniflandirici skorlari (destek vektor makinesi / lojistik regresyon) |
+| M-CAP | Mendelyen Klinik Uygulanabilir Patojenisite skoru |
 
 ---
 
-## Data Requirements
+## On Isleme Pipeline
 
-### Input columns
-- `Variant_ID` (string) — unique identifier, **preserved through pipeline, never used as feature**
-- Numeric annotation features (arbitrary count — no hardcoded feature dimensionality)
-- `Label` (0 = Benign, 1 = Pathogenic) — required for training, optional for prediction
-- `Panel` (optional) — panel identifier for panel-specific training/evaluation
-- `Nuc_Context` / `AA_Context` (optional) — ±5 nucleotide/amino-acid context strings
+Tum on isleme adimlari **yalnizca egitim verisi uzerinde** fit edilir (her CV fold'u icinde). Bu, veri sizintisini (data leakage) onleyen altin standart yaklasimdir.
 
-### Data contract
-See `data_contracts/variant_schema.py` for the Pydantic v2 schema.
+```
+Ham CSV Verisi
+    |
+    v
+[1] Medyan Imputation (SimpleImputer)
+    → Eksik degerleri egitim setinin medyani ile doldurur
+    |
+    v
+[2] Robust Scaler (RobustScaler)
+    → IQR tabanli olcekleme; aşırı degerlere dayanikli
+    |
+    v
+[3] Istege Bagli: Ozellik Secimi
+    → VarianceThreshold + SelectKBest (karsilikli bilgi)
+    → Dusuk varyanslı ve bilgisiz ozellikleri eler
+    |
+    v
+[4] Istege Bagli: AutoEncoder Latent Ozellik Birlestirme
+    → 43 ozellik → 16 boyutlu latent temsil → toplam 59 boyut
+    → Bottleneck mimarisi ile ozellik siksitirma
+    |
+    v
+[5] SMOTE Over-sampling
+    → Azinlik sinifini sentetik orneklerle dengeler
+    → YALNIZCA fold icinde uygulanir (sizinti onleme)
+    |
+    v
+[6] Kosinüs k-NN Graf Yaplandirma (VariantSAGEGNN icin)
+    → Her varyant bir dugum; en yakin k komsulari kenar olarak baglantilandi rilir
+    → Koordinat gerektirmez; yalnizca ozellik vektorleri kullanilir
+```
+
+> **Kritik:** SMOTE, AutoEncoder ve ozellik secimi adimlarinin YALNIZCA egitim fold'u icinde uygulanmasi, test setinin herhangi bir sekilde egitim surecini etkilememesini garanti eder.
 
 ---
 
-## Limitations
+## Egitim Detaylari
 
-- Class imbalance is handled by SMOTE + WeightedBCELoss but performance may degrade on highly imbalanced datasets
-- Requires pre-computed variant annotation scores — does not perform raw sequence analysis
-- VUS (Variants of Unknown Significance) support is architecturally present but requires annotated VUS training data
+| Ayar | Deger | Aciklama |
+|---|---|---|
+| Capraz dogrulama | Stratified K-Fold (k=5 varsayilan) | Sinif dagılımını koruyarak bolen |
+| Model secim metrigi | **Macro F1** (dogruluk degil) | Dengesiz siniflar icin daha adil |
+| Kalibrasyon bolmesi | Egitim verisinin %15'i | Izotonik regresyon icin ayri tutulan set |
+| Test bolmesi | Veri setinin %20'si | Son performans degerlendirmesi icin |
+| Rastgele tohum | 42 (tum bilesenler) | Tekrarlanabilirlik icin sabit tohum |
+| Kayip fonksiyonu | WeightedBCELoss (sinif dengeli) | SAGE + DNN icin dinamik sinif agirlik |
+| Erken durdurma | Dogrulama Macro F1 (sabir=5 epoch) | Asiri uyumlanamayi (overfitting) onler |
+| Ogrenme orani | Yapilandirmadan (varsayilan: 1e-3) | GNN ve DNN icin |
+| Epoch sayisi | Maksimum 100 (erken durdurma ile) | Pratikte ~20-40 epoch'ta durur |
+
+### Hiperparametre Optimizasyonu
+
+Optuna kutuphanesi ile Bayes tabanli hiper parametre arama:
+
+| Parametre | Aralik | Olcek |
+|---|---|---|
+| max_depth | [3, 10] | Tamsayi |
+| learning_rate | [0.01, 0.3] | Logaritmik |
+| n_estimators | [100, 500] | Tamsayi |
+| subsample | [0.6, 1.0] | Surekli |
+| colsample_bytree | [0.6, 1.0] | Surekli |
+
+- Varsayilan deneme sayisi: 30
+- Optimizasyon metrigi: Macro F1 (capraz dogrulama ortalaması)
 
 ---
 
-## Ethical Considerations
+## Degerlendirme Metrikleri
 
-- This model is a **research tool** and should not be used as the sole basis for clinical diagnostic decisions
-- Predictions should be interpreted alongside clinical data, family history, and expert clinical genetics review
-- Performance may vary across ancestry groups depending on the composition of gnomAD allele frequency features
+Tum metrikler, kalibrasyondan sonra ayri tutulan test seti uzerinde raporlanir:
+
+| Metrik | Aciklama | Yon |
+|---|---|---|
+| **Macro F1** | Birincil metrik; sinif dengeli F1 skoru | Yuksek = iyi |
+| **ROC-AUC** | ROC egrisi altindaki alan; ayirt edicilik gucu | Yuksek = iyi |
+| **PR-AUC** | Hassasiyet-Duyarlilik egrisi altindaki alan | Yuksek = iyi |
+| **MCC** | Matthews Korelasyon Katsayisi; dengeli ikili metrik | Yuksek = iyi |
+| **Brier Skoru** | Ortalama karesi alinmis olasilik hatasi | Dusuk = iyi |
+| **ECE** | Beklenen Kalibrasyon Hatasi (10 esit genislikli kutu) | Dusuk = iyi |
+
+### Dis Dogrulama (External Validation)
+
+Dis dogrulama modu, onceden egitilmis bir modeli yeni test verileri uzerinde degerlendirir:
+
+```bash
+python main.py --mode external_val --test-data data/test_variants_blind.csv
+```
+
+Cikti olarak F1, ROC-AUC, Brier Skoru, Hassasiyet, Duyarlilik hesaplanir ve JSON raporu disa aktarilir.
+
+### Adversarial Validation (Rakip Dogrulama)
+
+Egitim ve test veri dagilimlarinin benzerligini olcmek icin adversarial dogrulama modulu bulunur:
+
+```bash
+# src/evaluation/adversarial_validation.py
+# AUC ≈ 0.5 → egitim ve test dagilimi benzer (iyi)
+# AUC > 0.7 → alan kaymasi (domain shift) riski var (kotu)
+```
+
+---
+
+## Veri Gereksinimleri
+
+### Girdi Sutunlari
+
+| Sutun | Tip | Zorunluluk | Aciklama |
+|---|---|---|---|
+| `Variant_ID` | String | Zorunlu | Benzersiz tanimlayici; pipeline boyunca korunur, **asla ozellik olarak kullanilmaz** |
+| Sayisal anotasyon ozellikleri | Float/Int | Zorunlu | 43 adet fonksiyonel anotasyon skoru |
+| `Label` | 0/1 | Egitim icin zorunlu, tahmin icin istege bagli | 0=Benign, 1=Patojenik |
+| `Panel` | String | Istege bagli | Panel tanimlayicisi (General, Hereditary_Cancer, PAH, CFTR) |
+| `Nuc_Context` | String | Istege bagli | ±5 nukleotid baglam dizesi (ornek: "ACGTACGTAC") |
+| `AA_Context` | String | Istege bagli | ±5 amino asit baglam dizesi (ornek: "MVLSPADKTN") |
+
+### Veri Sozlesmesi
+
+Tum girdiler islenmeden once `data_contracts/variant_schema.py` dosyasindaki Pydantic v2 semasina karsi dogrulanir:
+
+```python
+from data_contracts.variant_schema import validate_dataset
+
+result = validate_dataset(df)
+if not result.is_valid:
+    raise ValueError(f"Sema dogrulama hatasi: {result.errors}")
+```
+
+---
+
+## Belirsizlik Olcumleme (Uncertainty Quantification)
+
+Model, MC Dropout (Monte Carlo Dropout) yontemi ile epistemik belirsizlik tahmini saglar:
+
+| Ozellik | Aciklama |
+|---|---|
+| **Yontem** | Test zamaninda dropout acik birakarak N ileri gecis |
+| **Ileri gecis sayisi** | 30 (varsayilan) |
+| **Cikti** | Tahmini entropi → [0, 1] araliginda normalize belirsizlik |
+| **Klinik kategoriler** | Yuksek Guven / Orta Guven / Dusuk Guven |
+
+Bu sayede model, "Bu tahmin hakkinda ne kadar emin?" sorusuna yanitlayabilir — bu, klinik karar destek sistemleri icin kritik oneme sahiptir.
+
+---
+
+## Aciklanabilirlik (XAI — Explainable AI)
+
+Model, dort farkli aciklanabilirlik katmani sunar:
+
+### 1. SHAP (SHapley Additive exPlanations)
+- **TreeExplainer** ile XGBoost icin yerel ve global aciklamalar
+- Her ozelligin tahmini nasil etkiledigini gosteren ozet ve selale grafikleri
+- Ozellik onemi siralamasi
+
+### 2. LIME (Local Interpretable Model-agnostic Explanations)
+- Yerel pertürbasyon tabanli aciklamalar
+- Bireysel varyant tahminlerinin neden yapildigini aciklar
+- 500 ornek varsayilan pertürbasyon sayisi
+
+### 3. GNN Aciklayici (GNNExplainer)
+- Graf dugum ve kenar onemliligi maskeleri
+- Hangi komsularin tahmine katki sagladigini gosterir
+- PyTorch Geometric entegrasyonu
+
+### 4. Klinik Icgoruler (Turkce)
+- SHAP degerlerinden otomatik Turkce klinik yorum uretimi
+- 43 ozellik → 6 biyolojik kategori eslemesi
+- Risk bolge siniflandirmasi: KRITIK / YUKSEK / ORTA / DUSUK
+- Her risk bolgesi icin klinik eylem onerileri
+
+---
+
+## Sinirlamalar
+
+| Sinir | Aciklama | Olasi Cozum |
+|---|---|---|
+| Sinif dengesizligi | SMOTE + WeightedBCELoss ile ele alinir, ancak asiri dengesiz veri setlerinde performans dusebilir | FocalLoss alternatifi mevcut (henuz varsayilan degil) |
+| Onceden hesaplanmis skorlar gerekli | Ham sekans analizi yapmaz; CADD, SIFT vb. onceden hesaplanmis olmalidir | VEP veya ANNOVAR ile on isleme gerekli |
+| VUS destegi | Belirsiz Onemi Bilinmeyen Varyantlar (VUS) mimari olarak desteklenir | Etiketli VUS egitim verisi gereklidir |
+| Kucuk panel performansi | CFTR gibi kucuk panellerde (140 ornek) istatistiksel guc sinirli olabilir | Daha fazla veri toplama veya transfer ogrenme |
+| GPU bagimliligi | GNN ve DNN bilesenleri GPU ile onemli olcude hizlanir | CPU modunda da calişir ancak yavas |
+| Tek dilli XAI | Klinik icgoruler yalnizca Turkce | Dil destek modulu genişletilebilir |
+
+---
+
+## Etik Degerlendirmeler
+
+### Klinik Kullanim Uyarisi
+
+> **Bu model bir ARASTIRMA ARACIDIR ve klinik tani kararlarinin tek temeli olarak kullanilmamalidir.**
+
+- Tahminler, klinik veriler, aile oykusu ve uzman klinik genetik degerlendirmesi ile birlikte yorumlanmalidir
+- Model, bagimsiz klinik dogrulama olmadan hasta yonetim kararlarini yonlendirmek icin kullanilmamalidir
+
+### Adillik ve Onyargi
+
+- Performans, gnomAD alel frekans ozelliklerinin bilesimi nedeniyle **soy gruplari arasinda farklilik gosterebilir**
+- Egitim verisinde temsil edilmeyen populasyonlar icin tahmin guvenirligi dusuk olabilir
+- Adversarial validation ile egitim/test dagilim uyumu duzenli olarak kontrol edilmelidir
+
+### Seffaflik
+
+- Model karti, tum mimari ve egitim detaylarini acik olarak belgelemektedir
+- SHAP, LIME ve GNNExplainer ile tahmin aciklanabilirligi saglanmistir
+- Belirsizlik olcumleme, modelin guven seviyesini raporlamaktadir
+- Kaynak kodu MIT lisansi altinda acik erisimlidir
+
+---
+
+## Tekrarlanabilirlik
+
+| Bilesen | Yontem |
+|---|---|
+| Rastgele tohum | `set_global_seed(42)` — tum bilesenler (NumPy, PyTorch, Python random) |
+| Veri bolmeleri | Sabit `random_state=42` ile StratifiedKFold |
+| Model agirliklari | Deterministik baslatma (seed kontrollü) |
+| Ortam | `requirements.txt` ile sabitlenmis bagimlilik surümleri |
+| Docker | Dockerfile ile tam tekrarlanabilir ortam |
+
+---
+
+## Komut Satiri Kullanimi
+
+```bash
+# Tam egitim pipeline (varsayilan: General panel)
+python main.py --mode train
+
+# Panel bazli egitim
+python main.py --mode train --panel cftr
+
+# Dis dogrulama
+python main.py --mode external_val --test-data data/test_variants_blind.csv
+
+# Streamlit arayuzu
+streamlit run app.py
+```
+
+---
+
+## Ilgili Dosyalar
+
+| Dosya | Aciklama |
+|---|---|
+| `src/models/gnn.py` | VariantSAGEGNN model tanimlamasi |
+| `src/models/ensemble.py` | Topluluk birlesimi ve agirlik optimizasyonu |
+| `src/training/trainer.py` | Ana egitim dongusu ve capraz dogrulama |
+| `src/inference/pipeline.py` | Uctan uca tahmin pipeline |
+| `src/inference/uncertainty.py` | MC Dropout belirsizlik olcumleme |
+| `src/explainability/` | SHAP, LIME, GNN Explainer, klinik icgorüler |
+| `src/calibration/calibrator.py` | Izotonik kalibrasyon modulu |
+| `configs/default.yaml` | Tum yapilandirma parametreleri |
+| `data_contracts/variant_schema.py` | Pydantic v2 veri semasi |
+
+---
+
+*Son guncelleme: Mart 2026 — VARIANT-GNN v3.0 (TEKNOFEST 2026 Finale Surumu)*
