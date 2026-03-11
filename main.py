@@ -254,6 +254,50 @@ def mode_external_val(args, cfg):
     logging.info("External validation tamamland\u0131.")
 
 
+def mode_adversarial_val(args, cfg):
+    """Adversarial validation — train/test domain shift testii.
+
+    Train ve test verisi aras\u0131ndaki da\u011f\u0131l\u0131m fark\u0131n\u0131 tespit eder.
+    AUC ~0.5 \u2192 fark yok (iyi). AUC ~1.0 \u2192 ciddi shift var (k\u00f6t\u00fc).
+    """
+    from src.evaluation.adversarial_validation import adversarial_validate
+
+    if not args.data_file or not args.test_file:
+        logging.error("--data_file (train) ve --test_file (test) ikisi de gerekli.")
+        sys.exit(1)
+
+    ds_train = load_csv(args.data_file)
+    ds_test = load_csv(args.test_file)
+
+    result = adversarial_validate(
+        X_train=ds_train.features.values,
+        X_test=ds_test.features.values,
+        feature_names=ds_train.feature_columns,
+    )
+
+    # Sonu\u00e7lar\u0131 kaydet
+    cfg.paths.create_dirs()
+    report_json = {
+        "mode": "adversarial_validation",
+        "train_file": str(args.data_file),
+        "test_file": str(args.test_file),
+        "auc_mean": result.auc_mean,
+        "auc_std": result.auc_std,
+        "auc_per_fold": result.auc_per_fold,
+        "verdict": result.verdict,
+        "top_shift_features": result.top_shift_features,
+    }
+    out_json = cfg.paths.reports_dir / "adversarial_validation_report.json"
+    with open(out_json, "w") as fh:
+        json.dump(report_json, fh, indent=2, default=str, ensure_ascii=False)
+
+    logging.info("Adversarial validation report -> %s", out_json)
+    print(f"\nSonu\u00e7: {result.verdict}")
+    print(f"AUC: {result.auc_mean:.4f} \u00b1 {result.auc_std:.4f}")
+    if result.top_shift_features:
+        print(f"En \u00e7ok shift g\u00f6steren \u00f6znitelikler: {', '.join(result.top_shift_features[:5])}")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -264,7 +308,8 @@ def build_parser():
         description="VARIANT-GNN: Graph-based Variant Pathogenicity Prediction"
     )
     p.add_argument("--mode",
-                   choices=["train", "tune", "eval", "predict", "crossval", "external_val"],
+                   choices=["train", "tune", "eval", "predict", "crossval",
+                            "external_val", "adversarial_val"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
@@ -288,12 +333,13 @@ def main():
     logging.info("VARIANT-GNN | mode=%s", args.mode.upper())
     logging.info("=" * 60)
     dispatch = {
-        "train":        mode_train,
-        "tune":         mode_tune,
-        "eval":         mode_eval,
-        "predict":      mode_predict,
-        "crossval":     mode_crossval,
-        "external_val": mode_external_val,
+        "train":            mode_train,
+        "tune":             mode_tune,
+        "eval":             mode_eval,
+        "predict":          mode_predict,
+        "crossval":         mode_crossval,
+        "external_val":     mode_external_val,
+        "adversarial_val":  mode_adversarial_val,
     }
     dispatch[args.mode](args, cfg)
 

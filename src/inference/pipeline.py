@@ -137,13 +137,15 @@ class InferencePipeline:
         cfg = self.cfg
         expected_n = self._preprocessor._imputer.n_features_in_
 
-        # Separate metadata cols
+        # Separate metadata cols (id + non-feature columns like Panel, Nuc_Context, AA_Context)
+        non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
         id_cols  = [c for c in cfg.schema.id_columns if c in df.columns]
-        drop     = id_cols + (
+        meta_cols = list(dict.fromkeys(id_cols + [c for c in non_feature_cols if c in df.columns]))
+        drop     = meta_cols + (
             [cfg.schema.target_column] if cfg.schema.target_column in df.columns else []
         )
-        metadata = df[id_cols].copy() if id_cols else pd.DataFrame(index=df.index)
-        feature_df = df.drop(columns=drop).select_dtypes(include=[np.number])
+        metadata = df[meta_cols].copy() if meta_cols else pd.DataFrame(index=df.index)
+        feature_df = df.drop(columns=drop, errors='ignore').select_dtypes(include=[np.number])
 
         # Auto-remap anonymous columns when count matches
         if feature_df.shape[1] != expected_n:

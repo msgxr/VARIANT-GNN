@@ -224,3 +224,53 @@ def evaluate(
     )
     report.log()
     return report
+
+
+# ---------------------------------------------------------------------------
+# Panel-based evaluation — TEKNOFEST 2026
+# ---------------------------------------------------------------------------
+
+
+def evaluate_per_panel(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    panels: np.ndarray,
+    threshold: float = 0.5,
+) -> Dict[str, EvaluationReport]:
+    """
+    Her panel için ayrı değerlendirme raporu üretir.
+
+    Parameters
+    ----------
+    y_true : Binary ground-truth labels.
+    y_prob : (N, 2) probability array.
+    panels : Panel labels for each sample (e.g., 'General', 'CFTR').
+
+    Returns
+    -------
+    Dict mapping panel name → EvaluationReport.
+    """
+    unique_panels = np.unique(panels)
+    reports = {}
+
+    for panel in unique_panels:
+        mask = panels == panel
+        if mask.sum() < 2:
+            logger.warning("Panel '%s' has too few samples (%d), skipping.", panel, mask.sum())
+            continue
+
+        panel_report = evaluate(
+            y_true[mask],
+            y_prob[mask],
+            threshold=threshold,
+        )
+        reports[str(panel)] = panel_report
+        logger.info(
+            "Panel %s | n=%d | F1=%.4f | AUC=%s | Brier=%.4f",
+            panel, mask.sum(), panel_report.macro_f1,
+            f"{panel_report.roc_auc:.4f}" if panel_report.roc_auc else "N/A",
+            panel_report.brier_score,
+        )
+
+    return reports
+
