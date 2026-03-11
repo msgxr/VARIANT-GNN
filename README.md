@@ -14,15 +14,18 @@
 
 ## 🌟 Proje Özeti
 
-VARIANT-GNN, insan genomundaki bir genetik varyantın **Patojenik (Hastalık Yapıcı)** mi yoksa **Benign (Zararsız)** mi olduğunu; XGBoost, Grafik Sinir Ağı (GNN) ve Derin Sinir Ağı (DNN) algoritmalarını birleştirerek yüksek hassasiyetle tahmin eder.
+VARIANT-GNN, insan genomundaki bir genetik varyantın **Patojenik (Hastalık Yapıcı)** mi yoksa **Benign (Zararsız)** mi olduğunu; XGBoost, Grafik Sinir Ağı (VariantSAGEGNN) ve Derin Sinir Ağı (DNN) algoritmalarını birleştirerek yüksek hassasiyetle tahmin eder.
 
-**v2.0 sürümündeki Yeni Özellikler (TEKNOFEST 2026 İçin Hazır):**
-- **🔬 Gerçek Zamanlı ClinVar API:** NCBI E-utilities üzerinden gerçek varyantların klinik doğrulamalarını çeker (Arayüz entegreli).
-- **📋 Varyant Önceliklendirme Sistemi:** Kritik derecede yüksek riskli varyantları "Önce İncele" tablosu ile renk kodlu şekilde sunar.
-- **📄 PDF Klinik Rapor Üretici:** Matbu çıktıya hazır, Türkçe açıklamalı ve SHAP/GNN grafikleri içeren profesyonel hekim raporu basar.
-- **💬 Klinik Karar Destek Asistanı:** Model sonuçlarını tıp uzmanları için anlamlı, Türkçe biyolojik metinlere (NLP) çevirir.
-- **🕸️ GNN Etkileşim Grafı:** Yapay zekanın kararı alırken genetik özellikler arasında kurduğu bağlantıları görsel ağ (NetworkX) ile açıklar.
-- **📊 10.000 Varyantlık Gelişmiş Veri Seti:** 5-K fold çapraz doğrulama ile **Makro F1: 0.9998** başarısına ulaşılmıştır.
+**v3.0 sürümündeki Yeni Özellikler (TEKNOFEST 2026 Şartname Uyumlu):**
+- **🧬 43 Öznitelikli Şartname Uyumlu Veri Seti:** Sekans, biyokimyasal, evrimsel, popülasyon ve in silico risk skorları
+- **📊 4 Panel Desteği:** Genel, Herediter Kanser, PAH, CFTR — şartnameye uygun varyant sayıları
+- **🕸️ VariantSAGEGNN:** GraphSAGE tabanlı indüktif model — skip connections, BatchNorm, WeightedBCELoss
+- **🔬 Multimodal Encoder:** ±5 nükleotid/amino asit bağlamı için Embedding+CNN dual-branch encoder
+- **✅ External Validation Modu:** Eğitilmiş modeli yeni veri ile test et, F1/AUC/Brier raporla
+- **🔬 Gerçek Zamanlı ClinVar API:** NCBI E-utilities üzerinden klinik doğrulama
+- **📄 PDF Klinik Rapor Üretici:** Türkçe açıklamalı, SHAP/GNN grafikleri içeren profesyonel rapor
+- **💬 Klinik Karar Destek Asistanı:** Model sonuçlarını Türkçe biyolojik metinlere çevirir
+- **📊 WeightedBCELoss:** Sınıf dengesizliği için dinamik ağırlıklı kayıp fonksiyonu (SAGE + DNN)
 
 Detaylı güvenlik ve kullanım bilgileri için [SECURITY.md](SECURITY.md) ve [MODEL_CARD.md](MODEL_CARD.md) dosyalarını inceleyebilirsiniz.
 
@@ -34,19 +37,21 @@ Detaylı güvenlik ve kullanım bilgileri için [SECURITY.md](SECURITY.md) ve [M
 Girdi CSV Dosyası (Variant_ID korunarak)
        |
 [Şema Doğrulama]     data_contracts/variant_schema.py
+       |                (Panel, Nuc_Context, AA_Context ayrıştırılır)
        |
 [Veri Ön İşleme]     YALNIZCA Train Fold'da eğitilir (Leakage yok)
     Eksik Veri Tamamlama (Median)
     Robust Ölçeklendirme (RobustScaler)
-    AutoEncoder ile Boyut Gizleme (34 → 16 dim)
+    AutoEncoder ile Boyut Gizleme (43 → 16 dim latent)
     Aşırı Örnekleme (SMOTE)
-    Grafik Kenarları (Train-Korelasyon tabanlı)
+    Kosinüs k-NN Grafik Yapısı (Varyant-düğüm tabanlı)
        |
        +--------------------+--------------------+
        |                    |                    |
        ▼                    ▼                    ▼
-    XGBoost                GNN                  DNN
-     (0.40)               (0.40)               (0.20)
+    XGBoost          VariantSAGEGNN            DNN
+     (0.40)      (GraphSAGE + Multimodal)    (0.20)
+                       (0.40)
        |                    |                    |
        +--------------------+--------------------+
                             |
@@ -59,7 +64,7 @@ Girdi CSV Dosyası (Variant_ID korunarak)
 
 ---
 
-## 📁 Proje Klasör Yapısı (v2.0)
+## 📁 Proje Klasör Yapısı (v3.0)
 
 ```text
 VARIANT-GNN/
@@ -70,7 +75,7 @@ VARIANT-GNN/
  ├── src/
  │   ├── config/                   Ayar yükleyici (settings.py)
  │   ├── data/                     Güvenli CSV yükleyici
- │   ├── features/                 AutoEncoder ve Preprocessing modülleri
+ │   ├── features/                 AutoEncoder, Preprocessing, Multimodal Encoder
  │   ├── graph/                    Grafik mimarisi oluşturucu
  │   ├── models/                   GNN, DNN ve Hibrit modeller
  │   ├── calibration/              İzotonik risk kalibratörü
@@ -83,7 +88,7 @@ VARIANT-GNN/
  │       ├── graph_viz.py          GNN Grafı ve Isı Haritası (NetworkX)
  │       └── shap_lime_explainer   Yapay Zeka modülleri
  ├── tests/                        Tüm CI/CD test dosyaları
- ├── data/                         10.000 satırlık varyant veri tabanı
+ ├── data/                         Şartname uyumlu varyant veri tabanı (43 öznitelik, 4 panel)
  ├── models/                       Eğitilmiş yapay zeka dosyaları
  ├── app.py                        Streamlit Arayüzü Uygulaması
  └── main.py                       Eğitim ve Tahmin Ana Çalıştırıcı (CLI)
@@ -117,15 +122,27 @@ python3 -m streamlit run app.py
 # Tarayıcıda http://localhost:8502 adresinde açılır.
 ```
 
-### Modeli Sıfırdan Eğitme (10.000 Varyant)
+### Modeli Sıfırdan Eğitme
 ```bash
 python3 main.py --mode train --data_file data/train_variants.csv
+```
+
+### Panel Bazlı Eğitim
+```bash
+python3 main.py --mode train --data_file data/train_general.csv --panel General
 ```
 
 ### Kör Test (Jüri Verisiyle Tahmin Alma)
 ```bash
 python3 main.py --mode predict --test_file data/test_variants_blind.csv
 # Sonuçlar 'reports/predictions.csv' olarak kaydedilir.
+```
+
+### External Validation (Dış Geçerlilik Testi)
+```bash
+python3 main.py --mode external_val --test_file data/test_variants.csv
+python3 main.py --mode external_val --test_file data/test_variants.csv --panel CFTR
+# Sonuçlar 'reports/external_validation_report.json' olarak kaydedilir.
 ```
 
 ---
@@ -149,11 +166,11 @@ preprocessing:
 
 ## 📈 Değerlendirme Metrikleri
 
-| Metrik | Anlamı ve İşlevi | Skor |
-|---|---|---|
-| **Macro F1** | Dengelenmiş doğruluğu gösteren **birincil metrik** | 0.9998 |
-| **ROC-AUC** | Modelin Patojenik ile Benign'i ayırma yeteneği | 1.0000 |
-| **Brier Skoru** | Modelin yüzdelik güven tahmininin kalibrasyon düzeyi | 0.0000 |
+| Metrik | Anlamı ve İşlevi |
+|---|---|
+| **Macro F1** | Dengelenmiş doğruluğu gösteren **birincil metrik** (şartname) |
+| **ROC-AUC** | Modelin Patojenik ile Benign'i ayırma yeteneği |
+| **Brier Skoru** | Modelin yüzdelik güven tahmininin kalibrasyon düzeyi |
 
 ---
 

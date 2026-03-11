@@ -73,3 +73,38 @@ class TestValidateDataset:
         result = validate_dataset(df)
         assert not result.is_valid
         assert any("numeric feature" in e.lower() for e in result.errors)
+
+    # ---------------------------------------------------------------
+    # TEKNOFEST Şartname — non_feature_columns testleri
+    # ---------------------------------------------------------------
+
+    def test_non_feature_columns_treated_as_metadata(self):
+        """Panel, Nuc_Context, AA_Context gibi non-feature sütunlarının
+        metadata olarak işlendiğini ve uyarı üretmediğini doğrular."""
+        df = _make_df()
+        df["Panel"] = "General"
+        df["Nuc_Context"] = "ACGTTGACGTG"
+        df["AA_Context"] = "AVILMFYWKRN"
+        result = validate_dataset(
+            df,
+            non_feature_columns=["Panel", "Nuc_Context", "AA_Context"]
+        )
+        assert result.is_valid
+        assert "Panel" in result.metadata_columns
+        assert "Nuc_Context" in result.metadata_columns
+        assert "AA_Context" in result.metadata_columns
+        # non-feature sütunlar uyarı üretmemeli
+        drop_warnings = [w for w in result.warnings if "dropped" in w.lower()]
+        for w in drop_warnings:
+            assert "Panel" not in w
+            assert "Nuc_Context" not in w
+            assert "AA_Context" not in w
+
+    def test_panel_column_not_in_features(self):
+        """Panel sütununun sayısal özellik listesine dahil edilmediğini doğrular."""
+        df = _make_df()
+        df["Panel"] = "CFTR"
+        result = validate_dataset(df, non_feature_columns=["Panel"])
+        assert "Panel" not in result.numeric_feature_columns
+        assert "Panel" in result.metadata_columns
+

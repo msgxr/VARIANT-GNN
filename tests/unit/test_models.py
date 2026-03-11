@@ -176,3 +176,92 @@ class TestHybridEnsemble:
         dnn_p = np.array([[0.7, 0.3], [0.2, 0.8]])
         result = ens.combine(xgb_proba=xgb_p, gnn_proba=gnn_p, dnn_proba=dnn_p)
         assert np.allclose(result.sum(axis=1), 1.0, atol=1e-5)
+
+
+# ---------------------------------------------------------------------------
+# VariantSAGEGNN (TEKNOFEST 2026 Primary Model)
+# ---------------------------------------------------------------------------
+
+class TestVariantSAGEGNN:
+    def test_forward_shape(self):
+        """VariantSAGEGNN çıktı boyutunu doğrular."""
+        from src.models.gnn import VariantSAGEGNN
+        model = VariantSAGEGNN(numeric_dim=20, hidden_dim=32, num_classes=2)
+        N = 10
+        x = torch.randn(N, 20)
+        edges = torch.randint(0, N, (2, 30))
+        out = model(x, edges)
+        assert out.shape == (N, 2), f"Expected ({N}, 2), got {out.shape}"
+
+    def test_multimodal_forward(self):
+        """Multimodal giriş (nükleotid + amino asit) ile forward pass."""
+        from src.models.gnn import VariantSAGEGNN
+        model = VariantSAGEGNN(
+            numeric_dim=20, hidden_dim=32, num_classes=2,
+            use_multimodal=True, seq_enc_dim=32
+        )
+        N = 8
+        x = torch.randn(N, 20)
+        edges = torch.randint(0, N, (2, 20))
+        nuc_ids = torch.randint(0, 6, (N, 11))
+        aa_ids = torch.randint(0, 22, (N, 11))
+        out = model(x, edges, nuc_ids=nuc_ids, aa_ids=aa_ids)
+        assert out.shape == (N, 2)
+
+    def test_gradient_flows(self):
+        from src.models.gnn import VariantSAGEGNN
+        model = VariantSAGEGNN(numeric_dim=16, hidden_dim=32, num_classes=2)
+        x = torch.randn(6, 16)
+        edges = torch.randint(0, 6, (2, 15))
+        out = model(x, edges)
+        loss = out.sum()
+        loss.backward()
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                assert param.grad is not None, f"No gradient for {name}"
+
+
+# ---------------------------------------------------------------------------
+# SequenceEncoder (Multimodal Encoder)
+# ---------------------------------------------------------------------------
+
+class TestSequenceEncoder:
+    def test_forward_shape(self):
+        """SequenceEncoder çıktı boyutunu doğrular."""
+        from src.features.multimodal_encoder import SequenceEncoder
+        encoder = SequenceEncoder(embedding_dim=8, cnn_channels=16)
+        N = 5
+        nuc_ids = torch.randint(0, 6, (N, 11))
+        aa_ids = torch.randint(0, 22, (N, 11))
+        out = encoder(nuc_ids, aa_ids)
+        assert out.shape == (N, 32), f"Expected ({N}, 32), got {out.shape}"
+
+    def test_output_dim_property(self):
+        from src.features.multimodal_encoder import SequenceEncoder
+        encoder = SequenceEncoder(cnn_channels=16)
+        assert encoder.output_dim == 32
+
+    def test_tokenize_nucleotides(self):
+        from src.features.multimodal_encoder import tokenize_nucleotides
+        seqs = ["ACGTTGACGTG", "NNNNNNNNNNN"]
+        result = tokenize_nucleotides(seqs, seq_len=11)
+        assert result.shape == (2, 11)
+        assert result.dtype == np.int64
+        # A=1, C=2, G=3, T=4
+        assert result[0, 0] == 1   # A
+        assert result[0, 1] == 2   # C
+        assert result[0, 2] == 3   # G
+        assert result[0, 3] == 4   # T
+        # N=5 (unknown)
+        assert result[1, 0] == 5
+
+    def test_tokenize_amino_acids(self):
+        from src.features.multimodal_encoder import tokenize_amino_acids
+        seqs = ["AVILMFYWKRN"]
+        result = tokenize_amino_acids(seqs, seq_len=11)
+        assert result.shape == (1, 11)
+        assert result.dtype == np.int64
+        # A=1, V=20
+        assert result[0, 0] == 1   # A
+        assert result[0, 1] == 20  # V
+

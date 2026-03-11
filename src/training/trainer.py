@@ -395,7 +395,7 @@ class VariantTrainer:
             num_classes= 2,
         ).to(self.device)
         dnn_loader = _make_dnn_loader(X_proc, y_resampled, cfg.training.batch_size, shuffle=True)
-        dnn_model  = self._train_dnn(dnn_model, dnn_loader, val_loader=None)
+        dnn_model  = self._train_dnn(dnn_model, dnn_loader, val_loader=None, y_train=y_resampled)
 
         ensemble = HybridEnsemble(
             xgb_model = xgb_model,
@@ -461,7 +461,7 @@ class VariantTrainer:
             dnn_model     = VariantDNN(X_tr_proc.shape[1], cfg.dnn.hidden_dim, 2).to(self.device)
             dnn_tr_loader = _make_dnn_loader(X_tr_proc, y_tr_res, cfg.training.batch_size, True)
             dnn_val_loader= _make_dnn_loader(X_val_proc, y_val, cfg.training.batch_size, False)
-            dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader)
+            dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_train=y_tr_res)
             dnn_preds, _  = _dnn_eval(dnn_model, dnn_val_loader, self.device)
             dnn_f1        = float(f1_score(y_val, dnn_preds[:len(y_val)],
                                            average="macro", zero_division=0))
@@ -631,12 +631,17 @@ class VariantTrainer:
         model:       VariantDNN,
         train_loader: TorchDataLoader,
         val_loader:   Optional[TorchDataLoader],
+        y_train:      Optional[np.ndarray] = None,
     ) -> VariantDNN:
         cfg       = self.cfg
         optimizer = torch.optim.Adam(
             model.parameters(), lr=cfg.dnn.lr, weight_decay=cfg.dnn.weight_decay
         )
-        criterion    = nn.CrossEntropyLoss()
+        # WeightedBCELoss for class-balanced training (TEKNOFEST: imbalanced panels)
+        if y_train is not None:
+            criterion = WeightedBCELoss.from_labels(y_train).to(self.device)
+        else:
+            criterion = nn.CrossEntropyLoss()
         best_f1      = -1.0
         best_weights = copy.deepcopy(model.state_dict())
 
