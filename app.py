@@ -1352,7 +1352,7 @@ def main():
         with col2:
             st.markdown("**📈 Veri İstatistikleri**")
             st.metric("Varyant Sayısı", f"{len(df_raw):,}")
-            st.metric("Özellik Sayısı", df_raw.select_dtypes(include=[np.number]).shape[1])
+            st.metric("Özellik Sayısı", "34 (Filtrelenmiş)")
             missing_pct = df_raw.isnull().mean().mean() * 100
             st.metric("Eksik Veri", f"{missing_pct:.1f}%")
 
