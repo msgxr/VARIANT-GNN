@@ -59,6 +59,10 @@ schema:
   target_column: Label
   id_columns:
     - Variant_ID
+  non_feature_columns:
+    - Panel
+    - Nuc_Context
+    - AA_Context
   label_mapping:
     pathogenic: 1
     "likely pathogenic": 1
@@ -68,3 +72,37 @@ schema:
     "1.0": 1
     "0": 0
     "0.0": 0
+
+# ─── Panel Tanımları (TEKNOFEST 2026 Şartname Bölüm 3.2) ───
+panels:
+  General:
+    train_pathogenic: 1500
+    train_benign: 1500
+    test_pathogenic: 1000
+    test_benign: 1000
+  Hereditary_Cancer:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  PAH:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  CFTR:
+    train_pathogenic: 70
+    train_benign: 70
+    test_pathogenic: 30
+    test_benign: 30
+
+# ─── External Validation ───
+external_validation:
+  enabled: true
+  metrics:
+    - f1
+    - roc_auc
+    - brier_score
+    - precision
+    - recall
+  export_predictions: true

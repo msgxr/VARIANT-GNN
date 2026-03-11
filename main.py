@@ -2,18 +2,22 @@
 main.py — VARIANT-GNN entry point.
 
 Modes:
-  train    — leakage-free training + cross-validation + calibration + evaluation
-  tune     — Optuna hyperparameter search
-  eval     — evaluate saved models on a labelled test CSV
-  predict  — run inference on an unlabelled CSV, output results
-  crossval — standalone cross-validation on a labelled CSV
+  train        — leakage-free training + cross-validation + calibration + evaluation
+  tune         — Optuna hyperparameter search
+  eval         — evaluate saved models on a labelled test CSV
+  predict      — run inference on an unlabelled CSV, output results
+  crossval     — standalone cross-validation on a labelled CSV
+  external_val — external validation: load trained model, run on new test data,
+                 compute F1/AUC/Brier metrics  (TEKNOFEST jüri senaryosu)
 
 Usage examples:
   python main.py --mode train
   python main.py --mode train --data_file data/train_variants.csv
+  python main.py --mode train --panel General
   python main.py --mode predict --test_file data/test_variants_blind.csv
   python main.py --mode eval   --data_file data/test_variants.csv
   python main.py --mode tune   --data_file data/train_variants.csv --n_trials 30
+  python main.py --mode external_val --test_file data/test_variants.csv
 """
 from __future__ import annotations
 
@@ -184,6 +188,72 @@ def mode_crossval(args, cfg):
                      r.fold, r.f1, r.xgb_f1, r.gnn_f1, r.dnn_f1)
 
 
+def mode_external_val(args, cfg):
+    """External validation — TEKNOFEST 2026 jüri senaryosu.
+
+    Önceden eğitilmiş modeli yükler, yeni etiketli test verisi üzerinde
+    F1 / ROC-AUC / Brier / Precision / Recall hesaplar.
+    """
+    from sklearn.metrics import brier_score_loss
+
+    test_path = args.test_file or args.data_file
+    if not test_path:
+        logging.error("--test_file veya --data_file gerekli (external_val modu).")
+        sys.exit(1)
+
+    ds = load_csv(test_path)
+    if ds.labels is None:
+        logging.error("External validation i\u00e7in etiketli veri gerekli.")
+        sys.exit(1)
+
+    # Panel filtresi (iste\u011fe ba\u011fl\u0131)
+    panel = getattr(args, "panel", None)
+    if panel and "Panel" in ds.metadata.columns:
+        mask = ds.metadata["Panel"] == panel
+        from src.data.loader import LoadedDataset
+        ds = LoadedDataset(
+            features        = ds.features[mask].reset_index(drop=True),
+            labels          = ds.labels[mask.values],
+            metadata        = ds.metadata[mask].reset_index(drop=True),
+            feature_columns = ds.feature_columns,
+        )
+        logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))
+
+    pipeline = InferencePipeline()
+    pipeline.load()
+    df_result = pipeline.predict_from_dataset(ds)
+
+    p1    = df_result["Probability"].values
+    proba = np.column_stack([1 - p1, p1])
+    report = evaluate(ds.labels, proba)
+    report.log(prefix="EXTERNAL_VAL")
+
+    # Brier score
+    brier = brier_score_loss(ds.labels, p1)
+    logging.info("Brier Score: %.6f", brier)
+
+    # Sonu\u00e7lar\u0131 kaydet
+    cfg.paths.create_dirs()
+    out_csv = cfg.paths.reports_dir / "external_validation_results.csv"
+    df_result.to_csv(out_csv, index=False)
+
+    report_json = {
+        "mode": "external_validation",
+        "test_file": str(test_path),
+        "panel": panel,
+        "n_samples": len(ds.labels),
+        "metrics": report.as_dict(),
+        "brier_score": brier,
+    }
+    out_json = cfg.paths.reports_dir / "external_validation_report.json"
+    with open(out_json, "w") as fh:
+        json.dump(report_json, fh, indent=2, default=str)
+
+    logging.info("External validation results -> %s", out_csv)
+    logging.info("External validation report  -> %s", out_json)
+    logging.info("External validation tamamland\u0131.")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -193,13 +263,16 @@ def build_parser():
     p = argparse.ArgumentParser(
         description="VARIANT-GNN: Graph-based Variant Pathogenicity Prediction"
     )
-    p.add_argument("--mode", choices=["train","tune","eval","predict","crossval"],
+    p.add_argument("--mode",
+                   choices=["train", "tune", "eval", "predict", "crossval", "external_val"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
     p.add_argument("--config",    type=str, default=None)
     p.add_argument("--n_trials",  type=int, default=30)
     p.add_argument("--log_file",  type=str, default=None)
+    p.add_argument("--panel",     type=str, default=None,
+                   help="Panel filtresi: General, Hereditary_Cancer, PAH, CFTR")
     return p
 
 
@@ -215,11 +288,12 @@ def main():
     logging.info("VARIANT-GNN | mode=%s", args.mode.upper())
     logging.info("=" * 60)
     dispatch = {
-        "train":   mode_train,
-        "tune":    mode_tune,
-        "eval":    mode_eval,
-        "predict": mode_predict,
-        "crossval":mode_crossval,
+        "train":        mode_train,
+        "tune":         mode_tune,
+        "eval":         mode_eval,
+        "predict":      mode_predict,
+        "crossval":     mode_crossval,
+        "external_val": mode_external_val,
     }
     dispatch[args.mode](args, cfg)
 

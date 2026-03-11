@@ -82,6 +82,7 @@ def load_csv(
     target_column = target_column or cfg.schema.target_column
     id_columns    = id_columns    or cfg.schema.id_columns
     label_mapping = label_mapping or cfg.schema.label_mapping
+    non_feature_columns = getattr(cfg.schema, 'non_feature_columns', [])
 
     path = Path(csv_path)
     if not path.exists():
@@ -90,15 +91,21 @@ def load_csv(
     df = pd.read_csv(path, sep=separator, low_memory=False)
     logger.info("Loaded %d rows × %d cols from %s", len(df), df.shape[1], path)
 
-    result = validate_dataset(df, target_column=target_column, id_columns=id_columns)
+    result = validate_dataset(
+        df,
+        target_column=target_column,
+        id_columns=id_columns,
+        non_feature_columns=non_feature_columns,
+    )
 
     for w in result.warnings:
         logger.warning("Schema warning: %s", w)
     if not result.is_valid:
         raise ValueError("Schema validation failed:\n" + "\n".join(result.errors))
 
-    # Build metadata frame (preserve original id columns intact)
-    meta_cols = [c for c in id_columns if c in df.columns]
+    # Build metadata frame (preserve original id columns + non-feature cols)
+    meta_cols = [c for c in (id_columns + non_feature_columns) if c in df.columns]
+    meta_cols = list(dict.fromkeys(meta_cols))  # deduplicate preserving order
     metadata  = df[meta_cols].reset_index(drop=True) if meta_cols else pd.DataFrame(index=df.index)
 
     # Feature matrix

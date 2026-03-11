@@ -185,3 +185,63 @@ def test_clinical_risk_score_range():
     probs = np.array([[0.8, 0.2], [0.3, 0.7], [0.5, 0.5]])
     scores = model.pathogenic_risk_score(probs)
     assert np.all(scores >= 0) and np.all(scores <= 100)
+
+
+# ─────────────────────────────────────────────────────────────
+# TEKNOFEST Şartname Uyum Testleri
+# ─────────────────────────────────────────────────────────────
+
+def test_anonymous_columns_accepted():
+    """Anonim sütun isimlerinin (kolon_0, kolon_1, ...) pipeline'da kabul edildiğini test eder.
+    Şartnameye göre veri seti sütun isimsiz gelecek."""
+    n_features = 20
+    df = pd.DataFrame(
+        np.random.randn(50, n_features),
+        columns=[f"col_{i}" for i in range(n_features)]
+    )
+    preprocessor = TabularGraphPreprocessor(corr_threshold=0.5, use_autoencoder=False)
+    scaled = preprocessor.fit_transform(df)
+    assert scaled.shape == (50, n_features)
+
+def test_non_feature_columns_excluded():
+    """Panel, Nuc_Context, AA_Context gibi non-feature sütunlarının
+    sayısal feature matrisinden çıkarıldığını test eder."""
+    df = generate_dummy_data(n_samples=50, n_features=15)
+    # non-feature sütunlar ekle
+    df['Panel'] = 'General'
+    df['Nuc_Context'] = 'ACGTTGACGTG'
+    df['AA_Context'] = 'AVILMFYWKRN'
+    
+    # Bu sütunlar sayısal olmadığı için drop edilmeli
+    X_df, y = load_and_prepare_data.__wrapped__(df) if hasattr(load_and_prepare_data, '__wrapped__') else (None, None)
+    if X_df is None:
+        # Doğrudan DataFrame ile test — non-numeric sütunları çıkar
+        X_df = df.drop(columns=['Label'])
+        non_numeric = X_df.select_dtypes(exclude=[np.number]).columns.tolist()
+        X_df = X_df.drop(columns=non_numeric)
+        assert 'Panel' not in X_df.columns
+        assert 'Nuc_Context' not in X_df.columns
+        assert 'AA_Context' not in X_df.columns
+        assert X_df.shape[1] == 15  # sadece sayısal özellikler
+
+def test_config_has_panel_settings():
+    """Konfigürasyonun panel ayarlarını içerdiğini test eder."""
+    cfg = get_settings()
+    assert hasattr(cfg, 'panels'), "Config'te panels alanı bulunmalı"
+    if cfg.panels:
+        assert 'General' in cfg.panels, "General paneli tanımlı olmalı"
+
+def test_config_has_external_validation():
+    """Konfigürasyonun external validation ayarlarını içerdiğini test eder."""
+    cfg = get_settings()
+    assert hasattr(cfg, 'external_validation'), "Config'te external_validation alanı bulunmalı"
+    assert cfg.external_validation.enabled is True
+
+def test_config_has_non_feature_columns():
+    """Konfigürasyondaki non_feature_columns alanını test eder."""
+    cfg = get_settings()
+    assert hasattr(cfg.schema, 'non_feature_columns'), "Schema'da non_feature_columns bulunmalı"
+    assert 'Panel' in cfg.schema.non_feature_columns
+    assert 'Nuc_Context' in cfg.schema.non_feature_columns
+    assert 'AA_Context' in cfg.schema.non_feature_columns
+

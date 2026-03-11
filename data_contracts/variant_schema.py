@@ -58,6 +58,7 @@ def validate_dataset(
     df: pd.DataFrame,
     target_column: str = "Label",
     id_columns: Optional[List[str]] = None,
+    non_feature_columns: Optional[List[str]] = None,
 ) -> DatasetValidationResult:
     """
     Validate a loaded DataFrame against the variant schema.
@@ -66,6 +67,7 @@ def validate_dataset(
     ``result.is_valid`` before proceeding.
     """
     id_columns = id_columns or ["Variant_ID"]
+    non_feature_columns = non_feature_columns or []
     warnings: List[str] = []
     errors: List[str] = []
 
@@ -80,10 +82,15 @@ def validate_dataset(
             errors=errors,
         )
 
-    # Identify metadata columns (id + label)
+    # Identify metadata columns (id + label + non_feature_columns)
     metadata_cols: List[str] = []
     for col in id_columns:
         if col in df.columns:
+            metadata_cols.append(col)
+
+    # Non-feature columns (Panel, Nuc_Context, AA_Context etc.)
+    for col in non_feature_columns:
+        if col in df.columns and col not in metadata_cols:
             metadata_cols.append(col)
 
     label_col: Optional[str] = None

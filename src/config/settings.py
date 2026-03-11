@@ -131,6 +131,9 @@ class ThresholdSettings:
 class SchemaSettings:
     target_column: str = "Label"
     id_columns: List[str] = field(default_factory=lambda: ["Variant_ID"])
+    non_feature_columns: List[str] = field(
+        default_factory=lambda: ["Panel", "Nuc_Context", "AA_Context"]
+    )
     label_mapping: Dict[str, int] = field(
         default_factory=lambda: {
             "pathogenic": 1,
@@ -143,6 +146,24 @@ class SchemaSettings:
             "0.0": 0,
         }
     )
+
+
+@dataclass
+class PanelSettings:
+    """Per-panel variant counts (TEKNOFEST 2026 Şartname Bölüm 3.2)."""
+    train_pathogenic: int = 0
+    train_benign: int = 0
+    test_pathogenic: int = 0
+    test_benign: int = 0
+
+
+@dataclass
+class ExternalValidationSettings:
+    enabled: bool = True
+    metrics: List[str] = field(
+        default_factory=lambda: ["f1", "roc_auc", "brier_score", "precision", "recall"]
+    )
+    export_predictions: bool = True
 
 
 @dataclass
@@ -159,6 +180,10 @@ class Settings:
     training: TrainingSettings
     thresholds: ThresholdSettings
     schema: SchemaSettings
+    panels: Dict[str, PanelSettings] = field(default_factory=dict)
+    external_validation: ExternalValidationSettings = field(
+        default_factory=ExternalValidationSettings
+    )
 
 
 def load_settings(config_path: Optional[Path] = None) -> Settings:
@@ -250,22 +275,44 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     schema = SchemaSettings(
         target_column = raw_sch.get("target_column", "Label"),
         id_columns    = raw_sch.get("id_columns", ["Variant_ID"]),
+        non_feature_columns = raw_sch.get("non_feature_columns", ["Panel", "Nuc_Context", "AA_Context"]),
         label_mapping = {str(k): int(v) for k, v in label_map_raw.items()},
     )
 
+    # ── Panel tanımları ───────────────────────────────────────────
+    raw_panels = raw.get("panels", {})
+    panels: Dict[str, PanelSettings] = {}
+    for panel_name, panel_data in raw_panels.items():
+        panels[panel_name] = PanelSettings(
+            train_pathogenic = panel_data.get("train_pathogenic", 0),
+            train_benign     = panel_data.get("train_benign", 0),
+            test_pathogenic  = panel_data.get("test_pathogenic", 0),
+            test_benign      = panel_data.get("test_benign", 0),
+        )
+
+    # ── External validation ───────────────────────────────────────
+    raw_ev = raw.get("external_validation", {})
+    external_validation = ExternalValidationSettings(
+        enabled           = raw_ev.get("enabled", True),
+        metrics           = raw_ev.get("metrics", ["f1", "roc_auc", "brier_score"]),
+        export_predictions = raw_ev.get("export_predictions", True),
+    )
+
     return Settings(
-        seed          = raw.get("seed", 42),
-        device        = raw.get("device", "auto"),
-        paths         = paths,
-        gnn           = gnn,
-        dnn           = dnn,
-        xgb           = xgb,
-        ensemble      = ensemble,
-        preprocessing = preprocessing,
-        calibration   = calibration,
-        training      = training,
-        thresholds    = thresholds,
-        schema        = schema,
+        seed                = raw.get("seed", 42),
+        device              = raw.get("device", "auto"),
+        paths               = paths,
+        gnn                 = gnn,
+        dnn                 = dnn,
+        xgb                 = xgb,
+        ensemble            = ensemble,
+        preprocessing       = preprocessing,
+        calibration         = calibration,
+        training            = training,
+        thresholds          = thresholds,
+        schema              = schema,
+        panels              = panels,
+        external_validation = external_validation,
     )
 
 
