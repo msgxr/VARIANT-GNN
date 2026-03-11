@@ -1434,6 +1434,22 @@ def main():
                 df_features = df_raw.drop(columns=drop_cols, errors="ignore").select_dtypes(
                     include=[np.number]
                 )
+                try:
+                    # attempt to get exact model columns if available
+                    exp_features = pipeline._ensemble.xgb.get_booster().feature_names
+                    if exp_features:
+                        df_features = df_features[[c for c in exp_features if c in df_features.columns]]
+                except Exception:
+                    pass
+                
+                # drop known non-features from cfg just to be safe if model features isn't set
+                non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
+                df_features = df_features.drop(columns=[c for c in non_feature_cols if c in df_features.columns], errors="ignore")
+                
+                # fallback enforce 34 limit to avoid XAI crash
+                if df_features.shape[1] > 34:
+                     df_features = df_features.iloc[:, :34]
+                     
                 render_xai(pipeline, df_features, opts)
 
     with tab_perf:

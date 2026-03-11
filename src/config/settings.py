@@ -134,7 +134,7 @@ class SchemaSettings:
     target_column: str = "Label"
     id_columns: List[str] = field(default_factory=lambda: ["Variant_ID"])
     non_feature_columns: List[str] = field(
-        default_factory=lambda: ["Panel", "Nuc_Context", "AA_Context"]
+        default_factory=lambda: ["Panel", "Nuc_Context", "AA_Context", "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type", "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic", "OMIM_Disease_Gene", "Secondary_Structure_Disruption", "Variant_type", "Variant_Type"]
     )
     label_mapping: Dict[str, int] = field(
         default_factory=lambda: {
@@ -279,7 +279,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     schema = SchemaSettings(
         target_column = raw_sch.get("target_column", "Label"),
         id_columns    = raw_sch.get("id_columns", ["Variant_ID"]),
-        non_feature_columns = raw_sch.get("non_feature_columns", ["Panel", "Nuc_Context", "AA_Context"]),
+        non_feature_columns = raw_sch.get("non_feature_columns", ["Panel", "Nuc_Context", "AA_Context", "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type", "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic", "OMIM_Disease_Gene", "Secondary_Structure_Disruption", "Variant_type", "Variant_Type"]),
         label_mapping = {str(k): int(v) for k, v in label_map_raw.items()},
     )
 

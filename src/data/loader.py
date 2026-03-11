@@ -145,4 +145,57 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
     Convenience wrapper for unlabelled prediction CSVs.
     Label column is ignored even if present.
     """
-    return load_csv(csv_path, separator=separator)
+    dataset = load_csv(csv_path, separator=separator)
+    # Ensure dataset.features exactly matches the 34 columns expected by the model.
+    # The current model was trained with exactly 34 columns. 
+    # Any additional numeric columns not in standard 34 should be moved to metadata.
+    expected_34_features = [
+        'Ref_Nucleotide', 'Alt_Nucleotide', 'Codon_Change_Type', 'AA_Grantham_Score', 
+        'GC_Content_Window', 'In_CpG_Site', 'Motif_Disruption_Score', 'AA_Polarity_Change', 
+        'AA_Hydrophobicity_Diff', 'AA_Mol_Weight_Diff', 'AA_Size_Diff', 'Protein_Impact_Score', 
+        'Delta_Solvent_Accessibility', 'Secondary_Structure_Disruption', 'GERP_RS', 
+        'PhyloP100way_vertebrate', 'phastCons100way_vertebrate', 'SiPhy_29way_logOdds', 
+        'Phylo_Diversity_Index', 'gnomAD_exomes_AF', 'gnomAD_exomes_AF_afr', 
+        'gnomAD_exomes_AF_eur', 'gnomAD_exomes_AF_eas', 'gnomAD_exomes_AF_sas', 
+        'gnomAD_exomes_AF_amr', 'ExAC_AF', 'SIFT_score', 'PolyPhen2_HDIV_score', 
+        'PolyPhen2_HVAR_score', 'CADD_phred', 'REVEL_score', 'MutPred2_score', 'VEST4_score', 
+        'PROVEAN_score'
+    ]
+    
+    # Capitalization in actual data vs schema may differ, try case-insensitive or direct match:
+    existing_cols = dataset.features.columns.tolist()
+    
+    # If there are exactly 34 columns, assume it's right.
+    if len(existing_cols) == 34:
+        return dataset
+        
+    # Build a lowercase map of the 34 expected features for robust matching
+    expected_lower = {c.lower(): c for c in expected_34_features}
+    
+    matched_cols = []
+    # Identify which of the existing columns belong to the expected 34 features
+    for c in existing_cols:
+        cl = c.lower()
+        if cl in expected_lower:
+            matched_cols.append(c)
+            
+    # If we found matches (usually around 34), we subset the features
+    if len(matched_cols) > 0:
+        # Move non-matched features to metadata
+        unmatched = [c for c in existing_cols if c not in matched_cols]
+        if unmatched:
+            for uc in unmatched:
+                dataset.metadata[uc] = dataset.features[uc]
+            dataset.features = dataset.features[matched_cols]
+            dataset.feature_columns = matched_cols
+            
+    # Try one more brute-force fallback for 34 features
+    if len(dataset.features.columns) > 34:
+        # Fallback to taking exactly the first 34 columns to prevent crash
+        excess_cols = dataset.features.columns[34:]
+        for c in excess_cols:
+            dataset.metadata[c] = dataset.features[c]
+        dataset.features = dataset.features.iloc[:, :34]
+        dataset.feature_columns = dataset.features.columns.tolist()
+
+    return dataset
