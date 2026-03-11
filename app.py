@@ -503,7 +503,7 @@ def render_risk_histogram(df_result: pd.DataFrame):
     plt.close()
 
 
-def render_chromosome_map(df_result: pd.DataFrame):
+def render_risk_map(df_result: pd.DataFrame):
     """Varyant risk dağılımını scatter görselleştirmesi ile göster."""
     st.markdown("""
     <div class="section-header">
@@ -1398,7 +1398,7 @@ def main():
                 )
 
             render_risk_histogram(df_result)
-            render_chromosome_map(df_result)
+            render_risk_map(df_result)
             render_model_comparison(df_result)
 
     with tab_xai:
