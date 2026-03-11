@@ -13,6 +13,9 @@ NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 ESEARCH   = f"{NCBI_BASE}/esearch.fcgi"
 ESUMMARY  = f"{NCBI_BASE}/esummary.fcgi"
 
+# ClinVar API'sinin etkin olup olmadığını kontrol eden bayrak
+CLINVAR_API_ENABLED = True
+
 # ClinVar klinik anlam renk/ikon eşlemesi
 SIGNIFICANCE_MAP: dict[str, tuple[str, str]] = {
     "pathogenic":              ("🔴", "#fc8181"),
@@ -82,6 +85,10 @@ def fetch_clinvar_info(query: str) -> dict:
         "url": "",
         "error": None,
     }
+
+    if not CLINVAR_API_ENABLED:
+        base_result["error"] = "ClinVar API devre dışı bırakıldı."
+        return base_result
 
     try:
         uids = _clinvar_search(query)
