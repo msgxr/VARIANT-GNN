@@ -1,0 +1,80 @@
+cv:
+  n_splits: 5
+  per_fold_preprocessor: true
+  shuffle: true
+device: cuda
+dnn:
+  batch_norm: true
+  dropout: 0.4
+  hidden_layers:
+  - 256
+  - 128
+  - 64
+ensemble:
+  calibration_method: isotonic
+  threshold: 0.5
+  weights:
+  - 0.4
+  - 0.4
+  - 0.2
+explainability:
+  lime_num_features: 15
+  lime_num_samples: 1000
+  shap_sample_size: 200
+gnn:
+  dropout: 0.3
+  hidden_dim: 128
+  knn_k: 8
+  num_layers: 3
+  use_gat: false
+  use_skip_connections: true
+optuna:
+  enabled: false
+  n_trials: 30
+panels:
+  cftr:
+    n_test: 60
+    n_train: 140
+    test: data/test_cftr_blind.csv
+    train: data/train_cftr.csv
+  general:
+    n_test: 2000
+    n_train: 3000
+    test: data/test_general_blind.csv
+    train: data/train_general.csv
+  hereditary:
+    n_test: 200
+    n_train: 400
+    test: data/test_hereditary_blind.csv
+    train: data/train_hereditary.csv
+  pah:
+    n_test: 200
+    n_train: 400
+    test: data/test_pah_blind.csv
+    train: data/train_pah.csv
+positive_class: 1
+preprocessing:
+  missing_strategy: median
+  scaling_method: robust
+  smote_enabled: true
+  use_autoencoder: false
+primary_metric: f1_macro
+seed: 42
+system:
+  num_workers: 2
+  pin_memory: true
+target_column: Label
+training:
+  batch_size: 64
+  early_stopping_patience: 10
+  gradient_accumulation: 2
+  learning_rate: 0.001
+  max_epochs: 50
+  mixed_precision: true
+  weight_decay: 0.0001
+xgboost:
+  colsample_bytree: 0.8
+  learning_rate: 0.05
+  max_depth: 6
+  n_estimators: 300
+  subsample: 0.8
