@@ -121,18 +121,42 @@ def _build_sample_graph(
     return preprocessor.build_sample_graph(X, y, k=knn_k)
 
 
+def _tokenize_sequences(
+    nuc_seqs: Optional[List[str]],
+    aa_seqs:  Optional[List[str]],
+    device:   torch.device,
+) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+    """
+    Tokenise raw Nuc_Context / AA_Context string lists to int64 tensors.
+    Returns (None, None) when sequences are not provided.
+    """
+    from src.features.multimodal_encoder import tokenize_nucleotides, tokenize_amino_acids
+
+    nuc_t = (
+        torch.tensor(tokenize_nucleotides(nuc_seqs), dtype=torch.long).to(device)
+        if nuc_seqs is not None else None
+    )
+    aa_t = (
+        torch.tensor(tokenize_amino_acids(aa_seqs), dtype=torch.long).to(device)
+        if aa_seqs is not None else None
+    )
+    return nuc_t, aa_t
+
+
 def _sage_epoch(
     model: VariantSAGEGNN,
     data,
     optimizer: torch.optim.Optimizer,
     criterion: WeightedBCELoss,
     device: torch.device,
+    nuc_ids: Optional[torch.Tensor] = None,
+    aa_ids:  Optional[torch.Tensor] = None,
 ) -> float:
     """One full-batch training step on the sample graph."""
     model.train()
     data = data.to(device)
     optimizer.zero_grad()
-    logits = model(data.x, data.edge_index)
+    logits = model(data.x, data.edge_index, nuc_ids=nuc_ids, aa_ids=aa_ids)
     loss   = criterion(logits, data.y)
     loss.backward()
     optimizer.step()
@@ -143,15 +167,18 @@ def _sage_eval(
     model: VariantSAGEGNN,
     data,
     device: torch.device,
+    nuc_ids: Optional[torch.Tensor] = None,
+    aa_ids:  Optional[torch.Tensor] = None,
 ) -> Tuple[List[int], np.ndarray]:
     """Return (preds, probs) for all nodes in a sample graph."""
     model.eval()
     data = data.to(device)
     with torch.no_grad():
-        logits = model(data.x, data.edge_index)
+        logits = model(data.x, data.edge_index, nuc_ids=nuc_ids, aa_ids=aa_ids)
         probs  = F.softmax(logits, dim=1).cpu().numpy()
         preds  = logits.argmax(dim=1).cpu().tolist()
     return preds, probs
+
 
 
 # ---------------------------------------------------------------------------
@@ -320,25 +347,40 @@ class VariantTrainer:
         self,
         X: np.ndarray,
         y: np.ndarray,
+        nuc_seqs: Optional[List[str]] = None,
+        aa_seqs:  Optional[List[str]] = None,
     ) -> TrainResult:
         """
         Train on provided arrays with a final held-out test split,
         then re-fit on the full training portion.
+
+        Parameters
+        ----------
+        X        : Numeric feature matrix [N, F].
+        y        : Integer label array [N].
+        nuc_seqs : Optional list of Nuc_Context strings (length N).
+        aa_seqs  : Optional list of AA_Context strings (length N).
 
         Returns a ``TrainResult`` with the fitted ensemble + preprocessor.
         """
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
 
-        X_train_all, X_test, y_train_all, y_test = train_test_split(
-            X, y,
-            test_size   = cfg.training.test_size,
-            stratify    = y,
-            random_state= cfg.seed,
-        )
+        # Split indices so we can slice sequences in parallel
+        from sklearn.model_selection import train_test_split as _tts
+        idx = np.arange(len(X))
+        idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
+                               random_state=cfg.seed)
+        X_train_all, X_test = X[idx_tr], X[idx_te]
+        y_train_all, y_test = y[idx_tr], y[idx_te]
+        nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
+        nuc_te = ([nuc_seqs[i] for i in idx_te] if nuc_seqs else None)  # noqa: F841
+        aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
+        aa_te  = ([aa_seqs[i]  for i in idx_te] if aa_seqs  else None)   # noqa: F841
 
         # Cross-validate on train portion
-        fold_results = self._cross_validate(X_train_all, y_train_all)
+        fold_results = self._cross_validate(X_train_all, y_train_all,
+                                            nuc_seqs=nuc_tr, aa_seqs=aa_tr)
         mean_f1 = float(np.mean([r.f1 for r in fold_results]))
         std_f1  = float(np.std( [r.f1 for r in fold_results]))
         logger.info(
@@ -346,7 +388,8 @@ class VariantTrainer:
         )
 
         # Final model — fit on full training set
-        preprocessor, ensemble = self._fit_single(X_train_all, y_train_all)
+        preprocessor, ensemble = self._fit_single(X_train_all, y_train_all,
+                                                  nuc_seqs=nuc_tr, aa_seqs=aa_tr)
 
         # Optionally optimise weights on test set
         if cfg.ensemble.optimize_weights:
@@ -373,38 +416,61 @@ class VariantTrainer:
         self,
         X_train: np.ndarray,
         y_train: np.ndarray,
+        nuc_seqs: Optional[List[str]] = None,
+        aa_seqs:  Optional[List[str]] = None,
     ) -> Tuple[VariantPreprocessor, HybridEnsemble]:
         """Fit ALL preprocessing + ALL models on X_train / y_train."""
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
+        use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
+        seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
 
         preprocessor = build_preprocessor_from_config()
         X_proc, y_resampled = preprocessor.fit_resample_train(X_train, y_train)
 
+        # SMOTE resamples rows → we can no longer align sequences by original index.
+        # Sequences are passed to the graph BEFORE SMOTE via the original indices.
+        # After SMOTE, sequence-augmented training is not supported (fall back to numeric).
+        post_smote_nuc: Optional[List[str]] = None
+        post_smote_aa:  Optional[List[str]] = None
+        if use_multimodal and nuc_seqs is not None:
+            logger.warning(
+                "SMOTE disrupts sequence-row alignment. "
+                "Multimodal sequences will be used WITHOUT SMOTE-augmented samples."
+            )
+            # Use original (pre-SMOTE) proc rows — limited to original N samples.
+            # Better than nothing; real fix is to disable SMOTE when use_multimodal=True.
+            n_orig = len(nuc_seqs)
+            post_smote_nuc = nuc_seqs[:n_orig]
+            post_smote_aa  = aa_seqs[:n_orig] if aa_seqs else None
+
         # --- XGBoost ---
-        xgb_model = xgb.XGBClassifier(
-            **cfg.xgb.as_dict()
-        )
+        xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
         xgb_model.fit(X_proc, y_resampled)
         logger.info("XGBoost fitted: n_features_in=%d", X_proc.shape[1])
 
-        # --- GNN (VariantSAGEGNN — coordinate-free cosine kNN graph) ---
-        knn_k     = getattr(cfg.gnn, "knn_k", 5)
-        patience  = getattr(cfg.gnn, "early_stopping_patience", 5)
+        # --- GNN (VariantSAGEGNN) ---
+        knn_k    = getattr(cfg.gnn, "knn_k", 5)
+        patience = getattr(cfg.gnn, "early_stopping_patience", 5)
+        X_for_gnn = X_proc[:len(post_smote_nuc)] if post_smote_nuc else X_proc
+        y_for_gnn = y_resampled[:len(post_smote_nuc)] if post_smote_nuc else y_resampled
         gnn_model = VariantSAGEGNN(
-            numeric_dim = X_proc.shape[1],
-            hidden_dim  = cfg.gnn.hidden_dim,
-            num_classes = 2,
+            numeric_dim    = X_proc.shape[1],
+            hidden_dim     = cfg.gnn.hidden_dim,
+            num_classes    = 2,
+            use_multimodal = use_multimodal,
+            seq_enc_dim    = seq_enc_dim,
         ).to(self.device)
         gnn_model = self._train_sage(
             gnn_model, preprocessor,
-            X_proc, y_resampled,
+            X_for_gnn, y_for_gnn,
             X_val=None, y_val=None,
             knn_k=knn_k, patience=patience,
+            nuc_seqs=post_smote_nuc, aa_seqs=post_smote_aa,
         )
 
         # --- DNN ---
-        dnn_model = VariantDNN(
+        dnn_model  = VariantDNN(
             input_dim  = X_proc.shape[1],
             hidden_dim = cfg.dnn.hidden_dim,
             num_classes= 2,
@@ -426,13 +492,17 @@ class VariantTrainer:
     # ------------------------------------------------------------------
 
     def _cross_validate(
-        self, X: np.ndarray, y: np.ndarray
+        self, X: np.ndarray, y: np.ndarray,
+        nuc_seqs: Optional[List[str]] = None,
+        aa_seqs:  Optional[List[str]] = None,
     ) -> List[FoldResult]:
         cfg   = self.cfg
         skf   = StratifiedKFold(
             n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed
         )
         results: List[FoldResult] = []
+        use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
+        seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
 
         for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y), start=1):
             set_global_seed(cfg.seed + fold_idx)
@@ -441,10 +511,21 @@ class VariantTrainer:
             X_tr, X_val = X[train_idx], X[val_idx]
             y_tr, y_val = y[train_idx], y[val_idx]
 
+            # Slice sequences for this fold (pre-SMOTE rows only)
+            nuc_tr = ([nuc_seqs[i] for i in train_idx] if nuc_seqs else None)
+            nuc_val = ([nuc_seqs[i] for i in val_idx]  if nuc_seqs else None)
+            aa_tr  = ([aa_seqs[i]  for i in train_idx] if aa_seqs  else None)
+            aa_val = ([aa_seqs[i]  for i in val_idx]   if aa_seqs  else None)
+
             # --- Preprocessing fit on fold training data ONLY ---
             preprocessor = build_preprocessor_from_config()
             X_tr_proc, y_tr_res = preprocessor.fit_resample_train(X_tr, y_tr)
             X_val_proc           = preprocessor.transform(X_val)
+
+            # After SMOTE, limit sequence arrays to original train size
+            n_orig_tr = len(X_tr)
+            nuc_tr_proc = nuc_tr[:n_orig_tr] if (nuc_tr and use_multimodal) else None
+            aa_tr_proc  = aa_tr[:n_orig_tr]  if (aa_tr  and use_multimodal) else None
 
             # --- XGBoost ---
             xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
@@ -452,23 +533,33 @@ class VariantTrainer:
             xgb_preds   = xgb_model.predict(X_val_proc)
             xgb_f1      = float(f1_score(y_val, xgb_preds, average="macro", zero_division=0))
 
-            # --- GNN (VariantSAGEGNN — coordinate-free cosine kNN graph) ---
+            # --- GNN (VariantSAGEGNN) ---
             knn_k    = getattr(cfg.gnn, "knn_k", 5)
             patience = getattr(cfg.gnn, "early_stopping_patience", 5)
+            X_for_gnn = X_tr_proc[:n_orig_tr] if nuc_tr_proc else X_tr_proc
+            y_for_gnn = y_tr_res[:n_orig_tr]  if nuc_tr_proc else y_tr_res
             sage_model = VariantSAGEGNN(
-                numeric_dim = X_tr_proc.shape[1],
-                hidden_dim  = cfg.gnn.hidden_dim,
-                num_classes = 2,
+                numeric_dim    = X_tr_proc.shape[1],
+                hidden_dim     = cfg.gnn.hidden_dim,
+                num_classes    = 2,
+                use_multimodal = use_multimodal,
+                seq_enc_dim    = seq_enc_dim,
             ).to(self.device)
             sage_model = self._train_sage(
                 sage_model, preprocessor,
-                X_tr_proc, y_tr_res,
+                X_for_gnn, y_for_gnn,
                 X_val_proc, y_val,
                 knn_k=knn_k, patience=patience,
+                nuc_seqs=nuc_tr_proc, aa_seqs=aa_tr_proc,
+                nuc_val=nuc_val, aa_val=aa_val,
             )
             # Evaluate SAGE on validation graph
             val_graph = _build_sample_graph(preprocessor, X_val_proc, y_val, knn_k)
-            gnn_preds, gnn_probs_fold = _sage_eval(sage_model, val_graph, self.device)
+            nuc_val_t, aa_val_t = _tokenize_sequences(nuc_val if use_multimodal else None,
+                                                      aa_val  if use_multimodal else None,
+                                                      self.device)
+            gnn_preds, gnn_probs_fold = _sage_eval(sage_model, val_graph, self.device,
+                                                   nuc_ids=nuc_val_t, aa_ids=aa_val_t)
             gnn_f1 = float(f1_score(y_val, gnn_preds[:len(y_val)],
                                     average="macro", zero_division=0))
 
@@ -512,26 +603,24 @@ class VariantTrainer:
         y_val:       Optional[np.ndarray],
         knn_k:       int = 5,
         patience:    int = 5,
+        nuc_seqs:    Optional[List[str]] = None,
+        aa_seqs:     Optional[List[str]] = None,
+        nuc_val:     Optional[List[str]] = None,
+        aa_val:      Optional[List[str]] = None,
     ) -> VariantSAGEGNN:
         """
         Full-batch node-classification training on a cosine k-NN sample graph.
 
         Loss function:  WeightedBCELoss (class-balanced cross-entropy).
-        Early stopping: monitored on Validation Macro F1.  Restores best
-                        checkpoint when validation F1 stops improving.
+        Early stopping: monitored on Validation Macro F1.
 
         Parameters
         ----------
-        model        : Uninitialised VariantSAGEGNN.
-        preprocessor : Fitted VariantPreprocessor (for kNN graph builder).
-        X_tr / y_tr  : Training features and labels.
-        X_val / y_val: Validation features and labels (None → no early stop).
-        knn_k        : k for k-NN graph construction.
-        patience     : Early-stopping patience (epochs without improvement).
+        nuc_seqs / aa_seqs   : Training sequence strings (pre-tokenised internally).
+        nuc_val  / aa_val    : Validation sequence strings.
         """
         cfg = self.cfg
 
-        # Dynamically select criterion from config (FocalLoss or WeightedBCE)
         criterion = _make_criterion(y_tr, self.device)
         logger.info(
             "SAGE loss class_weights: %s",
@@ -543,6 +632,10 @@ class VariantTrainer:
             lr           = cfg.gnn.lr,
             weight_decay = cfg.gnn.weight_decay,
         )
+
+        # Tokenise sequences once
+        nuc_tr_t, aa_tr_t   = _tokenize_sequences(nuc_seqs, aa_seqs, self.device)
+        nuc_val_t, aa_val_t = _tokenize_sequences(nuc_val, aa_val, self.device)
 
         # Build full-batch training graph (coordinate-free, cosine kNN)
         train_graph = _build_sample_graph(preprocessor, X_tr, y_tr, knn_k)
@@ -556,10 +649,12 @@ class VariantTrainer:
         patience_cnt  = 0
 
         for epoch in range(1, cfg.gnn.epochs + 1):
-            loss = _sage_epoch(model, train_graph, optimizer, criterion, self.device)
+            loss = _sage_epoch(model, train_graph, optimizer, criterion, self.device,
+                               nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
 
             if val_graph is not None:
-                preds, _ = _sage_eval(model, val_graph, self.device)
+                preds, _ = _sage_eval(model, val_graph, self.device,
+                                      nuc_ids=nuc_val_t, aa_ids=aa_val_t)
                 val_f1   = float(f1_score(
                     y_val, preds[:len(y_val)], average="macro", zero_division=0
                 ))

@@ -108,3 +108,83 @@ class TestValidateDataset:
         assert "Panel" not in result.numeric_feature_columns
         assert "Panel" in result.metadata_columns
 
+
+# ---------------------------------------------------------------
+# ColumnAligner testleri
+# ---------------------------------------------------------------
+
+class TestColumnAligner:
+    """src/data/column_aligner.py — 4-aşamalı eşleştirme testleri."""
+
+    def _make_df(self, cols):
+        import pandas as pd
+        import numpy as np
+        return pd.DataFrame({c: np.random.randn(5) for c in cols})
+
+    def test_exact_match(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["alpha", "beta", "gamma"]
+        df = self._make_df(["alpha", "beta", "gamma"])
+        aligner = ColumnAligner(expected)
+        aligned, report = aligner.apply(df)
+        assert list(aligned.columns) == expected
+        assert len(report.exact_matches) == 3
+        assert len(report.case_matches) == 0
+        assert len(report.positional_matches) == 0
+
+    def test_case_insensitive_match(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["Alpha", "Beta", "Gamma"]
+        df = self._make_df(["alpha", "BETA", "Gamma"])
+        aligner = ColumnAligner(expected)
+        aligned, report = aligner.apply(df)
+        assert list(aligned.columns) == expected
+        assert len(report.case_matches) == 2   # alpha→Alpha, BETA→Beta
+        assert len(report.exact_matches) == 1  # Gamma exact
+        assert report.is_clean
+
+    def test_fuzzy_match(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["CADD_phred", "REVEL_score", "SIFT_score"]
+        df = self._make_df(["CADD_phred", "REVEL_scor", "SIFT_scre"])
+        aligner = ColumnAligner(expected, fuzzy_threshold=0.80)
+        aligned, report = aligner.apply(df)
+        assert list(aligned.columns) == expected
+        assert len(report.fuzzy_matches) >= 1
+
+    def test_positional_fallback(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["feat_A", "feat_B", "feat_C"]
+        df = self._make_df(["x", "y", "z"])
+        aligner = ColumnAligner(expected, fuzzy_threshold=0.99, allow_positional=True)
+        aligned, report = aligner.apply(df)
+        assert list(aligned.columns) == expected
+        assert len(report.positional_matches) == 3
+        assert not report.is_clean
+
+    def test_missing_column_filled_with_nan(self):
+        import numpy as np
+        from src.data.column_aligner import ColumnAligner
+        expected = ["a", "b", "c"]
+        df = self._make_df(["a", "b"])
+        aligner = ColumnAligner(expected, allow_positional=False)
+        aligned, report = aligner.apply(df)
+        assert "c" in aligned.columns
+        assert aligned["c"].isna().all()
+        assert "c" in report.unmatched_expected
+
+    def test_report_is_clean_for_exact(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["x1", "x2"]
+        df = self._make_df(["x1", "x2"])
+        aligner = ColumnAligner(expected)
+        _, report = aligner.apply(df)
+        assert report.is_clean
+
+    def test_warnings_for_nonexact(self):
+        from src.data.column_aligner import ColumnAligner
+        expected = ["Feature_One"]
+        df = self._make_df(["feature_one"])
+        aligner = ColumnAligner(expected)
+        _, report = aligner.apply(df)
+        assert len(report.warnings()) > 0

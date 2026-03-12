@@ -56,6 +56,8 @@ class GNNSettings:
     use_gat: bool = False
     knn_k: int = 5                    # k for cosine k-NN sample graph
     early_stopping_patience: int = 5  # 0 = disabled
+    use_multimodal: bool = False      # fuse SequenceEncoder (Nuc_Context/AA_Context)
+    seq_enc_dim: int = 32             # SequenceEncoder output_dim (cnn_channels*2)
 
 
 @dataclass
@@ -211,6 +213,8 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         use_gat                  = raw_gnn.get("use_gat", False),
         knn_k                    = raw_gnn.get("knn_k", 5),
         early_stopping_patience  = raw_gnn.get("early_stopping_patience", 5),
+        use_multimodal           = raw_gnn.get("use_multimodal", False),
+        seq_enc_dim              = raw_gnn.get("seq_enc_dim", 32),
     )
 
     raw_dnn = raw.get("dnn", {})

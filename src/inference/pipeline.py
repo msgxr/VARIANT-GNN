@@ -75,18 +75,46 @@ class InferencePipeline:
         """
         Run inference on a ``LoadedDataset``.
 
+        If the model was trained with ``use_multimodal=True`` and the dataset
+        carries ``nuc_sequences`` / ``aa_sequences``, they are tokenised and
+        fed to the GNN SequenceEncoder automatically.
+
         Returns a DataFrame with prediction columns plus preserved metadata.
         """
         if not self._loaded:
             raise RuntimeError("Call .load() before predict_from_dataset().")
 
-        cfg       = self.cfg
+        cfg = self.cfg
 
         X_np     = dataset.features.values
         X_scaled = self._preprocessor.transform(X_np)
 
-        # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
+        # ── Build sequence tensors for multimodal GNN (if applicable) ──
         from src.models.gnn import VariantSAGEGNN
+        nuc_ids = None
+        aa_ids  = None
+        if (
+            isinstance(self._ensemble.gnn, VariantSAGEGNN)
+            and getattr(self._ensemble.gnn, "use_multimodal", False)
+            and dataset.nuc_sequences is not None
+        ):
+            from src.features.multimodal_encoder import tokenize_nucleotides, tokenize_amino_acids
+            import torch
+            device = next(self._ensemble.gnn.parameters()).device
+            nuc_ids = torch.tensor(
+                tokenize_nucleotides(dataset.nuc_sequences), dtype=torch.long
+            ).to(device)
+            if dataset.aa_sequences is not None:
+                aa_ids = torch.tensor(
+                    tokenize_amino_acids(dataset.aa_sequences), dtype=torch.long
+                ).to(device)
+            logger.info(
+                "Inference: feeding sequence tokens to multimodal GNN "
+                "(nuc=%s, aa=%s)",
+                nuc_ids.shape, aa_ids.shape if aa_ids is not None else None,
+            )
+
+        # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
         if isinstance(self._ensemble.gnn, VariantSAGEGNN):
             loader = None
         else:
@@ -95,7 +123,10 @@ class InferencePipeline:
             )
 
         threshold = cfg.thresholds.classification
-        preds, raw_proba = self._ensemble.predict(X_scaled, loader, threshold)
+        preds, raw_proba = self._ensemble.predict(
+            X_scaled, loader, threshold,
+            nuc_ids=nuc_ids, aa_ids=aa_ids,
+        )
 
         # Calibrated probabilities
         if self._calibrator is not None:
