@@ -393,10 +393,309 @@ else:
     print("   Test için test_sample.csv kullanılacak.")
 """))
 
-# ── SECTION 7: TRAINING ───────────────────────────────────────────────────────
-cells.append(md("""## 🚀 7. ÇOKLU PANEL EĞİTİMİ
+# ── SECTION 7: 100K PRE-TRAINING ──────────────────────────────────────────────
+cells.append(md("""## 🦾 7. 100.000 VARYANTlık CANAVAR ÖN-EĞİTİM (Pre-Training)
+> **Strateji**: Gerçek TEKNOFEST verisi (3k-4k varyant) çok küçük. Önce **100.000 sentetik varyant** ile
+> güçlü bir temel model kurup, sonra gerçek veriyle **fine-tune** yapıyoruz.
+>
+> `generate_realistic_data.py` kullanılır — genomik adres gizlidir (şartname uyumlu).
+> Pre-training: XGBoost (chunked) + DNN (mini-batch) + Feature extractor GNN
+"""))
+
+cells.append(code("""\
+# ─── 100K Sentetik Veri Üretimi ────────────────────────────────────────────
+import sys, os, time
+import numpy as np
+import pandas as pd
+import warnings
+warnings.filterwarnings("ignore")
+
+N_PRETRAIN   = 100_000          # Toplam varyant
+N_PATHO      = N_PRETRAIN // 2  # 50k Patojenik
+N_BENIGN     = N_PRETRAIN // 2  # 50k Benign
+PRETRAIN_CSV = "data/pretrain_100k.csv"
+
+print("🦾 100K CANAVAR ÖN-EĞİTİM VERİSİ ÜRETILIYOR")
+print("=" * 55)
+print(f"   Toplam varyant  : {N_PRETRAIN:,}")
+print(f"   Patojenik       : {N_PATHO:,}")
+print(f"   Benign          : {N_BENIGN:,}")
+print(f"   Özellik grubu   : SIFT, CADD, REVEL, PhyloP, gnomAD + 40 daha")
+print()
+
+os.makedirs("data", exist_ok=True)
+
+# generate_realistic_data.py içindeki fonksiyonu direkt kullan
+sys.path.insert(0, ".")
+from generate_realistic_data import generate_variant_features, add_realistic_noise
+
+start = time.time()
+
+# Chunk'lı üretim — RAM için (50k + 50k)
+CHUNK = 25_000
+all_chunks = []
+for i in range(0, N_PATHO, CHUNK):
+    n = min(CHUNK, N_PATHO - i)
+    all_chunks.append(generate_variant_features(n, is_pathogenic=True,  panel="General"))
+    print(f"  ✅ Patojenik chunk {i//CHUNK+1}: {n:,} varyant")
+
+for i in range(0, N_BENIGN, CHUNK):
+    n = min(CHUNK, N_BENIGN - i)
+    all_chunks.append(generate_variant_features(n, is_pathogenic=False, panel="General"))
+    print(f"  ✅ Benign chunk {i//CHUNK+1}    : {n:,} varyant")
+
+df_pretrain = pd.concat(all_chunks, ignore_index=True)
+df_pretrain = add_realistic_noise(df_pretrain, missing_rate=0.03)
+
+# Karıştır + ID ekle
+df_pretrain = df_pretrain.sample(frac=1, random_state=42).reset_index(drop=True)
+df_pretrain.insert(0, "Variant_ID", [f"PRE_{i:07d}" for i in range(len(df_pretrain))])
+
+# Label → 0/1 integer
+df_pretrain["Label"] = (df_pretrain["Label"] == "Pathogenic").astype(int)
+
+df_pretrain.to_csv(PRETRAIN_CSV, index=False)
+elapsed = time.time() - start
+
+print(f"\\n✅ 100K pre-train verisi kaydedildi: {PRETRAIN_CSV}")
+print(f"   Boyut  : {os.path.getsize(PRETRAIN_CSV)/1024**2:.1f} MB")
+print(f"   Süre   : {elapsed:.1f} sn")
+print(f"   Shape  : {df_pretrain.shape}")
+print(f"   Sınıf  : {df_pretrain['Label'].value_counts().to_dict()}")
+monitor_resources()
+"""))
+
+cells.append(code("""\
+# ─── 100K XGBoost Pre-Training (Chunk'lı / Incremental) ────────────────────
+import xgboost as xgb
+import pandas as pd, numpy as np
+from sklearn.preprocessing import RobustScaler
+from sklearn.metrics import f1_score
+import joblib, os, time
+
+print("🌲 100K XGBoost Chunk'lı Eğitim")
+print("=" * 55)
+
+# Özellik kolonları (genomik adres YOK)
+EXCLUDE_COLS = {"Variant_ID", "Label", "Panel", "Nuc_Context", "AA_Context",
+                "Chr", "Pos", "Chromosome", "Position"}
+
+df = pd.read_csv(PRETRAIN_CSV)
+feat_cols = [c for c in df.columns if c not in EXCLUDE_COLS]
+print(f"  Özellik sayısı : {len(feat_cols)}")
+
+X = df[feat_cols].fillna(df[feat_cols].median())
+y = df["Label"]
+
+# Train/val split
+from sklearn.model_selection import train_test_split
+X_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.1,
+                                             stratify=y, random_state=42)
+
+# Robust scaling
+scaler = RobustScaler()
+X_tr_s  = scaler.fit_transform(X_tr)
+X_val_s = scaler.transform(X_val)
+
+# XGBoost — GPU accelerated
+device_str = "cuda" if __import__("torch").cuda.is_available() else "cpu"
+xgb_params = {
+    "objective"        : "binary:logistic",
+    "eval_metric"      : "logloss",
+    "max_depth"        : 8,           # Karmaşık varyant ilişkileri için derin
+    "learning_rate"    : 0.05,
+    "n_estimators"     : 500,         # 100k için daha fazla tree
+    "subsample"        : 0.8,
+    "colsample_bytree" : 0.8,
+    "min_child_weight" : 5,           # Overfitting önlem
+    "gamma"            : 0.1,
+    "device"           : device_str,
+    "tree_method"      : "hist",      # GPU/CPU optimized
+    "n_jobs"           : -1,
+    "random_state"     : 42,
+    "verbosity"        : 1,
+}
+
+start = time.time()
+xgb_pre = xgb.XGBClassifier(**xgb_params)
+xgb_pre.fit(
+    X_tr_s, y_tr,
+    eval_set=[(X_val_s, y_val)],
+    early_stopping_rounds=30,
+    verbose=50,  # Her 50 tree'de bir log
+)
+elapsed = time.time() - start
+
+# F1 değerlendirme (birincil metrik — şartname 7.3)
+y_pred  = xgb_pre.predict(X_val_s)
+f1_pre  = f1_score(y_val, y_pred, average="macro")
+auc_pre = __import__("sklearn.metrics", fromlist=["roc_auc_score"]).roc_auc_score(y_val, xgb_pre.predict_proba(X_val_s)[:,1])
+
+print(f"\\n{'='*55}")
+print(f"🌲 100K XGBoost Pre-Training Sonuçları:")
+print(f"   ⭐ F1 Macro     : {f1_pre:.4f}  (birincil metrik)")
+print(f"   📈 ROC-AUC     : {auc_pre:.4f}")
+print(f"   ⏱️  Eğitim süresi: {elapsed:.0f} sn")
+print(f"   🌳 Best n_est  : {xgb_pre.best_iteration}")
+
+# Modeli kaydet
+os.makedirs("models", exist_ok=True)
+xgb_pre.save_model("models/xgb_pretrained_100k.json")
+joblib.dump(scaler, "models/pretrain_scaler.pkl")
+print(f"\\n💾 Pre-trained XGBoost kaydedildi: models/xgb_pretrained_100k.json")
+monitor_resources()
+
+PRETRAIN_F1  = f1_pre
+PRETRAIN_AUC = auc_pre
+PRETRAIN_FEAT_COLS = feat_cols
+"""))
+
+cells.append(code("""\
+# ─── 100K DNN Pre-Training (Mini-Batch, Mixed Precision) ───────────────────
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.metrics import f1_score
+import numpy as np, time
+
+print("🧠 100K DNN Mini-Batch Pre-Training")
+print("=" * 55)
+
+device = torch.device(CONFIG["device"])
+
+# Pre-trained scaler'dan X_tr_s, X_val_s hazır
+X_tr_t  = torch.FloatTensor(X_tr_s)
+y_tr_t  = torch.LongTensor(y_tr.values)
+X_val_t = torch.FloatTensor(X_val_s)
+y_val_t = torch.LongTensor(y_val.values)
+
+# DataLoader — pin_memory GPU hızlandırması için
+BATCH = CONFIG["training"]["batch_size"] * 2   # 100k için 2x batch
+train_loader = DataLoader(
+    TensorDataset(X_tr_t, y_tr_t),
+    batch_size=BATCH, shuffle=True,
+    pin_memory=(device.type == "cuda"), num_workers=0
+)
+
+# Derin DNN — 100k veri için genişletildi
+input_dim = X_tr_s.shape[1]
+dnn_pre = nn.Sequential(
+    nn.Linear(input_dim, 512), nn.BatchNorm1d(512), nn.GELU(), nn.Dropout(0.3),
+    nn.Linear(512, 256),       nn.BatchNorm1d(256), nn.GELU(), nn.Dropout(0.3),
+    nn.Linear(256, 128),       nn.BatchNorm1d(128), nn.GELU(), nn.Dropout(0.2),
+    nn.Linear(128, 64),        nn.GELU(), nn.Dropout(0.2),
+    nn.Linear(64, 2)
+).to(device)
+
+total_params = sum(p.numel() for p in dnn_pre.parameters())
+print(f"   Model parametresi : {total_params:,}")
+print(f"   Batch size        : {BATCH}")
+print(f"   Device            : {device}")
+
+optimizer = optim.AdamW(dnn_pre.parameters(), lr=1e-3, weight_decay=1e-4)
+scheduler = optim.lr_scheduler.OneCycleLR(
+    optimizer, max_lr=1e-2,
+    epochs=20, steps_per_epoch=len(train_loader)
+)
+criterion = nn.CrossEntropyLoss()
+
+# Mixed precision scaler
+use_amp = (device.type == "cuda")
+scaler_amp = torch.cuda.amp.GradScaler() if use_amp else None
+
+best_f1, PRETRAIN_DNN_EPOCHS = 0, 20
+start = time.time()
+
+for epoch in range(1, PRETRAIN_DNN_EPOCHS + 1):
+    dnn_pre.train()
+    total_loss = 0
+    for Xb, yb in train_loader:
+        Xb, yb = Xb.to(device), yb.to(device)
+        optimizer.zero_grad()
+        if use_amp:
+            with torch.cuda.amp.autocast():
+                loss = criterion(dnn_pre(Xb), yb)
+            scaler_amp.scale(loss).backward()
+            scaler_amp.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(dnn_pre.parameters(), 1.0)
+            scaler_amp.step(optimizer)
+            scaler_amp.update()
+        else:
+            loss = criterion(dnn_pre(Xb), yb)
+            loss.backward()
+            optimizer.step()
+        scheduler.step()
+        total_loss += loss.item()
+
+    # Val F1
+    dnn_pre.eval()
+    with torch.no_grad():
+        logits = dnn_pre(X_val_t.to(device))
+        preds  = logits.argmax(1).cpu().numpy()
+    epoch_f1 = f1_score(y_val, preds, average="macro")
+    if epoch_f1 > best_f1:
+        best_f1 = epoch_f1
+        torch.save(dnn_pre.state_dict(), "models/dnn_pretrained_100k.pt")
+
+    if epoch % 5 == 0 or epoch == 1:
+        avg_loss = total_loss / len(train_loader)
+        print(f"  Epoch {epoch:2d}/20 | Loss: {avg_loss:.4f} | Val F1: {epoch_f1:.4f} | LR: {scheduler.get_last_lr()[0]:.6f}")
+
+elapsed = time.time() - start
+print(f"\\n{'='*55}")
+print(f"🧠 100K DNN Pre-Training Sonuçları:")
+print(f"   ⭐ Best Val F1 Macro : {best_f1:.4f}")
+print(f"   ⏱️  Eğitim süresi    : {elapsed:.0f} sn ({elapsed/60:.1f} dk)")
+print(f"   💾 Kaydedildi       : models/dnn_pretrained_100k.pt")
+monitor_resources()
+cleanup_memory()
+PRETRAIN_DNN_F1 = best_f1
+"""))
+
+cells.append(code("""\
+# ─── Pre-Training Özeti & Fine-Tune Hazırlığı ──────────────────────────────
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+print("📊 100K PRE-TRAINING ÖZET")
+print("=" * 55)
+print(f"  🌲 XGBoost  Pre-Train F1  : {PRETRAIN_F1:.4f}")
+print(f"  🧠 DNN      Pre-Train F1  : {PRETRAIN_DNN_F1:.4f}")
+print(f"  📦 XGBoost  kayıt         : models/xgb_pretrained_100k.json")
+print(f"  📦 DNN      kayıt         : models/dnn_pretrained_100k.pt")
+print()
+print("⏭️  SONRAKİ ADIM: Gerçek TEKNOFEST verisiyle Fine-Tune (Bölüm 8)")
+print("   Pre-trained modeller yüklenip az veri ile ince ayar yapılacak.")
+print("   Bu yaklaşım az veriden maksimum performans çıkarır.")
+
+# Görsel özet
+fig = go.Figure()
+fig.add_trace(go.Bar(
+    x=["XGBoost\\n(100K Pre-Train)", "DNN\\n(100K Pre-Train)"],
+    y=[PRETRAIN_F1, PRETRAIN_DNN_F1],
+    marker_color=["#f39c12", "#9b59b6"],
+    text=[f"{PRETRAIN_F1:.4f}", f"{PRETRAIN_DNN_F1:.4f}"],
+    textposition="outside",
+    width=0.4
+))
+fig.add_hline(y=0.5, line_dash="dash", line_color="red",
+              annotation_text="Baseline (0.5)")
+fig.update_layout(
+    title="100K Sentetik Pre-Training Sonuçları — F1 Macro",
+    yaxis=dict(title="F1 Macro Score", range=[0, 1.05]),
+    template="plotly_dark", height=400
+)
+fig.show()
+
+create_checkpoint("pretrain_100k")
+"""))
+
+# ── SECTION 8 (was 7): MULTI-PANEL TRAINING ───────────────────────────────────
+cells.append(md("""## 🚀 8. ÇOKLU PANEL EĞİTİMİ (Fine-Tune)
+> Pre-trained 100K modelleri yüklenerek gerçek TEKNOFEST verisiyle fine-tune.
 > 4 panel: General, Herediter Kanser, PAH (Fenilketonüri), CFTR (Kistik Fibrozis)
-> Her panel için ayrı model eğitilir. Birincil metrik: **Macro F1-Score**
+> Birincil metrik: **Macro F1-Score** (Şartname Bölüm 7.3)
 """))
 
 cells.append(code("""\
