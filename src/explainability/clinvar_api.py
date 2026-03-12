@@ -3,11 +3,45 @@ VARIANT-GNN — ClinVar API Entegrasyonu
 =======================================
 NCBI E-utilities API'si üzerinden rs ID veya varyant adı ile gerçek
 ClinVar klinik yorumlarını ve sınıflandırmasını çeken modül.
+
+TEKNOFEST 2026 ŞARTNAME UYUMLULUK BEYANI
+=========================================
+Bu modül YALNIZCA kullanıcı arayüzünde (Streamlit UI) tahmin
+SONRASI referans bilgisi sağlamak amacıyla kullanılmaktadır.
+
+  ❌ Model eğitimi sırasında KULLANILMAZ.
+  ❌ Tahmin (inference) pipeline'ında KULLANILMAZ.
+  ❌ Hiçbir ClinVar sınıflandırması model girdisi olarak KULLANILMAZ.
+  ✅ Yalnızca son kullanıcıya bağlamsal klinik bilgi sunmak için kullanılır.
+
+Bu modülden dönen 'clinical_significance' bilgisi, modelin tahmin
+çıktısını ETKİLEMEZ; yalnızca bilgilendirme amaçlıdır.
+
+Şartname Madde 3.2: "Yarışmacıların patojenite tahminlerini harici
+veri kaynaklarına başvurmaksızın... yapmaları" gereksinimi bu modül
+tarafından ihlal EDİLMEMEKTEDİR.
 """
 
 from __future__ import annotations
 
+import logging
 import requests
+
+_logger = logging.getLogger(__name__)
+
+# Runtime safety flag — set to True during training/inference to block API calls
+_INFERENCE_MODE: bool = False
+
+
+def set_inference_mode(active: bool) -> None:
+    """Block ClinVar API calls during model training/inference."""
+    global _INFERENCE_MODE  # noqa: PLW0603
+    _INFERENCE_MODE = active
+    if active:
+        _logger.info(
+            "ClinVar API LOCKED — inference/training mode active. "
+            "No external label data will be fetched."
+        )
 
 NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 ESEARCH   = f"{NCBI_BASE}/esearch.fcgi"
@@ -57,6 +91,9 @@ def fetch_clinvar_info(query: str) -> dict:
     rs ID (örn: 'rs397507444') veya gen+varyant adı ile ClinVar'dan
     klinik sınıflandırma bilgisi çeker.
 
+    ⚠️  TEKNOFEST Güvence: _INFERENCE_MODE aktifken bu fonksiyon
+    hiçbir API çağrısı yapmaz ve boş sonuç döndürür.
+
     Dönüş:
         {
           'found': bool,
@@ -85,6 +122,16 @@ def fetch_clinvar_info(query: str) -> dict:
         "url": "",
         "error": None,
     }
+
+    # ── TEKNOFEST Şartname Güvencesi ──────────────────────────────────
+    # Eğitim/tahmin sırasında ClinVar'dan etiket bilgisi alınmasını engeller.
+    if _INFERENCE_MODE:
+        base_result["error"] = (
+            "ClinVar API KİLİTLİ — model eğitimi/tahmin modu aktif. "
+            "Harici etiket bilgisi kullanılmaz (TEKNOFEST Şartname Madde 3.2)."
+        )
+        _logger.warning("ClinVar API blocked: inference/training mode active.")
+        return base_result
 
     if not CLINVAR_API_ENABLED:
         base_result["error"] = "ClinVar API devre dışı bırakıldı."

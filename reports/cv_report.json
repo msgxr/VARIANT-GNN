@@ -1,40 +1,40 @@
 {
-  "mean_cv_macro_f1": 0.9998437453268562,
-  "std_cv_macro_f1": 0.00031250934628781476,
+  "mean_cv_macro_f1": 1.0,
+  "std_cv_macro_f1": 0.0,
   "folds": [
     {
       "fold": 1,
-      "f1": 0.9992187266342805,
+      "f1": 1.0,
       "xgb_f1": 1.0,
-      "gnn_f1": 0.99609372854221,
+      "gnn_f1": 1.0,
       "dnn_f1": 1.0
     },
     {
       "fold": 2,
       "f1": 1.0,
       "xgb_f1": 1.0,
-      "gnn_f1": 0.9968749694821238,
+      "gnn_f1": 1.0,
       "dnn_f1": 1.0
     },
     {
       "fold": 3,
       "f1": 1.0,
       "xgb_f1": 1.0,
-      "gnn_f1": 0.9921874237053097,
+      "gnn_f1": 0.9968253648310892,
       "dnn_f1": 1.0
     },
     {
       "fold": 4,
       "f1": 1.0,
-      "xgb_f1": 1.0,
-      "gnn_f1": 0.998437484741062,
+      "xgb_f1": 0.9984126944134402,
+      "gnn_f1": 1.0,
       "dnn_f1": 1.0
     },
     {
       "fold": 5,
       "f1": 1.0,
       "xgb_f1": 1.0,
-      "gnn_f1": 0.998437484741062,
+      "gnn_f1": 1.0,
       "dnn_f1": 1.0
     }
   ],
@@ -44,10 +44,56 @@
     "recall": 1.0,
     "roc_auc": 1.0,
     "pr_auc": 1.0,
-    "brier_score": 0.00010495933383936062,
-    "ece": 0.0003305859029205749,
+    "brier_score": 4.3719099406692565e-11,
+    "ece": 2.3554424343980507e-07,
     "mcc": 1.0,
-    "threshold": 0.059494949494949496
+    "threshold": 0.01
   },
-  "best_threshold": 0.059494949494949496
+  "best_threshold": 0.01,
+  "panel_metrics": {
+    "CFTR": {
+      "macro_f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "brier_score": 0.0,
+      "ece": 0.0,
+      "mcc": 1.0,
+      "threshold": 0.01
+    },
+    "General": {
+      "macro_f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "brier_score": 5.780310458468749e-11,
+      "ece": 3.114242681720913e-07,
+      "mcc": 1.0,
+      "threshold": 0.01
+    },
+    "Hereditary_Cancer": {
+      "macro_f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "brier_score": 0.0,
+      "ece": 0.0,
+      "mcc": 1.0,
+      "threshold": 0.01
+    },
+    "PAH": {
+      "macro_f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "brier_score": 0.0,
+      "ece": 0.0,
+      "mcc": 1.0,
+      "threshold": 0.01
+    }
+  }
 }

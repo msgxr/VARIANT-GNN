@@ -363,6 +363,10 @@ def main():
     logging.info("=" * 60)
     logging.info("VARIANT-GNN | mode=%s", args.mode.upper())
     logging.info("=" * 60)
+    # ── TEKNOFEST Şartname: ClinVar API'yi eğitim/tahmin sırasında kilitle ──
+    from src.explainability.clinvar_api import set_inference_mode
+    set_inference_mode(True)
+
     dispatch = {
         "train":            mode_train,
         "tune":             mode_tune,
