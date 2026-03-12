@@ -421,10 +421,16 @@ def render_sidebar(cfg) -> dict:
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("""
-    <div style="padding: 12px; background: rgba(99,179,237,0.05); border-radius: 8px; border: 1px solid rgba(99,179,237,0.15);">
+    <div style="padding: 12px; background: rgba(99,179,237,0.05); border-radius: 8px; border: 1px solid rgba(99,179,237,0.15); margin-bottom: 12px;">
         <div style="font-size:0.75rem; color:#718096; line-height:1.6;">
             ⚠️ <strong style="color:#f6ad55;">Araştırma Aracı</strong><br>
             Bu sistem klinik karar desteği için değil, araştırma amacıyla geliştirilmiştir.
+        </div>
+    </div>
+    <div style="padding: 12px; background: rgba(229,62,62,0.05); border-radius: 8px; border: 1px solid rgba(229,62,62,0.25);">
+        <div style="font-size:0.75rem; color:#fc8181; line-height:1.5;">
+            🛑 <strong style="color:#fc8181;">ÖNEMLİ (TEKNOFEST NDA)</strong><br>
+            Gizlilik Sözleşmesi (NDA) imzalanmadan T.C. Sağlık Bakanlığı / TÜSEB verilerinin sisteme yüklenmesi yasaktır.
         </div>
     </div>
     """, unsafe_allow_html=True)

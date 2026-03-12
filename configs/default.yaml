@@ -14,7 +14,7 @@ gnn:
   use_gat: false
   knn_k: 5
   early_stopping_patience: 5
-  use_multimodal: false   # true: Nuc_Context/AA_Context → SequenceEncoder → GNN
+  use_multimodal: true    # Nuc_Context/AA_Context → SequenceEncoder → GNN (TEKNOFEST şartname uyumu)
   seq_enc_dim: 32          # SequenceEncoder output dim (cnn_channels*2)
 
 dnn:

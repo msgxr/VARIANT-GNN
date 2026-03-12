@@ -36,6 +36,7 @@ from src.data.loader import load_csv
 from src.evaluation.metrics import evaluate, evaluate_per_panel, find_best_threshold
 from src.evaluation.plots import save_all_plots
 from src.features.preprocessing import build_preprocessor_from_config
+from src.inference.export import export_predictions
 from src.inference.pipeline import InferencePipeline
 from src.training.trainer import VariantTrainer
 from src.training.tune import ModelTuner
@@ -80,12 +81,17 @@ def mode_train(args, cfg):
     panel = getattr(args, "panel", None)
     if panel and "Panel" in ds.metadata.columns:
         mask = ds.metadata["Panel"] == panel
+        valid_idx = mask[mask].index.tolist()
         from src.data.loader import LoadedDataset
         ds = LoadedDataset(
             features        = ds.features[mask].reset_index(drop=True),
             labels          = ds.labels[mask.values],
             metadata        = ds.metadata[mask].reset_index(drop=True),
             feature_columns = ds.feature_columns,
+            nuc_sequences   = ([ds.nuc_sequences[i] for i in valid_idx]
+                               if ds.nuc_sequences else None),
+            aa_sequences    = ([ds.aa_sequences[i] for i in valid_idx]
+                               if ds.aa_sequences else None),
         )
         logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))
 
@@ -94,8 +100,9 @@ def mode_train(args, cfg):
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 
+    # Pass sequences for multimodal SequenceEncoder (TEKNOFEST şartname uyumu)
     trainer = VariantTrainer()
-    result  = trainer.train(X, y)
+    result  = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
     logging.info("CV summary — Mean Macro F1: %.4f +/- %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
@@ -199,10 +206,12 @@ def mode_predict(args, cfg):
     pipeline  = InferencePipeline()
     pipeline.load()
     df_result = pipeline.predict_from_csv(args.test_file)
-    out_path  = cfg.paths.reports_dir / "predictions.csv"
     cfg.paths.create_dirs()
-    df_result.to_csv(out_path, index=False)
-    logging.info("Predictions saved -> %s", out_path)
+
+    # Standardised TEKNOFEST jury-compliant export
+    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="predictions")
+    logging.info("Jury CSV   -> %s", paths["jury"])
+    logging.info("Full CSV   -> %s", paths["full"])
     print(df_result.head(10).to_string(index=False))
 
 
@@ -263,10 +272,10 @@ def mode_external_val(args, cfg):
     brier = brier_score_loss(ds.labels, p1)
     logging.info("Brier Score: %.6f", brier)
 
-    # Sonu\u00e7lar\u0131 kaydet
+    # Sonuçları kaydet — jury-compliant export
     cfg.paths.create_dirs()
-    out_csv = cfg.paths.reports_dir / "external_validation_results.csv"
-    df_result.to_csv(out_csv, index=False)
+    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="external_val")
+    out_csv = paths["full"]
 
     report_json = {
         "mode": "external_validation",
@@ -329,6 +338,75 @@ def mode_adversarial_val(args, cfg):
         print(f"En \u00e7ok shift g\u00f6steren \u00f6znitelikler: {', '.join(result.top_shift_features[:5])}")
 
 
+def mode_train_panels(args, cfg):
+    """Train a single unified model on ALL panels, then evaluate per-panel.
+
+    TEKNOFEST Şartname Bölüm 3.2: 4 panel birleşik veri seti.
+    Strateji: Tek model, paneller arası genelleme yeteneği sağlar.
+    Küçük paneller (CFTR: 70+70) ayrı model eğitmek için yetersiz.
+    """
+    ds = _get_labelled_data(args.data_file, cfg)
+
+    X   = ds.features.values
+    y   = ds.labels
+    set_global_seed(cfg.seed)
+    cfg.paths.create_dirs()
+
+    trainer = VariantTrainer()
+    result  = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
+    logging.info("CV summary — Mean Macro F1: %.4f +/- %.4f",
+                 result.mean_cv_f1, result.std_cv_f1)
+
+    preprocessor = result.preprocessor
+    ensemble     = result.ensemble
+
+    # Calibration
+    X_train_pre, X_cal, y_train_pre, y_cal = train_test_split(
+        X, y, test_size=0.15, stratify=y, random_state=cfg.seed + 99
+    )
+    X_cal_proc = preprocessor.transform(X_cal)
+    from src.training.trainer import _make_geo_loader
+    cal_loader = _make_geo_loader(preprocessor, X_cal_proc, None,
+                                  cfg.training.batch_size, shuffle=False)
+    _, raw_cal_proba = ensemble.predict(X_cal_proc, cal_loader)
+    calibrator = EnsembleCalibrator(method=cfg.calibration.method)
+    calibrator.fit(raw_cal_proba, y_cal)
+
+    store = ModelStore(cfg.paths.models_dir)
+    store.save_all(preprocessor, ensemble, calibrator)
+
+    # Per-panel evaluation on each panel's train set (validation-split)
+    if "Panel" in ds.metadata.columns:
+        panels = ds.metadata["Panel"].unique()
+        panel_summary = {}
+        for panel_name in panels:
+            mask = ds.metadata["Panel"] == panel_name
+            X_p, y_p = X[mask.values], y[mask.values]
+            if len(y_p) < 10:
+                logging.warning("Panel %s: too few samples (%d), skipping.", panel_name, len(y_p))
+                continue
+            X_p_proc = preprocessor.transform(X_p)
+            loader_p = _make_geo_loader(preprocessor, X_p_proc, None,
+                                        cfg.training.batch_size, shuffle=False)
+            _, proba_p = ensemble.predict(X_p_proc, loader_p)
+            cal_proba_p = calibrator.transform(proba_p)
+            report_p = evaluate(y_p, cal_proba_p)
+            report_p.log(prefix=f"PANEL_{panel_name}")
+            panel_summary[panel_name] = {
+                "n_samples": int(len(y_p)),
+                "metrics": report_p.as_dict(),
+            }
+
+        report_path = cfg.paths.reports_dir / "panel_evaluation.json"
+        with open(report_path, "w") as fh:
+            json.dump(panel_summary, fh, indent=2, default=str, ensure_ascii=False)
+        logging.info("Panel evaluation report -> %s", report_path)
+    else:
+        logging.warning("No 'Panel' column found — skipping per-panel evaluation.")
+
+    logging.info("train_panels mode complete.")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -340,7 +418,7 @@ def build_parser():
     )
     p.add_argument("--mode",
                    choices=["train", "tune", "eval", "predict", "crossval",
-                            "external_val", "adversarial_val"],
+                            "external_val", "adversarial_val", "train_panels"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
@@ -363,6 +441,9 @@ def main():
     logging.info("=" * 60)
     logging.info("VARIANT-GNN | mode=%s", args.mode.upper())
     logging.info("=" * 60)
+    logging.info("⚠️ TEKNOFEST 2026: Gizlilik Sözleşmesi (NDA) imzalanmadan")
+    logging.info("T.C. Sağlık Bakanlığı/TÜSEB verilerinin kullanılması yasaktır.")
+    logging.info("=" * 60)
     # ── TEKNOFEST Şartname: ClinVar API'yi eğitim/tahmin sırasında kilitle ──
     from src.explainability.clinvar_api import set_inference_mode
     set_inference_mode(True)
@@ -375,6 +456,7 @@ def main():
         "crossval":         mode_crossval,
         "external_val":     mode_external_val,
         "adversarial_val":  mode_adversarial_val,
+        "train_panels":     mode_train_panels,
     }
     dispatch[args.mode](args, cfg)
 

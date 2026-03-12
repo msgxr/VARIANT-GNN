@@ -113,6 +113,17 @@ class InferencePipeline:
                 "(nuc=%s, aa=%s)",
                 nuc_ids.shape, aa_ids.shape if aa_ids is not None else None,
             )
+        elif (
+            isinstance(self._ensemble.gnn, VariantSAGEGNN)
+            and getattr(self._ensemble.gnn, "use_multimodal", False)
+            and dataset.nuc_sequences is None
+        ):
+            logger.warning(
+                "Multimodal GNN is enabled but Nuc_Context/AA_Context "
+                "columns are missing from input data. Falling back to "
+                "numeric-only features. Add 'Nuc_Context' and 'AA_Context' "
+                "columns for full SequenceEncoder performance."
+            )
 
         # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
         if isinstance(self._ensemble.gnn, VariantSAGEGNN):
