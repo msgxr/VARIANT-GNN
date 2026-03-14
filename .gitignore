@@ -32,7 +32,11 @@ logs/
 models/*.pth
 models/*.pkl
 models/*.json
+models/*.txt
 models/autoencoder.pth
+
+# Word geçici dosyaları
+~$*.docx
 
 # Raporlar (üretilmiş çıktılar)
 reports/*.png

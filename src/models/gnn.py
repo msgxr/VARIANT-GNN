@@ -216,10 +216,22 @@ class VariantSAGEGNN(nn.Module):
         """
         Returns logits of shape [N, num_classes] — one prediction per node
         (variant).  No global pooling is applied.
+
+        When use_multimodal=True but sequence tensors are absent (e.g. at
+        inference time without context columns), the sequence embedding
+        dimension is zero-padded so the network always receives ``in_channels``
+        features as trained.
         """
-        if self.use_multimodal and nuc_ids is not None and aa_ids is not None:
-            seq_feat = self.seq_encoder(nuc_ids, aa_ids)   # [N, seq_enc_dim]
-            x = torch.cat([x, seq_feat], dim=1)            # [N, numeric+seq]
+        if self.use_multimodal and self.seq_encoder is not None:
+            if nuc_ids is not None and aa_ids is not None:
+                seq_feat = self.seq_encoder(nuc_ids, aa_ids)   # [N, seq_enc_dim]
+            else:
+                # Zero-pad missing sequence dimensions to preserve model shape
+                seq_feat = torch.zeros(
+                    x.shape[0], self.seq_encoder.output_dim,
+                    device=x.device, dtype=x.dtype,
+                )
+            x = torch.cat([x, seq_feat], dim=1)                # [N, numeric+seq]
 
         # Project to hidden dimension
         x = F.relu(self.input_proj(x))   # [N, hidden_dim]

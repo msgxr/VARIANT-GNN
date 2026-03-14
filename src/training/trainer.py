@@ -293,6 +293,7 @@ class FoldResult:
     fold:    int
     f1:      float
     xgb_f1: float
+    lgbm_f1: float
     gnn_f1: float
     dnn_f1: float
 
@@ -388,17 +389,22 @@ class VariantTrainer:
         )
 
         # Final model — fit on full training set
-        preprocessor, ensemble = self._fit_single(X_train_all, y_train_all,
-                                                  nuc_seqs=nuc_tr, aa_seqs=aa_tr)
+        preprocessor, ensemble, X_opt_val, y_opt_val = self._fit_single(
+            X_train_all, y_train_all, nuc_seqs=nuc_tr, aa_seqs=aa_tr
+        )
 
-        # Optionally optimise weights on test set
+        # Optionally optimise ensemble weights on the inner val set
+        # (NOT on X_test, to keep the test set strictly held-out for metrics)
         if cfg.ensemble.optimize_weights:
-            gnn_loader = _make_geo_loader(
-                preprocessor, preprocessor.transform(X_test), None,
-                cfg.training.batch_size, shuffle=False,
-            )
-            X_test_proc = preprocessor.transform(X_test)
-            ensemble.optimise_weights(X_test_proc, gnn_loader, y_test)
+            ensemble.optimise_weights(X_opt_val, None, y_opt_val)
+
+        # Fit stacking meta-learner on the same inner val set
+        # MetaLearner replaces fixed weights with a LogisticRegression combiner,
+        # which can learn non-linear combinations and panel-specific patterns.
+        try:
+            ensemble.fit_meta_learner(X_opt_val, y_opt_val)
+        except Exception as exc:
+            logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
 
         return TrainResult(
             ensemble      = ensemble,
@@ -418,42 +424,88 @@ class VariantTrainer:
         y_train: np.ndarray,
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
-    ) -> Tuple[VariantPreprocessor, HybridEnsemble]:
-        """Fit ALL preprocessing + ALL models on X_train / y_train."""
+    ) -> Tuple["VariantPreprocessor", "HybridEnsemble", np.ndarray, np.ndarray]:
+        """
+        Fit ALL preprocessing + ALL models on X_train / y_train.
+
+        Returns
+        -------
+        (preprocessor, ensemble, X_val_proc, y_val)
+          where X_val_proc / y_val are the inner early-stopping split
+          (post-SMOTE, already preprocessed) — used by caller for weight
+          optimisation without touching the held-out test set.
+        """
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
         use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
         seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
 
+        # Auto-disable SMOTE when multimodal sequences are present to avoid
+        # sequence-row misalignment after synthetic oversampling.
+        if use_multimodal and nuc_seqs is not None:
+            logger.warning(
+                "use_multimodal=True: auto-disabling SMOTE to preserve "
+                "sequence-row alignment."
+            )
+            cfg.preprocessing.smote_enabled = False  # type: ignore[attr-defined]
+
         preprocessor = build_preprocessor_from_config()
         X_proc, y_resampled = preprocessor.fit_resample_train(X_train, y_train)
 
-        # SMOTE resamples rows → we can no longer align sequences by original index.
-        # Sequences are passed to the graph BEFORE SMOTE via the original indices.
-        # After SMOTE, sequence-augmented training is not supported (fall back to numeric).
+        # ── Inner val split for GNN/DNN early stopping (AFTER SMOTE) ──────────
+        # Carving from the post-SMOTE pool so the ES val set is balanced.
+        # Never touches the external test set → no leakage of jury data.
+        inner_val_size = min(0.15, 200 / max(len(X_proc), 1))  # at least 15%
+        inner_val_size = max(inner_val_size, 0.10)
+        idx_inner = np.arange(len(X_proc))
+        idx_inner_tr, idx_inner_val = train_test_split(
+            idx_inner, test_size=inner_val_size, stratify=y_resampled,
+            random_state=cfg.seed,
+        )
+        X_inner_tr, X_inner_val = X_proc[idx_inner_tr], X_proc[idx_inner_val]
+        y_inner_tr, y_inner_val = y_resampled[idx_inner_tr], y_resampled[idx_inner_val]
+
+        # Sequence slices for multimodal: use original-indexed rows only
         post_smote_nuc: Optional[List[str]] = None
         post_smote_aa:  Optional[List[str]] = None
         if use_multimodal and nuc_seqs is not None:
-            logger.warning(
-                "SMOTE disrupts sequence-row alignment. "
-                "Multimodal sequences will be used WITHOUT SMOTE-augmented samples."
-            )
-            # Use original (pre-SMOTE) proc rows — limited to original N samples.
-            # Better than nothing; real fix is to disable SMOTE when use_multimodal=True.
             n_orig = len(nuc_seqs)
-            post_smote_nuc = nuc_seqs[:n_orig]
-            post_smote_aa  = aa_seqs[:n_orig] if aa_seqs else None
+            # Intersect inner_tr indices with original-row range
+            orig_inner_tr = idx_inner_tr[idx_inner_tr < n_orig]
+            post_smote_nuc = [nuc_seqs[i] for i in orig_inner_tr]
+            post_smote_aa  = ([aa_seqs[i] for i in orig_inner_tr]
+                              if aa_seqs else None)
 
         # --- XGBoost ---
         xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
-        xgb_model.fit(X_proc, y_resampled)
-        logger.info("XGBoost fitted: n_features_in=%d", X_proc.shape[1])
+        xgb_model.fit(
+            X_inner_tr, y_inner_tr,
+            eval_set=[(X_inner_val, y_inner_val)],
+            verbose=False,
+        )
+        logger.info("XGBoost fitted: n_features_in=%d", X_inner_tr.shape[1])
 
-        # --- GNN (VariantSAGEGNN) ---
+        # --- LightGBM ---
+        lgbm_model = None
+        try:
+            import lightgbm as lgb
+            lgbm_model = lgb.LGBMClassifier(**cfg.lgbm.as_dict())
+            lgbm_model.fit(
+                X_inner_tr, y_inner_tr,
+                eval_set=[(X_inner_val, y_inner_val)],
+                callbacks=[lgb.early_stopping(20, verbose=False),
+                           lgb.log_evaluation(-1)],
+            )
+            logger.info("LightGBM fitted: best_iteration=%d",
+                        lgbm_model.best_iteration_)
+        except ImportError:
+            logger.warning("lightgbm not installed — skipping LGBM member.")
+        except Exception as exc:
+            logger.warning("LightGBM training failed (%s) — skipping.", exc)
+
+        # --- GNN (VariantSAGEGNN) — with proper early stopping via inner val ---
         knn_k    = getattr(cfg.gnn, "knn_k", 5)
         patience = getattr(cfg.gnn, "early_stopping_patience", 5)
-        X_for_gnn = X_proc[:len(post_smote_nuc)] if post_smote_nuc else X_proc
-        y_for_gnn = y_resampled[:len(post_smote_nuc)] if post_smote_nuc else y_resampled
         gnn_model = VariantSAGEGNN(
             numeric_dim    = X_proc.shape[1],
             hidden_dim     = cfg.gnn.hidden_dim,
@@ -463,8 +515,8 @@ class VariantTrainer:
         ).to(self.device)
         gnn_model = self._train_sage(
             gnn_model, preprocessor,
-            X_for_gnn, y_for_gnn,
-            X_val=None, y_val=None,
+            X_inner_tr, y_inner_tr,
+            X_val=X_inner_val, y_val=y_inner_val,   # ← early stopping now active
             knn_k=knn_k, patience=patience,
             nuc_seqs=post_smote_nuc, aa_seqs=post_smote_aa,
         )
@@ -475,17 +527,20 @@ class VariantTrainer:
             hidden_dim = cfg.dnn.hidden_dim,
             num_classes= 2,
         ).to(self.device)
-        dnn_loader = _make_dnn_loader(X_proc, y_resampled, cfg.training.batch_size, shuffle=True)
-        dnn_model  = self._train_dnn(dnn_model, dnn_loader, val_loader=None, y_train=y_resampled)
+        dnn_tr_loader  = _make_dnn_loader(X_inner_tr, y_inner_tr, cfg.training.batch_size, True)
+        dnn_val_loader = _make_dnn_loader(X_inner_val, y_inner_val, cfg.training.batch_size, False)
+        dnn_model = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_inner_tr)
 
         ensemble = HybridEnsemble(
-            xgb_model = xgb_model,
-            gnn_model = gnn_model,
-            dnn_model = dnn_model,
-            weights   = cfg.ensemble.weights,
-            device    = self.device,
+            xgb_model  = xgb_model,
+            lgbm_model = lgbm_model,
+            gnn_model  = gnn_model,
+            dnn_model  = dnn_model,
+            weights    = cfg.ensemble.weights,
+            device     = self.device,
         )
-        return preprocessor, ensemble
+        # Return the inner val set so caller can use it for weight optimisation
+        return preprocessor, ensemble, X_inner_val, y_inner_val
 
     # ------------------------------------------------------------------
     # Internal — cross-validation
@@ -512,10 +567,15 @@ class VariantTrainer:
             y_tr, y_val = y[train_idx], y[val_idx]
 
             # Slice sequences for this fold (pre-SMOTE rows only)
-            nuc_tr = ([nuc_seqs[i] for i in train_idx] if nuc_seqs else None)
-            nuc_val = ([nuc_seqs[i] for i in val_idx]  if nuc_seqs else None)
-            aa_tr  = ([aa_seqs[i]  for i in train_idx] if aa_seqs  else None)
-            aa_val = ([aa_seqs[i]  for i in val_idx]   if aa_seqs  else None)
+            nuc_tr  = ([nuc_seqs[i] for i in train_idx] if nuc_seqs else None)
+            nuc_val = ([nuc_seqs[i] for i in val_idx]   if nuc_seqs else None)
+            aa_tr   = ([aa_seqs[i]  for i in train_idx] if aa_seqs  else None)
+            aa_val  = ([aa_seqs[i]  for i in val_idx]   if aa_seqs  else None)
+
+            # Auto-disable SMOTE when multimodal to preserve sequence alignment
+            fold_cfg = cfg
+            if use_multimodal and nuc_tr is not None:
+                cfg.preprocessing.smote_enabled = False  # type: ignore[attr-defined]
 
             # --- Preprocessing fit on fold training data ONLY ---
             preprocessor = build_preprocessor_from_config()
@@ -529,9 +589,29 @@ class VariantTrainer:
 
             # --- XGBoost ---
             xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
-            xgb_model.fit(X_tr_proc, y_tr_res)
+            xgb_model.fit(
+                X_tr_proc, y_tr_res,
+                eval_set=[(X_val_proc, y_val)], verbose=False,
+            )
             xgb_preds   = xgb_model.predict(X_val_proc)
             xgb_f1      = float(f1_score(y_val, xgb_preds, average="macro", zero_division=0))
+
+            # --- LightGBM ---
+            lgbm_f1 = 0.0
+            lgbm_model_fold = None
+            try:
+                import lightgbm as lgb
+                lgbm_model_fold = lgb.LGBMClassifier(**cfg.lgbm.as_dict())
+                lgbm_model_fold.fit(
+                    X_tr_proc, y_tr_res,
+                    eval_set=[(X_val_proc, y_val)],
+                    callbacks=[lgb.early_stopping(20, verbose=False),
+                               lgb.log_evaluation(-1)],
+                )
+                lgbm_preds = lgbm_model_fold.predict(X_val_proc)
+                lgbm_f1    = float(f1_score(y_val, lgbm_preds, average="macro", zero_division=0))
+            except Exception:
+                pass
 
             # --- GNN (VariantSAGEGNN) ---
             knn_k    = getattr(cfg.gnn, "knn_k", 5)
@@ -577,15 +657,24 @@ class VariantTrainer:
             xgb_probs = xgb_model.predict_proba(X_val_proc)
             gnn_probs = np.array(gnn_probs_fold)
             dnn_probs = np.array(_dnn_eval(dnn_model, dnn_val_loader, self.device)[1])
-            ens_probs = w[0] * xgb_probs + w[1] * gnn_probs + w[2] * dnn_probs
+            if lgbm_model_fold is not None and len(w) >= 4:
+                lgbm_probs = lgbm_model_fold.predict_proba(X_val_proc)
+                # 4-model weighted combine: [XGB, LGB, GNN, DNN]
+                w_sum = sum(w[:4])
+                ens_probs = (w[0]/w_sum * xgb_probs + w[1]/w_sum * lgbm_probs
+                             + w[2]/w_sum * gnn_probs + w[3]/w_sum * dnn_probs)
+            else:
+                w3 = w[:3] if len(w) == 3 else [w[0]+w[1], w[2], w[3]]
+                t  = sum(w3); w3 = [x/t for x in w3]
+                ens_probs = w3[0] * xgb_probs + w3[1] * gnn_probs + w3[2] * dnn_probs
             ens_preds = np.argmax(ens_probs, axis=1)
             ens_f1    = float(f1_score(y_val, ens_preds, average="macro", zero_division=0))
 
             logger.info(
-                "Fold %d | Ensemble Macro F1: %.4f  (XGB=%.4f, GNN=%.4f, DNN=%.4f)",
-                fold_idx, ens_f1, xgb_f1, gnn_f1, dnn_f1,
+                "Fold %d | Ensemble Macro F1: %.4f  (XGB=%.4f, LGB=%.4f, GNN=%.4f, DNN=%.4f)",
+                fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1,
             )
-            results.append(FoldResult(fold_idx, ens_f1, xgb_f1, gnn_f1, dnn_f1))
+            results.append(FoldResult(fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1))
 
         return results
 

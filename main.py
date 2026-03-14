@@ -224,8 +224,8 @@ def mode_crossval(args, cfg):
     std_f1  = float(np.std( [r.f1 for r in folds]))
     logging.info("Cross-val complete | Macro F1 = %.4f +/- %.4f", mean_f1, std_f1)
     for r in folds:
-        logging.info("  Fold %d | Ens=%.4f  XGB=%.4f  GNN=%.4f  DNN=%.4f",
-                     r.fold, r.f1, r.xgb_f1, r.gnn_f1, r.dnn_f1)
+        logging.info("  Fold %d | Ens=%.4f  XGB=%.4f  LGB=%.4f  GNN=%.4f  DNN=%.4f",
+                     r.fold, r.f1, r.xgb_f1, getattr(r, 'lgbm_f1', 0.0), r.gnn_f1, r.dnn_f1)
 
 
 def mode_external_val(args, cfg):

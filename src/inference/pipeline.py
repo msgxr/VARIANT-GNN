@@ -177,8 +177,20 @@ class InferencePipeline:
         mapped to the expected training-time feature names.
         """
         cfg = self.cfg
-        
-        # Try to extract the exact expected features from the trained XGB model 
+
+        # ── Panel one-hot encoding (must happen before feature extraction) ──
+        # Training adds Panel_General, Panel_Hereditary_Cancer, Panel_PAH,
+        # Panel_CFTR from the categorical "Panel" column.  Replicate here so
+        # that inference sees the same 47-feature schema.
+        KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
+        if "Panel" in df.columns:
+            panel_series = df["Panel"].astype(str).str.strip()
+            for panel_name in KNOWN_PANELS:
+                col = f"Panel_{panel_name}"
+                if col not in df.columns:
+                    df[col] = (panel_series == panel_name).astype(float)
+
+        # Try to extract the exact expected features from the trained XGB model
         # (XGBoost often saves feature names if provided during training)
         try:
             expected_features = self._ensemble.xgb.get_booster().feature_names
@@ -190,25 +202,25 @@ class InferencePipeline:
         # Separate metadata cols (id + non-feature columns like Panel, Nuc_Context, AA_Context)
         non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
         id_cols  = [c for c in cfg.schema.id_columns if c in df.columns]
-        
+
         # Determine all columns to drop before feeding to the model
         drop_cols = list(id_cols)
         if cfg.schema.target_column in df.columns:
             drop_cols.append(cfg.schema.target_column)
-        
+
         # For non-numeric or extra columns that shouldn't be modeled
         # Also drop string/categorical columns automatically unless encoded
         for col in non_feature_cols:
             if col in df.columns and col not in drop_cols:
                 drop_cols.append(col)
-                
+
         # Drop known non-numeric object columns if any snuck through
         for col in df.columns:
             if col not in drop_cols and df[col].dtype == object:
                 drop_cols.append(col)
 
         metadata = df[[c for c in drop_cols if c in df.columns]].copy()
-        
+
         # Attempt to get the exact feature names the model was trained on
         if expected_features is not None:
             # We know the exact columns the model wants
@@ -222,7 +234,7 @@ class InferencePipeline:
             # Fallback based on column dropping
             feature_df = df.drop(columns=drop_cols, errors='ignore').select_dtypes(include=[np.number])
             if feature_df.shape[1] != expected_n:
-                # If we have more than expected, we just take the first `expected_n` 
+                # If we have more than expected, we just take the first `expected_n`
                 # numeric columns as a best-effort approach to prevent inference crash
                 if feature_df.shape[1] > expected_n:
                     feature_df = feature_df.iloc[:, :expected_n]
@@ -231,7 +243,7 @@ class InferencePipeline:
                         f"X has {feature_df.shape[1]} features, but "
                         f"the model expects {expected_n} features."
                     )
-        
+
         # Finally, ensure columns are in the EXACT order expected if known
         if expected_features is not None:
             feature_df = feature_df[expected_features]

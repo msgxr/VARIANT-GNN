@@ -22,6 +22,26 @@ import xgboost as xgb
 logger = logging.getLogger(__name__)
 
 
+class _LGBMBoosterWrapper:
+    """
+    Thin shim that wraps a raw ``lightgbm.Booster`` to expose a
+    ``predict_proba(X)`` interface compatible with ``HybridEnsemble``.
+    Used only when loading checkpoints saved via ``Booster.save_model``.
+    """
+
+    def __init__(self, booster) -> None:
+        import numpy as _np
+        self._booster = booster
+        self._np = _np
+
+    def predict_proba(self, X) -> "np.ndarray":
+        import numpy as _np
+        raw = self._booster.predict(X)
+        if raw.ndim == 1:
+            return _np.column_stack([1.0 - raw, raw])
+        return raw
+
+
 def _safe_torch_load(path: Path, device: torch.device) -> dict:
     """Load a PyTorch state dict safely."""
     try:
@@ -64,6 +84,10 @@ class ModelStore:
     @property
     def _xgb_path(self)          -> Path: return self.model_dir / "xgb_model.json"
     @property
+    def _lgbm_path(self)         -> Path: return self.model_dir / "lgbm_model.txt"
+    @property
+    def _meta_learner_path(self) -> Path: return self.model_dir / "meta_learner.pkl"
+    @property
     def _gnn_path(self)          -> Path: return self.model_dir / "gnn_model.pth"
     @property
     def _gnn_arch_path(self)     -> Path: return self.model_dir / "gnn_arch.json"
@@ -90,11 +114,13 @@ class ModelStore:
     ) -> None:
         """Persist all artefacts.  ``ensemble`` is a ``HybridEnsemble``."""
         self._save_xgb(ensemble.xgb)
+        self._save_lgbm(ensemble.lgbm)
         self._save_gnn(ensemble.gnn)
         self._save_dnn(ensemble.dnn)
         self._save_autoencoder(preprocessor)
         self._save_preprocessor(preprocessor)
         self._save_ensemble_cfg(ensemble)
+        self._save_meta_learner(ensemble)
         if calibrator is not None:
             self._save_calibrator(calibrator)
         logger.info("All artefacts saved -> %s", self.model_dir)
@@ -103,6 +129,20 @@ class ModelStore:
         if model is not None:
             model.save_model(str(self._xgb_path))
             logger.info("XGBoost -> %s", self._xgb_path)
+
+    def _save_lgbm(self, model) -> None:
+        if model is not None:
+            try:
+                model.booster_.save_model(str(self._lgbm_path))
+                logger.info("LightGBM -> %s", self._lgbm_path)
+            except Exception as exc:
+                logger.warning("LightGBM save failed: %s", exc)
+
+    def _save_meta_learner(self, ensemble) -> None:
+        ml = getattr(ensemble, "meta_learner", None)
+        if ml is not None:
+            joblib.dump(ml, str(self._meta_learner_path))
+            logger.info("MetaLearner -> %s", self._meta_learner_path)
 
     def _save_gnn(self, model) -> None:
         if model is None:
@@ -113,7 +153,12 @@ class ModelStore:
         from src.models.gnn import VariantSAGEGNN as _VSGNN
         arch: dict = {"type": type(model).__name__}
         if isinstance(model, _VSGNN):
-            arch["numeric_dim"]    = model.input_proj.in_features
+            # Save true numeric_dim (pre-concat), NOT input_proj.in_features
+            # which includes seq_encoder output when use_multimodal=True.
+            _in_feats = model.input_proj.in_features
+            if model.use_multimodal and model.seq_encoder is not None:
+                _in_feats -= model.seq_encoder.output_dim
+            arch["numeric_dim"]    = _in_feats
             arch["hidden_dim"]     = model.classifier.in_features
             arch["use_multimodal"] = bool(model.use_multimodal)
         with open(self._gnn_arch_path, "w") as _fh:
@@ -244,6 +289,18 @@ class ModelStore:
             xgb_model.load_model(str(self._xgb_path))
             logger.info("XGBoost ← %s", self._xgb_path)
 
+        # --- LightGBM (optional — absent in legacy checkpoints) ---
+        lgbm_model = None
+        if self._lgbm_path.exists():
+            try:
+                import lightgbm as lgb
+                lgbm_model = lgb.Booster(model_file=str(self._lgbm_path))
+                # Wrap in sklearn API shim for predict_proba compatibility
+                lgbm_model = _LGBMBoosterWrapper(lgbm_model)
+                logger.info("LightGBM ← %s", self._lgbm_path)
+            except Exception as exc:
+                logger.warning("LightGBM load failed (skipping): %s", exc)
+
         # Ensemble weights from saved config (allows runtime update)
         weights = cfg.ensemble.weights
         if self._ensemble_cfg_path.exists():
@@ -252,11 +309,12 @@ class ModelStore:
                 weights = json.load(fh).get("weights", weights)
 
         ensemble = HybridEnsemble(
-            xgb_model = xgb_model,
-            gnn_model = gnn_model,
-            dnn_model = dnn_model,
-            weights   = weights,
-            device    = device,
+            xgb_model  = xgb_model,
+            lgbm_model = lgbm_model,
+            gnn_model  = gnn_model,
+            dnn_model  = dnn_model,
+            weights    = weights,
+            device     = device,
         )
 
         # --- Calibrator (optional) ---
@@ -264,6 +322,14 @@ class ModelStore:
         if self._calibrator_path.exists():
             calibrator = joblib.load(str(self._calibrator_path))
             logger.info("Calibrator ← %s", self._calibrator_path)
+
+        # --- Meta-learner (optional stacking) ---
+        if self._meta_learner_path.exists():
+            try:
+                ensemble.meta_learner = joblib.load(str(self._meta_learner_path))
+                logger.info("MetaLearner ← %s", self._meta_learner_path)
+            except Exception as exc:
+                logger.warning("Meta-learner load failed (skipping): %s", exc)
 
         logger.info("All artefacts loaded from %s", self.model_dir)
         return preprocessor, ensemble, calibrator

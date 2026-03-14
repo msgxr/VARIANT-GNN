@@ -76,8 +76,11 @@ class XGBSettings:
     learning_rate: float = 0.05
     subsample: float = 0.8
     colsample_bytree: float = 0.8
-    n_estimators: int = 150
+    n_estimators: int = 200
     n_jobs: int = -1
+    min_child_weight: int = 3
+    reg_alpha: float = 0.05
+    reg_lambda: float = 1.0
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -89,14 +92,50 @@ class XGBSettings:
             "colsample_bytree": self.colsample_bytree,
             "n_estimators": self.n_estimators,
             "n_jobs": self.n_jobs,
+            "min_child_weight": self.min_child_weight,
+            "reg_alpha": self.reg_alpha,
+            "reg_lambda": self.reg_lambda,
+            "random_state": 42,
+        }
+
+
+@dataclass
+class LGBMSettings:
+    """LightGBM classifier settings (4th ensemble member)."""
+    num_leaves: int = 63
+    max_depth: int = -1
+    learning_rate: float = 0.05
+    n_estimators: int = 300
+    subsample: float = 0.8
+    colsample_bytree: float = 0.8
+    reg_alpha: float = 0.1
+    reg_lambda: float = 1.0
+    min_child_samples: int = 10
+    n_jobs: int = -1
+    verbose: int = -1
+
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "num_leaves": self.num_leaves,
+            "max_depth": self.max_depth,
+            "learning_rate": self.learning_rate,
+            "n_estimators": self.n_estimators,
+            "subsample": self.subsample,
+            "colsample_bytree": self.colsample_bytree,
+            "reg_alpha": self.reg_alpha,
+            "reg_lambda": self.reg_lambda,
+            "min_child_samples": self.min_child_samples,
+            "n_jobs": self.n_jobs,
+            "verbose": self.verbose,
             "random_state": 42,
         }
 
 
 @dataclass
 class EnsembleSettings:
-    weights: List[float] = field(default_factory=lambda: [0.4, 0.4, 0.2])
-    optimize_weights: bool = False
+    # 4 weights: [XGB, LGB, GNN, DNN]  (auto-normalised in HybridEnsemble)
+    weights: List[float] = field(default_factory=lambda: [0.35, 0.30, 0.25, 0.10])
+    optimize_weights: bool = True
 
 
 @dataclass
@@ -178,6 +217,7 @@ class Settings:
     gnn: GNNSettings
     dnn: DNNSettings
     xgb: XGBSettings
+    lgbm: LGBMSettings
     ensemble: EnsembleSettings
     preprocessing: PreprocessingSettings
     calibration: CalibrationSettings
@@ -227,20 +267,38 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_xgb = raw.get("xgb", {})
     xgb = XGBSettings(
-        objective       = raw_xgb.get("objective", "binary:logistic"),
-        eval_metric     = raw_xgb.get("eval_metric", "logloss"),
-        max_depth       = raw_xgb.get("max_depth", 6),
-        learning_rate   = raw_xgb.get("learning_rate", 0.05),
-        subsample       = raw_xgb.get("subsample", 0.8),
-        colsample_bytree= raw_xgb.get("colsample_bytree", 0.8),
-        n_estimators    = raw_xgb.get("n_estimators", 150),
-        n_jobs          = raw_xgb.get("n_jobs", -1),
+        objective        = raw_xgb.get("objective", "binary:logistic"),
+        eval_metric      = raw_xgb.get("eval_metric", "logloss"),
+        max_depth        = raw_xgb.get("max_depth", 6),
+        learning_rate    = raw_xgb.get("learning_rate", 0.05),
+        subsample        = raw_xgb.get("subsample", 0.8),
+        colsample_bytree = raw_xgb.get("colsample_bytree", 0.8),
+        n_estimators     = raw_xgb.get("n_estimators", 200),
+        n_jobs           = raw_xgb.get("n_jobs", -1),
+        min_child_weight = raw_xgb.get("min_child_weight", 3),
+        reg_alpha        = raw_xgb.get("reg_alpha", 0.05),
+        reg_lambda       = raw_xgb.get("reg_lambda", 1.0),
+    )
+
+    raw_lgbm = raw.get("lgbm", {})
+    lgbm = LGBMSettings(
+        num_leaves       = raw_lgbm.get("num_leaves", 63),
+        max_depth        = raw_lgbm.get("max_depth", -1),
+        learning_rate    = raw_lgbm.get("learning_rate", 0.05),
+        n_estimators     = raw_lgbm.get("n_estimators", 300),
+        subsample        = raw_lgbm.get("subsample", 0.8),
+        colsample_bytree = raw_lgbm.get("colsample_bytree", 0.8),
+        reg_alpha        = raw_lgbm.get("reg_alpha", 0.1),
+        reg_lambda       = raw_lgbm.get("reg_lambda", 1.0),
+        min_child_samples= raw_lgbm.get("min_child_samples", 10),
+        n_jobs           = raw_lgbm.get("n_jobs", -1),
+        verbose          = raw_lgbm.get("verbose", -1),
     )
 
     raw_ens = raw.get("ensemble", {})
     ensemble = EnsembleSettings(
-        weights          = raw_ens.get("weights", [0.4, 0.4, 0.2]),
-        optimize_weights = raw_ens.get("optimize_weights", False),
+        weights          = raw_ens.get("weights", [0.35, 0.30, 0.25, 0.10]),
+        optimize_weights = raw_ens.get("optimize_weights", True),
     )
 
     raw_pre = raw.get("preprocessing", {})
@@ -313,6 +371,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         gnn                 = gnn,
         dnn                 = dnn,
         xgb                 = xgb,
+        lgbm                = lgbm,
         ensemble            = ensemble,
         preprocessing       = preprocessing,
         calibration         = calibration,

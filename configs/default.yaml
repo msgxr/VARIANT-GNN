@@ -30,12 +30,28 @@ xgb:
   learning_rate: 0.05
   subsample: 0.8
   colsample_bytree: 0.8
-  n_estimators: 150
+  n_estimators: 200
   n_jobs: -1
+  min_child_weight: 3
+  reg_alpha: 0.05
+  reg_lambda: 1.0
+
+lgbm:
+  num_leaves: 63
+  max_depth: -1
+  learning_rate: 0.05
+  n_estimators: 300
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  min_child_samples: 10
+  n_jobs: -1
+  verbose: -1
 
 ensemble:
-  weights: [0.4, 0.4, 0.2]   # [XGB, GNN, DNN]
-  optimize_weights: false     # true: validation-set optimisation
+  weights: [0.35, 0.30, 0.25, 0.10]   # [XGB, LGB, GNN, DNN]
+  optimize_weights: true               # Nelder-Mead ile validation-set optimizasyonu
 
 preprocessing:
   corr_threshold: 0.25

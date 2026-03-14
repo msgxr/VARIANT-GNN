@@ -149,6 +149,7 @@ def load_csv(
 
     # Labels
     labels: Optional[np.ndarray] = None
+    label_valid_mask: Optional[pd.Series] = None   # kept for panel encoding alignment
     if result.label_column is not None:
         raw_labels = df[result.label_column].astype(str).str.strip().str.lower()
         mapped = raw_labels.map(label_mapping)
@@ -160,6 +161,7 @@ def load_csv(
             feature_df      = feature_df[valid_mask].reset_index(drop=True)
             metadata        = metadata[valid_mask].reset_index(drop=True) if len(metadata) else metadata
             mapped          = mapped[valid_mask]
+            label_valid_mask = valid_mask
             if nuc_sequences is not None:
                 nuc_sequences = [nuc_sequences[i] for i in valid_idx]
             if aa_sequences is not None:
@@ -174,11 +176,24 @@ def load_csv(
         nuc_sequences is not None,
     )
 
+    # ── Panel one-hot encoding (TEKNOFEST 2026 Bölüm 3.2) ───────────────
+    # Panel information is provided in both training AND test data, so using
+    # it as a feature is valid and improves panel-specific predictions.
+    KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
+    if "Panel" in df.columns:
+        panel_series = df["Panel"].astype(str).str.strip().reset_index(drop=True)
+        if label_valid_mask is not None:
+            panel_series = df.loc[label_valid_mask, "Panel"].astype(str).str.strip().reset_index(drop=True)
+        for panel_name in KNOWN_PANELS:
+            col = f"Panel_{panel_name}"
+            feature_df[col] = (panel_series == panel_name).astype(float)
+        logger.info("Panel one-hot features added: %s", [f"Panel_{p}" for p in KNOWN_PANELS])
+
     return LoadedDataset(
         features        = feature_df,
         labels          = labels,
         metadata        = metadata,
-        feature_columns = result.numeric_feature_columns,
+        feature_columns = list(feature_df.columns),
         nuc_sequences   = nuc_sequences,
         aa_sequences    = aa_sequences,
     )

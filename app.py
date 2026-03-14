@@ -376,7 +376,7 @@ def render_hero():
         </p>
         <span class="hero-badge">🏆 TEKNOFEST 2026</span>
         <span class="hero-badge">🔬 Sağlıkta Yapay Zeka</span>
-        <span class="hero-badge">⚡ GNN + XGBoost + DNN</span>
+        <span class="hero-badge">⚡ GNN + XGBoost + LightGBM + DNN</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -395,7 +395,7 @@ def render_sidebar(cfg) -> dict:
     st.sidebar.markdown(f"""
     <div class="model-card">
         <h4>🤖 Ensemble Modeli</h4>
-        <p>XGBoost + GNN + DNN Hibrit<br>
+        <p>XGBoost + LightGBM + GNN + DNN Hibrit<br>
         Ağırlıklar: {cfg.ensemble.weights}<br>
         Kalibrasyon: {cfg.calibration.method}</p>
     </div>
@@ -550,7 +550,7 @@ def render_risk_map(df_result: pd.DataFrame):
 
 def render_model_comparison(df_result: pd.DataFrame):
     """XGB, GNN, DNN olasılık sütunları varsa karşılaştırma göster."""
-    prob_cols = [c for c in ["XGB_Prob", "GNN_Prob", "DNN_Prob", "Probability"] if c in df_result.columns]
+    prob_cols = [c for c in ["XGB_Prob", "LGB_Prob", "GNN_Prob", "DNN_Prob", "Probability"] if c in df_result.columns]
     if not prob_cols or len(prob_cols) < 2:
         return
 
@@ -1313,6 +1313,7 @@ def main():
                 <br><br>
                 🕸️ <strong style="color:#90cdf4;">Graph Neural Network (GNN)</strong> — Varyantlar arasındaki biyolojik ilişkileri öğrenir<br>
                 🌲 <strong style="color:#90cdf4;">XGBoost</strong> — Sayısal genomik özellikleri hızlı ve güçlü şekilde sınıflandırır<br>
+                💡 <strong style="color:#90cdf4;">LightGBM</strong> — Gradient boosting; tabular genomik veri için optimize<br>
                 🤖 <strong style="color:#90cdf4;">Derin Sinir Ağı (DNN)</strong> — Gizli karmaşık örüntüleri keşfeder
                 <br><br>
                 Bu 3 modelin kararları birleştirilerek her varyant için bir
@@ -1358,7 +1359,7 @@ def main():
         with col2:
             st.markdown("**📈 Veri İstatistikleri**")
             st.metric("Varyant Sayısı", f"{len(df_raw):,}")
-            st.metric("Özellik Sayısı", "34 (Filtrelenmiş)")
+            st.metric("Özellik Sayısı", "Filtrelenmiş")
             missing_pct = df_raw.isnull().mean().mean() * 100
             st.metric("Eksik Veri", f"{missing_pct:.1f}%")
 
@@ -1366,7 +1367,7 @@ def main():
             return
 
         if st.button("🚀 ANALİZİ BAŞLAT", type="primary", use_container_width=True):
-            with st.spinner("⚡ GNN + XGBoost + DNN modelleri çalışıyor..."):
+            with st.spinner("⚡ XGBoost + LightGBM + GNN + DNN modelleri çalışıyor..."):
                 try:
                     df_result = pipeline.predict_from_dataframe(df_raw)
                 except (ValueError, RuntimeError, KeyError) as exc:
@@ -1441,9 +1442,14 @@ def main():
                     include=[np.number]
                 )
                 try:
+                    expected_n = pipeline._preprocessor._imputer.n_features_in_
+                except Exception:
+                    expected_n = None
+
+                try:
                     # attempt to get exact model columns if available
                     exp_features = pipeline._ensemble.xgb.get_booster().feature_names
-                    if exp_features:
+                    if exp_features and len(exp_features) == expected_n:
                         df_features = df_features[[c for c in exp_features if c in df_features.columns]]
                 except Exception:
                     pass
@@ -1452,9 +1458,9 @@ def main():
                 non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
                 df_features = df_features.drop(columns=[c for c in non_feature_cols if c in df_features.columns], errors="ignore")
                 
-                # fallback enforce 34 limit to avoid XAI crash
-                if df_features.shape[1] > 34:
-                     df_features = df_features.iloc[:, :34]
+                # fallback enforce expected limit to avoid XAI crash
+                if expected_n is not None and df_features.shape[1] > expected_n:
+                     df_features = df_features.iloc[:, :expected_n]
                      
                 render_xai(pipeline, df_features, opts)
 
@@ -1513,26 +1519,33 @@ def main():
             </h2>
         """, unsafe_allow_html=True)
 
-        col_m1, col_m2, col_m3 = st.columns(3)
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
             st.markdown("""
             <div class="model-card">
                 <h4>🕸️ Graph Neural Network</h4>
-                <p>Varyantlar arası biyolojik ilişkileri modelleyen GCN/GAT tabanlı derin öğrenme (50 node, ~1800 edge)</p>
+                <p>Varyantlar arası biyolojik ilişkileri modelleyen SAGEConv tabanlı derin öğrenme — cosine k-NN sample graph</p>
             </div>
             """, unsafe_allow_html=True)
         with col_m2:
             st.markdown("""
             <div class="model-card">
                 <h4>🌲 XGBoost</h4>
-                <p>34 genomik özellik üzerinde gradient boosting ile güçlü tablo veri analizi</p>
+                <p>Genomik özellikler üzerinde gradient boosting; min_child_weight + L1/L2 regularizasyon</p>
             </div>
             """, unsafe_allow_html=True)
         with col_m3:
             st.markdown("""
             <div class="model-card">
+                <h4>💡 LightGBM</h4>
+                <p>Leaf-wise büyüme stratejisiyle hızlı ve güçlü gradient boosting — tabular genomik veri için optimize</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_m4:
+            st.markdown("""
+            <div class="model-card">
                 <h4>🤖 Deep Neural Network</h4>
-                <p>BatchNorm + Dropout ile optimize edilmiş çok katmanlı sinir ağı sınıflandırıcı</p>
+                <p>BatchNorm + Dropout ile optimize edilmiş çok katmanlı sinir ağı + Stacking meta-learner</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1546,23 +1559,23 @@ def main():
   Varyant CSV
        │
        ▼
-  ┌─────────────────────────────────────────┐
-  │         Veri Ön İşleme Pipeline        │
-  │  Imputation → Scaling → SMOTE → PCA    │
-  │  AutoEncoder (34→16 dim) → Graph Build │
-  └──────────┬──────────┬──────────┬────── ┘
-             │          │          │
-             ▼          ▼          ▼
-         XGBoost      GNN       DNN
-         (0.40)      (0.40)    (0.20)
-             │          │          │
-             └──────────┴──────────┘
-                        │
-                 Ağırlıklı Ensemble
-                        │
+  ┌─────────────────────────────────────────────────┐
+  │           Veri Ön İşleme Pipeline               │
+  │  Imputation → Scaling → SMOTE → AutoEncoder     │
+  │  Panel One-Hot (4 kolon) → Graph Build          │
+  └────┬────────┬─────────┬──────────┬───────────── ┘
+       │        │         │          │
+       ▼        ▼         ▼          ▼
+   XGBoost  LightGBM    GNN        DNN
+   (0.35)   (0.30)     (0.25)    (0.10)
+       │        │         │          │
+       └────────┴─────────┴──────────┘
+                          │
+              Stacking Meta-Learner (LR)
+                          │
                Kalibrasyon (Isotonic)
-                        │
-              Risk Skoru + SHAP/LIME
+                          │
+                Risk Skoru + SHAP/LIME
         """, language="")
 
         st.markdown("""
