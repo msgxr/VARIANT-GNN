@@ -927,8 +927,9 @@ def _hex_to_rgb(hex_color: str) -> str:
 # ─────────────────────────────────────────────
 def generate_pdf_report(df_result: pd.DataFrame, cfg) -> bytes:
     """Analiz sonuclarini fpdf2 ile PDF'e donusturur."""
-    from fpdf import FPDF
     from datetime import datetime
+
+    from fpdf import FPDF
 
     class _PDF(FPDF):
         def header(self):

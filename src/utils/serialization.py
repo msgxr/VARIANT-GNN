@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/utils/serialization.py
 Secure, forward-compatible model serialisation and deserialisation.
 
@@ -34,7 +34,7 @@ class _LGBMBoosterWrapper:
         self._booster = booster
         self._np = _np
 
-    def predict_proba(self, X) -> "np.ndarray":
+    def predict_proba(self, X) -> "numpy.ndarray":  # noqa: F821
         import numpy as _np
         raw = self._booster.predict(X)
         if raw.ndim == 1:
@@ -150,6 +150,7 @@ class ModelStore:
         torch.save(model.state_dict(), str(self._gnn_path))
         # Save architecture metadata so load_all can reconstruct correctly
         import json as _json
+
         from src.models.gnn import VariantSAGEGNN as _VSGNN
         arch: dict = {"type": type(model).__name__}
         if isinstance(model, _VSGNN):

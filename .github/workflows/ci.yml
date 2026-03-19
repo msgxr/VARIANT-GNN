@@ -53,6 +53,9 @@ jobs:
           pip install torch-scatter torch-sparse torch-geometric \
             -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
 
+      - name: Pin numpy for torch 2.2 compat
+        run: pip install "numpy>=1.24.0,<2.0"
+
       - name: Install remaining requirements
         run: pip install -r requirements.txt
 

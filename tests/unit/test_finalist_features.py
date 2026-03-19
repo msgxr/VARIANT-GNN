@@ -13,7 +13,6 @@ import numpy as np
 import pytest
 import torch
 
-
 # ---------------------------------------------------------------------------
 # MC Dropout Uncertainty
 # ---------------------------------------------------------------------------
@@ -21,8 +20,8 @@ import torch
 class TestMCDropoutEstimator:
     def test_estimate_dnn_shapes(self):
         """MC Dropout DNN çıktı boyutlarını doğrular."""
-        from src.models.dnn import VariantDNN
         from src.inference.uncertainty import MCDropoutEstimator
+        from src.models.dnn import VariantDNN
 
         model = VariantDNN(input_dim=20, hidden_dim=32, num_classes=2, dropout=0.5)
         estimator = MCDropoutEstimator(model, n_forward=10)
@@ -35,8 +34,8 @@ class TestMCDropoutEstimator:
 
     def test_estimate_gnn_shapes(self):
         """MC Dropout GNN çıktı boyutlarını doğrular."""
-        from src.models.gnn import VariantSAGEGNN
         from src.inference.uncertainty import MCDropoutEstimator
+        from src.models.gnn import VariantSAGEGNN
 
         model = VariantSAGEGNN(numeric_dim=16, hidden_dim=32, num_classes=2)
         estimator = MCDropoutEstimator(model, n_forward=10)

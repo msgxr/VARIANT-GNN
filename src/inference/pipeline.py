@@ -98,8 +98,9 @@ class InferencePipeline:
             and getattr(self._ensemble.gnn, "use_multimodal", False)
             and dataset.nuc_sequences is not None
         ):
-            from src.features.multimodal_encoder import tokenize_nucleotides, tokenize_amino_acids
             import torch
+
+            from src.features.multimodal_encoder import tokenize_amino_acids, tokenize_nucleotides
             device = next(self._ensemble.gnn.parameters()).device
             nuc_ids = torch.tensor(
                 tokenize_nucleotides(dataset.nuc_sequences), dtype=torch.long

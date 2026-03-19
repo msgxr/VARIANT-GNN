@@ -62,9 +62,9 @@ def adversarial_validate(
     -------
     AdversarialResult with AUC scores, verdict, and top shift features.
     """
-    from sklearn.model_selection import StratifiedKFold
-    from sklearn.metrics import roc_auc_score
     import xgboost as xgb
+    from sklearn.metrics import roc_auc_score
+    from sklearn.model_selection import StratifiedKFold
 
     # Train=0, Test=1
     X_combined = np.vstack([X_train, X_test])

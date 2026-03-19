@@ -25,6 +25,7 @@ tarafından ihlal EDİLMEMEKTEDİR.
 from __future__ import annotations
 
 import logging
+
 import requests
 
 _logger = logging.getLogger(__name__)

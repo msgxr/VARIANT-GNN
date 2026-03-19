@@ -16,7 +16,6 @@ import pytest
 
 from src.data.column_aligner import ColumnAligner
 
-
 # ── Test fixtures ─────────────────────────────────────────────────────
 
 EXPECTED_FEATURES = [

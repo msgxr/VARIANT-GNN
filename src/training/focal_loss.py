@@ -12,9 +12,14 @@ varyantlarda etkilidir.
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class FocalLoss(nn.Module):

@@ -197,7 +197,6 @@ class ColumnAligner:
         aligned_df : DataFrame with expected columns in expected order.
         report     : AlignmentReport for logging / inspection.
         """
-        import numpy as np
 
         source_df = df.select_dtypes(include=[np.number]) if extra_numeric else df
         incoming  = source_df.columns.tolist()

@@ -14,7 +14,7 @@ class TestSettings:
         reset_settings()
         cfg = load_settings()
         assert cfg.seed == 42
-        assert len(cfg.ensemble.weights) == 3
+        assert len(cfg.ensemble.weights) == 4
         assert abs(sum(cfg.ensemble.weights) - 1.0) < 0.01
 
     def test_paths_are_path_objects(self):

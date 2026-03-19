@@ -130,7 +130,7 @@ def _tokenize_sequences(
     Tokenise raw Nuc_Context / AA_Context string lists to int64 tensors.
     Returns (None, None) when sequences are not provided.
     """
-    from src.features.multimodal_encoder import tokenize_nucleotides, tokenize_amino_acids
+    from src.features.multimodal_encoder import tokenize_amino_acids, tokenize_nucleotides
 
     nuc_t = (
         torch.tensor(tokenize_nucleotides(nuc_seqs), dtype=torch.long).to(device)
@@ -372,8 +372,8 @@ class VariantTrainer:
         idx = np.arange(len(X))
         idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
                                random_state=cfg.seed)
-        X_train_all, X_test = X[idx_tr], X[idx_te]
-        y_train_all, y_test = y[idx_tr], y[idx_te]
+        X_train_all, _X_test = X[idx_tr], X[idx_te]
+        y_train_all, _y_test = y[idx_tr], y[idx_te]
         nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
         nuc_te = ([nuc_seqs[i] for i in idx_te] if nuc_seqs else None)  # noqa: F841
         aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
@@ -573,7 +573,7 @@ class VariantTrainer:
             aa_val  = ([aa_seqs[i]  for i in val_idx]   if aa_seqs  else None)
 
             # Auto-disable SMOTE when multimodal to preserve sequence alignment
-            fold_cfg = cfg
+            _fold_cfg = cfg  # noqa: F841
             if use_multimodal and nuc_tr is not None:
                 cfg.preprocessing.smote_enabled = False  # type: ignore[attr-defined]
 
@@ -665,7 +665,8 @@ class VariantTrainer:
                              + w[2]/w_sum * gnn_probs + w[3]/w_sum * dnn_probs)
             else:
                 w3 = w[:3] if len(w) == 3 else [w[0]+w[1], w[2], w[3]]
-                t  = sum(w3); w3 = [x/t for x in w3]
+                t  = sum(w3)
+                w3 = [x/t for x in w3]
                 ens_probs = w3[0] * xgb_probs + w3[1] * gnn_probs + w3[2] * dnn_probs
             ens_preds = np.argmax(ens_probs, axis=1)
             ens_f1    = float(f1_score(y_val, ens_preds, average="macro", zero_division=0))
