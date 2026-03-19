@@ -117,8 +117,8 @@ class TestColumnAligner:
     """src/data/column_aligner.py — 4-aşamalı eşleştirme testleri."""
 
     def _make_df(self, cols):
-        import pandas as pd
         import numpy as np
+        import pandas as pd
         return pd.DataFrame({c: np.random.randn(5) for c in cols})
 
     def test_exact_match(self):
@@ -164,6 +164,7 @@ class TestColumnAligner:
 
     def test_missing_column_filled_with_nan(self):
         import numpy as np
+
         from src.data.column_aligner import ColumnAligner
         expected = ["a", "b", "c"]
         df = self._make_df(["a", "b"])

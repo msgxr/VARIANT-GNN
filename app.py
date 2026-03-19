@@ -1,6 +1,7 @@
 """
 app.py  — VARIANT-GNN Premium Streamlit Dashboard
 TEKNOFEST 2026 | Sağlıkta Yapay Zeka
+[RELOAD SIGNAL: FIXED ENSEMBLE SIGNATURE]
 """
 from __future__ import annotations
 
@@ -340,7 +341,8 @@ st.markdown("""
 # ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
-@st.cache_resource(show_spinner="🧠 Modeller yükleniyor...")
+@st.cache_resource(show_spinner="🧠 Modeller yükleniyor...", ttl=None)
+# [CACHE_VERSION: v2_fixed_ensemble]
 def _load_pipeline() -> InferencePipeline | None:
     try:
         pipeline = InferencePipeline()

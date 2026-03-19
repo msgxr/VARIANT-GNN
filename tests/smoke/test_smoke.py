@@ -63,7 +63,7 @@ class TestSmokeConfig:
     def test_ensemble_weights_length(self):
         from src.config import get_settings
         cfg = get_settings()
-        assert len(cfg.ensemble.weights) == 3
+        assert len(cfg.ensemble.weights) == 4
 
 
 # ---------------------------------------------------------------------------
