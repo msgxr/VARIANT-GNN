@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from data_contracts.variant_schema import validate_dataset
+from src.data.schemas.variant_schema import validate_dataset
 
 
 def _make_df(n: int = 10, n_features: int = 5, with_label: bool = True,

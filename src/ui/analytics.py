@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from typing import NoReturn, Optional, List, Any
-from src.ui.utils import plot_dark, hex_to_rgb
+from src.interface.dashboard.utils import plot_dark, hex_to_rgb
 
 def render_summary_cards(df_result: pd.DataFrame) -> None:
     """Analiz özetini gösteren metrik kartlarını oluşturur."""
@@ -13,6 +13,10 @@ def render_summary_cards(df_result: pd.DataFrame) -> None:
     benign = total - pathogenic
     high_risk = int(df_result.get("High_Risk", pd.Series(dtype=bool)).sum())
     path_pct = 100 * pathogenic / max(total, 1)
+    
+    avg_conf = 0.0
+    if "Confidence" in df_result.columns:
+        avg_conf = float(df_result["Confidence"].mean())
 
     st.markdown(f"""
     <div class="metric-row">
@@ -26,15 +30,15 @@ def render_summary_cards(df_result: pd.DataFrame) -> None:
             <div class="label">Patojenik</div>
             <div class="sublabel">{path_pct:.1f}% oran</div>
         </div>
-        <div class="metric-card benign">
-            <div class="value" style="color:#68d391;">{benign}</div>
-            <div class="label">Benign</div>
-            <div class="sublabel">{100-path_pct:.1f}% oran</div>
-        </div>
         <div class="metric-card warning">
             <div class="value" style="color:#f6ad55;">{high_risk}</div>
             <div class="label">Yüksek Risk</div>
             <div class="sublabel">Kalibre edilmiş</div>
+        </div>
+        <div class="metric-card info">
+            <div class="value" style="color:#63b3ed;">{avg_conf:.1f}%</div>
+            <div class="label">Model Güveni</div>
+            <div class="sublabel">Ortalama (SOTA)</div>
         </div>
     </div>
     """, unsafe_allow_html=True)

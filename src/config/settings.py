@@ -148,6 +148,7 @@ class PreprocessingSettings:
     use_feature_selection: bool = False
     k_best_features: int = 30
     smote_enabled: bool = True
+    use_bio_scoring: bool = True
 
 
 @dataclass
@@ -315,6 +316,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         use_feature_selection   = raw_pre.get("use_feature_selection", False),
         k_best_features         = raw_pre.get("k_best_features", 30),
         smote_enabled           = raw_pre.get("smote_enabled", True),
+        use_bio_scoring         = raw_pre.get("use_bio_scoring", True),
     )
 
     raw_cal = raw.get("calibration", {})

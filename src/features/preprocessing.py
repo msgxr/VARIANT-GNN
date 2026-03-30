@@ -22,8 +22,44 @@ from sklearn.preprocessing import RobustScaler
 
 from src.config import get_settings
 from src.features.autoencoder import AutoEncoderTransformer
+from src.features.bio_scoring import get_blosum62_score, get_grantham_score
 
 logger = logging.getLogger(__name__)
+
+
+class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
+    """
+    Scientific enrichment: Calculates BLOSUM62 and Grantham scores.
+    Expects a DataFrame with 'Ref_AA' and 'Alt_AA' columns, or 
+    tries to extract them from 'AA_Context'.
+    """
+
+    def fit(self, X: Any, y: Optional[np.ndarray] = None) -> BiologicalEnrichmentTransformer:
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if not isinstance(X, (np.ndarray, list)):
+            # If it's a DataFrame, we can do real scoring
+            import pandas as pd
+            if isinstance(X, pd.DataFrame):
+                scores = []
+                for _, row in X.iterrows():
+                    ref = str(row.get('Ref_AA', 'A'))
+                    alt = str(row.get('Alt_AA', 'A'))
+                    if len(ref) != 1 or len(alt) != 1:
+                         # Try parsing from AA_Context if available
+                         ctx = str(row.get('AA_Context', 'A/A'))
+                         if '/' in ctx:
+                             ref, alt = ctx.split('/')[:2]
+                    
+                    scores.append([
+                        get_blosum62_score(ref, alt),
+                        get_grantham_score(ref, alt)
+                    ])
+                return np.array(scores)
+        
+        # Fallback if no AA info: return zeros (dim 2)
+        return np.zeros((len(X), 2))
 
 
 class VariantPreprocessor(BaseEstimator, TransformerMixin):
@@ -55,6 +91,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         use_feature_selection: bool = False,
         k_best_features: int = 30,
         smote_enabled: bool = True,
+        use_bio_scoring: bool = True,
         device: str = "auto",
         random_state: int = 42,
     ) -> None:
@@ -65,10 +102,12 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self.use_feature_selection: bool = use_feature_selection
         self.k_best_features: int = k_best_features
         self.smote_enabled: bool = smote_enabled
+        self.use_bio_scoring: bool = use_bio_scoring
         self.device: str = device
         self.random_state: int = random_state
 
-        # Fitted components (set by fit_transform_train)
+        # Fitted components
+        self._bio_transformer: Optional[BiologicalEnrichmentTransformer] = None
         self._imputer: Optional[SimpleImputer] = None
         self._scaler: Optional[RobustScaler] = None
         self._var_selector: Optional[VarianceThreshold] = None
@@ -125,7 +164,14 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self._scaler = RobustScaler()
         X_scaled = self._scaler.fit_transform(X_imputed)
 
-        # 3. SMOTE (before feature selection & autoencoder)
+        # 3. Biological Enrichment (Before SMOTE so scores are resampled)
+        if self.use_bio_scoring:
+            self._bio_transformer = BiologicalEnrichmentTransformer()
+            bio_feats = self._bio_transformer.fit_transform(X)
+            # Impute/Scale bio feats if they were actually used (not zeros)
+            X_scaled = np.hstack([X_scaled, bio_feats])
+
+        # 4. SMOTE (includes bio features)
         if apply_smote and y is not None:
             logger.info("Applying SMOTE for class balancing …")
             smote = SMOTE(random_state=self.random_state)
@@ -147,7 +193,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             )
             X_scaled = self._autoenc.fit_transform(X_scaled)
 
-        # 6. Build graph from training-fold correlation
+        # No Biological Enrichment here, moved earlier
+
+        # 6. Build graph
         self._build_graph(X_scaled)
         self.n_output_features = X_scaled.shape[1]
         self._is_fitted = True
@@ -160,6 +208,10 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
              
         X_imputed = self._imputer.transform(X)
         X_scaled = self._scaler.transform(X_imputed)
+
+        if self.use_bio_scoring and self._bio_transformer is not None:
+             bio_feats = self._bio_transformer.transform(X)
+             X_scaled = np.hstack([X_scaled, bio_feats])
 
         if self.use_feature_selection:
             if self._var_selector is not None:
@@ -242,7 +294,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         """
         Build a coordinate-free cosine k-NN sample graph.
         """
-        from src.graph.builder import SampleKNNGraphBuilder
+        from src.core.graph.builder import SampleKNNGraphBuilder
 
         builder = SampleKNNGraphBuilder(k=k)
         return builder.build(X, y)
@@ -260,6 +312,7 @@ def build_preprocessor_from_config() -> VariantPreprocessor:
         use_feature_selection = p.use_feature_selection,
         k_best_features = p.k_best_features,
         smote_enabled = p.smote_enabled,
+        use_bio_scoring = p.use_bio_scoring,
         device = cfg.device,
         random_state = cfg.seed,
     )

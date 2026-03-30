@@ -36,10 +36,13 @@ from torch_geometric.loader import DataLoader as GeoDataLoader
 
 from src.config import get_settings
 from src.features.preprocessing import VariantPreprocessor, build_preprocessor_from_config
-from src.models.dnn import VariantDNN
-from src.models.ensemble import HybridEnsemble
-from src.models.gnn import FeatureGNN, VariantSAGEGNN
+from src.core.models.dnn import VariantDNN
+from src.core.models.ensemble import HybridEnsemble
+from src.core.models.gnn import VariantGATv2GNN
 from src.training.focal_loss import FocalLoss
+import mlflow
+import mlflow.pytorch
+import mlflow.sklearn
 from src.utils.seeds import set_global_seed
 
 logger = logging.getLogger(__name__)
@@ -143,8 +146,8 @@ def _tokenize_sequences(
     return nuc_t, aa_t
 
 
-def _sage_epoch(
-    model: VariantSAGEGNN,
+def _gatv2_epoch(
+    model: VariantGATv2GNN,
     data,
     optimizer: torch.optim.Optimizer,
     criterion: WeightedBCELoss,
@@ -163,8 +166,8 @@ def _sage_epoch(
     return loss.item()
 
 
-def _sage_eval(
-    model: VariantSAGEGNN,
+def _gatv2_eval(
+    model: VariantGATv2GNN,
     data,
     device: torch.device,
     nuc_ids: Optional[torch.Tensor] = None,
@@ -213,7 +216,7 @@ def _make_dnn_loader(
 
 
 def _gnn_epoch(
-    model: FeatureGNN,
+    model: VariantGATv2GNN,
     loader: GeoDataLoader,
     optimizer: torch.optim.Optimizer,
     device: torch.device,
@@ -223,7 +226,7 @@ def _gnn_epoch(
     for data in loader:
         data = data.to(device)
         optimizer.zero_grad()
-        out  = model(data)
+        out  = model(data.x, data.edge_index)
         loss = F.cross_entropy(out, data.y)
         loss.backward()
         optimizer.step()
@@ -232,14 +235,14 @@ def _gnn_epoch(
 
 
 def _gnn_eval(
-    model: FeatureGNN, loader: GeoDataLoader, device: torch.device
+    model: VariantGATv2GNN, loader: GeoDataLoader, device: torch.device
 ) -> Tuple[List[int], List[List[float]]]:
     model.eval()
     preds_all, probs_all = [], []
     with torch.no_grad():
         for data in loader:
             data  = data.to(device)
-            out   = model(data)
+            out   = model(data.x, data.edge_index)
             probs = F.softmax(out, dim=1).cpu().numpy()
             preds = out.argmax(dim=1).cpu().numpy()
             probs_all.extend(probs.tolist())
@@ -367,52 +370,68 @@ class VariantTrainer:
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
 
-        # Split indices so we can slice sequences in parallel
-        from sklearn.model_selection import train_test_split as _tts
-        idx = np.arange(len(X))
-        idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
-                               random_state=cfg.seed)
-        X_train_all, _X_test = X[idx_tr], X[idx_te]
-        y_train_all, _y_test = y[idx_tr], y[idx_te]
-        nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
-        nuc_te = ([nuc_seqs[i] for i in idx_te] if nuc_seqs else None)  # noqa: F841
-        aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
-        aa_te  = ([aa_seqs[i]  for i in idx_te] if aa_seqs  else None)   # noqa: F841
+        # MLflow Run initialization
+        mlflow.set_experiment("VARIANT-GNN-Professional")
+        run_name = f"HybridEnsemble_{cfg.gnn.model_type}"
+        
+        with mlflow.start_run(run_name=run_name):
+            # Log Hyperparameters
+            mlflow.log_params({
+                "gnn_hidden_dim": cfg.gnn.hidden_dim,
+                "gnn_lr": cfg.gnn.lr,
+                "xgb_max_depth": cfg.xgb.max_depth,
+                "ensemble_weights": str(cfg.ensemble.weights)
+            })
 
-        # Cross-validate on train portion
-        fold_results = self._cross_validate(X_train_all, y_train_all,
-                                            nuc_seqs=nuc_tr, aa_seqs=aa_tr)
-        mean_f1 = float(np.mean([r.f1 for r in fold_results]))
-        std_f1  = float(np.std( [r.f1 for r in fold_results]))
-        logger.info(
-            "Cross-validation complete: Macro F1 = %.4f ± %.4f", mean_f1, std_f1
-        )
+            # Split indices so we can slice sequences in parallel
+            from sklearn.model_selection import train_test_split as _tts
+            idx = np.arange(len(X))
+            idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
+                                   random_state=cfg.seed)
+            X_train_all, _X_test = X[idx_tr], X[idx_te]
+            y_train_all, _y_test = y[idx_tr], y[idx_te]
+            nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
+            aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
 
-        # Final model — fit on full training set
-        preprocessor, ensemble, X_opt_val, y_opt_val = self._fit_single(
-            X_train_all, y_train_all, nuc_seqs=nuc_tr, aa_seqs=aa_tr
-        )
+            # Cross-validate on train portion
+            fold_results = self._cross_validate(X_train_all, y_train_all,
+                                                nuc_seqs=nuc_tr, aa_seqs=aa_tr)
+            mean_f1 = float(np.mean([r.f1 for r in fold_results]))
+            std_f1  = float(np.std( [r.f1 for r in fold_results]))
+            
+            mlflow.log_metric("mean_cv_f1", mean_f1)
+            mlflow.log_metric("std_cv_f1", std_f1)
+            
+            logger.info(
+                "Cross-validation complete: Macro F1 = %.4f ± %.4f", mean_f1, std_f1
+            )
 
-        # Optionally optimise ensemble weights on the inner val set
-        # (NOT on X_test, to keep the test set strictly held-out for metrics)
-        if cfg.ensemble.optimize_weights:
-            ensemble.optimise_weights(X_opt_val, None, y_opt_val)
+            # Final model — fit on full training set
+            preprocessor, ensemble, X_opt_val, y_opt_val = self._fit_single(
+                X_train_all, y_train_all, nuc_seqs=nuc_tr, aa_seqs=aa_tr
+            )
 
-        # Fit stacking meta-learner on the same inner val set
-        # MetaLearner replaces fixed weights with a LogisticRegression combiner,
-        # which can learn non-linear combinations and panel-specific patterns.
-        try:
-            ensemble.fit_meta_learner(X_opt_val, y_opt_val)
-        except Exception as exc:
-            logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
+            # Stacking/Weight optimization (logging this is useful)
+            if cfg.ensemble.optimize_weights:
+                ensemble.optimise_weights(X_opt_val, None, y_opt_val)
 
-        return TrainResult(
-            ensemble      = ensemble,
-            preprocessor  = preprocessor,
-            fold_results  = fold_results,
-            mean_cv_f1    = mean_f1,
-            std_cv_f1     = std_f1,
-        )
+            # Fit stacking meta-learner on the same inner val set
+            try:
+                ensemble.fit_meta_learner(X_opt_val, y_opt_val)
+            except Exception as exc:
+                logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
+
+            # Log Final Models
+            mlflow.pytorch.log_model(ensemble.gnn_model, "gnn_model")
+            mlflow.sklearn.log_model(ensemble.xgb_model, "xgb_model")
+            
+            return TrainResult(
+                ensemble      = ensemble,
+                preprocessor  = preprocessor,
+                fold_results  = fold_results,
+                mean_cv_f1    = mean_f1,
+                std_cv_f1     = std_f1,
+            )
 
     # ------------------------------------------------------------------
     # Internal — single fit
@@ -503,17 +522,17 @@ class VariantTrainer:
         except Exception as exc:
             logger.warning("LightGBM training failed (%s) — skipping.", exc)
 
-        # --- GNN (VariantSAGEGNN) — with proper early stopping via inner val ---
+        # --- GNN (VariantGATv2GNN) — with proper early stopping via inner val ---
         knn_k    = getattr(cfg.gnn, "knn_k", 5)
         patience = getattr(cfg.gnn, "early_stopping_patience", 5)
-        gnn_model = VariantSAGEGNN(
+        gnn_model = VariantGATv2GNN(
             numeric_dim    = X_proc.shape[1],
             hidden_dim     = cfg.gnn.hidden_dim,
             num_classes    = 2,
             use_multimodal = use_multimodal,
             seq_enc_dim    = seq_enc_dim,
         ).to(self.device)
-        gnn_model = self._train_sage(
+        gnn_model = self._train_gatv2(
             gnn_model, preprocessor,
             X_inner_tr, y_inner_tr,
             X_val=X_inner_val, y_val=y_inner_val,   # ← early stopping now active
@@ -613,32 +632,32 @@ class VariantTrainer:
             except Exception:
                 pass
 
-            # --- GNN (VariantSAGEGNN) ---
+            # --- GNN (VariantGATv2GNN) ---
             knn_k    = getattr(cfg.gnn, "knn_k", 5)
             patience = getattr(cfg.gnn, "early_stopping_patience", 5)
             X_for_gnn = X_tr_proc[:n_orig_tr] if nuc_tr_proc else X_tr_proc
             y_for_gnn = y_tr_res[:n_orig_tr]  if nuc_tr_proc else y_tr_res
-            sage_model = VariantSAGEGNN(
+            gat_model = VariantGATv2GNN(
                 numeric_dim    = X_tr_proc.shape[1],
                 hidden_dim     = cfg.gnn.hidden_dim,
                 num_classes    = 2,
                 use_multimodal = use_multimodal,
                 seq_enc_dim    = seq_enc_dim,
             ).to(self.device)
-            sage_model = self._train_sage(
-                sage_model, preprocessor,
+            gat_model = self._train_gatv2(
+                gat_model, preprocessor,
                 X_for_gnn, y_for_gnn,
                 X_val_proc, y_val,
                 knn_k=knn_k, patience=patience,
                 nuc_seqs=nuc_tr_proc, aa_seqs=aa_tr_proc,
                 nuc_val=nuc_val, aa_val=aa_val,
             )
-            # Evaluate SAGE on validation graph
+            # Evaluate GATv2 on validation graph
             val_graph = _build_sample_graph(preprocessor, X_val_proc, y_val, knn_k)
             nuc_val_t, aa_val_t = _tokenize_sequences(nuc_val if use_multimodal else None,
                                                       aa_val  if use_multimodal else None,
                                                       self.device)
-            gnn_preds, gnn_probs_fold = _sage_eval(sage_model, val_graph, self.device,
+            gnn_preds, gnn_probs_fold = _gatv2_eval(gat_model, val_graph, self.device,
                                                    nuc_ids=nuc_val_t, aa_ids=aa_val_t)
             gnn_f1 = float(f1_score(y_val, gnn_preds[:len(y_val)],
                                     average="macro", zero_division=0))
@@ -680,12 +699,12 @@ class VariantTrainer:
         return results
 
     # ------------------------------------------------------------------
-    # VariantSAGEGNN training loop — Module 3 & 4
+    # VariantGATv2GNN training loop — Module 3 & 4
     # ------------------------------------------------------------------
 
-    def _train_sage(
+    def _train_gatv2(
         self,
-        model:       VariantSAGEGNN,
+        model:       VariantGATv2GNN,
         preprocessor: VariantPreprocessor,
         X_tr:        np.ndarray,
         y_tr:        np.ndarray,
@@ -697,7 +716,7 @@ class VariantTrainer:
         aa_seqs:     Optional[List[str]] = None,
         nuc_val:     Optional[List[str]] = None,
         aa_val:      Optional[List[str]] = None,
-    ) -> VariantSAGEGNN:
+    ) -> VariantGATv2GNN:
         """
         Full-batch node-classification training on a cosine k-NN sample graph.
 
@@ -739,11 +758,11 @@ class VariantTrainer:
         patience_cnt  = 0
 
         for epoch in range(1, cfg.gnn.epochs + 1):
-            loss = _sage_epoch(model, train_graph, optimizer, criterion, self.device,
+            loss = _gatv2_epoch(model, tr_graph, optimizer, criterion, self.device,
                                nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
 
             if val_graph is not None:
-                preds, _ = _sage_eval(model, val_graph, self.device,
+                preds, _ = _gatv2_eval(model, val_graph, self.device,
                                       nuc_ids=nuc_val_t, aa_ids=aa_val_t)
                 val_f1   = float(f1_score(
                     y_val, preds[:len(y_val)], average="macro", zero_division=0

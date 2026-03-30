@@ -17,7 +17,7 @@ def _fake_proba(n: int = 200, seed: int = 0) -> tuple:
 
 class TestEnsembleCalibrator:
     def test_isotonic_fit_transform(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         proba, y = _fake_proba()
         cal      = EnsembleCalibrator(method="isotonic")
         cal_p    = cal.fit_transform(proba, y)
@@ -25,7 +25,7 @@ class TestEnsembleCalibrator:
         np.testing.assert_allclose(cal_p.sum(axis=1), 1.0, atol=1e-6)
 
     def test_sigmoid_fit_transform(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         proba, y = _fake_proba(seed=5)
         cal      = EnsembleCalibrator(method="sigmoid")
         cal_p    = cal.fit_transform(proba, y)
@@ -33,26 +33,26 @@ class TestEnsembleCalibrator:
         np.testing.assert_allclose(cal_p.sum(axis=1), 1.0, atol=1e-6)
 
     def test_values_in_range(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         proba, y = _fake_proba()
         cal      = EnsembleCalibrator(method="isotonic")
         cal_p    = cal.fit_transform(proba, y)
         assert (cal_p >= 0).all() and (cal_p <= 1).all()
 
     def test_unknown_method_raises(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         with pytest.raises(ValueError):
             EnsembleCalibrator(method="unknown")
 
     def test_transform_before_fit_raises(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         proba, _ = _fake_proba()
         cal = EnsembleCalibrator()
         with pytest.raises(RuntimeError):
             cal.transform(proba)
 
     def test_calibration_curve_data(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         proba, y = _fake_proba()
         cal      = EnsembleCalibrator(method="isotonic")
         cal.fit(proba, y)

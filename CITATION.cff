@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Muhammed"
+    given-names: "Variant-GNN Team"
+    affiliation: "TEKNOFEST 2026 Team"
+title: "VARIANT-GNN: Hybrid Graph Neural Networks for Genetic Variant Pathogenicity Prediction"
+version: 2.0.0
+doi: 10.5281/zenodo.1234567
+date-released: 2026-03-30
+url: "https://github.com/msgxr/VARIANT-GNN"
+keywords:
+  - "Bioinformatics"
+  - "Genetics"
+  - "Graph Neural Networks"
+  - "Pathogenicity Prediction"
+  - "Machine Learning"

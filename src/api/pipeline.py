@@ -22,11 +22,11 @@ import numpy as np
 import pandas as pd
 from torch_geometric.loader import DataLoader as GeoDataLoader
 
-from src.calibration.calibrator import EnsembleCalibrator
+from src.scientific.calibration.calibrator import EnsembleCalibrator
 from src.config import get_settings, Settings
 from src.data.loader import LoadedDataset, load_predict_csv
 from src.features.preprocessing import VariantPreprocessor
-from src.models.ensemble import HybridEnsemble
+from src.core.models.ensemble import HybridEnsemble
 from src.utils.serialization import ModelStore
 
 logger = logging.getLogger(__name__)
@@ -84,11 +84,11 @@ class InferencePipeline:
         X_scaled = self._preprocessor.transform(X_np)
 
         # ── Build sequence tensors for multimodal GNN (if applicable) ──
-        from src.models.gnn import VariantSAGEGNN
+        from src.core.models.gnn import VariantGATv2GNN
         nuc_ids = None
         aa_ids = None
         if (
-            isinstance(self._ensemble.gnn, VariantSAGEGNN)
+            isinstance(self._ensemble.gnn, VariantGATv2GNN)
             and getattr(self._ensemble.gnn, "use_multimodal", False)
             and dataset.nuc_sequences is not None
         ):
@@ -103,35 +103,23 @@ class InferencePipeline:
                 aa_ids = torch.tensor(
                     tokenize_amino_acids(dataset.aa_sequences), dtype=torch.long
                 ).to(device)
-            logger.info(
-                "Inference: feeding sequence tokens to multimodal GNN "
-                "(nuc=%s, aa=%s)",
-                nuc_ids.shape, aa_ids.shape if aa_ids is not None else None,
-            )
-        elif (
-            isinstance(self._ensemble.gnn, VariantSAGEGNN)
-            and getattr(self._ensemble.gnn, "use_multimodal", False)
-            and dataset.nuc_sequences is None
-        ):
-            logger.warning(
-                "Multimodal GNN is enabled but Nuc_Context/AA_Context "
-                "columns are missing from input data. Falling back to "
-                "numeric-only features."
-            )
-
-        # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
-        if isinstance(self._ensemble.gnn, VariantSAGEGNN):
-            loader = None
-        else:
-            loader = _build_gnn_loader(
-                self._preprocessor, X_scaled, cfg.training.batch_size
-            )
-
+        
+        # Determine prediction method (Uncertainty-aware if GATv2)
         threshold = cfg.thresholds.classification
-        preds, raw_proba = self._ensemble.predict(
-            X_scaled, loader, threshold,
-            nuc_ids=nuc_ids, aa_ids=aa_ids,
-        ) # type: ignore
+        
+        if isinstance(self._ensemble.gnn, VariantGATv2GNN):
+            # State-of-the-art Prediction with MC-Dropout Uncertainty
+            preds, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
+                X_scaled, n_iter=10, threshold=threshold
+            )
+            # Confidence is based on the inverse of standard deviation
+            confidence = ((1.0 - uncertainty) * 100).round(2)
+        else:
+            # Traditional Prediction
+            preds, raw_proba = self._ensemble.predict(
+                X_scaled, threshold=threshold
+            )
+            confidence = (np.max(raw_proba, axis=1) * 100).round(2)
 
         # Calibrated probabilities
         if self._calibrator is not None:
@@ -140,7 +128,6 @@ class InferencePipeline:
             cal_proba = raw_proba
 
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
-        confidence = (np.max(raw_proba, axis=1) * 100).round(2)
 
         # Build output DataFrame
         result: pd.DataFrame = dataset.metadata.copy()

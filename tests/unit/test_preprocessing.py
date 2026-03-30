@@ -17,7 +17,7 @@ class TestVariantPreprocessor:
     def test_fit_resample_returns_arrays(self):
         from src.features.preprocessing import VariantPreprocessor
         X, y     = _make_xy()
-        pre      = VariantPreprocessor(use_autoencoder=False, smote_enabled=False)
+        pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False, use_bio_scoring=False)
         X_out, y_out = pre.fit_resample_train(X, y)
         assert X_out.ndim == 2
         assert len(y_out) == len(X_out)

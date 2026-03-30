@@ -20,14 +20,14 @@ from sklearn.metrics import f1_score
 from torch_geometric.loader import DataLoader
 
 from src.config import get_settings
-from src.models.dnn import VariantDNN
-from src.models.gnn import FeatureGNN, VariantSAGEGNN
+from src.core.models.dnn import VariantDNN
+from src.core.models.gnn import VariantGATv2GNN
 
 logger = logging.getLogger(__name__)
 
 
 def _gnn_predict_proba(
-    model: Union[FeatureGNN, VariantSAGEGNN], 
+    model: VariantGATv2GNN, 
     loader: DataLoader, 
     device: torch.device
 ) -> np.ndarray:
@@ -37,7 +37,7 @@ def _gnn_predict_proba(
     with torch.no_grad():
         for data in loader:
             data = data.to(device)
-            out = model(data)
+            out = model(data.x, data.edge_index)
             probs_list.append(F.softmax(out, dim=1).cpu().numpy())
     return np.vstack(probs_list)
 
@@ -57,16 +57,8 @@ def _dnn_predict_proba(
 
 class HybridEnsemble:
     """
-    Weighted ensemble of XGBoost, LightGBM, GNN, and DNN models.
-
-    Weights can be:
-      - loaded from config (default)
-      - manually set
-      - optimised on validation data via ``optimise_weights``
-
-    Labels in output:
-      index 0 → Benign
-      index 1 → Pathogenic
+    Weighted ensemble of XGBoost, LightGBM, GATv2, and DNN models.
+    Supports Uncertainty Quantification via GNN MC-Dropout.
     """
 
     LABEL_MAP: Dict[int, str] = {0: "Benign", 1: "Pathogenic"}
@@ -74,8 +66,8 @@ class HybridEnsemble:
     def __init__(
         self,
         xgb_model: Optional[xgb.XGBClassifier] = None,
-        lgbm_model: Optional[Any] = None,  # LightGBM model or wrapper
-        gnn_model: Optional[nn.Module] = None,  # FeatureGNN or VariantSAGEGNN
+        lgbm_model: Optional[Any] = None,
+        gnn_model: Optional[VariantGATv2GNN] = None,
         dnn_model: Optional[VariantDNN] = None,
         weights: Optional[List[float]] = None,
         device: Optional[torch.device] = None,
@@ -89,10 +81,8 @@ class HybridEnsemble:
             "cuda" if torch.cuda.is_available() else "cpu"
         )
         
-        # Read weights from config, allow override; normalise automatically
         raw_w = list(weights) if weights is not None else list(cfg.ensemble.weights)
         if len(raw_w) != 4:
-            logger.warning("Ensemble weights length != 4 (%d). Using default [0.35, 0.30, 0.25, 0.10]", len(raw_w))
             raw_w = [0.35, 0.30, 0.25, 0.10]
             
         w_sum = sum(raw_w)
@@ -103,7 +93,6 @@ class HybridEnsemble:
     def predict_proba_all(
         self,
         X_scaled: np.ndarray,
-        gnn_loader: Optional[DataLoader] = None,
         **kwargs: Any,
     ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
         """Return (xgb_probs, lgb_probs, gnn_probs, dnn_probs) each shape (N, C)."""
@@ -112,24 +101,19 @@ class HybridEnsemble:
 
         gnn_probs = None
         if self.gnn is not None:
-            if isinstance(self.gnn, VariantSAGEGNN):
-                gnn_probs = self._sage_predict_proba(X_scaled, **kwargs)
-            elif gnn_loader is not None:
-                gnn_probs = _gnn_predict_proba(
-                    self.gnn.to(self.device), gnn_loader, self.device
-                )
+             gnn_probs = self._gat_predict_proba(X_scaled, **kwargs)
 
         dnn_probs = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device) if self.dnn is not None else None
 
         return xgb_probs, lgb_probs, gnn_probs, dnn_probs
 
-    def _sage_predict_proba(
+    def _gat_predict_proba(
         self,
         X_scaled: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray:
-        """Run VariantSAGEGNN inference on the full feature matrix."""
-        from src.graph.builder import SampleKNNGraphBuilder
+        """Run VariantGATv2GNN inference using KNN graph building."""
+        from src.core.graph.builder import SampleKNNGraphBuilder
         knn_k = getattr(get_settings().gnn, "knn_k", 5)
         data = SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
         
@@ -141,6 +125,46 @@ class HybridEnsemble:
             logits = model(data.x, data.edge_index, **kwargs)
             probs = F.softmax(logits, dim=1).cpu().numpy()
         return probs
+
+    def predict_with_uncertainty(
+        self,
+        X_scaled: np.ndarray,
+        n_iter: int = 15,
+        threshold: float = 0.5,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Calculates ensemble prediction with an added 'Uncertainty' (std) 
+        from the GATv2 model's MC Dropout passes.
+        
+        Returns: (preds, combined_probs, uncertainty_std)
+        """
+        # 1. GATv2 Uncertainty estimate
+        from src.core.graph.builder import SampleKNNGraphBuilder
+        knn_k = getattr(get_settings().gnn, "knn_k", 5)
+        data = SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
+        
+        model = self.gnn.to(self.device)
+        data = data.to(self.device)
+        
+        # MC Dropout passes on GNN
+        gnn_mean, gnn_std = model.predict_with_uncertainty(
+            data.x, data.edge_index, n_iter=n_iter
+        )
+        gnn_probs = gnn_mean.cpu().numpy()
+        
+        # 2. Others (Normal)
+        xp = self.xgb.predict_proba(X_scaled) if self.xgb is not None else None
+        lp = self.lgbm.predict_proba(X_scaled) if self.lgbm is not None else None
+        dp = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device) if self.dnn is not None else None
+        
+        # 3. Combine
+        combined_proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gnn_probs, dnn_proba=dp)
+        preds = (combined_proba[:, 1] >= threshold).astype(int)
+        
+        # Uncertainty is based on GNN variance (main stochastic component)
+        uncertainty = gnn_std[:, 1].cpu().numpy()
+        
+        return preds, combined_proba, uncertainty
 
     def combine(
         self,
@@ -158,59 +182,23 @@ class HybridEnsemble:
         ]
         available = [(p, w) for p, w in pairs if p is not None]
         if not available:
-            raise ValueError("At least one probability array must be provided to combine().")
+            raise ValueError("No predictions available.")
         
         total_w = sum(w for _, w in available)
         return sum((w / total_w) * p for p, w in available)
 
     def predict(
         self,
-        X_scaled_or_proba: np.ndarray,
-        gnn_loader: Optional[DataLoader] = None,
+        X_scaled: np.ndarray,
         threshold: float = 0.5,
         **kwargs: Any,
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        """
-        Predict classes or (classes, probabilities).
-        """
-        is_sage = isinstance(self.gnn, VariantSAGEGNN)
-
-        if gnn_loader is None and not is_sage:
-            # Pre-computed (N, 2) probability array supplied directly
-            proba = X_scaled_or_proba
-            return (proba[:, 1] >= threshold).astype(int)
-
-        # Full prediction
-        xp, lp, gp, dp = self.predict_proba_all(
-            X_scaled_or_proba, gnn_loader, **kwargs
-        )
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Classic ensemble prediction."""
+        xp, lp, gp, dp = self.predict_proba_all(X_scaled, **kwargs)
         proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
         preds = (proba[:, 1] >= threshold).astype(int)
         return preds, proba
 
-    def optimise_weights(
-        self,
-        X_val: np.ndarray,
-        gnn_loader: DataLoader,
-        y_val: np.ndarray,
-    ) -> List[float]:
-        """Find weights that maximise validation Macro F1."""
-        xp, lp, gp, dp = self.predict_proba_all(X_val, gnn_loader)
-
-        def neg_f1(w: np.ndarray) -> float:
-            w_norm = w / w.sum()
-            proba = w_norm[0] * xp + w_norm[1] * lp + w_norm[2] * gp + w_norm[3] * dp
-            preds = np.argmax(proba, axis=1)
-            return -f1_score(y_val, preds, average="macro", zero_division=0)
-
-        x0 = np.array(self.weights)
-        result = minimize(neg_f1, x0, method="Nelder-Mead")
-        w_opt = result.x / result.x.sum()
-        self.weights = w_opt.tolist()
-        logger.info("Optimised ensemble weights: %s (F1=%.4f)", self.weights, -result.fun)
-        return self.weights
-
     @staticmethod
     def pathogenic_risk_score(ensemble_proba: np.ndarray) -> np.ndarray:
-        """Convert Pathogenic class probability to a 0–100 risk score."""
         return (ensemble_proba[:, 1] * 100).round(2)

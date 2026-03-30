@@ -72,18 +72,18 @@ class TestSmokeConfig:
 
 class TestSmokeModels:
     def test_gnn_instantiates(self):
-        from src.models.gnn import FeatureGNN
-        model = FeatureGNN(in_channels=1, hidden_dim=16, num_classes=2)
+        from src.core.models.gnn import VariantGATv2GNN
+        model = VariantGATv2GNN(numeric_dim=10, hidden_dim=16, num_classes=2)
         assert model is not None
 
     def test_dnn_instantiates(self):
-        from src.models.dnn import VariantDNN
+        from src.core.models.dnn import VariantDNN
         model = VariantDNN(input_dim=20, hidden_dim=32, num_classes=2)
         assert model is not None
 
     def test_ensemble_instantiates(self):
-        from src.models.ensemble import HybridEnsemble
-        ens = HybridEnsemble(weights=[0.4, 0.4, 0.2])
+        from src.core.models.ensemble import HybridEnsemble
+        ens = HybridEnsemble(weights=[0.3, 0.3, 0.3, 0.1])
         assert ens is not None
 
     def test_preprocessor_instantiates(self):
@@ -92,7 +92,7 @@ class TestSmokeModels:
         assert pp is not None
 
     def test_calibrator_instantiates(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         cal = EnsembleCalibrator(method="isotonic")
         assert cal is not None
 
@@ -113,7 +113,7 @@ class TestSmokeSchema:
         import numpy as np
         import pandas as pd
 
-        from data_contracts.variant_schema import validate_dataset
+        from src.data.schemas.variant_schema import validate_dataset
 
         df = pd.DataFrame({
             "Variant_ID": ["V1", "V2", "V3", "V4"],
@@ -139,7 +139,7 @@ class TestSmokeUtils:
         set_global_seed(42)
 
     def test_evaluation_metrics_importable(self):
-        from src.evaluation.metrics import evaluate, expected_calibration_error, find_best_threshold
+        from src.scientific.metrics.metrics import evaluate, expected_calibration_error, find_best_threshold
         assert callable(evaluate)
         assert callable(find_best_threshold)
         assert callable(expected_calibration_error)

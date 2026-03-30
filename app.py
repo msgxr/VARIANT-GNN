@@ -11,24 +11,24 @@ import streamlit as st
 from typing import Optional
 
 from src.config import get_settings
-from src.inference.pipeline import InferencePipeline
+from src.api.pipeline import InferencePipeline
 from src.utils.logging_cfg import setup_logging
 
 # UI Modülleri
-from src.ui.styles import inject_styles
-from src.ui.header import render_hero
-from src.ui.sidebar import render_sidebar
-from src.ui.analytics import (
+from src.interface.dashboard.styles import inject_styles
+from src.interface.dashboard.header import render_hero
+from src.interface.dashboard.sidebar import render_sidebar
+from src.interface.dashboard.analytics import (
     render_summary_cards, 
     render_results_table, 
     render_risk_histogram, 
     render_risk_map, 
     render_model_comparison
 )
-from src.ui.explainability import render_xai
-from src.ui.performance import render_performance_tab
-from src.ui.clinvar import render_clinvar_tab
-from src.ui.reporting import generate_pdf_report
+from src.interface.dashboard.explainability import render_xai
+from src.interface.dashboard.performance import render_performance_tab
+from src.interface.dashboard.clinvar import render_clinvar_tab
+from src.interface.dashboard.reporting import generate_pdf_report
 
 setup_logging(level=logging.WARNING)
 
@@ -43,7 +43,12 @@ st.set_page_config(
 )
 
 # Premium CSS Enjeksiyonu
-inject_styles()
+# Sidebar yields settings and optionally a pre-loaded dataframe (VCF/FHIR/CSV)
+pipeline: Optional[InferencePipeline] = _get_pipeline()
+sidebar_df, opts = render_sidebar() 
+
+# Apply Theme
+inject_styles(theme=opts.get("theme", "dark"))
 
 @st.cache_resource(show_spinner="🧠 Modeller yükleniyor...", ttl=None)
 def _get_pipeline() -> InferencePipeline | None:
@@ -59,18 +64,23 @@ def main():
     cfg = get_settings()
     render_hero()
 
-    pipeline: Optional[InferencePipeline] = _get_pipeline()
-    # Sidebar returns settings; file upload is handled in the main tab for better UX
-    sidebar_df, opts = render_sidebar() 
-
     # ── Tabs ──────────────────────────────────
-    tab_analyze, tab_xai, tab_perf, tab_clinvar, tab_about = st.tabs([
-        "🔬 Varyant Analizi",
-        "🧠 Açıklanabilir YZ",
-        "📊 Model Performansı",
-        "🔍 ClinVar Araması",
-        "ℹ️ Proje Hakkında",
-    ])
+    tabs = ["🔬 Varyant Analizi", "🧠 Açıklanabilir YZ"]
+    if opts.get("show_3d", True):
+        tabs.append("🧬 3D Protein Viz")
+    tabs.extend(["📊 Model Performansı", "🔍 ClinVar Araması", "ℹ️ Proje Hakkında"])
+    
+    selected_tabs = st.tabs(tabs)
+    
+    # Map tabs correctly
+    tab_analyze = selected_tabs[0]
+    tab_xai = selected_tabs[1]
+    curr_idx = 2
+    tab_3d = selected_tabs[curr_idx] if opts.get("show_3d", True) else None
+    if tab_3d: curr_idx += 1
+    tab_perf = selected_tabs[curr_idx]; curr_idx += 1
+    tab_clinvar = selected_tabs[curr_idx]; curr_idx += 1
+    tab_about = selected_tabs[curr_idx]
 
     with tab_analyze:
         st.markdown("""
@@ -79,29 +89,30 @@ def main():
                     padding:20px 24px; margin-bottom:22px;">
             <div style="font-size:1rem; font-weight:700; color:#63b3ed; margin-bottom:10px;">🤖 Bu Sekme Ne Yapıyor?</div>
             <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
-                Buraya genetik varyant verilerinizi <strong style="color:#90cdf4;">CSV formatında</strong> yükleyebilirsiniz.
-                Sisteminiz yüklenen her varyantı 4 farklı yapay zeka modeli ile analiz eder:
-                GNN, XGBoost, LightGBM ve DNN.
+                Sol menüden <strong style="color:#90cdf4;">CSV, VCF veya FHIR (JSON)</strong> formatında genetik verilerinizi yükleyebilirsiniz. 
+                Sistem, varyantları GNN ve Ensemble modelleriyle analiz ederek patojenite skoru üretir.
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        uploaded = st.file_uploader("Varyant CSV dosyası yükleyin", type=["csv"])
+        # Use sidebar_df if available
+        df_to_analyze = sidebar_df if sidebar_df is not None else (st.session_state.get("df_raw") if "df_raw" in st.session_state else None)
 
-        if uploaded:
-            df_raw = pd.read_csv(uploaded)
-            st.markdown(f"**📋 Önizleme** — {len(df_raw):,} satır")
-            st.dataframe(df_raw.head(5), use_container_width=True)
+        if df_to_analyze is not None:
+            st.markdown(f"**📋 Yüklenen Veri Seti Önizleme** — {len(df_to_analyze):,} satır")
+            st.dataframe(df_to_analyze.head(5), use_container_width=True)
 
-            if pipeline and st.button("🚀 ANALİZİ BAŞLAT", type="primary", use_container_width=True):
+            if pipeline and st.button("🚀 ANALİZİ BAŞLAT / GÜNCELLE", type="primary", use_container_width=True):
                 with st.spinner("⚡ Modeller çalışıyor..."):
                     try:
-                        df_result = pipeline.predict_from_dataframe(df_raw)
+                        df_result = pipeline.predict_from_dataframe(df_to_analyze)
                         st.session_state["df_result"] = df_result
-                        st.session_state["df_raw"]    = df_raw
+                        st.session_state["df_raw"]    = df_to_analyze
                         st.success("✅ Analiz tamamlandı!")
                     except Exception as exc:
                         st.error(f"⚠️ İnferans hatası: {exc}")
+        else:
+            st.info("👈 Lütfen sol menüden bir veri dosyası seçerek başlayın.")
 
         if "df_result" in st.session_state:
             df_result = st.session_state["df_result"]
@@ -138,6 +149,27 @@ def main():
             
             render_xai(pipeline, df_features, opts)
 
+    if tab_3d:
+        with tab_3d:
+            st.markdown("""
+            <div class="section-header">
+                <div class="section-icon">🧬</div>
+                <h3>Üç Boyutlu Protein Yapı Analizi</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            from src.interface.dashboard.protein_viz import render_protein_3d, get_pdb_for_gene
+            
+            # Eğer analiz edilmiş veri varsa ilk genin PDB'sini çek
+            gene_sym = "BRCA1"
+            if "df_raw" in st.session_state:
+                df_ = st.session_state["df_raw"]
+                if "Gene_Symbol" in df_.columns:
+                    gene_sym = df_["Gene_Symbol"].iloc[0]
+            
+            pdb_id = get_pdb_for_gene(gene_sym)
+            render_protein_3d(pdb_id=pdb_id)
+
     with tab_perf:
         render_performance_tab()
 
@@ -145,11 +177,15 @@ def main():
         render_clinvar_tab()
 
     with tab_about:
-        st.markdown("""
+        st.markdown(f"""
         <div style="max-width:720px; margin:0 auto;">
             <h2 style="color:#63b3ed; font-size:1.5rem; margin-bottom:24px;">🧬 VARIANT-GNN Hakkında</h2>
-            <p style='color:#94a3b8;'>Bu sistem, TEKNOFEST 2026 Sağlıkta Yapay Zeka yarışması kapsamında 
+            <p style='color:#94a3b8;'>Bu sistem, <strong>TEKNOFEST 2026 Sağlıkta Yapay Zeka</strong> yarışması kapsamında 
             genetik varyantların patojenitesini hibrit bir yapay zeka mimarisi ile tahmin etmek için geliştirilmiştir.</p>
+            <div style="margin-top:20px; padding:15px; background:rgba(99,179,237,0.1); border-radius:10px;">
+                <h4 style="color:#63b3ed; font-size:1rem;">Akademik Atıf</h4>
+                <code style="font-size:0.8rem; color:#cbd5e0;">Muhammed et al. (2026). VARIANT-GNN: Hybrid Graph Neural Networks...</code>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 

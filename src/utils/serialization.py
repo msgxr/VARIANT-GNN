@@ -151,7 +151,7 @@ class ModelStore:
         # Save architecture metadata so load_all can reconstruct correctly
         import json as _json
 
-        from src.models.gnn import VariantSAGEGNN as _VSGNN
+        from src.core.models.gnn import VariantSAGEGNN as _VSGNN
         arch: dict = {"type": type(model).__name__}
         if isinstance(model, _VSGNN):
             # Save true numeric_dim (pre-concat), NOT input_proj.in_features
@@ -210,9 +210,9 @@ class ModelStore:
         """
         from src.config import get_settings
         from src.features.preprocessing import VariantPreprocessor
-        from src.models.dnn import VariantDNN
-        from src.models.ensemble import HybridEnsemble
-        from src.models.gnn import FeatureGNN
+        from src.core.models.dnn import VariantDNN
+        from src.core.models.ensemble import HybridEnsemble
+        from src.core.models.gnn import FeatureGNN
 
         cfg    = get_settings()
         device = torch.device(
@@ -254,7 +254,7 @@ class ModelStore:
 
         _gnn_type = _gnn_arch.get("type", "FeatureGNN")
         if _gnn_type == "VariantSAGEGNN":
-            from src.models.gnn import VariantSAGEGNN
+            from src.core.models.gnn import VariantSAGEGNN
             gnn_model = VariantSAGEGNN(
                 numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
                 hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),

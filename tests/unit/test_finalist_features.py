@@ -20,8 +20,8 @@ import torch
 class TestMCDropoutEstimator:
     def test_estimate_dnn_shapes(self):
         """MC Dropout DNN çıktı boyutlarını doğrular."""
-        from src.inference.uncertainty import MCDropoutEstimator
-        from src.models.dnn import VariantDNN
+        from src.api.uncertainty import MCDropoutEstimator
+        from src.core.models.dnn import VariantDNN
 
         model = VariantDNN(input_dim=20, hidden_dim=32, num_classes=2, dropout=0.5)
         estimator = MCDropoutEstimator(model, n_forward=10)
@@ -34,8 +34,8 @@ class TestMCDropoutEstimator:
 
     def test_estimate_gnn_shapes(self):
         """MC Dropout GNN çıktı boyutlarını doğrular."""
-        from src.inference.uncertainty import MCDropoutEstimator
-        from src.models.gnn import VariantSAGEGNN
+        from src.api.uncertainty import MCDropoutEstimator
+        from src.core.models.gnn import VariantSAGEGNN
 
         model = VariantSAGEGNN(numeric_dim=16, hidden_dim=32, num_classes=2)
         estimator = MCDropoutEstimator(model, n_forward=10)
@@ -48,7 +48,7 @@ class TestMCDropoutEstimator:
 
     def test_uncertainty_category(self):
         """Belirsizlik kategorileri doğru atanıyor mu."""
-        from src.inference.uncertainty import MCDropoutEstimator
+        from src.api.uncertainty import MCDropoutEstimator
 
         scores = np.array([0.1, 0.3, 0.6])
         cats = MCDropoutEstimator.uncertainty_category(scores)
@@ -58,7 +58,7 @@ class TestMCDropoutEstimator:
 
     def test_predictive_entropy_deterministic(self):
         """Kesin tahmin için entropy ~0 olmalı."""
-        from src.inference.uncertainty import MCDropoutEstimator
+        from src.api.uncertainty import MCDropoutEstimator
 
         probs = np.array([[0.99, 0.01], [0.01, 0.99]])
         entropy = MCDropoutEstimator._predictive_entropy(probs)
@@ -126,7 +126,7 @@ class TestFocalLoss:
 class TestAdversarialValidation:
     def test_similar_distributions_low_auc(self):
         """Benzer dağılımlar → AUC ~0.5"""
-        from src.evaluation.adversarial_validation import adversarial_validate
+        from src.scientific.metrics.adversarial_validation import adversarial_validate
 
         np.random.seed(42)
         X_train = np.random.randn(200, 10)
@@ -138,7 +138,7 @@ class TestAdversarialValidation:
 
     def test_different_distributions_high_auc(self):
         """Farklı dağılımlar → AUC yüksek"""
-        from src.evaluation.adversarial_validation import adversarial_validate
+        from src.scientific.metrics.adversarial_validation import adversarial_validate
 
         np.random.seed(42)
         X_train = np.random.randn(200, 10)
@@ -149,7 +149,7 @@ class TestAdversarialValidation:
 
     def test_with_feature_names(self):
         """Feature isimleri verilince top_shift_features dolu dönmeli."""
-        from src.evaluation.adversarial_validation import adversarial_validate
+        from src.scientific.metrics.adversarial_validation import adversarial_validate
 
         np.random.seed(42)
         X_train = np.random.randn(100, 5)
@@ -167,7 +167,7 @@ class TestAdversarialValidation:
 class TestEvaluatePerPanel:
     def test_returns_reports_per_panel(self):
         """Her panel için ayrı EvaluationReport dönmeli."""
-        from src.evaluation.metrics import evaluate_per_panel
+        from src.scientific.metrics.metrics import evaluate_per_panel
 
         np.random.seed(42)
         N = 100
@@ -184,7 +184,7 @@ class TestEvaluatePerPanel:
 
     def test_skips_tiny_panels(self):
         """Çok az örnekli paneller atlanmalı."""
-        from src.evaluation.metrics import evaluate_per_panel
+        from src.scientific.metrics.metrics import evaluate_per_panel
 
         y_true = np.array([0, 1, 0, 1, 0])
         y_prob = np.array([[0.8, 0.2], [0.3, 0.7], [0.6, 0.4], [0.2, 0.8], [0.9, 0.1]])

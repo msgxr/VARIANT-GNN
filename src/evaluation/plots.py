@@ -17,7 +17,7 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import precision_recall_curve, roc_curve
 
-from src.evaluation.metrics import EvaluationReport
+from src.scientific.metrics.metrics import EvaluationReport
 
 logger = logging.getLogger(__name__)
 

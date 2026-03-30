@@ -19,7 +19,7 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from data_contracts.variant_schema import validate_dataset
+from src.data.schemas.variant_schema import validate_dataset
 from src.config import get_settings
 
 logger = logging.getLogger(__name__)

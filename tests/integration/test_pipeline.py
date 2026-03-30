@@ -81,11 +81,12 @@ class TestPreprocessingIntegration:
     def test_graph_edges_built_from_training_only(self, synthetic_dataset):
         """edge_index should be non-None after fit and reflect only training data."""
         from src.features.preprocessing import VariantPreprocessor
+        from src.core.models.gnn import VariantGATv2GNN
         df = synthetic_dataset
         feat_cols = [c for c in df.columns if c.startswith("feat_")]
         X = df[feat_cols].values
         y = df["Label"].values
-        pp = VariantPreprocessor(use_autoencoder=False, use_feature_selection=False)
+        pp = VariantPreprocessor(use_autoencoder=False, use_feature_selection=False, use_bio_scoring=False)
         pp.fit_resample_train(X, y)
         assert pp.edge_index is not None
         # edge_index must be 2-row tensor [source, target]
@@ -98,7 +99,7 @@ class TestPreprocessingIntegration:
 
 class TestCalibrationIntegration:
     def test_calibrated_proba_in_unit_range(self):
-        from src.calibration.calibrator import EnsembleCalibrator
+        from src.scientific.calibration.calibrator import EnsembleCalibrator
         rng   = np.random.default_rng(1)
         proba = rng.dirichlet([1, 1], size=100)
         y     = rng.integers(0, 2, size=100)
@@ -116,7 +117,7 @@ class TestCalibrationIntegration:
 
 class TestEvaluationIntegration:
     def test_full_evaluate_call(self):
-        from src.evaluation.metrics import evaluate
+        from src.scientific.metrics.metrics import evaluate
         rng   = np.random.default_rng(2)
         N     = 80
         y_true = rng.integers(0, 2, size=N)
@@ -128,7 +129,7 @@ class TestEvaluationIntegration:
         assert -1.0 <= report.mcc <= 1.0
 
     def test_confusion_matrix_shape(self):
-        from src.evaluation.metrics import evaluate
+        from src.scientific.metrics.metrics import evaluate
         rng    = np.random.default_rng(3)
         y_true = rng.integers(0, 2, size=60)
         proba  = rng.dirichlet([1, 1], size=60)
@@ -142,7 +143,7 @@ class TestEvaluationIntegration:
 
 class TestSchemaLoaderIntegration:
     def test_validate_then_load(self, synthetic_dataset, tmp_path):
-        from data_contracts.variant_schema import validate_dataset
+        from src.data.schemas.variant_schema import validate_dataset
         from src.data.loader import load_csv
 
         csv_path = tmp_path / "test_data.csv"

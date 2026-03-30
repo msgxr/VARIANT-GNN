@@ -30,14 +30,14 @@ from pathlib import Path
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from src.calibration.calibrator import EnsembleCalibrator
+from src.scientific.calibration.calibrator import EnsembleCalibrator
 from src.config import get_settings, reset_settings
 from src.data.loader import load_csv
-from src.evaluation.metrics import evaluate, evaluate_per_panel, find_best_threshold
-from src.evaluation.plots import save_all_plots
+from src.scientific.metrics.metrics import evaluate, evaluate_per_panel, find_best_threshold
+from src.scientific.metrics.plots import save_all_plots
 from src.features.preprocessing import build_preprocessor_from_config
-from src.inference.export import export_predictions
-from src.inference.pipeline import InferencePipeline
+from src.api.export import export_predictions
+from src.api.pipeline import InferencePipeline
 from src.training.trainer import VariantTrainer
 from src.training.tune import ModelTuner
 from src.utils.logging_cfg import setup_logging
@@ -300,7 +300,7 @@ def mode_adversarial_val(args, cfg):
     Train ve test verisi aras\u0131ndaki da\u011f\u0131l\u0131m fark\u0131n\u0131 tespit eder.
     AUC ~0.5 \u2192 fark yok (iyi). AUC ~1.0 \u2192 ciddi shift var (k\u00f6t\u00fc).
     """
-    from src.evaluation.adversarial_validation import adversarial_validate
+    from src.scientific.metrics.adversarial_validation import adversarial_validate
 
     if not args.data_file or not args.test_file:
         logging.error("--data_file (train) ve --test_file (test) ikisi de gerekli.")
@@ -445,7 +445,7 @@ def main():
     logging.info("T.C. Sağlık Bakanlığı/TÜSEB verilerinin kullanılması yasaktır.")
     logging.info("=" * 60)
     # ── TEKNOFEST Şartname: ClinVar API'yi eğitim/tahmin sırasında kilitle ──
-    from src.explainability.clinvar_api import set_inference_mode
+    from src.scientific.xai.clinvar_api import set_inference_mode
     set_inference_mode(True)
 
     dispatch = {

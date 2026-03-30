@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Protocol
-from src.ui.utils import plot_dark
+from src.interface.dashboard.utils import plot_dark
 
 # Define a Protocol for the pipeline for better type checking if needed
 class PipelineProtocol(Protocol):
@@ -26,7 +26,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
 
     xgb_model: Any = pipeline._ensemble.xgb
     feature_names: List[str] = list(df_features.columns)
-    from src.explainability.shap_explainer import SHAPExplainer
+    from src.scientific.xai.shap_explainer import SHAPExplainer
     explainer: SHAPExplainer = SHAPExplainer(xgb_model, feature_names=feature_names, training_data=X_scaled)
     idx: int = min(int(opts.get("variant_index", 0)), len(X_scaled) - 1)
 
@@ -73,7 +73,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
             <h3>LIME Açıklaması — Varyant #{idx}</h3>
         </div>
         """, unsafe_allow_html=True)
-        from src.explainability.lime_explainer import LIMEExplainer
+        from src.scientific.xai.lime_explainer import LIMEExplainer
         lime_exp: LIMEExplainer = LIMEExplainer(
             training_data=X_scaled,
             feature_names=feature_names,
@@ -93,7 +93,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
     """, unsafe_allow_html=True)
 
     try:
-        from src.explainability.clinical_insight import generate_clinical_insight
+        from src.scientific.xai.clinical_insight import generate_clinical_insight
         top_feats: List[Tuple[str, float]] = explainer.get_top_features(X_scaled[idx:idx+1], top_n=8)
         probs_row: np.ndarray = xgb_model.predict_proba(X_scaled[idx:idx+1])[0]
         prob_val: float = float(probs_row[1])
@@ -139,6 +139,20 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
     except Exception as exc:
         st.info(f"ℹ️ Klinik yorum üretilemedi: {exc}")
 
+    # --- Biyolojik Sözlük (Tooltips) ---
+    with st.expander("📖 Biyolojik Özellikler Sözlüğü"):
+        cols_dict = st.columns(2)
+        dictionary = {
+            "SIFT_score": "Proteinin yapısını bozma olasılığı. 0'a yakın değerler daha zararlıdır.",
+            "PolyPhen2_HVAR": "Varyantın insan proteinleri üzerindeki yapısal etkisini tahmin eder.",
+            "GERP++": "Evrimsel korunmuşluk skoru. Yüksek değer yoğun korunan bölgeleri (ve dolayısıyla hayati önemi) belirtir.",
+            "CADD_phred": "Birçok farklı annotasyonu birleştiren genel bir zararlılık skoru.",
+            "REVEL": "Nadir varyantlar için geliştirilmiş, yüksek performanslı bir topluluk (ensemble) skorudur."
+        }
+        for i, (k, v) in enumerate(dictionary.items()):
+            with cols_dict[i % 2]:
+                st.markdown(f"**{k}:** {v}")
+
     st.markdown("""
     <div class="section-header">
         <div class="section-icon">🧬</div>
@@ -150,7 +164,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
     with col_gnn1:
         st.markdown("**🕸️ Özellik Etkileşim Ağı**")
         try:
-            from src.explainability.graph_viz import plot_variant_graph
+            from src.scientific.xai.graph_viz import plot_variant_graph
             if hasattr(pipeline._preprocessor, 'edge_index') and pipeline._preprocessor.edge_index is not None:
                 fig_gnn = plot_variant_graph(edge_index=pipeline._preprocessor.edge_index, node_features=X_scaled, feature_names=feature_names, top_n_nodes=20, figsize=(8, 6))
                 if fig_gnn:
@@ -162,10 +176,82 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
     with col_gnn2:
         st.markdown("**🌡️ Korelasyon Isı Haritası (GNN Kenar Temeli)**")
         try:
-            from src.explainability.graph_viz import plot_feature_correlation_heatmap
+            from src.scientific.xai.graph_viz import plot_feature_correlation_heatmap
             fig_heat = plot_feature_correlation_heatmap(node_features=X_scaled, feature_names=feature_names, top_n=20, figsize=(8, 6))
             if fig_heat:
                 st.pyplot(fig_heat)
                 plt.close()
         except Exception as exc:
             st.warning(f"Korelasyon ısı haritası çizilemedi: {exc}")
+
+    # --- What-If Simulator ---
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">🧪</div>
+        <h3>Interactive 'What-If' Varyant Simülatörü</h3>
+    </div>
+    <div style="background:rgba(159,122,234,0.05); border:1px solid rgba(159,122,234,0.2);
+                border-radius:10px; padding:12px 18px; margin-bottom:20px;">
+        <div style="color:#9f7aea; font-weight:600; margin-bottom:4px;">🕹️ Deneysel Analiz Modu</div>
+        <div style="color:#94a3b8; font-size:0.85rem;">
+            Seçili varyantın özelliklerini manuel olarak değiştirerek modelin kararının nasıl değiştiğini gözlemleyin.
+            Bu mod, modelin hangi biyolojik eşiklere hassas olduğunu anlamanızı sağlar.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    sim_col1, sim_col2 = st.columns([1, 1])
+    
+    # Identify top 5 features to simulate
+    top_5 = explainer.get_top_features(X_scaled[idx:idx+1], top_n=5)
+    sim_features = {}
+    
+    with sim_col1:
+        st.markdown("**⚙️ Parametre Ayarları**")
+        working_features = df_features.iloc[idx].copy()
+        
+        for feat_name, _ in top_5:
+            val = float(working_features[feat_name])
+            # Basic heuristic for slider range
+            min_v = min(0.0, val * 0.5)
+            max_v = max(1.0, val * 2.0)
+            if "score" in feat_name.lower() or "prob" in feat_name.lower():
+                max_v = 1.0
+            
+            new_val = st.slider(f"Modify {feat_name}", min_value=float(min_v), max_value=float(max_v), value=float(val), step=0.01)
+            working_features[feat_name] = new_val
+
+    with sim_col2:
+        st.markdown("**🔮 Simülasyon Sonucu**")
+        # Run prediction on modified features
+        sim_df = pd.DataFrame([working_features])
+        X_sim = pipeline._preprocessor.transform(sim_df.values)
+        
+        # Use predict_with_uncertainty for SOTA feel
+        if hasattr(pipeline._ensemble, "predict_with_uncertainty"):
+            preds, probs, uncertainty = pipeline._ensemble.predict_with_uncertainty(X_sim, n_iter=10)
+            prob_p = probs[0, 1]
+            conf = (1.0 - uncertainty[0]) * 100
+        else:
+            _, probs = pipeline._ensemble.predict(X_sim)
+            prob_p = probs[0, 1]
+            conf = 0.0 # No uncertainty support in old model
+
+        risk_color = "#fc8181" if prob_p > 0.5 else "#68d391"
+        
+        st.markdown(f"""
+        <div style="background:rgba(26,32,44,0.6); border:2px solid {risk_color}; border-radius:15px; padding:25px; text-align:center;">
+            <div style="font-size:0.8rem; color:#a0aec0; margin-bottom:8px;">YENİ TAHMİNİ RİSK</div>
+            <div style="font-size:2.8rem; font-weight:800; color:{risk_color}; line-height:1;">{prob_p*100:.1f}%</div>
+            <div style="margin-top:15px; font-weight:600; color:#e2e8f0;">
+                {"🔴 PATHOGENIC" if prob_p > 0.5 else "🟢 BENIGN"}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if conf > 0:
+            st.metric("Model Güven Skoru (MC-Dropout)", f"{conf:.1f}%", help="Modelin bu tahmindeki matematiksel kesinliği.")
+            st.progress(conf / 100.0)
+        
+        if st.button("♻️ Orijinal Değerlere Dön"):
+            st.rerun()
