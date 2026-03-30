@@ -1,8 +1,8 @@
 ﻿<div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:0b1020,30:1e3a8a,60:0ea5e9,100:22c55e&text=VARIANT-GNN&fontSize=56&fontAlignY=38&desc=TEKNOFEST%202026%20%7C%20Saglikta%20Yapay%20Zeka%20PSR&descAlignY=58" alt="VARIANT-GNN Banner" />
+<img src="https://capsule-render.vercel.app/api?type=waving&height=240&color=0:030712,25:0f172a,50:1d4ed8,75:0ea5e9,100:22c55e&text=VARIANT-GNN&fontSize=62&fontAlignY=38&desc=TEKNOFEST%202026%20%7C%20Cinematic%20README%20Showcase&descAlignY=61" alt="VARIANT-GNN Banner" />
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=21&duration=2400&pause=700&color=22C55E&center=true&vCenter=true&width=980&lines=Missense+Varyant+Patojenite+Tahmini;Hybrid+Ensemble%3A+XGBoost+%2B+LightGBM+%2B+GNN+%2B+DNN;Kalibrasyon+%2B+Belirsizlik+%2B+Aciklanabilirlik;Bu+README+yalnizca+PSR+PDF+icerigine+dayalidir" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=22&duration=2200&pause=650&color=22C55E&center=true&vCenter=true&width=1100&lines=3D+Architecture+Showcase;Hybrid+Ensemble%3A+XGBoost+%2B+LightGBM+%2B+GNN+%2B+DNN;Calibration+%2B+Uncertainty+%2B+Explainability;Panel-Based+Clinical+Decision+Support" alt="Typing SVG" />
 
 <br/>
 
@@ -12,16 +12,15 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-006400)](https://xgboost.readthedocs.io/)
 [![LightGBM](https://img.shields.io/badge/LightGBM-4.3.0-9ACD32)](https://lightgbm.readthedocs.io/)
 [![Competition](https://img.shields.io/badge/TEKNOFEST-2026-0ea5e9)](#)
+[![Architecture](https://img.shields.io/badge/3D-Visualized-22c55e)](#visual-showcase-renkli--dinamik)
+[![Readme](https://img.shields.io/badge/README-Nirvana_Mode-f59e0b)](#)
 
 </div>
 
----
+<p align="center">
+  <img src="docs/assets/readme/architecture_3d.svg" alt="VARIANT-GNN 3D architecture" width="100%"/>
+</p>
 
-## Not
-
-Bu README icerigi sadece eklenen PSR PDF metnindeki bilgilerden uretilmistir. PDF disi yeni metrik, iddia veya teknik sonuc eklenmemistir.
-
----
 
 ## Proje Kimligi
 
@@ -101,6 +100,27 @@ flowchart TB
 ```
 
 ## Visual Showcase (Renkli + Dinamik)
+
+<p align="center">
+  <img src="docs/assets/readme/ops_3d.svg" alt="Operational 3D pipeline" width="100%"/>
+</p>
+
+### 0) 3D Dataflow Galaxy
+
+```mermaid
+flowchart LR
+    classDef n0 fill:#030712,color:#e5e7eb,stroke:#22d3ee,stroke-width:2px;
+    classDef n1 fill:#0f172a,color:#dbeafe,stroke:#3b82f6,stroke-width:2px;
+    classDef n2 fill:#052e16,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    classDef n3 fill:#3f1d2e,color:#fce7f3,stroke:#f472b6,stroke-width:2px;
+    classDef n4 fill:#422006,color:#fef3c7,stroke:#f59e0b,stroke-width:2px;
+
+    I[(Input Space)]:::n0 --> P[Preprocessing Space]:::n1 --> M[Model Manifold]:::n2 --> C[Calibration Core]:::n3 --> O[(Clinical Output)]:::n4
+    M --> X1[XGBoost]
+    M --> X2[LightGBM]
+    M --> X3[VariantSAGEGNN]
+    M --> X4[DNN]
+```
 
 ### 1) PSR Konu Haritasi
 
@@ -212,6 +232,18 @@ stateDiagram-v2
     FinalPrediction --> ClinicalReport
     ClinicalReport --> [*]
 ```
+
+  ### 8) 3D Katman Kupi
+
+  ```mermaid
+  flowchart TB
+    classDef c1 fill:#1e3a8a,color:#dbeafe,stroke:#60a5fa,stroke-width:3px;
+    classDef c2 fill:#14532d,color:#dcfce7,stroke:#22c55e,stroke-width:3px;
+    classDef c3 fill:#7c2d12,color:#ffedd5,stroke:#fb923c,stroke-width:3px;
+    classDef c4 fill:#581c87,color:#f3e8ff,stroke:#c084fc,stroke-width:3px;
+
+    A[Cube Layer A\nData Geometry]:::c1 --> B[Cube Layer B\nRepresentation Learning]:::c2 --> C[Cube Layer C\nReliability Engineering]:::c3 --> D[Cube Layer D\nClinical Reporting]:::c4
+  ```
 
 ---
 
