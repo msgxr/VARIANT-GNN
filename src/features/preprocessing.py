@@ -57,9 +57,10 @@ class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
                         get_grantham_score(ref, alt)
                     ])
                 return np.array(scores)
-        
-        # Fallback if no AA info: return zeros (dim 2)
-        return np.zeros((len(X), 2))
+
+        # If amino-acid context is unavailable (plain numeric arrays),
+        # do not append synthetic bio features.
+        return np.empty((len(X), 0))
 
 
 class VariantPreprocessor(BaseEstimator, TransformerMixin):
@@ -168,8 +169,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self.use_bio_scoring:
             self._bio_transformer = BiologicalEnrichmentTransformer()
             bio_feats = self._bio_transformer.fit_transform(X)
-            # Impute/Scale bio feats if they were actually used (not zeros)
-            X_scaled = np.hstack([X_scaled, bio_feats])
+            if bio_feats.shape[1] > 0:
+                X_scaled = np.hstack([X_scaled, bio_feats])
 
         # 4. SMOTE (includes bio features)
         if apply_smote and y is not None:
@@ -211,7 +212,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         if self.use_bio_scoring and self._bio_transformer is not None:
              bio_feats = self._bio_transformer.transform(X)
-             X_scaled = np.hstack([X_scaled, bio_feats])
+             if bio_feats.shape[1] > 0:
+                 X_scaled = np.hstack([X_scaled, bio_feats])
 
         if self.use_feature_selection:
             if self._var_selector is not None:

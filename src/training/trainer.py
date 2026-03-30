@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
@@ -40,10 +41,14 @@ from src.core.models.dnn import VariantDNN
 from src.core.models.ensemble import HybridEnsemble
 from src.core.models.gnn import VariantGATv2GNN
 from src.training.focal_loss import FocalLoss
-import mlflow
-import mlflow.pytorch
-import mlflow.sklearn
 from src.utils.seeds import set_global_seed
+
+try:
+    import mlflow
+    import mlflow.pytorch
+    import mlflow.sklearn
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    mlflow = None
 
 logger = logging.getLogger(__name__)
 
@@ -370,18 +375,22 @@ class VariantTrainer:
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
 
-        # MLflow Run initialization
-        mlflow.set_experiment("VARIANT-GNN-Professional")
         run_name = f"HybridEnsemble_{cfg.gnn.model_type}"
-        
-        with mlflow.start_run(run_name=run_name):
-            # Log Hyperparameters
-            mlflow.log_params({
-                "gnn_hidden_dim": cfg.gnn.hidden_dim,
-                "gnn_lr": cfg.gnn.lr,
-                "xgb_max_depth": cfg.xgb.max_depth,
-                "ensemble_weights": str(cfg.ensemble.weights)
-            })
+        if mlflow is not None:
+            mlflow.set_experiment("VARIANT-GNN-Professional")
+            run_ctx = mlflow.start_run(run_name=run_name)
+        else:
+            logger.info("MLflow is not installed; proceeding without experiment logging.")
+            run_ctx = nullcontext()
+
+        with run_ctx:
+            if mlflow is not None:
+                mlflow.log_params({
+                    "gnn_hidden_dim": cfg.gnn.hidden_dim,
+                    "gnn_lr": cfg.gnn.lr,
+                    "xgb_max_depth": cfg.xgb.max_depth,
+                    "ensemble_weights": str(cfg.ensemble.weights)
+                })
 
             # Split indices so we can slice sequences in parallel
             from sklearn.model_selection import train_test_split as _tts
@@ -399,8 +408,9 @@ class VariantTrainer:
             mean_f1 = float(np.mean([r.f1 for r in fold_results]))
             std_f1  = float(np.std( [r.f1 for r in fold_results]))
             
-            mlflow.log_metric("mean_cv_f1", mean_f1)
-            mlflow.log_metric("std_cv_f1", std_f1)
+            if mlflow is not None:
+                mlflow.log_metric("mean_cv_f1", mean_f1)
+                mlflow.log_metric("std_cv_f1", std_f1)
             
             logger.info(
                 "Cross-validation complete: Macro F1 = %.4f ± %.4f", mean_f1, std_f1
@@ -421,9 +431,9 @@ class VariantTrainer:
             except Exception as exc:
                 logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
 
-            # Log Final Models
-            mlflow.pytorch.log_model(ensemble.gnn_model, "gnn_model")
-            mlflow.sklearn.log_model(ensemble.xgb_model, "xgb_model")
+            if mlflow is not None:
+                mlflow.pytorch.log_model(ensemble.gnn_model, "gnn_model")
+                mlflow.sklearn.log_model(ensemble.xgb_model, "xgb_model")
             
             return TrainResult(
                 ensemble      = ensemble,
