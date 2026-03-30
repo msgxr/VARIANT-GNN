@@ -10,7 +10,7 @@ Graph edge information is derived from training-fold correlation only.
 from __future__ import annotations
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any, List, Union
 
 import numpy as np
 import torch
@@ -58,25 +58,25 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         device: str = "auto",
         random_state: int = 42,
     ) -> None:
-        self.corr_threshold           = corr_threshold
-        self.use_autoencoder          = use_autoencoder
-        self.autoencoder_encoding_dim = autoencoder_encoding_dim
-        self.autoencoder_epochs       = autoencoder_epochs
-        self.use_feature_selection    = use_feature_selection
-        self.k_best_features          = k_best_features
-        self.smote_enabled            = smote_enabled
-        self.device                   = device
-        self.random_state             = random_state
+        self.corr_threshold: float = corr_threshold
+        self.use_autoencoder: bool = use_autoencoder
+        self.autoencoder_encoding_dim: int = autoencoder_encoding_dim
+        self.autoencoder_epochs: int = autoencoder_epochs
+        self.use_feature_selection: bool = use_feature_selection
+        self.k_best_features: int = k_best_features
+        self.smote_enabled: bool = smote_enabled
+        self.device: str = device
+        self.random_state: int = random_state
 
         # Fitted components (set by fit_transform_train)
-        self._imputer:      Optional[SimpleImputer]          = None
-        self._scaler:       Optional[RobustScaler]           = None
-        self._var_selector: Optional[VarianceThreshold]      = None
-        self._kb_selector:  Optional[SelectKBest]            = None
-        self._autoenc:      Optional[AutoEncoderTransformer] = None
+        self._imputer: Optional[SimpleImputer] = None
+        self._scaler: Optional[RobustScaler] = None
+        self._var_selector: Optional[VarianceThreshold] = None
+        self._kb_selector: Optional[SelectKBest] = None
+        self._autoenc: Optional[AutoEncoderTransformer] = None
 
         self.edge_index: Optional[torch.Tensor] = None
-        self.edge_attr:  Optional[torch.Tensor] = None
+        self.edge_attr: Optional[torch.Tensor] = None
         self.n_output_features: int = 0
         self._is_fitted: bool = False
 
@@ -84,7 +84,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     # sklearn interface
     # ------------------------------------------------------------------
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> "VariantPreprocessor":
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> VariantPreprocessor:
         """Fit on training data (no SMOTE applied — use fit_resample_train for training)."""
         self._fit_internal(X, y, apply_smote=False)
         return self
@@ -106,7 +106,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         Use this inside CV folds for the training split only.
         Returns (X_processed, y_resampled).
         """
-        return self._fit_internal(X, y, apply_smote=self.smote_enabled)
+        X_res, y_res = self._fit_internal(X, y, apply_smote=self.smote_enabled)
+        return X_res, y_res # type: ignore
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -154,8 +155,11 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         return X_scaled, y
 
     def _transform_internal(self, X: np.ndarray) -> np.ndarray:
+        if self._imputer is None or self._scaler is None:
+             raise RuntimeError("Preprocessor components not intialized.")
+             
         X_imputed = self._imputer.transform(X)
-        X_scaled  = self._scaler.transform(X_imputed)
+        X_scaled = self._scaler.transform(X_imputed)
 
         if self.use_feature_selection:
             if self._var_selector is not None:
@@ -202,10 +206,10 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         if edges:
             self.edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-            self.edge_attr  = torch.tensor(weights, dtype=torch.float)
+            self.edge_attr = torch.tensor(weights, dtype=torch.float)
         else:
             self.edge_index = torch.empty((2, 0), dtype=torch.long)
-            self.edge_attr  = torch.empty((0,), dtype=torch.float)
+            self.edge_attr = torch.empty((0,), dtype=torch.float)
 
         logger.info(
             "Feature graph: %d nodes, %d edges (corr_threshold=%.2f)",
@@ -216,7 +220,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     # Graph data helper
     # ------------------------------------------------------------------
 
-    def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None):
+    def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Any:
         """Convert a single processed feature vector to a PyG Data object (legacy feature-graph)."""
         from torch_geometric.data import Data
 
@@ -234,23 +238,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         X: np.ndarray,
         y: Optional[np.ndarray] = None,
         k: int = 5,
-    ):
+    ) -> Any:
         """
         Build a coordinate-free cosine k-NN sample graph.
-
-        Each variant in X becomes a node; k nearest neighbours in FEATURE
-        space (cosine similarity) are connected.  Chromosome/position columns
-        are not used — complies with TEKNOFEST 2026 labelling constraints.
-
-        Parameters
-        ----------
-        X : Already-preprocessed [N_samples, N_features] matrix.
-        y : Optional integer label array.
-        k : Number of nearest neighbours (default 5).
-
-        Returns
-        -------
-        torch_geometric.data.Data with x, edge_index, edge_attr, y.
         """
         from src.graph.builder import SampleKNNGraphBuilder
 
@@ -261,15 +251,15 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 def build_preprocessor_from_config() -> VariantPreprocessor:
     """Factory that constructs a VariantPreprocessor from the global settings."""
     cfg = get_settings()
-    p   = cfg.preprocessing
+    p = cfg.preprocessing
     return VariantPreprocessor(
-        corr_threshold           = p.corr_threshold,
-        use_autoencoder          = p.use_autoencoder,
+        corr_threshold = p.corr_threshold,
+        use_autoencoder = p.use_autoencoder,
         autoencoder_encoding_dim = p.autoencoder_encoding_dim,
-        autoencoder_epochs       = p.autoencoder_epochs,
-        use_feature_selection    = p.use_feature_selection,
-        k_best_features          = p.k_best_features,
-        smote_enabled            = p.smote_enabled,
-        device                   = cfg.device,
-        random_state             = cfg.seed,
+        autoencoder_epochs = p.autoencoder_epochs,
+        use_feature_selection = p.use_feature_selection,
+        k_best_features = p.k_best_features,
+        smote_enabled = p.smote_enabled,
+        device = cfg.device,
+        random_state = cfg.seed,
     )

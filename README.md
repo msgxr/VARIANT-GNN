@@ -405,23 +405,57 @@ python -m venv .venv
 source .venv/bin/activate
 # Windows:
 .venv\Scripts\activate
+# 🧬 VARIANT-GNN
 
-# PyTorch kurulumu (CPU)
-pip install torch==2.2.0+cpu torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+State-of-the-Art (SOTA) variant pathogenicity prediction using Graph Neural Networks (GNN) and multimodal ensembles.
 
-# PyTorch Geometric
-pip install torch-geometric torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+## 🏗️ Architecture (Modular & Professional)
 
-# Bağımlılıklar
-pip install -r requirements.txt
-```
+The project has been refactored into a layered architecture for scalability and maintainability:
 
-### Docker ile Çalıştırma
+- **`src/config/`**: Centralised configuration using YAML and typed dataclasses.
+- **`src/ui/`**: Modular Streamlit UI components (Analytics, XAI, ClinVar, Reporting).
+- **`src/data/`**: Robust data loading, schema validation, and alignment.
+- **`src/features/`**: Preprocessing pipeline, AutoEncoder (AE), and Multimodal encoders.
+- **`src/models/`**: Hybrid Ensemble (XGB, LGBM, GNN, DNN) with calibration.
+- **`src/inference/`**: Metadata-preserving end-to-end prediction pipeline.
 
+## 📊 Data Management (DVC)
+
+Large datasets are managed using **DVC (Data Version Control)** to keep the Git repository lightweight.
+
+### Setup DVC
 ```bash
-docker build -t variant-gnn .
-docker run -p 8502:8502 variant-gnn
+# Data is already tracked by .dvc files. To pull:
+dvc pull
 ```
+
+### Track New Data
+```bash
+dvc add data/your_dataset.csv
+git add data/your_dataset.csv.dvc .gitignore
+git commit -m "Add new dataset version"
+```
+
+## 🚀 Quick Start
+
+1. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run Streamlit App**:
+   ```bash
+   streamlit run app.py
+   ```
+
+3. **Static Analysis (Type Safety)**:
+   ```bash
+   mypy src/
+   ```
+
+## ⚖️ License
+Proprietary / TEKNOFEST 2026
 
 ### Temel Komutlar
 

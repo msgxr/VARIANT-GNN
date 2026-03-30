@@ -66,3 +66,11 @@ Desktop.ini
 __pycache__/
 *.pyc
 *.pyo
+
+# Büyük veri dosyaları
+data/pretrain_100k.csv
+
+# Test ve Lint Cache
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

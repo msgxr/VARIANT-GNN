@@ -425,8 +425,8 @@ print()
 
 os.makedirs("data", exist_ok=True)
 
-# generate_realistic_data.py içindeki fonksiyonu direkt kullan
-sys.path.insert(0, ".")
+# scripts/generate_realistic_data.py içindeki fonksiyonu direkt kullan
+sys.path.insert(0, "scripts")
 from generate_realistic_data import generate_variant_features, add_realistic_noise
 
 start = time.time()

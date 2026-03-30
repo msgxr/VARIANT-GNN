@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Bu yazılımı kullanıyorsanız lütfen aşağıdaki şekilde atıfta bulunun."
+type: software
+title: "VARIANT-GNN: Graph Neural Network Tabanlı Genetik Varyant Patojenite Tahmini"
+version: 0.1.0
+date-released: "2026-03-10"
+license: MIT
+url: "https://github.com/msgxr/VARIANT-GNN"
+abstract: >
+  VARIANT-GNN, genomik varyantların patojenik/benign olarak sınıflandırılması için
+  XGBoost, Graph Neural Network (GNN) ve Deep Neural Network (DNN) modellerini
+  birleştiren çok modelli bir ensemble sistemidir.
+  TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması kapsamında geliştirilmiştir.
+keywords:
+  - genomics
+  - variant-pathogenicity
+  - graph-neural-network
+  - machine-learning
+  - bioinformatics
+  - xai

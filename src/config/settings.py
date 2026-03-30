@@ -17,7 +17,8 @@ _DEFAULT_CONFIG = _BASE_DIR / "configs" / "default.yaml"
 
 def _load_yaml(path: Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh) or {}
+        data: Optional[Dict[str, Any]] = yaml.safe_load(fh)
+        return data if data is not None else {}
 
 
 @dataclass
@@ -228,6 +229,10 @@ class Settings:
     external_validation: ExternalValidationSettings = field(
         default_factory=ExternalValidationSettings
     )
+
+    def __post_init__(self) -> None:
+        """Validation logic can be added here if needed."""
+        pass
 
 
 def load_settings(config_path: Optional[Path] = None) -> Settings:
