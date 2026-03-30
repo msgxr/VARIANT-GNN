@@ -100,6 +100,119 @@ flowchart TB
     D1 --> D2 --> D3 --> M5
 ```
 
+## Visual Showcase (Renkli + Dinamik)
+
+### 1) PSR Konu Haritasi
+
+```mermaid
+mindmap
+  root((VARIANT-GNN PSR))
+    Takim Semasi
+      Biyoinformatik
+      ML Istatistik
+      Yazilim MLOps
+      Deney Tasarimi
+    Veri ve Yontem
+      Panel Kompozisyonu
+      Leakage Kontrolu
+      ColumnAligner
+      Preprocessing 6 Adim
+    Deney Sonuclari
+      Macro F1
+      ROC-AUC
+      MCC
+      Brier
+    Guvenilirlik
+      Isotonik Kalibrasyon
+      MC Dropout
+      Uzman Bayragi
+    Ozgunluk
+      Hybrid Ensemble
+      Adversarial Validation
+      Turkce Klinik Rapor
+```
+
+### 2) Uctan Uca Is Akisi (3D Katman Gecisi)
+
+```mermaid
+flowchart TD
+    classDef l1 fill:#0f172a,color:#e2e8f0,stroke:#38bdf8,stroke-width:2px;
+    classDef l2 fill:#052e16,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    classDef l3 fill:#172554,color:#dbeafe,stroke:#60a5fa,stroke-width:2px;
+    classDef l4 fill:#3f1d2e,color:#fce7f3,stroke:#f472b6,stroke-width:2px;
+    classDef l5 fill:#3f3f46,color:#fafafa,stroke:#f59e0b,stroke-width:2px;
+
+    A[Layer 1\nPanel Verisi]:::l1 --> B[Layer 2\nOn Isleme]:::l2 --> C[Layer 3\nModel Havuzu]:::l3 --> D[Layer 4\nKalibrasyon + Belirsizlik]:::l4 --> E[Layer 5\nKlinik Cikti]:::l5
+
+    C --> C1[XGBoost]
+    C --> C2[LightGBM]
+    C --> C3[VariantSAGEGNN]
+    C --> C4[DNN]
+```
+
+### 3) Ensemble Agirlik Dagilimi
+
+```mermaid
+pie title Ensemble Weight Mix
+    "XGBoost" : 30
+    "LightGBM" : 30
+    "VariantSAGEGNN" : 25
+    "DNN" : 15
+```
+
+### 4) Panel Veri Buyuklugu Dagilimi (Toplam)
+
+```mermaid
+pie title Panel Total Sample Share
+    "Genel (4000)" : 4000
+    "Herediter Kanser (600)" : 600
+    "PAH (600)" : 600
+    "CFTR (200)" : 200
+```
+
+### 5) Klinik Karar Mantigi
+
+```mermaid
+flowchart LR
+    classDef hi fill:#14532d,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    classDef mid fill:#78350f,color:#fef3c7,stroke:#f59e0b,stroke-width:2px;
+    classDef lo fill:#7f1d1d,color:#fee2e2,stroke:#ef4444,stroke-width:2px;
+
+    S[Model Output] --> T{Risk >= 0.40?}
+    T -- Evet --> U{MC Dropout <= 0.15?}
+    U -- Evet --> P[Patojenik\nYuksek Guven]:::hi
+    U -- Hayir --> R[Uzman Degerlendirmesi\nGerekli]:::mid
+    T -- Hayir --> B[Benign\nKalibre Olasilikla]:::lo
+```
+
+### 6) Deney Takvimi ve Asamalar
+
+```mermaid
+timeline
+    title VARIANT-GNN PSR Workflow
+    Literatür ve Problem Cercevesi : REVEL, CADD, EVE, ClinGen ve digerleri
+    Veri Tasarimi : 4 panel kompozisyonu ve etiket guvenilirligi
+    Pipeline Kurulumu : 6 adim preprocessing + k-NN graph
+    Modelleme : XGBoost + LightGBM + VariantSAGEGNN + DNN
+    Degerlendirme : 5-fold CV + panel bazli metrikler
+    Guvenilirlik : Isotonik kalibrasyon + MC Dropout
+    Aciklanabilirlik : SHAP + LIME + GNNExplainer
+```
+
+### 7) Durum Makinesi (Tahmin Sonrasi)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inference
+    Inference --> Calibrated: Probability computed
+    Calibrated --> UncertaintyCheck: MC Dropout
+    UncertaintyCheck --> ExpertFlag: uncertainty > 0.30
+    UncertaintyCheck --> FinalPrediction: uncertainty <= 0.30
+    ExpertFlag --> FinalPrediction
+    FinalPrediction --> ClinicalReport
+    ClinicalReport --> [*]
+```
+
 ---
 
 ## Icindekiler
