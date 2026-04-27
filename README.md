@@ -1,19 +1,14 @@
-﻿<div align="center">
+<div align="center">
+  
+<img src="https://capsule-render.vercel.app/api?type=waving&height=280&color=0:0f172a,20:1e293b,40:3b82f6,60:2ecc71,80:27ae60,100:16a085&text=VARIANT-GNN&fontSize=80&fontAlignY=35&desc=TEKNOFEST%202026%20%7C%20Health%20AI%20Championship&descAlignY=62&descFontSize=24" alt="VARIANT-GNN Banner" />
 
-<img src="https://capsule-render.vercel.app/api?type=waving&height=240&color=0:030712,25:0f172a,50:1d4ed8,75:0ea5e9,100:22c55e&text=VARIANT-GNN&fontSize=62&fontAlignY=38&desc=TEKNOFEST%202026%20%7C%20Cinematic%20README%20Showcase&descAlignY=61" alt="VARIANT-GNN Banner" />
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=22&duration=2200&pause=650&color=22C55E&center=true&vCenter=true&width=1100&lines=3D+Architecture+Showcase;Hybrid+Ensemble%3A+XGBoost+%2B+LightGBM+%2B+GNN+%2B+DNN;Calibration+%2B+Uncertainty+%2B+Explainability;Panel-Based+Clinical+Decision+Support" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=28&duration=3000&pause=1000&color=2ecc71&center=true&vCenter=true&width=1100&lines=PSR%3A+FIRST+ROUND+PASSED;SCORE%3A+93.00+/+100;HYBRID+GNN+ENSEMBLE+ARCHITECTURE;NEXT+STOP%3A+PDR+FINAL+REPORT" alt="Typing SVG" />
 
 <br/>
 
-[![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.2.0-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![PyG](https://img.shields.io/badge/PyG-2.5.0-red?logo=pytorch&logoColor=white)](https://pyg.org/)
-[![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-006400)](https://xgboost.readthedocs.io/)
-[![LightGBM](https://img.shields.io/badge/LightGBM-4.3.0-9ACD32)](https://lightgbm.readthedocs.io/)
-[![Competition](https://img.shields.io/badge/TEKNOFEST-2026-0ea5e9)](#)
-[![Architecture](https://img.shields.io/badge/3D-Visualized-22c55e)](#visual-showcase-renkli--dinamik)
-[![Readme](https://img.shields.io/badge/README-Nirvana_Mode-f59e0b)](#)
+| 🚀 **Status** | 🏆 **Score** | 🛠️ **Framework** | 🧠 **Model** |
+| :---: | :---: | :---: | :---: |
+| <img src="https://img.shields.io/badge/PSR-PASSED-22c55e?style=for-the-badge&logo=checkmarx" /> | <img src="https://img.shields.io/badge/93.00-PRO-blue?style=for-the-badge" /> | <img src="https://img.shields.io/badge/PyTorch-2.2-EE4C2C?style=for-the-badge&logo=pytorch" /> | <img src="https://img.shields.io/badge/GNN+XGB-Hybrid-7928CA?style=for-the-badge" /> |
 
 </div>
 
@@ -22,18 +17,37 @@
 </p>
 
 
-## Proje Kimligi
+## 📂 Project Identity & Metadata
 
-| Alan | Deger |
-|---|---|
-| Proje Adi | VARIANT-GNN |
-| Takim | XYRA3 |
-| Takim ID | #909249 |
-| Yarisma | Saglikta Yapay Zeka Yarismasi |
+<div align="center">
+
+| 🏷️ Attribute | 📋 Details |
+| :--- | :--- |
+| **Project Name** | `VARIANT-GNN` |
+| **Mission** | Clinical Decision Support via Variant Classification |
+| **Team / ID** | **XYRA3** / `#909249` |
+| **Category** | TEKNOFEST Health AI (University & Above) |
+| **Current Stage** | **PSR: PASSED (93.00/100)** |
+| **Next Stage** | **PDR Development (In Progress)** |
+
+</div>
 
 ---
 
-## Canli Mimari (PSR Iceriginden)
+## ⚡ Core Engine Features
+
+> [!IMPORTANT]
+> VARIANT-GNN is not just a model; it's a **calibrated clinical ecosystem** designed for high-stakes medical decisions.
+
+- 💎 **Hybrid Stacking**: Synergy of XGBoost, LightGBM, GNN, and DNN.
+- 📉 **Uncertainty Quantification**: Bayesian-style inference with MC Dropout.
+- ⚖️ **Clinical Calibration**: Isotonic regression for real-world probability mapping.
+- 🔍 **Transparent Reasoning**: SHAP + LIME + GNNExplainer for "White-Box" results.
+- 🌍 **Panel-Adaptive**: Dynamic performance across 4 distinct genetic panels.
+
+---
+
+## 🏗️ 3D Architectural Blueprint (PSR Engine)
 
 ```mermaid
 flowchart LR
@@ -247,7 +261,32 @@ stateDiagram-v2
 
 ---
 
-## Icindekiler
+---
+
+## 📊 PSR Performance Scoreboard (Official: 93.00)
+
+<div align="center">
+
+| Section | Domain | Score / Max | Progress |
+| :--- | :--- | :---: | :--- |
+| **01** | International Literature & Summary | `9.67` / 10 | ![96.7%](https://geps.dev/progress/97?dangerColor=2ecc71&warningColor=2ecc71&successColor=2ecc71) |
+| **02** | Data & Methodology | `30.00` / 30 | ![100%](https://geps.dev/progress/100?dangerColor=2ecc71&warningColor=2ecc71&successColor=2ecc71) |
+| **03** | Experiment Design & Analysis | `21.66` / 25 | ![86.6%](https://geps.dev/progress/87?dangerColor=3b82f6&warningColor=3b82f6&successColor=3b82f6) |
+| **04** | Originality & Resources | `22.34` / 25 | ![89.4%](https://geps.dev/progress/89?dangerColor=3b82f6&warningColor=3b82f6&successColor=3b82f6) |
+| **05** | Formatting & References | `9.33` / 10 | ![93.3%](https://geps.dev/progress/93?dangerColor=2ecc71&warningColor=2ecc71&successColor=2ecc71) |
+| 🏆 | **FINAL SCORE** | **93.00** / 100 | ![93%](https://geps.dev/progress/93?dangerColor=2ecc71&warningColor=2ecc71&successColor=2ecc71) |
+
+</div>
+
+> [!CAUTION]
+> ### 🛡️ PDR Improvement Roadmap (Fixing the Gaps)
+> While we achieved an elite score of 93.00, our focus for the **PDR (Project Detail Report)** phase is to fix:
+> 1.  **Explainability (3.33/5)**: Moving from static SHAP plots to interactive, path-based GNN explanations.
+> 2.  **Technique Evolution (3.33/5)**: Better documenting the "Aha!" moments during hyperparameter tuning.
+
+---
+
+## 📖 Contents
 
 1. Takim Semasi
 2. Uluslararasi Makale Ozetleri
@@ -258,38 +297,34 @@ stateDiagram-v2
 
 ---
 
-## 1) Takim Semasi
+---
 
-| Rol | Sorumluluk Alani | Detay |
-|---|---|---|
-| Biyoinformatik Uzmani | Veri ve Etiket Kalitesi | ACMG uyumluluk, ClinVar dogrulama, veri kalite kontrolu |
-| ML / Istatistik Uzm. | Model Gelistirme | XGBoost/LightGBM/GNN/DNN, SHAP, Optuna, kalibrasyon, SMOTE |
-| Yazilim Gelistirici | MLOps ve Arayuz | CI/CD, Docker, Streamlit, ColumnAligner, API |
-| Deney Tasarimcisi | Dogrulama ve Raporlama | 5-fold CV, adversarial validation, panel bazli degerlendirme |
+## 🛠️ 1) Team Structure & QA
 
-Kalite kontrol notlari:
-- Deney kayitlari: cv_report.json
-- Kod degisiklikleri: PR/review
-- Model surumleri: commit tabanli
-- Karar metrik odagi: macro F1
+| 👤 Role | 🎯 Responsibility | 📝 Focus Area |
+| :--- | :--- | :--- |
+| **Bioinformatics Expert** | Data & Label Integrity | ACMG Compliance, ClinVar Validation |
+| **ML / Stats Expert** | Model Development | Hybrid Ensemble, Optuna, Calibration |
+| **Software Engineer** | MLOps & Interface | CI/CD, Docker, Streamlit API |
+| **Experiment Designer** | Validation & Reporting | 5-Fold CV, Adversarial Validation |
+
+> [!NOTE]
+> **Quality Control Protocols:** All experimental logs are stored in `cv_report.json`. Code integrity is maintained via strict PR reviews and commit-based model versioning.
 
 ---
 
-## 2) Probleme En Yakin Cozum Sunan Makaleler
+## 📚 2) State-of-the-Art Literature Review
 
-| Kaynak | Yaklasim | Raporlanan Metrik | PSR'daki Sinirlilik | VARIANT-GNN Katkisi |
-|---|---|---|---|---|
-| Ioannidis 2016 (REVEL) | Meta-ensemble (RF) | AUC 0.91 | Tek modalite, ortusme riski | Panel bazli bagimsiz degerlendirme |
-| Rentzsch 2019 (CADD) | SVM + nöral ağ hibrit | PHRED ranking | Koordinat bagimliligi | Koordinat bagimsiz fonksiyonel profil |
-| Ghosh 2022 | Splice + XGBoost | F1 0.88 | Tek panel, dengesizlik | SMOTE + WeightedBCELoss |
-| Frazer 2021 (EVE) | Unsupervised VAE | AUC 0.89 | Tek modalite | Tablo + sekans + graf birlesimi |
-| Pejaver 2022 | KlinGen kalibrasyon | Posterior esitler | Tekil arac kalibrasyonu | Ensemble cikti kalibrasyonu |
-| Livesey 2020 | DMS tabanli modelleme | PR-AUC 0.82 | Deneysel veri gereksinimi | In-silico profil odagi |
-| Sundaram 2018 (MutPred2) | Filogenetik stacking | F1/AUC odakli | Hesaplama maliyeti | Grup tabanli SHAP aciklamasi |
+| Source | Approach | Metric | PSR Limitations | **VARIANT-GNN Edge** |
+| :--- | :--- | :---: | :--- | :--- |
+| **REVEL (2016)** | Meta-Ensemble | AUC 0.91 | Single Modality | Panel-Independent Eval |
+| **CADD (2019)** | SVM+NN Hybrid | PHRED | Coord. Dependency | Functional Profiles |
+| **Ghosh (2022)** | XGBoost | F1 0.88 | Imbalance | SMOTE + WeightedBCE |
+| **EVE (2021)** | Unsupervised VAE | AUC 0.89 | Single Modality | Graph + Sequence Fusion |
 
 ---
 
-## 3) Veri ve Yontem
+## 🧬 3) Data Architecture & Methodology
 
 ### 3.1 Kullanilan Veri Seti ve Etiketler
 
@@ -449,8 +484,16 @@ PSR parametre ozeti:
 
 ---
 
+---
+
 <div align="center">
 
-VARIANT-GNN | PSR tabanli teknik ozet dokumani
+### 🛡️ VARIANT-GNN: Clinical Excellence through Intelligence
+
+**TEKNOFEST 2026 | XYRA3 Team**
+
+[Explore Code](https://github.com/) • [Technical Docs](docs/) • [Report Bug](issues/)
+
+<img src="https://capsule-render.vercel.app/api?type=rect&height=50&color=2ecc71&text=NIRVANA%20MODE%20ACTIVATED&fontSize=20" alt="Footer" />
 
 </div>
