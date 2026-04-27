@@ -50,55 +50,55 @@
 ## 🏗️ 3D Architectural Blueprint (PSR Engine)
 
 ```mermaid
-flowchart LR
-    classDef prep fill:#052e16,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
-    classDef model fill:#172554,color:#dbeafe,stroke:#60a5fa,stroke-width:2px;
-    classDef post fill:#3f1d2e,color:#fce7f3,stroke:#f472b6,stroke-width:2px;
-    classDef out fill:#3f3f46,color:#fafafa,stroke:#f59e0b,stroke-width:2px;
+graph LR
+    classDef prep fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#dcfce7
+    classDef model fill:#172554,stroke:#60a5fa,stroke-width:2px,color:#dbeafe
+    classDef post fill:#3f1d2e,stroke:#f472b6,stroke-width:2px,color:#fce7f3
+    classDef out fill:#3f3f46,stroke:#f59e0b,stroke-width:2px,color:#fafafa
 
-    A[Variant Profilleri]:::prep --> B[Imputation + RobustScaler + Ozellik Secimi]:::prep
-    B --> C1[XGBoost %30]:::model
-    B --> C2[LightGBM %30]:::model
-    B --> C3[VariantSAGEGNN %25]:::model
-    B --> C4[DNN %15]:::model
+    A["Variant Profilleri"]:::prep --> B["Imputation + RobustScaler + Ozellik Secimi"]:::prep
+    B --> C1["XGBoost %30"]:::model
+    B --> C2["LightGBM %30"]:::model
+    B --> C3["VariantSAGEGNN %25"]:::model
+    B --> C4["DNN %15"]:::model
 
-    C1 --> D[Stacking Meta Ogrenici]:::model
+    C1 --> D["Stacking Meta Ogrenici"]:::model
     C2 --> D
     C3 --> D
     C4 --> D
 
-    D --> E[Isotonik Kalibrasyon]:::post
-    E --> F[Risk Skoru + MC Dropout Belirsizlik]:::out
-    F --> G[Turkce Klinik Raporlama]:::out
+    D --> E["Isotonik Kalibrasyon"]:::post
+    E --> F["Risk Skoru + MC Dropout Belirsizlik"]:::out
+    F --> G["Turkce Klinik Raporlama"]:::out
 ```
 
 ### Katmanli 3D Hissiyatli Iskelet
 
 ```mermaid
-flowchart TB
-    subgraph K1[Katman 1 - Arayuz]
-      U1[Streamlit]
-      U2[Raporlama]
+graph TB
+    subgraph K1 ["Katman 1 - Arayuz"]
+      U1["Streamlit"]
+      U2["Raporlama"]
     end
 
-    subgraph K2[Katman 2 - Ogrenme]
-      M1[XGBoost]
-      M2[LightGBM]
-      M3[VariantSAGEGNN]
-      M4[DNN]
-      M5[Stacking]
+    subgraph K2 ["Katman 2 - Ogrenme"]
+      M1["XGBoost"]
+      M2["LightGBM"]
+      M3["VariantSAGEGNN"]
+      M4["DNN"]
+      M5["Stacking"]
     end
 
-    subgraph K3[Katman 3 - Guvenilirlik]
-      P1[Isotonik Kalibrasyon]
-      P2[MC Dropout]
-      P3[SHAP + LIME + GNNExplainer]
+    subgraph K3 ["Katman 3 - Guvenilirlik"]
+      P1["Isotonik Kalibrasyon"]
+      P2["MC Dropout"]
+      P3["SHAP + LIME + GNNExplainer"]
     end
 
-    subgraph K4[Katman 4 - Veri ve Protokol]
-      D1[Panel Bazli Veri]
-      D2[Stratified 5 Fold CV]
-      D3[Adversarial Validation]
+    subgraph K4 ["Katman 4 - Veri ve Protokol"]
+      D1["Panel Bazli Veri"]
+      D2["Stratified 5 Fold CV"]
+      D3["Adversarial Validation"]
     end
 
     U1 --> M5
@@ -122,18 +122,18 @@ flowchart TB
 ### 0) 3D Dataflow Galaxy
 
 ```mermaid
-flowchart LR
-    classDef n0 fill:#030712,color:#e5e7eb,stroke:#22d3ee,stroke-width:2px;
-    classDef n1 fill:#0f172a,color:#dbeafe,stroke:#3b82f6,stroke-width:2px;
-    classDef n2 fill:#052e16,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
-    classDef n3 fill:#3f1d2e,color:#fce7f3,stroke:#f472b6,stroke-width:2px;
-    classDef n4 fill:#422006,color:#fef3c7,stroke:#f59e0b,stroke-width:2px;
+graph LR
+    classDef n0 fill:#030712,stroke:#22d3ee,stroke-width:2px,color:#e5e7eb
+    classDef n1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#dbeafe
+    classDef n2 fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#dcfce7
+    classDef n3 fill:#3f1d2e,stroke:#f472b6,stroke-width:2px,color:#fce7f3
+    classDef n4 fill:#422006,stroke:#f59e0b,stroke-width:2px,color:#fef3c7
 
-    I[(Input Space)]:::n0 --> P[Preprocessing Space]:::n1 --> M[Model Manifold]:::n2 --> C[Calibration Core]:::n3 --> O[(Clinical Output)]:::n4
-    M --> X1[XGBoost]
-    M --> X2[LightGBM]
-    M --> X3[VariantSAGEGNN]
-    M --> X4[DNN]
+    I[("Input Space")]:::n0 --> P["Preprocessing Space"]:::n1 --> M["Model Manifold"]:::n2 --> C["Calibration Core"]:::n3 --> O[("Clinical Output")]:::n4
+    M --> X1["XGBoost"]
+    M --> X2["LightGBM"]
+    M --> X3["VariantSAGEGNN"]
+    M --> X4["DNN"]
 ```
 
 ### 1) PSR Konu Haritasi
@@ -169,19 +169,19 @@ mindmap
 ### 2) Uctan Uca Is Akisi (3D Katman Gecisi)
 
 ```mermaid
-flowchart TD
-    classDef l1 fill:#0f172a,color:#e2e8f0,stroke:#38bdf8,stroke-width:2px;
-    classDef l2 fill:#052e16,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
-    classDef l3 fill:#172554,color:#dbeafe,stroke:#60a5fa,stroke-width:2px;
-    classDef l4 fill:#3f1d2e,color:#fce7f3,stroke:#f472b6,stroke-width:2px;
-    classDef l5 fill:#3f3f46,color:#fafafa,stroke:#f59e0b,stroke-width:2px;
+graph TD
+    classDef l1 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#e2e8f0
+    classDef l2 fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#dcfce7
+    classDef l3 fill:#172554,stroke:#60a5fa,stroke-width:2px,color:#dbeafe
+    classDef l4 fill:#3f1d2e,stroke:#f472b6,stroke-width:2px,color:#fce7f3
+    classDef l5 fill:#3f3f46,stroke:#f59e0b,stroke-width:2px,color:#fafafa
 
-    A[Layer 1\nPanel Verisi]:::l1 --> B[Layer 2\nOn Isleme]:::l2 --> C[Layer 3\nModel Havuzu]:::l3 --> D[Layer 4\nKalibrasyon + Belirsizlik]:::l4 --> E[Layer 5\nKlinik Cikti]:::l5
+    A["Layer 1: Panel Verisi"]:::l1 --> B["Layer 2: On Isleme"]:::l2 --> C["Layer 3: Model Havuzu"]:::l3 --> D["Layer 4: Kalibrasyon + Belirsizlik"]:::l4 --> E["Layer 5: Klinik Cikti"]:::l5
 
-    C --> C1[XGBoost]
-    C --> C2[LightGBM]
-    C --> C3[VariantSAGEGNN]
-    C --> C4[DNN]
+    C --> C1["XGBoost"]
+    C --> C2["LightGBM"]
+    C --> C3["VariantSAGEGNN"]
+    C --> C4["DNN"]
 ```
 
 ### 3) Ensemble Agirlik Dagilimi
@@ -207,16 +207,16 @@ pie title Panel Total Sample Share
 ### 5) Klinik Karar Mantigi
 
 ```mermaid
-flowchart LR
-    classDef hi fill:#14532d,color:#dcfce7,stroke:#22c55e,stroke-width:2px;
-    classDef mid fill:#78350f,color:#fef3c7,stroke:#f59e0b,stroke-width:2px;
-    classDef lo fill:#7f1d1d,color:#fee2e2,stroke:#ef4444,stroke-width:2px;
+graph LR
+    classDef hi fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#dcfce7
+    classDef mid fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#fef3c7
+    classDef lo fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fee2e2
 
-    S[Model Output] --> T{Risk >= 0.40?}
-    T -- Evet --> U{MC Dropout <= 0.15?}
-    U -- Evet --> P[Patojenik\nYuksek Guven]:::hi
-    U -- Hayir --> R[Uzman Degerlendirmesi\nGerekli]:::mid
-    T -- Hayir --> B[Benign\nKalibre Olasilikla]:::lo
+    S["Model Output"] --> T{"Risk >= 0.40?"}
+    T -- "Evet" --> U{"MC Dropout <= 0.15?"}
+    U -- "Evet" --> P["Patojenik: Yuksek Guven"]:::hi
+    U -- "Hayir" --> R["Uzman Degerlendirmesi Gerekli"]:::mid
+    T -- "Hayir" --> B["Benign: Kalibre Olasilikla"]:::lo
 ```
 
 ### 6) Deney Takvimi ve Asamalar
@@ -250,13 +250,13 @@ stateDiagram-v2
   ### 8) 3D Katman Kupi
 
   ```mermaid
-  flowchart TB
-    classDef c1 fill:#1e3a8a,color:#dbeafe,stroke:#60a5fa,stroke-width:3px;
-    classDef c2 fill:#14532d,color:#dcfce7,stroke:#22c55e,stroke-width:3px;
-    classDef c3 fill:#7c2d12,color:#ffedd5,stroke:#fb923c,stroke-width:3px;
-    classDef c4 fill:#581c87,color:#f3e8ff,stroke:#c084fc,stroke-width:3px;
+  graph TB
+    classDef c1 fill:#1e3a8a,stroke:#60a5fa,stroke-width:3px,color:#dbeafe
+    classDef c2 fill:#14532d,stroke:#22c55e,stroke-width:3px,color:#dcfce7
+    classDef c3 fill:#7c2d12,stroke:#fb923c,stroke-width:3px,color:#ffedd5
+    classDef c4 fill:#581c87,stroke:#c084fc,stroke-width:3px,color:#f3e8ff
 
-    A[Cube Layer A\nData Geometry]:::c1 --> B[Cube Layer B\nRepresentation Learning]:::c2 --> C[Cube Layer C\nReliability Engineering]:::c3 --> D[Cube Layer D\nClinical Reporting]:::c4
+    A["Cube Layer A: Data Geometry"]:::c1 --> B["Cube Layer B: Representation Learning"]:::c2 --> C["Cube Layer C: Reliability Engineering"]:::c3 --> D["Cube Layer D: Clinical Reporting"]:::c4
   ```
 
 ---
