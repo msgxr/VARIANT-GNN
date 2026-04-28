@@ -1,13 +1,12 @@
 ﻿"""
 src/evaluation/metrics.py
-Comprehensive evaluation metrics:
-  - Macro F1, Precision, Recall (primary competition metric: Macro F1)
-  - ROC-AUC, PR-AUC
-  - Brier Score
-  - Matthews Correlation Coefficient (MCC)
-  - Expected Calibration Error (ECE)
-  - Calibration report (reliability diagram data)
-  - Threshold tuning via maximising F1 on validation set
+Comprehensive evaluation metrics.
+
+Primary competition metric (TEKNOFEST 2026 §7.3):
+  binary_f1 = 2*TP / (2*TP + FP + FN)  — F1 for the Pathogenic (positive) class.
+  This is the ranking metric as defined by the spec ("TP, FP, FN üzerinden F1 Skoru").
+
+Additional metrics: Macro F1, Precision, Recall, ROC-AUC, PR-AUC, Brier Score, MCC, ECE.
 """
 from __future__ import annotations
 
@@ -34,9 +33,10 @@ logger = logging.getLogger(__name__)
 class EvaluationReport:
     """All metrics in one dataclass."""
 
-    # Primary
+    # TEKNOFEST 2026 §7.3 primary ranking metric: F1 = 2*TP/(2*TP+FP+FN)
+    binary_f1:  float = 0.0   # binary F1 for Pathogenic class (positive=1)
+    # Supporting metrics
     macro_f1:   float = 0.0
-    # Standard
     precision:  float = 0.0
     recall:     float = 0.0
     roc_auc:    Optional[float] = None
@@ -56,6 +56,8 @@ class EvaluationReport:
 
     def as_dict(self) -> Dict[str, object]:
         return {
+            # §7.3 primary competition metric first
+            "binary_f1":     self.binary_f1,
             "macro_f1":      self.macro_f1,
             "precision":     self.precision,
             "recall":        self.recall,
@@ -69,18 +71,19 @@ class EvaluationReport:
 
     def log(self, prefix: str = "") -> None:
         tag = f"[{prefix}] " if prefix else ""
-        logger.info("%s=== Evaluation Report ===",          tag)
-        logger.info("%s[PRIMARY]  Macro F1      : %.4f",   tag, self.macro_f1)
-        logger.info("%s           Precision     : %.4f",   tag, self.precision)
-        logger.info("%s           Recall        : %.4f",   tag, self.recall)
-        logger.info("%s           MCC           : %.4f",   tag, self.mcc)
+        logger.info("%s=== Evaluation Report ===",                   tag)
+        logger.info("%s[§7.3 PRIMARY] Binary F1     : %.4f",        tag, self.binary_f1)
+        logger.info("%s               Macro F1      : %.4f",        tag, self.macro_f1)
+        logger.info("%s               Precision     : %.4f",        tag, self.precision)
+        logger.info("%s               Recall        : %.4f",        tag, self.recall)
+        logger.info("%s               MCC           : %.4f",        tag, self.mcc)
         if self.roc_auc is not None:
-            logger.info("%s           ROC-AUC       : %.4f", tag, self.roc_auc)
+            logger.info("%s               ROC-AUC       : %.4f",    tag, self.roc_auc)
         if self.pr_auc is not None:
-            logger.info("%s           PR-AUC        : %.4f", tag, self.pr_auc)
-        logger.info("%s[CALIB ]   Brier Score   : %.4f",   tag, self.brier_score)
-        logger.info("%s           ECE           : %.4f",   tag, self.ece)
-        logger.info("%s           Threshold     : %.3f",   tag, self.threshold_used)
+            logger.info("%s               PR-AUC        : %.4f",    tag, self.pr_auc)
+        logger.info("%s[CALIB ]       Brier Score   : %.4f",        tag, self.brier_score)
+        logger.info("%s               ECE           : %.4f",        tag, self.ece)
+        logger.info("%s               Threshold     : %.3f",        tag, self.threshold_used)
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +149,9 @@ def find_best_threshold(
     for thr in thresholds:
         preds = (y_prob >= thr).astype(int)
         if metric == "f1":
+            # §7.3: primary metric is binary F1 (TP/FP/FN for Pathogenic class)
+            score = f1_score(y_true, preds, average="binary", pos_label=1, zero_division=0)
+        elif metric == "macro_f1":
             score = f1_score(y_true, preds, average="macro", zero_division=0)
         elif metric == "mcc":
             score = matthews_corrcoef(y_true, preds)
@@ -183,9 +189,11 @@ def evaluate(
     p1    = y_prob[:, 1]
     preds = (p1 >= threshold).astype(int)
 
+    # §7.3 primary competition metric: binary F1 (TP/FP/FN for Pathogenic class)
+    binary_f1 = float(f1_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
     macro_f1  = float(f1_score(y_true, preds, average="macro", zero_division=0))
-    precision = float(precision_score(y_true, preds, average="macro", zero_division=0))
-    recall    = float(recall_score(y_true, preds, average="macro", zero_division=0))
+    precision = float(precision_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
+    recall    = float(recall_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
     mcc       = float(matthews_corrcoef(y_true, preds))
     brier     = float(brier_score_loss(y_true, p1))
     ece       = expected_calibration_error(y_true, p1, n_bins=n_calibration_bins)
@@ -209,6 +217,7 @@ def evaluate(
         frac_pos, mean_pred = np.array([]), np.array([])
 
     report = EvaluationReport(
+        binary_f1                 = binary_f1,
         macro_f1                  = macro_f1,
         precision                 = precision,
         recall                    = recall,

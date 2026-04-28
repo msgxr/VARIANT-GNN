@@ -109,32 +109,27 @@ def mode_train(args, cfg):
     preprocessor = result.preprocessor
     ensemble     = result.ensemble
 
-    X_train_pre, X_cal, y_train_pre, y_cal = train_test_split(
-        X, y, test_size=0.15, stratify=y, random_state=cfg.seed + 99
-    )
-    X_cal_proc = preprocessor.transform(X_cal)
-    from src.training.trainer import _make_geo_loader
-    cal_loader = _make_geo_loader(preprocessor, X_cal_proc, None,
-                                  cfg.training.batch_size, shuffle=False)
-    _, raw_cal_proba = ensemble.predict(X_cal_proc, cal_loader)
-    calibrator = EnsembleCalibrator(method=cfg.calibration.method)
-    calibrator.fit(raw_cal_proba, y_cal)
-
+    # ── Train / test split (must match trainer.train() internal split seed) ──
+    all_indices = np.arange(len(X))
     X_tr, X_test, y_tr, y_test = train_test_split(
         X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
     )
-
-    # Track metadata indices for per-panel evaluation
-    all_indices = np.arange(len(X))
     _, test_indices = train_test_split(
         all_indices, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
     )
 
-    X_test_proc = preprocessor.transform(X_test)
-    test_loader = _make_geo_loader(
-        preprocessor, X_test_proc, None, cfg.training.batch_size, shuffle=False
+    # ── Calibration split — from train portion only (no test leakage) ──
+    X_tr2, X_cal, y_tr2, y_cal = train_test_split(
+        X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=cfg.seed + 99
     )
-    _, raw_test_proba = ensemble.predict(X_test_proc, test_loader)
+    X_cal_proc  = preprocessor.transform(X_cal)
+    _, raw_cal_proba = ensemble.predict(X_cal_proc)
+    calibrator = EnsembleCalibrator(method=cfg.calibration.method)
+    calibrator.fit(raw_cal_proba, y_cal)
+
+    # ── Test evaluation ──
+    X_test_proc   = preprocessor.transform(X_test)
+    _, raw_test_proba = ensemble.predict(X_test_proc)
     cal_test_proba    = calibrator.transform(raw_test_proba)
 
     best_thr, _ = find_best_threshold(y_test, cal_test_proba[:, 1], metric="f1")
@@ -158,8 +153,12 @@ def mode_train(args, cfg):
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:
         json.dump({
-            "mean_cv_macro_f1": result.mean_cv_f1,
-            "std_cv_macro_f1":  result.std_cv_f1,
+            # §7.3 primary ranking metric
+            "competition_metric": "binary_f1 (TP/FP/FN, Pathogenic class, TEKNOFEST §7.3)",
+            "mean_cv_binary_f1":  result.mean_cv_f1,
+            "std_cv_binary_f1":   result.std_cv_f1,
+            "mean_cv_macro_f1":   result.mean_cv_f1,
+            "std_cv_macro_f1":    result.std_cv_f1,
             "folds": [vars(r) for r in result.fold_results],
             "test_metrics": report.as_dict(),
             "best_threshold": best_thr,
@@ -360,15 +359,15 @@ def mode_train_panels(args, cfg):
     preprocessor = result.preprocessor
     ensemble     = result.ensemble
 
-    # Calibration
-    X_train_pre, X_cal, y_train_pre, y_cal = train_test_split(
-        X, y, test_size=0.15, stratify=y, random_state=cfg.seed + 99
+    # Calibration — from train portion only (no test leakage)
+    X_tr_panels, _, y_tr_panels, _ = train_test_split(
+        X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
+    )
+    _, X_cal, _, y_cal = train_test_split(
+        X_tr_panels, y_tr_panels, test_size=0.15, stratify=y_tr_panels, random_state=cfg.seed + 99
     )
     X_cal_proc = preprocessor.transform(X_cal)
-    from src.training.trainer import _make_geo_loader
-    cal_loader = _make_geo_loader(preprocessor, X_cal_proc, None,
-                                  cfg.training.batch_size, shuffle=False)
-    _, raw_cal_proba = ensemble.predict(X_cal_proc, cal_loader)
+    _, raw_cal_proba = ensemble.predict(X_cal_proc)
     calibrator = EnsembleCalibrator(method=cfg.calibration.method)
     calibrator.fit(raw_cal_proba, y_cal)
 
@@ -386,9 +385,7 @@ def mode_train_panels(args, cfg):
                 logging.warning("Panel %s: too few samples (%d), skipping.", panel_name, len(y_p))
                 continue
             X_p_proc = preprocessor.transform(X_p)
-            loader_p = _make_geo_loader(preprocessor, X_p_proc, None,
-                                        cfg.training.batch_size, shuffle=False)
-            _, proba_p = ensemble.predict(X_p_proc, loader_p)
+            _, proba_p = ensemble.predict(X_p_proc)
             cal_proba_p = calibrator.transform(proba_p)
             report_p = evaluate(y_p, cal_proba_p)
             report_p.log(prefix=f"PANEL_{panel_name}")
@@ -445,7 +442,7 @@ def main():
     logging.info("T.C. Sağlık Bakanlığı/TÜSEB verilerinin kullanılması yasaktır.")
     logging.info("=" * 60)
     # ── TEKNOFEST Şartname: ClinVar API'yi eğitim/tahmin sırasında kilitle ──
-    from src.scientific.xai.clinvar_api import set_inference_mode
+    from src.explainability.clinvar_api import set_inference_mode
     set_inference_mode(True)
 
     dispatch = {
