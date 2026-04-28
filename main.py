@@ -676,6 +676,78 @@ def mode_explain(args, cfg):
     else:
         logging.info("gnn_learning_curve.json bulunamadı — önce eğitim yapın.")
 
+    # ── 9. ACMG Kriter Haritalayıcı ─────────────────────────────────────────
+    try:
+        from src.scientific.acmg_mapper import ACMGMapper
+        _acmg = ACMGMapper()
+        _acmg_results = _acmg.classify_batch(
+            X_sample[:min(5, len(X_sample))],
+            shap_matrix = shap_vals[:min(5, len(X_sample))] if (shap_vals is not None and shap_vals.ndim == 2) else None,
+            feature_names = feature_names,
+        )
+        import json as _json
+        _acmg_path = cfg.paths.reports_dir / "acmg_criteria.json"
+        with open(_acmg_path, "w", encoding="utf-8") as _fh:
+            _json.dump(_acmg_results, _fh, indent=2, ensure_ascii=False)
+        logging.info("ACMG kriter haritası → %s", _acmg_path)
+        for _i, _res in enumerate(_acmg_results):
+            logging.info(
+                "  [Örnek %d] %s (puan=%+d) — Kriterler: %s",
+                _i, _res["classification"], _res["acmg_score"],
+                [c["code"] for c in _res["criteria"]],
+            )
+    except Exception as _acmg_exc:
+        logging.warning("ACMG haritalayıcı çalıştırılamadı: %s", _acmg_exc)
+
+    # ── 10. OOD / Data Drift Tespiti ─────────────────────────────────────────
+    try:
+        from src.scientific.ood_detector import OODDetector
+        _ood = OODDetector(z_threshold=3.0, ood_frac_thresh=0.20)
+        _ood.fit(X_scaled)                        # Eğitim seti ile kalibre et
+        _ood_report = _ood.detect(X_sample, feature_names=feature_names)
+        _drift_rpt  = _ood.drift_report(X_sample, feature_names=feature_names)
+        import json as _json
+        _ood_path = cfg.paths.reports_dir / "ood_drift_report.json"
+        with open(_ood_path, "w", encoding="utf-8") as _fh:
+            _json.dump({
+                "ood_summary":   _ood_report["summary"],
+                "n_ood":         _ood_report["n_ood"],
+                "n_total":       _ood_report["n_total"],
+                "drift_score":   _drift_rpt["mean_drift_score"],
+                "drift_flag":    _drift_rpt["drift_flag"],
+                "top_drifted":   _drift_rpt["top_drifted_features"],
+                "ood_features_per_sample": [
+                    {"sample": _i, "ood_features": _f}
+                    for _i, _f in enumerate(_ood_report["ood_features"][:5])
+                ],
+            }, _fh, indent=2, ensure_ascii=False)
+        logging.info("OOD/Drift raporu → %s | %s", _ood_path, _ood_report["summary"])
+    except Exception as _ood_exc:
+        logging.warning("OOD detektörü çalıştırılamadı: %s", _ood_exc)
+
+    # ── 11. PubMed RAG (ilk örnek için) ──────────────────────────────────────
+    try:
+        from src.scientific.pubmed_rag import PubMedRAG
+        _rag = PubMedRAG(cache_ttl=3600)
+        # İlk açıklanan varyantın gen adını tahmin et
+        _first_vid = explain_records[0]["variant_id"] if explain_records else "BRCA1"
+        _gene_guess = str(_first_vid).split("-")[0].split("_")[0]
+        _articles   = _rag.fetch(gene=_gene_guess, n_results=3)
+        if _articles:
+            import json as _json
+            _rag_path = cfg.paths.reports_dir / "pubmed_references.json"
+            with open(_rag_path, "w", encoding="utf-8") as _fh:
+                _json.dump(_articles, _fh, indent=2, ensure_ascii=False)
+            logging.info(
+                "PubMed RAG → %s makalesi → %s", len(_articles), _rag_path
+            )
+            for _art in _articles:
+                logging.info("  [PubMed] %s (%s) — %s", _art["title"][:60], _art["year"], _art["url"])
+        else:
+            logging.info("PubMed: '%s' için sonuç bulunamadı (ağ erişimi gereklidir).", _gene_guess)
+    except Exception as _rag_exc:
+        logging.warning("PubMed RAG çalıştırılamadı: %s", _rag_exc)
+
     logging.info("Explain modu tamamlandı. Çıktılar: %s", cfg.paths.reports_dir)
 
 

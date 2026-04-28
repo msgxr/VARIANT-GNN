@@ -151,6 +151,17 @@ class InferencePipeline:
         result["High_Risk"]     = cal_proba[:, 1] >= cfg.thresholds.high_risk
         result["Clinical_Flag"] = clinical_flag
 
+        # ── OOD Tespiti (opsiyonel, hata varsa sessizce atlanır) ─────────────
+        try:
+            from src.scientific.ood_detector import OODDetector
+            _ood_det = OODDetector(z_threshold=3.5, ood_frac_thresh=0.25)
+            _ood_det.fit(X_scaled)
+            _ood_out = _ood_det.detect(X_scaled)
+            result["OOD_Score"] = _ood_out["ood_scores"].round(3)
+            result["OOD_Flag"]  = _ood_out["ood_flags"]
+        except Exception:
+            pass   # OOD modülü opsiyonel — mevcut pipeline etkilenmez
+
         return result
 
     # ------------------------------------------------------------------
