@@ -1,0 +1,2 @@
+﻿# Geliştirme bağımlılıkları
+# Doldurulacak

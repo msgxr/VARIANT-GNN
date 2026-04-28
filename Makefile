@@ -1,0 +1,2 @@
+﻿# Makefile — geliştirme kısayolları
+# Doldurulacak

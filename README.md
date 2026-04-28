@@ -832,82 +832,69 @@ Belirsizlik yorumlama:
 
 ## 📁 Dizin Yapısı
 
-```
+```text
 VARIANT-GNN/
 │
-├── 📄 main.py                    # Ana giriş noktası — tüm modlar
+├── 📄 main.py                    # Ana eğitim ve değerlendirme scripti
 ├── 📄 app.py                     # Streamlit web arayüzü
+├── 📄 Dockerfile                 # Docker imaj yapılandırması
+├── 📄 docker-compose.yml         # Container orkestrasyonu
+├── 📄 train_log.txt              # Eğitim süreci logları
 │
-├── 📂 configs/
+├── 📂 configs/                   # Yapılandırma dosyaları
 │   ├── default.yaml              # Geliştirme konfigürasyonu
-│   ├── final.yaml                # Final demo (threshold=0.01 optimize)
-│   └── psr.yaml                  # PSR ile birebir eşleşen parametreler ⭐
+│   ├── final.yaml                # Final demo
+│   └── psr.yaml                  # PSR yarışma konfigürasyonu ⭐
 │
-├── 📂 src/
-│   ├── 📂 config/
-│   │   └── settings.py           # Tip güvenli ayar sınıfları
-│   │
-│   ├── 📂 core/
-│   │   ├── gnn.py                # VariantGATv2GNN (üretim modeli)
-│   │   ├── ensemble.py           # HybridEnsemble + Nelder-Mead
-│   │   └── models/               # Modüler model tanımları
-│   │
-│   ├── 📂 data/
-│   │   ├── loader.py             # CSV yükleme + şema doğrulama
-│   │   ├── column_aligner.py     # Anonim sütun eşleme ⭐
-│   │   └── schemas/
-│   │       └── variant_schema.py # Veri şeması
-│   │
-│   ├── 📂 features/
-│   │   ├── preprocessing.py      # 6 aşamalı pipeline
-│   │   ├── autoencoder.py        # AutoEncoder (43→16)
-│   │   └── multimodal_encoder.py # Sekans CNN Encoder
-│   │
-│   ├── 📂 training/
-│   │   ├── trainer.py            # Ana trainer + 5-fold CV
-│   │   ├── cross_val.py          # Çapraz doğrulama
-│   │   └── focal_loss.py         # Focal Loss alternatifi
-│   │
-│   ├── 📂 evaluation/
-│   │   └── metrics.py            # Binary F1 (§7.3) + tüm metrikler
-│   │
-│   ├── 📂 explainability/
-│   │   ├── group_shap.py         # 6 biyolojik kategori SHAP ⭐
-│   │   ├── shap_explainer.py     # XGBoost SHAP wrapper
-│   │   ├── gnn_explainer.py      # GNNExplainer wrapper
-│   │   ├── clinical_insight.py   # Türkçe klinik açıklama
-│   │   └── pdf_report.py         # PDF rapor üretimi
-│   │
-│   ├── 📂 scientific/
-│   │   ├── calibration/          # İsotonik kalibrasyon
-│   │   └── metrics/              # Adversarial validation
-│   │
-│   ├── 📂 api/
-│   │   ├── pipeline.py           # InferencePipeline
-│   │   └── export.py             # Jüri uyumlu CSV export
-│   │
-│   └── 📂 utils/
-│       ├── serialization.py      # ModelStore (save/load)
-│       └── seeds.py              # Deterministik seed
+├── 📂 data/                      # Veri setleri (NDA gereği paylaşılmaz)
+│   ├── train_*.csv               # Eğitim setleri (CFTR, PAH, vb.)
+│   └── test_*.csv                # Test ve jüri veri setleri
 │
-├── 📂 tests/
-│   ├── unit/
-│   │   ├── test_models.py
-│   │   ├── test_preprocessing.py
-│   │   ├── test_modelstore_gnn_roundtrip.py ⭐
-│   │   └── ...
-│   └── smoke/
-│       └── test_app_import.py
+├── 📂 data_contracts/            # Veri şema anlaşmaları
+│   └── variant_schema.py
 │
-├── 📂 data/                      # Veri klasörü (NDA gereği paylaşılmaz)
+├── 📂 docs/                      # Proje dokümantasyonu
+│   ├── MODEL_CARD.md
+│   ├── TEKNOFEST_2026_Raporu.md
+│   └── colab_setup_guide.md
+│
 ├── 📂 models/                    # Eğitilmiş model artifact'ları
-├── 📂 reports/                   # Metrik JSON'ları, grafikler
-│   ├── cv_report.json
-│   ├── gnn_learning_curve.json   ⭐ (§4.5 kanıtı)
-│   ├── shap_group_contributions.json ⭐ (§4.4 kanıtı)
-│   └── external_validation_report.json
+│   ├── xgb_model.json
+│   ├── dnn_model.pth
+│   ├── gnn_model.pth
+│   └── ensemble_config.json
 │
-└── 📄 requirements.txt
+├── 📂 reports/                   # Çıktılar, grafikler ve raporlar
+│   ├── cv_report.json            # Çapraz doğrulama sonuçları
+│   ├── figures/                  # ROC, PR, Kalibrasyon grafikleri
+│   └── VARIANT_GNN_Rapor_TEKNOFEST2026.pdf
+│
+├── 📂 scripts/                   # Yardımcı scriptler
+│   ├── data_generation/          # Gerçekçi sentetik veri üretimi
+│   └── reporting/                # Rapor oluşturma scriptleri
+│
+├── 📂 src/                       # Ana kaynak kod (Modüler Mimari)
+│   ├── 📂 api/                   # API, Dışa aktarım ve Inference pipeline
+│   ├── 📂 calibration/           # İsotonik kalibrasyon
+│   ├── 📂 config/                # Ayar yöneticisi (settings.py)
+│   ├── 📂 core/                  # Çekirdek model tanımları (GNN, DNN, Ensemble)
+│   ├── 📂 data/                  # Veri yükleme, VCF/FHIR ayrıştırma, anonim sütun eşleme ⭐
+│   ├── 📂 evaluation/            # Metrik hesaplama, adversarial validation
+│   ├── 📂 explainability/        # SHAP, LIME, GNNExplainer, PDF Rapor ⭐
+│   ├── 📂 features/              # Ön işleme, AutoEncoder, Biyo-skorlama
+│   ├── 📂 graph/                 # Graf oluşturucu (builder.py)
+│   ├── 📂 inference/             # Çıkarım (inference) pipeline
+│   ├── 📂 scientific/            # Bilimsel metrikler ve XAI alt modülleri
+│   ├── 📂 training/              # Eğitim döngüleri (Trainer, Focal Loss, Tune)
+│   ├── 📂 ui/                    # Streamlit UI bileşenleri (Analytics, ClinVar vb.)
+│   └── 📂 utils/                 # Genel araçlar (loglama, serialization, seed)
+│
+├── 📂 tests/                     # Birim, entegrasyon ve duman testleri
+│   ├── unit/                     # test_modelstore_gnn_roundtrip.py vb. ⭐
+│   ├── integration/              # test_pipeline.py
+│   └── smoke/                    # test_app_import.py
+│
+└── 📄 requirements.txt           # Python bağımlılıkları
 ```
 
 ---
