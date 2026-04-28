@@ -474,7 +474,60 @@ def mode_explain(args, cfg):
         logging.info("Grup SHAP JSON → %s", grp_result.get("json_path"))
         logging.info("Grup SHAP plot → %s", grp_result.get("plot_path"))
 
-        # ── 4. İlk 5 örnek için Türkçe açıklama ────────────────────────────
+        # ── 4. GNNExplainer analizi (SHAP'ın hemen ardından) ────────────────
+        try:
+            from src.explainability.gnn_explainer import GNNExplainerWrapper
+            from src.core.graph.builder import SampleKNNGraphBuilder
+            import torch as _torch
+
+            gnn_model = ensemble.gnn
+            if gnn_model is not None:
+                _device = next(gnn_model.parameters()).device
+                logging.info("GNNExplainer başlatılıyor…")
+                _gnn_exp = GNNExplainerWrapper(model=gnn_model, device=_device)
+
+                knn_k     = getattr(cfg.gnn, "knn_k", 10)
+                explain_n = min(30, len(X_scaled))
+                _graph    = SampleKNNGraphBuilder(k=knn_k).build(
+                    X_scaled[:explain_n], y=None
+                )
+                _expl = _gnn_exp.explain(_graph)
+
+                if _expl is not None:
+                    import json as _json
+                    _gnn_out: dict = {"n_explained": explain_n, "knn_k": knn_k}
+                    if hasattr(_expl, "node_mask") and _expl.node_mask is not None:
+                        _nm = _expl.node_mask.detach().cpu().numpy()
+                        _feat_imp = (_nm.mean(axis=0).tolist()
+                                     if _nm.ndim == 2 else _nm.tolist())
+                        _gnn_out["node_feature_importance"] = _feat_imp
+                        _gnn_out["top_gnn_features"] = [
+                            {"feature": f, "importance": round(v, 6)}
+                            for f, v in sorted(
+                                zip(feature_names[:len(_feat_imp)], _feat_imp),
+                                key=lambda x: abs(x[1]), reverse=True
+                            )[:10]
+                        ]
+                    if hasattr(_expl, "edge_mask") and _expl.edge_mask is not None:
+                        _em = _expl.edge_mask.detach().cpu().numpy()
+                        _gnn_out["edge_importance_mean"] = float(_em.mean())
+                        _gnn_out["edge_importance_max"]  = float(_em.max())
+
+                    _gnn_exp_path = cfg.paths.reports_dir / "gnn_explainer_results.json"
+                    with open(_gnn_exp_path, "w", encoding="utf-8") as _fh:
+                        _json.dump(_gnn_out, _fh, indent=2, ensure_ascii=False)
+                    logging.info("GNNExplainer sonuçları → %s", _gnn_exp_path)
+                else:
+                    logging.warning(
+                        "GNNExplainer açıklama üretemedi "
+                        "(kütüphane uyumsuzluğu veya model uyuşmazlığı)."
+                    )
+            else:
+                logging.warning("GNN modeli yüklü değil — GNNExplainer atlandı.")
+        except Exception as _gnn_exc:
+            logging.warning("GNNExplainer çalıştırılamadı: %s", _gnn_exc)
+
+        # ── 5. İlk 5 örnek için Türkçe açıklama ────────────────────────────
         df_pred = pipeline.predict_from_dataset(ds)
         explain_records = []
         for i in range(min(5, len(X_sample))):
@@ -492,6 +545,91 @@ def mode_explain(args, cfg):
         with open(out_json, "w", encoding="utf-8") as _fh:
             _json.dump(explain_records, _fh, indent=2, ensure_ascii=False)
         logging.info("Açıklama örnekleri → %s", out_json)
+
+        # ── 7. Türkçe PDF Klinik Raporu (Rapor §4.4) ─────────────────────
+        try:
+            from src.explainability.pdf_report import (
+                generate_pdf_report, FPDF_AVAILABLE,
+            )
+            if not FPDF_AVAILABLE:
+                logging.warning(
+                    "fpdf2 kurulu değil — PDF rapor atlanıyor. "
+                    "`pip install fpdf2` ile kurun."
+                )
+            elif explain_records:
+                _pdf_paths = []
+                for _i, _rec in enumerate(explain_records):
+                    _vid  = _rec["variant_id"]
+                    _pred = _rec["prediction"]
+                    _prob = float(_rec["probability"])
+
+                    # Risk skoru (0-100)
+                    _risk = (
+                        float(df_pred["Calibrated_Risk"].iloc[_i])
+                        if "Calibrated_Risk" in df_pred.columns
+                        else _prob * 100
+                    )
+
+                    # Zone etiketi
+                    if _risk >= 75:
+                        _zone = "KRITIK RISK - Klinik Degerlendirme Gereklidir"
+                    elif _risk >= 50:
+                        _zone = "YUKSEK RISK - Uzman Gorusu Onerilir"
+                    elif _risk >= 25:
+                        _zone = "ORTA RISK - Takip Onerilir"
+                    else:
+                        _zone = "DUSUK RISK - Muhtemelen Benign"
+
+                    _rec_text = _rec.get("clinical_insight_tr", "")
+                    _recom = (
+                        "Genetik uzmanı ile konsültasyon ve ek fonksiyonel "
+                        "çalışmalar önerilir."
+                        if _pred == "Pathogenic"
+                        else "Rutin klinik takip yeterli olabilir. "
+                             "Klinisyen değerlendirmesi esastır."
+                    )
+                    _clinical_insight = {
+                        "zone_label": _zone,
+                        "summary": _rec_text,
+                        "key_findings": [],
+                        "recommendation": _recom,
+                    }
+
+                    # Top SHAP features for this instance
+                    _sv_i = shap_vals[_i] if shap_vals.ndim == 2 else shap_vals
+                    _top_feats = sorted(
+                        zip(feature_names, _sv_i.tolist()),
+                        key=lambda x: abs(x[1]),
+                        reverse=True,
+                    )[:10]
+
+                    _waterfall = (
+                        str(cfg.paths.reports_dir / "shap_waterfall_sample0.png")
+                        if _i == 0 else None
+                    )
+
+                    _pdf_bytes = generate_pdf_report(
+                        variant_id=str(_vid),
+                        risk_score=_risk,
+                        prediction=_pred,
+                        probability=_prob,
+                        clinical_insight=_clinical_insight,
+                        top_features=_top_feats,
+                        shap_waterfall_path=_waterfall,
+                    )
+                    _safe_vid = str(_vid).replace("/", "_").replace(":", "_")[:40]
+                    _pdf_path = cfg.paths.reports_dir / f"clinical_report_{_safe_vid}.pdf"
+                    _pdf_path.write_bytes(_pdf_bytes)
+                    _pdf_paths.append(str(_pdf_path))
+                    logging.info("PDF klinik raporu → %s", _pdf_path)
+
+                logging.info(
+                    "%d PDF klinik raporu oluşturuldu → %s",
+                    len(_pdf_paths), cfg.paths.reports_dir,
+                )
+        except Exception as _pdf_exc:
+            logging.warning("PDF rapor üretilemedi: %s", _pdf_exc)
+
     else:
         logging.warning("SHAP explainer başlatılamadı — shap kütüphanesi kurulu mu?")
 

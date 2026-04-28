@@ -123,10 +123,15 @@ class MCDropoutEstimator:
         """
         Belirsizlik skorlarını klinik kategorilere çevirir.
 
+        Eşikler (Rapor §4.3 / §5.5 uyumlu):
+          - < 0.15 → Yüksek Güven
+          - 0.15–0.30 → Orta Güven
+          - > 0.30 → Düşük Güven (→ "Uzman Değerlendirmesi Gerekli")
+
         Returns: string array — 'Yüksek Güven', 'Orta Güven', 'Düşük Güven'
         """
         categories = np.where(
-            scores < 0.2, "Yüksek Güven",
-            np.where(scores < 0.5, "Orta Güven", "Düşük Güven")
+            scores < 0.15, "Yüksek Güven",
+            np.where(scores < 0.30, "Orta Güven", "Düşük Güven")
         )
         return categories

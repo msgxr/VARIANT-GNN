@@ -173,7 +173,32 @@ class HybridEnsemble:
         gnn_proba: Optional[np.ndarray],
         dnn_proba: Optional[np.ndarray],
     ) -> np.ndarray:
-        """Weighted average of available probability matrices."""
+        """
+        Combine base-model probability matrices.
+
+        Stacking path (meta-learner mevcutsa):
+            [xgb_p1, lgb_p1, gnn_p1, dnn_p1] → LogisticRegression → (N, 2)
+        Fallback (meta-learner yoksa):
+            Ağırlıklı ortalama (self.weights).
+        """
+        # ── Meta-learner stacking (adaptif birleştirme) ───────────────────
+        if self.meta_learner is not None:
+            cols = [
+                p[:, 1]
+                for p in [xgb_proba, lgb_proba, gnn_proba, dnn_proba]
+                if p is not None
+            ]
+            if cols:
+                try:
+                    meta_X = np.column_stack(cols)             # (N, n_models)
+                    return self.meta_learner.predict_proba(meta_X)  # (N, 2)
+                except Exception as exc:
+                    logger.warning(
+                        "Meta-learner predict_proba başarısız (%s) — "
+                        "ağırlıklı ortalamaya geçiliyor.", exc
+                    )
+
+        # ── Weighted-average fallback ─────────────────────────────────────
         pairs = [
             (xgb_proba, self.weights[0]),
             (lgb_proba, self.weights[1]),
@@ -183,7 +208,7 @@ class HybridEnsemble:
         available = [(p, w) for p, w in pairs if p is not None]
         if not available:
             raise ValueError("No predictions available.")
-        
+
         total_w = sum(w for _, w in available)
         return sum((w / total_w) * p for p, w in available)
 

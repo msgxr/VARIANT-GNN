@@ -106,22 +106,35 @@ class InferencePipeline:
         
         # Determine prediction method (Uncertainty-aware if GATv2)
         threshold = cfg.thresholds.classification
-        
+
         if isinstance(self._ensemble.gnn, VariantGATv2GNN):
-            # State-of-the-art Prediction with MC-Dropout Uncertainty
+            # MC-Dropout ile belirsizlik tahmini
             preds, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
                 X_scaled, n_iter=10, threshold=threshold
             )
-            # Confidence is based on the inverse of standard deviation
+            # Güven skoru: belirsizliğin tersi (yüksek std → düşük güven)
             confidence = ((1.0 - uncertainty) * 100).round(2)
+            # Klinik karar bayrağı — belirsizlik eşiklerine göre (Rapor §3.5)
+            clinical_flag = np.where(
+                uncertainty > 0.30,
+                "⚠️ Uzman Değerlendirmesi Gerekli",
+                np.where(uncertainty <= 0.15, "✅ Yüksek Güven", "🔶 Orta Güven"),
+            )
         else:
-            # Traditional Prediction
+            # Klasik tahmin (GATv2 olmayan path)
             preds, raw_proba = self._ensemble.predict(
                 X_scaled, threshold=threshold
             )
             confidence = (np.max(raw_proba, axis=1) * 100).round(2)
+            # Belirsizlik skoru olmadığında max-prob üzerinden bayrak
+            conf_frac = np.max(raw_proba, axis=1)
+            clinical_flag = np.where(
+                conf_frac < 0.70,
+                "⚠️ Uzman Değerlendirmesi Gerekli",
+                np.where(conf_frac >= 0.90, "✅ Yüksek Güven", "🔶 Orta Güven"),
+            )
 
-        # Calibrated probabilities
+        # Kalibrasyon
         if self._calibrator is not None:
             cal_proba = self._calibrator.transform(raw_proba)
         else:
@@ -129,13 +142,14 @@ class InferencePipeline:
 
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
 
-        # Build output DataFrame
+        # Çıktı DataFrame
         result: pd.DataFrame = dataset.metadata.copy()
-        result["Prediction"] = np.where(preds == 1, "Pathogenic", "Benign")
-        result["Probability"] = raw_proba[:, 1].round(4)
+        result["Prediction"]    = np.where(preds == 1, "Pathogenic", "Benign")
+        result["Probability"]   = raw_proba[:, 1].round(4)
         result["Calibrated_Risk"] = cal_risk
-        result["Confidence"] = confidence
-        result["High_Risk"] = cal_proba[:, 1] >= cfg.thresholds.high_risk
+        result["Confidence"]    = confidence
+        result["High_Risk"]     = cal_proba[:, 1] >= cfg.thresholds.high_risk
+        result["Clinical_Flag"] = clinical_flag
 
         return result
 

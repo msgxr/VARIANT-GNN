@@ -104,12 +104,106 @@ class ColumnAligner:
         # Build lowercase lookup for stage-2
         self._lower_map: Dict[str, str] = {c.lower(): c for c in self.expected_columns}
 
+        # Training-time distributional signatures (set via set_reference_distributions)
+        self._ref_signatures: Dict[str, Dict] = {}
+
+    # ------------------------------------------------------------------
+    def set_reference_distributions(
+        self, ref_df: "pd.DataFrame",
+    ) -> None:
+        """
+        Compute distributional signatures from training-time data.
+
+        For each column in ref_df, stores: dtype category, IQR, mean, std,
+        min, max, and non-null fraction. These are used in Stage 3.5 to
+        match anonymous columns by statistical profile when name-based
+        matching fails.
+
+        Parameters
+        ----------
+        ref_df : Training DataFrame with expected column names.
+        """
+        for col in ref_df.columns:
+            series = pd.to_numeric(ref_df[col], errors="coerce")
+            if series.notna().sum() < 3:
+                continue
+            q1, q3 = series.quantile(0.25), series.quantile(0.75)
+            self._ref_signatures[col] = {
+                "dtype": "numeric" if pd.api.types.is_numeric_dtype(ref_df[col]) else "categorical",
+                "iqr": float(q3 - q1),
+                "mean": float(series.mean()),
+                "std": float(series.std()),
+                "min": float(series.min()),
+                "max": float(series.max()),
+                "range": float(series.max() - series.min()),
+                "non_null_frac": float(series.notna().mean()),
+            }
+        logger.info(
+            "ColumnAligner: distributional signatures computed for %d columns.",
+            len(self._ref_signatures),
+        )
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _distributional_similarity(sig_a: Dict, sig_b: Dict) -> float:
+        """
+        Compute similarity score between two distributional signatures.
+
+        Uses normalised IQR, range, and mean comparison. Returns a score
+        in [0, 1] where 1 = identical distributions.
+        """
+        score = 0.0
+        total_weight = 0.0
+
+        # IQR similarity
+        if sig_a["iqr"] > 0 or sig_b["iqr"] > 0:
+            max_iqr = max(sig_a["iqr"], sig_b["iqr"], 1e-10)
+            iqr_sim = 1 - abs(sig_a["iqr"] - sig_b["iqr"]) / max_iqr
+            score += 3.0 * iqr_sim
+            total_weight += 3.0
+
+        # Range similarity
+        if sig_a["range"] > 0 or sig_b["range"] > 0:
+            max_range = max(sig_a["range"], sig_b["range"], 1e-10)
+            range_sim = 1 - abs(sig_a["range"] - sig_b["range"]) / max_range
+            score += 2.0 * range_sim
+            total_weight += 2.0
+
+        # Mean similarity (normalised by range)
+        denom = max(sig_a["range"], sig_b["range"], 1e-10)
+        mean_sim = 1 - min(abs(sig_a["mean"] - sig_b["mean"]) / denom, 1.0)
+        score += 2.0 * mean_sim
+        total_weight += 2.0
+
+        # Std similarity
+        if sig_a["std"] > 0 or sig_b["std"] > 0:
+            max_std = max(sig_a["std"], sig_b["std"], 1e-10)
+            std_sim = 1 - abs(sig_a["std"] - sig_b["std"]) / max_std
+            score += 1.0 * std_sim
+            total_weight += 1.0
+
+        # dtype match
+        if sig_a["dtype"] == sig_b["dtype"]:
+            score += 1.0
+        total_weight += 1.0
+
+        return score / total_weight if total_weight > 0 else 0.0
+
     # ------------------------------------------------------------------
     def build_mapping(
-        self, incoming_columns: List[str]
+        self, incoming_columns: List[str],
+        incoming_df: Optional[pd.DataFrame] = None,
     ) -> Tuple[Dict[str, str], AlignmentReport]:
         """
         Compute column name mapping: incoming_name → expected_name.
+
+        Parameters
+        ----------
+        incoming_columns : List of column names from the incoming data.
+        incoming_df      : Optional DataFrame for distributional matching
+                          (Stage 3.5). If not provided and reference
+                          signatures are set, distributional matching is
+                          skipped.
 
         Returns
         -------
@@ -156,6 +250,62 @@ class ColumnAligner:
                 remaining_expected.remove(best_match)
                 remaining_incoming.remove(col)
 
+        # ── Stage 3.5: Distributional signature match ───────────────────
+        # Uses dtype, IQR, range, mean, std to pair anonymous columns
+        # (e.g. Col_0, Col_1, ...) with expected biological categories.
+        if (self._ref_signatures and incoming_df is not None
+                and remaining_incoming and remaining_expected):
+            logger.info(
+                "ColumnAligner: distributional matching for %d remaining columns …",
+                len(remaining_incoming),
+            )
+            # Compute signatures for remaining incoming columns
+            inc_sigs: Dict[str, Dict] = {}
+            for col in remaining_incoming:
+                if col in incoming_df.columns:
+                    series = pd.to_numeric(incoming_df[col], errors="coerce")
+                    if series.notna().sum() >= 3:
+                        q1, q3 = series.quantile(0.25), series.quantile(0.75)
+                        inc_sigs[col] = {
+                            "dtype": "numeric" if pd.api.types.is_numeric_dtype(incoming_df[col]) else "categorical",
+                            "iqr": float(q3 - q1),
+                            "mean": float(series.mean()),
+                            "std": float(series.std()),
+                            "min": float(series.min()),
+                            "max": float(series.max()),
+                            "range": float(series.max() - series.min()),
+                            "non_null_frac": float(series.notna().mean()),
+                        }
+
+            # Hungarian-style greedy: match highest similarity first
+            dist_matches: List[Tuple[str, str, float]] = []
+            for inc_col, inc_sig in inc_sigs.items():
+                for exp_col in remaining_expected:
+                    if exp_col in self._ref_signatures:
+                        sim = self._distributional_similarity(inc_sig, self._ref_signatures[exp_col])
+                        dist_matches.append((inc_col, exp_col, sim))
+
+            # Sort by similarity descending, greedily assign
+            dist_matches.sort(key=lambda t: t[2], reverse=True)
+            used_inc, used_exp = set(), set()
+            dist_threshold = 0.70  # Minimum similarity for distributional match
+
+            for inc_col, exp_col, sim in dist_matches:
+                if inc_col in used_inc or exp_col in used_exp:
+                    continue
+                if sim >= dist_threshold:
+                    mapping[inc_col] = exp_col
+                    report.fuzzy_matches.append((inc_col, exp_col, sim))
+                    used_inc.add(inc_col)
+                    used_exp.add(exp_col)
+                    logger.info(
+                        "ColumnAligner [distributional=%.2f]: '%s' → '%s'",
+                        sim, inc_col, exp_col,
+                    )
+
+            remaining_expected = [c for c in remaining_expected if c not in used_exp]
+            remaining_incoming = [c for c in remaining_incoming if c not in used_inc]
+
         # ── Stage 4: Positional fallback ────────────────────────────────
         if self.allow_positional and remaining_incoming and remaining_expected:
             paired_inc = list(remaining_incoming)
@@ -201,7 +351,7 @@ class ColumnAligner:
         source_df = df.select_dtypes(include=[np.number]) if extra_numeric else df
         incoming  = source_df.columns.tolist()
 
-        mapping, report = self.build_mapping(incoming)
+        mapping, report = self.build_mapping(incoming, incoming_df=source_df)
 
         # Emit warnings for non-exact matches
         for msg in report.warnings():

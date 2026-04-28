@@ -16,7 +16,7 @@ import numpy as np
 import torch
 from imblearn.over_sampling import SMOTE
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_selection import SelectKBest, VarianceThreshold, mutual_info_classif
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import RobustScaler
 
@@ -237,7 +237,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         if y is not None and X_var.shape[1] > self.k_best_features:
             k = min(self.k_best_features, X_var.shape[1])
-            self._kb_selector = SelectKBest(mutual_info_classif, k=k)
+            self._kb_selector = SelectKBest(f_classif, k=k)
             X_var = self._kb_selector.fit_transform(X_var, y)
             logger.info("SelectKBest: → %d features", X_var.shape[1])
         else:

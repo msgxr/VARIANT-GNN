@@ -7,13 +7,14 @@ paths:
   reports_dir: reports
 
 gnn:
-  hidden_dim: 64
-  epochs: 20
-  lr: 0.005
+  hidden_dim: 128
+  epochs: 150
+  lr: 0.001
   weight_decay: 1.0e-4
   use_gat: false
-  knn_k: 5
-  early_stopping_patience: 5
+  knn_k: 10                          # Rapor §3.3: cosine k-NN k=10
+  knn_threshold: 0.3                  # Rapor §3.3: cosine similarity eşiği
+  early_stopping_patience: 20         # Rapor §3.5/§4.5: patience 15-50 arası
   use_multimodal: true    # Nuc_Context/AA_Context → SequenceEncoder → GNN (TEKNOFEST şartname uyumu)
   seq_enc_dim: 32          # SequenceEncoder output dim (cnn_channels*2)
 
@@ -50,7 +51,7 @@ lgbm:
   verbose: -1
 
 ensemble:
-  weights: [0.35, 0.30, 0.25, 0.10]   # [XGB, LGB, GNN, DNN]
+  weights: [0.30, 0.30, 0.25, 0.15]   # [XGB, LGB, GNN, DNN] — Rapor §5.3
   optimize_weights: true               # Nelder-Mead ile validation-set optimizasyonu
 
 preprocessing:
@@ -58,8 +59,8 @@ preprocessing:
   use_autoencoder: true
   autoencoder_encoding_dim: 16
   autoencoder_epochs: 10
-  use_feature_selection: false
-  k_best_features: 30
+  use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
+  k_best_features: 35                  # Rapor §3.3: k=35
   smote_enabled: true
 
 calibration:
@@ -74,7 +75,7 @@ training:
   focal_gamma: 2.0              # FocalLoss gamma parametresi (sadece loss_function=focal)
 
 thresholds:
-  classification: 0.5
+  classification: 0.40                # Rapor §3.5: Duyarlılık öncelikli karar eşiği
   high_risk: 0.7
 
 schema:
