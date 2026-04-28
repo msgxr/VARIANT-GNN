@@ -1,0 +1,134 @@
+seed: 42
+device: auto
+
+paths:
+  data_dir: data
+  models_dir: models
+  reports_dir: reports
+
+# ─── GNN ─── (PSR Bölüm 5.3: hidden_dim=128, knn_k=10)
+gnn:
+  hidden_dim: 128            # PSR §5.3: "GNN hidden_dim: 128"
+  epochs: 20
+  lr: 0.001                  # PSR §5.3: "lr: 1e-3 (Adam)"
+  weight_decay: 1.0e-4
+  use_gat: true
+  knn_k: 10                  # PSR §3.3: "Cosine k-NN Graf: en yakın 10 komşu"
+  early_stopping_patience: 20  # PSR §3.5: "erken durdurma patience=20"
+  use_multimodal: true
+  seq_enc_dim: 32
+
+dnn:
+  hidden_dim: 128
+  epochs: 20
+  lr: 0.001
+  weight_decay: 1.0e-4
+
+xgb:
+  objective: binary:logistic
+  eval_metric: logloss
+  max_depth: 6               # PSR §5.3: "max_depth: 6"
+  learning_rate: 0.05        # PSR §5.3: "learning_rate: 0.05"
+  subsample: 0.8             # PSR §5.3: "subsample: 0.8"
+  colsample_bytree: 0.8      # PSR §5.3: "colsample_bytree: 0.8"
+  n_estimators: 200          # PSR §5.3: "n_estimators: 200"
+  n_jobs: -1
+  min_child_weight: 3        # PSR §5.3: "min_child_weight: 3"
+  reg_alpha: 0.05
+  reg_lambda: 1.0
+
+lgbm:
+  num_leaves: 63
+  max_depth: -1
+  learning_rate: 0.05
+  n_estimators: 300
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  min_child_samples: 10
+  n_jobs: -1
+  verbose: -1
+
+# PSR §5.3: "XGBoost: 0.30 / LightGBM: 0.30 / GNN: 0.25 / DNN: 0.15"
+ensemble:
+  weights: [0.30, 0.30, 0.25, 0.15]
+  optimize_weights: true       # Nelder-Mead ile doğrulama seti optimizasyonu
+
+# PSR §3.3: "AutoEncoder 43→16, SelectKBest k=35"
+preprocessing:
+  corr_threshold: 0.25
+  use_autoencoder: true
+  autoencoder_encoding_dim: 16  # PSR §3.3: "AutoEncoder 43→16"
+  autoencoder_epochs: 10
+  use_feature_selection: true   # PSR §3.3: aktif
+  k_best_features: 35           # PSR §3.3: "SelectKBest (ANOVA, k=35)"
+  smote_enabled: true           # PSR §3.3 & §3.5: "SMOTE %30 artırım"
+
+calibration:
+  enabled: true
+  method: isotonic             # PSR §5.3: "İsotonik regresyon"
+
+# PSR §4.1: "%65 eğitim (CV), %15 kalibrasyon, %20 test"
+training:
+  test_size: 0.20              # PSR §4.1: "%20 test"
+  cv_folds: 5                  # PSR §4.1: "Stratified 5-Fold CV"
+  batch_size: 32
+  loss_function: weighted_bce  # PSR §3.6: "WeightedBCELoss"
+  focal_gamma: 2.0
+
+# PSR §3.5: "karar eşiği 0.40 (Duyarlılık Öncelikli)"
+thresholds:
+  classification: 0.40         # PSR §4.2: "karar eşiği 0.40 (duyarlılık öncelikli)"
+  high_risk: 0.70
+
+schema:
+  target_column: Label
+  id_columns:
+    - Variant_ID
+  non_feature_columns:
+    - Panel
+    - Nuc_Context
+    - AA_Context
+  label_mapping:
+    pathogenic: 1
+    "likely pathogenic": 1
+    benign: 0
+    "likely benign": 0
+    "1": 1
+    "1.0": 1
+    "0": 0
+    "0.0": 0
+
+# PSR Tablo 1 ile birebir uyumlu
+panels:
+  General:
+    train_pathogenic: 1500
+    train_benign: 1500
+    test_pathogenic: 1000
+    test_benign: 1000
+  Hereditary_Cancer:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  PAH:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  CFTR:
+    train_pathogenic: 70
+    train_benign: 70
+    test_pathogenic: 30
+    test_benign: 30
+
+external_validation:
+  enabled: true
+  metrics:
+    - f1
+    - roc_auc
+    - brier_score
+    - precision
+    - recall
+  export_predictions: true

@@ -767,9 +767,21 @@ class VariantTrainer:
         best_weights  = copy.deepcopy(model.state_dict())
         patience_cnt  = 0
 
+        # Epoch-level learning curve log (PSR §4.5 — öğrenme süreci kanıtı)
+        learning_curve: list = []
+
         for epoch in range(1, cfg.gnn.epochs + 1):
-            loss = _gatv2_epoch(model, tr_graph, optimizer, criterion, self.device,
+            loss = _gatv2_epoch(model, train_graph, optimizer, criterion, self.device,
                                nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
+
+            # Train F1 (same graph, eval mode)
+            tr_preds, _ = _gatv2_eval(model, train_graph, self.device,
+                                      nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
+            train_f1 = float(f1_score(
+                y_tr, tr_preds[:len(y_tr)], average="macro", zero_division=0
+            ))
+
+            epoch_entry: dict = {"epoch": epoch, "loss": round(loss, 6), "train_f1": round(train_f1, 4)}
 
             if val_graph is not None:
                 preds, _ = _gatv2_eval(model, val_graph, self.device,
@@ -777,37 +789,64 @@ class VariantTrainer:
                 val_f1   = float(f1_score(
                     y_val, preds[:len(y_val)], average="macro", zero_division=0
                 ))
+                epoch_entry["val_f1"] = round(val_f1, 4)
 
                 if val_f1 > best_val_f1:
                     best_val_f1  = val_f1
                     best_weights = copy.deepcopy(model.state_dict())
                     patience_cnt = 0
+                    epoch_entry["best"] = True
                 else:
                     patience_cnt += 1
 
                 if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
                     logger.debug(
-                        "SAGE epoch %d/%d | loss=%.4f | val_macro_f1=%.4f "
+                        "GATv2 epoch %d/%d | loss=%.4f | train_f1=%.4f | val_f1=%.4f "
                         "(patience %d/%d)",
-                        epoch, cfg.gnn.epochs, loss, val_f1,
+                        epoch, cfg.gnn.epochs, loss, train_f1, val_f1,
                         patience_cnt, patience,
                     )
 
                 if patience > 0 and patience_cnt >= patience:
                     logger.info(
-                        "Early stopping triggered at epoch %d "
-                        "(best val Macro F1 = %.4f)", epoch, best_val_f1,
+                        "Early stopping at epoch %d (best val Macro F1=%.4f)",
+                        epoch, best_val_f1,
                     )
+                    epoch_entry["early_stop"] = True
+                    learning_curve.append(epoch_entry)
                     break
             else:
                 if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
                     logger.debug(
-                        "SAGE epoch %d/%d | loss=%.4f", epoch, cfg.gnn.epochs, loss
+                        "GATv2 epoch %d/%d | loss=%.4f | train_f1=%.4f",
+                        epoch, cfg.gnn.epochs, loss, train_f1,
                     )
+
+            learning_curve.append(epoch_entry)
+
+        # Persist learning curve JSON for PDR §4.5 reproducibility
+        try:
+            import json as _json
+            lc_path = getattr(cfg.paths, "reports_dir", None)
+            if lc_path is not None:
+                import pathlib as _pl
+                lc_dir = _pl.Path(lc_path)
+                lc_dir.mkdir(parents=True, exist_ok=True)
+                lc_file = lc_dir / "gnn_learning_curve.json"
+                existing: list = []
+                if lc_file.exists():
+                    with open(lc_file) as _f:
+                        existing = _json.load(_f)
+                existing.append({"run_epochs": learning_curve})
+                with open(lc_file, "w") as _f:
+                    _json.dump(existing, _f, indent=2)
+                logger.info("GNN learning curve → %s", lc_file)
+        except Exception as _lc_exc:
+            logger.debug("Learning curve save failed (non-fatal): %s", _lc_exc)
 
         if val_graph is not None:
             model.load_state_dict(best_weights)
-            logger.info("SAGE restored best checkpoint (val Macro F1 = %.4f)", best_val_f1)
+            logger.info("GATv2 restored best checkpoint (val Macro F1=%.4f)", best_val_f1)
 
         return model
 

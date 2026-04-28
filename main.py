@@ -409,13 +409,145 @@ def mode_train_panels(args, cfg):
 # ---------------------------------------------------------------------------
 
 
+def mode_explain(args, cfg):
+    """Açıklanabilirlik modu — PSR §4.4.
+
+    Eğitilmiş modeli yükler, seçilen örnekler üzerinde:
+      1. SHAP analizi (XGBoost TreeExplainer)
+      2. Grup düzeyinde biyolojik katkı tablosu (6 kategori)
+      3. Türkçe klinik açıklama metni
+      4. GNN öğrenme eğrisi JSON'u çizer (eğer varsa)
+    çıktıları reports/ altına kaydeder.
+
+    Kullanım:
+      python main.py --mode explain --data_file data/train_variants.csv
+      python main.py --mode explain --test_file data/test_variants.csv
+    """
+    from src.explainability.shap_explainer import SHAPExplainer
+    from src.explainability.group_shap import group_shap_report, instance_explanation_tr
+
+    data_path = args.data_file or args.test_file
+    if not data_path:
+        logging.error("--data_file veya --test_file gerekli (explain modu).")
+        import sys; sys.exit(1)
+
+    ds = load_csv(data_path)
+    pipeline = InferencePipeline()
+    pipeline.load()
+
+    cfg.paths.create_dirs()
+
+    preprocessor = pipeline._preprocessor
+    ensemble     = pipeline._ensemble
+
+    # ── 1. Ön işleme ────────────────────────────────────────────────────────
+    X_np     = ds.features.values
+    X_scaled = preprocessor.transform(X_np)
+
+    # ── 2. SHAP analizi (XGBoost üzerinden) ─────────────────────────────────
+    feature_names = list(ds.feature_columns)
+    explainer = SHAPExplainer(
+        xgb_model     = ensemble.xgb,
+        feature_names = feature_names,
+        training_data = X_scaled,
+    )
+
+    sample_size = min(len(X_scaled), 200)
+    X_sample    = X_scaled[:sample_size]
+
+    shap_vals = explainer.explain_instance(X_sample)
+    if shap_vals is not None:
+        if isinstance(shap_vals, list):
+            import numpy as _np; shap_vals = _np.array(shap_vals[1])
+        # Özet plot
+        explainer.plot_summary(X_sample, str(cfg.paths.reports_dir / "shap_summary.png"))
+        # İlk örnek waterfall
+        explainer.plot_waterfall(X_sample[0], str(cfg.paths.reports_dir / "shap_waterfall_sample0.png"))
+
+        # ── 3. Grup SHAP raporu (PSR §4.4 — 6 biyolojik kategori) ─────────
+        grp_result = group_shap_report(
+            shap_values   = shap_vals,
+            feature_names = feature_names,
+            output_dir    = cfg.paths.reports_dir,
+            plot          = True,
+        )
+        logging.info("Grup SHAP JSON → %s", grp_result.get("json_path"))
+        logging.info("Grup SHAP plot → %s", grp_result.get("plot_path"))
+
+        # ── 4. İlk 5 örnek için Türkçe açıklama ────────────────────────────
+        df_pred = pipeline.predict_from_dataset(ds)
+        explain_records = []
+        for i in range(min(5, len(X_sample))):
+            vid      = df_pred["Variant_ID"].iloc[i] if "Variant_ID" in df_pred.columns else str(i)
+            pred     = df_pred["Prediction"].iloc[i]
+            prob     = float(df_pred["Probability"].iloc[i])
+            sv_i     = shap_vals[i] if shap_vals.ndim == 2 else shap_vals
+            text     = instance_explanation_tr(sv_i, feature_names, pred, prob, vid)
+            logging.info("[Örnek %d] %s", i, text)
+            explain_records.append({"variant_id": vid, "prediction": pred,
+                                    "probability": prob, "clinical_insight_tr": text})
+
+        import json as _json
+        out_json = cfg.paths.reports_dir / "explain_instances.json"
+        with open(out_json, "w", encoding="utf-8") as _fh:
+            _json.dump(explain_records, _fh, indent=2, ensure_ascii=False)
+        logging.info("Açıklama örnekleri → %s", out_json)
+    else:
+        logging.warning("SHAP explainer başlatılamadı — shap kütüphanesi kurulu mu?")
+
+    # ── 5. Öğrenme eğrisi JSON görselleştirmesi ──────────────────────────────
+    lc_path = cfg.paths.reports_dir / "gnn_learning_curve.json"
+    if lc_path.exists():
+        try:
+            import json as _json, matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            with open(lc_path) as _f:
+                lc_data = _json.load(_f)
+            last_run = lc_data[-1]["run_epochs"] if lc_data else []
+            if last_run:
+                epochs    = [e["epoch"] for e in last_run]
+                train_f1s = [e.get("train_f1", 0) for e in last_run]
+                val_f1s   = [e.get("val_f1", None) for e in last_run]
+
+                fig, ax = plt.subplots(figsize=(9, 4))
+                ax.plot(epochs, train_f1s, label="Eğitim F1", color="#3182ce", linewidth=2)
+                if any(v is not None for v in val_f1s):
+                    ax.plot(epochs, [v if v else 0 for v in val_f1s],
+                            label="Doğrulama F1", color="#e53e3e", linewidth=2,
+                            linestyle="--")
+                    # Erken durdurma noktası
+                    for e in last_run:
+                        if e.get("early_stop"):
+                            ax.axvline(e["epoch"], color="gray", linestyle=":",
+                                       label=f"Erken Durdurma (epoch {e['epoch']})")
+                            break
+                ax.set_xlabel("Epoch", fontsize=11)
+                ax.set_ylabel("Macro F1 Skoru", fontsize=11)
+                ax.set_title("GNN Öğrenme Eğrisi (PSR §4.5)", fontsize=12, fontweight="bold")
+                ax.legend()
+                ax.set_ylim(0.5, 1.05)
+                ax.grid(True, alpha=0.3)
+                plt.tight_layout()
+                lc_plot = cfg.paths.reports_dir / "gnn_learning_curve.png"
+                plt.savefig(lc_plot, dpi=150, bbox_inches="tight")
+                plt.close()
+                logging.info("Öğrenme eğrisi grafiği → %s", lc_plot)
+        except Exception as _lc_exc:
+            logging.warning("Öğrenme eğrisi grafiği çizilemedi: %s", _lc_exc)
+    else:
+        logging.info("gnn_learning_curve.json bulunamadı — önce eğitim yapın.")
+
+    logging.info("Explain modu tamamlandı. Çıktılar: %s", cfg.paths.reports_dir)
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         description="VARIANT-GNN: Graph-based Variant Pathogenicity Prediction"
     )
     p.add_argument("--mode",
                    choices=["train", "tune", "eval", "predict", "crossval",
-                            "external_val", "adversarial_val", "train_panels"],
+                            "external_val", "adversarial_val", "train_panels", "explain"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
@@ -454,6 +586,7 @@ def main():
         "external_val":     mode_external_val,
         "adversarial_val":  mode_adversarial_val,
         "train_panels":     mode_train_panels,
+        "explain":          mode_explain,
     }
     dispatch[args.mode](args, cfg)
 
