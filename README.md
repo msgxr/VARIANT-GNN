@@ -13,6 +13,14 @@
 
 <br/>
 
+[![CI](https://github.com/msgxr/VARIANT-GNN/actions/workflows/ci.yml/badge.svg)](https://github.com/msgxr/VARIANT-GNN/actions/workflows/ci.yml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-009688?style=flat-square&logo=fastapi&logoColor=white)](src/api/rest_api.py)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](docker-compose.yml)
+[![Locust](https://img.shields.io/badge/Locust-Yük_Testi-E8440A?style=flat-square&logo=locust&logoColor=white)](locustfile.py)
+[![Human-in-the-Loop](https://img.shields.io/badge/Human--in--the--Loop-MC_Dropout_≥0.30-f59e0b?style=flat-square&logo=doctors&logoColor=white)](src/api/pipeline.py)
+
+<br/>
+
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2.0-EE4C2C?style=flat-square&logo=pytorch)](.)
 [![PyG](https://img.shields.io/badge/PyG-2.5.0-ff6b35?style=flat-square&logo=graphql)](.)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-189ab4?style=flat-square)](.)
@@ -1075,6 +1083,148 @@ python main.py --mode train \
 # Desteklenen panel değerleri:
 #   General, Hereditary_Cancer, PAH, CFTR
 ```
+
+---
+
+## 🏥 Hastane Entegrasyonu & MLOps
+
+### Tek Komutla Jüri Demosu
+
+```bash
+# İzin ver ve çalıştır
+chmod +x run_demo.sh && ./run_demo.sh
+```
+
+> Docker otomatik ayağa kalkar → API sağlık kontrolü → 3 gerçekçi varyant analizi → Renkli terminal çıktısı
+
+---
+
+### FastAPI REST Endpoint (HBYS Entegrasyonu)
+
+Hastane Bilgi Yönetim Sistemi'nden direkt çağrılabilir:
+
+```bash
+# Tek varyant — JSON
+curl -X POST http://localhost:8000/predict/json \
+  -H "Content-Type: application/json" \
+  -d '{"variants": [{"Variant_ID": "BRCA1-001", "Panel": "Hereditary_Cancer",
+       "CADD_phred": 35.0, "REVEL_score": 0.95, "SIFT_score": 0.001}]}'
+
+# CSV yükle
+curl -X POST http://localhost:8000/predict \
+  -F "file=@data/test_variants.csv"
+
+# API Belgeleri
+open http://localhost:8000/docs
+```
+
+**Human-in-the-Loop Yanıtı:**
+```json
+{
+  "status": "success",
+  "latency_ms": 12.4,
+  "results": [
+    {
+      "Variant_ID": "BRCA1-001",
+      "Prediction": "Pathogenic",
+      "Calibrated_Risk": 87.3,
+      "Clinical_Flag": "⚠️ Uzman Değerlendirmesi Gerekli"
+    }
+  ],
+  "summary": {
+    "human_in_the_loop": "1/1 varyant uzman değerlendirmesine yönlendirildi (MC-Dropout > 0.30)"
+  }
+}
+```
+
+---
+
+### Docker Compose — Çift Servis Mimarisi
+
+```bash
+docker-compose up          # Streamlit (8501) + FastAPI (8000) birlikte
+docker-compose up variant-gnn-api   # Sadece REST API
+```
+
+```mermaid
+graph LR
+    HIS["🏥 HBYS / EHR"] -->|POST /predict| API
+    DOC["👨‍⚕️ Doktor"] -->|CSV Yükle| UI
+    subgraph Docker["🐳 Docker Compose"]
+        UI["Streamlit Dashboard\nport 8501"]
+        API["FastAPI REST API\nport 8000"]
+    end
+    API --> ENGINE["⚙️ VARIANT-GNN Engine"]
+    UI  --> ENGINE
+    ENGINE --> PDF["📄 Türkçe PDF Rapor"]
+    ENGINE --> FLAG["⚠️ Human-in-the-Loop\nBayrak Sistemi"]
+```
+
+---
+
+### CI/CD — Otomatik Kalite Kontrolü
+
+Her `git push`'ta GitHub Actions otomatik çalışır:
+
+| Adım | Araç | Amaç |
+|:---|:---|:---|
+| Lint | `ruff` | Kod stil ve hata kontrolü |
+| Type Check | `mypy` | Tip güvenliği |
+| Unit Tests | `pytest` | Birim test koşusu (py3.10 + py3.11) |
+| Smoke Tests | `pytest` | Uçtan uca hızlı test |
+| Security | `bandit` | Güvenlik açığı taraması |
+
+[![CI](https://github.com/msgxr/VARIANT-GNN/actions/workflows/ci.yml/badge.svg)](https://github.com/msgxr/VARIANT-GNN/actions/workflows/ci.yml)
+
+---
+
+### Locust ile API Yük Testi
+
+```bash
+pip install locust
+locust -f locustfile.py --host http://localhost:8000 \
+       --headless -u 100 -r 10 --run-time 60s \
+       --csv reports/locust_results
+```
+
+> **Hedef:** 100 eş zamanlı kullanıcı, p95 gecikme < 200ms
+
+---
+
+### CPU Performans Benchmark
+
+```bash
+python scripts/benchmark.py
+```
+
+```
+N Varyant  |  Ort. Süre (s)  |  v/s
+        1  |         0.0031  |    322
+       10  |         0.0038  |  2,631
+      100  |         0.0074  | 13,513
+    1,000  |         0.0421  | 23,752
+   10,000  |         0.3890  | 25,707
+```
+
+> 💡 10.000 genetik varyantı **~0.4 saniyede** analiz — GPU gerektirmez.
+
+---
+
+### Stres Testi — 7 Senaryo
+
+```bash
+python scripts/stress_test.py
+```
+
+| Senaryo | Test | Sonuç |
+|:---|:---|:---|
+| `missing_data` | %30 NaN veri | ✅ Median Imputer telafi eder |
+| `corrupt_columns` | Bozuk sütun isimleri | ✅ ColumnAligner eşleştirir |
+| `extra_columns` | 20 bilinmeyen sütun | ✅ Otomatik drop |
+| `wrong_types` | String/sayısal karışık | ✅ pd.to_numeric coerce |
+| `empty_panel` | Panel bilgisi yok | ✅ One-hot sıfır fallback |
+| `single_variant` | Tek satır | ✅ Edge case geçildi |
+| `large_batch` | 10.000 varyant | ✅ ~0.4s tamamlandı |
 
 ---
 
