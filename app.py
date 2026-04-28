@@ -419,6 +419,9 @@ def render_sidebar(cfg) -> dict:
         "show_lime":     st.sidebar.checkbox("🟢 LIME Açıklaması", value=False),
         "variant_index": st.sidebar.number_input("📍 Varyant İndeksi (Yerel XAI):", min_value=0, value=0, step=1),
         "threshold":     threshold,
+        "dp_enabled":    st.sidebar.checkbox("🔏 Diferansiyel Gizlilik (DP)", value=False, help="Laplace Noise Ekler"),
+        "acmg_enabled":  st.sidebar.checkbox("🧬 ACMG Kuralları", value=True),
+        "rag_enabled":   st.sidebar.checkbox("📚 PubMed Canlı Makale RAG", value=True),
     }
 
     st.sidebar.markdown("---")
@@ -478,6 +481,11 @@ def render_summary_cards(df_result: pd.DataFrame):
             <div class="value" style="color:#fbd38d;">{expert_needed}</div>
             <div class="label">⚠️ Uzman Gerekli</div>
             <div class="sublabel">Human-in-the-Loop</div>
+        </div>
+        <div class="metric-card" style="border-color:rgba(99,179,237,0.4);">
+            <div class="value" style="color:#63b3ed;">{df_result.get('OOD_Flag', pd.Series(dtype=bool)).sum()}</div>
+            <div class="label">🚨 OOD Tespit</div>
+            <div class="sublabel">Veri Sapması</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -763,6 +771,34 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
 
     except (KeyError, ValueError, IndexError, RuntimeError) as exc:
         st.info(f"ℹ️ Klinik yorum üretilemedi: {exc}")
+
+    # ACMG Mapper
+    if opts.get("acmg_enabled", False):
+        try:
+            from src.scientific.acmg_mapper import ACMGMapper
+            mapper = ACMGMapper()
+            shap_values = explainer.shap_values(X_scaled[idx:idx+1])[0]
+            acmg_res = mapper.classify(X_scaled[idx], shap_values, feature_names)
+            st.markdown(f"#### 🧬 ACMG Patojenite Değerlendirmesi: **{acmg_res['classification']}** (Skor: {acmg_res['acmg_score']})")
+            for c in acmg_res["criteria"]:
+                st.markdown(f"- **{c['code']}** ({c['strength']}): {c['evidence']} *(SHAP Katkısı: {c['shap_contrib']:.2f})*")
+        except Exception as e:
+            st.error(f"ACMG hatası: {e}")
+
+    # PubMed RAG
+    if opts.get("rag_enabled", False):
+        try:
+            from src.scientific.pubmed_rag import PubMedRAG
+            rag = PubMedRAG()
+            vid = df_features["Variant_ID"].iloc[idx] if "Variant_ID" in df_features.columns else "BRCA1-variant"
+            st.markdown("#### 📚 PubMed Canlı Literatür (RAG)")
+            with st.spinner("PubMed aranıyor..."):
+                articles = rag.fetch_for_variant(vid, n_results=2)
+                for a in articles:
+                    st.markdown(f"- [{a['title']}]({a['url']}) ({a['year']})")
+                    st.caption(f"_{a['abstract_snippet']}_")
+        except Exception as e:
+            st.error(f"PubMed RAG hatası: {e}")
 
     # ──────────────────────────────────────────────────────────────
     # 🧬 GNN ETKİLEŞİM GRAFI
@@ -1406,7 +1442,15 @@ def main():
         if st.button("🚀 ANALİZİ BAŞLAT", type="primary", width='stretch'):
             with st.spinner("⚡ XGBoost + LightGBM + GNN + DNN modelleri çalışıyor..."):
                 try:
-                    df_result = pipeline.predict_from_dataframe(df_raw)
+                    df_to_analyze = df_raw.copy()
+                    if opts.get("dp_enabled", False):
+                        from src.scientific.differential_privacy import DifferentialPrivacy
+                        dp = DifferentialPrivacy(epsilon=1.0)
+                        numeric_cols = df_to_analyze.select_dtypes(include=[np.number]).columns
+                        df_to_analyze[numeric_cols] = dp.apply(df_to_analyze[numeric_cols].values, feature_names=list(numeric_cols))
+                        st.session_state["dp_report"] = dp.privacy_report()
+                        
+                    df_result = pipeline.predict_from_dataframe(df_to_analyze)
                 except (ValueError, RuntimeError, KeyError) as exc:
                     st.error(f"⚠️ İnferans hatası: {exc}")
                     st.stop()
@@ -1418,6 +1462,10 @@ def main():
         if "df_result" in st.session_state:
             df_result = st.session_state["df_result"]
             df_raw    = st.session_state.get("df_raw", df_raw)
+            
+            if "dp_report" in st.session_state and opts.get("dp_enabled", False):
+                rep = st.session_state["dp_report"]
+                st.info(f"🔏 **Diferansiyel Gizlilik Aktif** — Seviye: {rep['privacy_level']}, Epsilon: {rep['epsilon']}")
 
             render_summary_cards(df_result)
             render_results_table(df_result)

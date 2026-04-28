@@ -126,16 +126,16 @@ class InferencePipeline:
             )
 
         # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
-        if isinstance(self._ensemble.gnn, VariantSAGEGNN):
-            loader = None
-        else:
-            loader = _build_gnn_loader(
+        from src.models.gnn import VariantSAGEGNN
+        if not isinstance(self._ensemble.gnn, VariantSAGEGNN):
+            # Keep _build_gnn_loader call just in case it's used later or the user needs it
+            _ = _build_gnn_loader(
                 self._preprocessor, X_scaled, cfg.training.batch_size
             )
 
         threshold = cfg.thresholds.classification
         preds, raw_proba = self._ensemble.predict(
-            X_scaled, loader, threshold,
+            X_scaled, threshold=threshold,
             nuc_ids=nuc_ids, aa_ids=aa_ids,
         )
 
