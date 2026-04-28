@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VARIANT-GNN Eğitim Veri Şeması",
+  "description": "Eğitim modu için beklenen CSV sütunları ve veri tipleri.",
+  "version": "1.0.0",
+  "required_columns": {
+    "Label": {
+      "type": "integer",
+      "values": [0, 1],
+      "description": "0=Benign, 1=Patojenik"
+    }
+  },
+  "optional_metadata_columns": {
+    "Variant_ID": {
+      "type": "string",
+      "description": "Benzersiz varyant tanımlayıcısı. Asla özellik olarak kullanılmaz."
+    },
+    "Panel": {
+      "type": "string",
+      "values": ["General", "Hereditary_Cancer", "PAH", "CFTR"],
+      "description": "Panel tanımlayıcısı"
+    },
+    "Nuc_Context": {
+      "type": "string",
+      "pattern": "^[ACGTN]{1,20}$",
+      "description": "±5 nükleotid bağlam dizesi (isteğe bağlı)"
+    },
+    "AA_Context": {
+      "type": "string",
+      "description": "±5 amino asit bağlam dizesi (isteğe bağlı)"
+    }
+  },
+  "feature_columns": {
+    "type": "numeric",
+    "description": "Label, Variant_ID, Panel, Nuc_Context, AA_Context dışındaki tüm sütunlar özellik olarak değerlendirilir.",
+    "min_features": 5,
+    "allowed_missing_fraction": 0.5
+  },
+  "validation_rules": [
+    "Label sütunu zorunludur",
+    "Label değerleri yalnızca 0 veya 1 olabilir (string eşlemesi label_mapping.json'a göre yapılır)",
+    "En az 5 sayısal özellik sütunu bulunmalıdır",
+    "Her özellik sütununda en fazla %50 eksik değer olabilir",
+    "Satır sayısı en az 10 olmalıdır"
+  ],
+  "notes": "Anonim kolon modu: Tüm sütunlar sayısal değer içeriyorsa ve Label yoksa sistem özellik modunu otomatik algılar."
+}

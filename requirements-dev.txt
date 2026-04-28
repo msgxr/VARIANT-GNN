@@ -1,2 +1,26 @@
-﻿# Geliştirme bağımlılıkları
-# Doldurulacak
+# Geliştirme bağımlılıkları (lint, typecheck, test, güvenlik)
+# Kullanım: pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Test
+pytest>=8.0.0
+pytest-cov>=4.0.0
+pytest-xdist>=3.0.0
+
+# Lint & Format
+ruff>=0.3.0
+
+# Type Check
+mypy>=1.8.0
+types-PyYAML
+types-requests
+
+# Güvenlik
+bandit[toml]>=1.7.0
+
+# Pre-commit
+pre-commit>=3.0.0
+
+# Profiling (opsiyonel)
+memory-profiler>=0.61.0

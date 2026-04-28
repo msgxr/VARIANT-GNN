@@ -1,2 +1,29 @@
-﻿# CI bağımlılıkları
-# Doldurulacak
+# CI ortamı için minimal bağımlılıklar (test + lint + typecheck)
+# CI'da PyTorch CPU wheels ayrıca kurulur (bkz. .github/workflows/ci.yml)
+
+# Test
+pytest>=8.0.0
+pytest-cov>=4.0.0
+
+# Lint
+ruff>=0.3.0
+
+# Type Check
+mypy>=1.8.0
+types-PyYAML
+
+# Güvenlik
+bandit[toml]>=1.7.0
+
+# Temel ML (PyTorch hariç — CI'da ayrı adımla kurulur)
+pandas>=2.0.0
+numpy>=1.24.0,<2.0
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
+shap>=0.45.0
+imbalanced-learn>=0.11.0
+pydantic>=2.0.0
+pyyaml>=6.0.0
+scipy>=1.11.0
+joblib>=1.3.0

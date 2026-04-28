@@ -1,0 +1,66 @@
+{
+  "project": "VARIANT-GNN",
+  "version": "3.1.0",
+  "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
+  "team": "XYRA3",
+  "team_id": "909249",
+  "application_id": "4865399",
+  "generated_at": "PLACEHOLDER — gerçek tarih üretim sırasında doldurulacak",
+  "status": "PLACEHOLDER — gerçek yarışma verisi henüz mevcut değil (5 Mayıs 2026)",
+  "artifacts": {
+    "model_files": [
+      {
+        "name": "xgb_model.json",
+        "path": "models/current/xgb_model.json",
+        "type": "XGBoost model",
+        "sha256": "PLACEHOLDER"
+      },
+      {
+        "name": "lgbm_model.txt",
+        "path": "models/current/lgbm_model.txt",
+        "type": "LightGBM model",
+        "sha256": "PLACEHOLDER"
+      },
+      {
+        "name": "gnn_model.pth",
+        "path": "models/current/gnn_model.pth",
+        "type": "VariantGATv2GNN weights",
+        "sha256": "PLACEHOLDER"
+      },
+      {
+        "name": "dnn_model.pth",
+        "path": "models/current/dnn_model.pth",
+        "type": "DNN weights",
+        "sha256": "PLACEHOLDER"
+      },
+      {
+        "name": "preprocessor.pkl",
+        "path": "models/current/preprocessor.pkl",
+        "type": "Preprocessing pipeline",
+        "sha256": "PLACEHOLDER"
+      },
+      {
+        "name": "calibrator.pkl",
+        "path": "models/current/calibrator.pkl",
+        "type": "Isotonic calibrator",
+        "sha256": "PLACEHOLDER"
+      }
+    ],
+    "config_files": [
+      {
+        "name": "ensemble_config.json",
+        "path": "models/current/ensemble_config.json",
+        "description": "Ensemble weights and configuration"
+      }
+    ],
+    "prediction_files": [
+      {
+        "name": "jury_predictions.csv",
+        "path": "submission/teknofest/jury_predictions.csv",
+        "description": "Final jury predictions in required format",
+        "sha256": "PLACEHOLDER"
+      }
+    ]
+  },
+  "notes": "Bu manifest dosyası gerçek yarışma verisiyle eğitim tamamlandıktan sonra scripts/artifacts/create_manifest.py ile yeniden üretilecektir."
+}

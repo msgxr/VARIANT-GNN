@@ -1,2 +1,25 @@
-﻿# Colab bağımlılıkları
-# Doldurulacak
+# Google Colab ortamı için bağımlılıklar
+# Kullanım: !pip install -r requirements-colab.txt
+# Colab'da PyTorch ve CUDA zaten kurulu olduğu varsayılır.
+
+# PyG Colab kurulumu (Colab'daki torch sürümüne göre ayarlayın)
+# torch-scatter torch-sparse torch-geometric ayrı kurulur, bkz. VARIANT_GNN_Colab_Training.ipynb
+
+pandas>=2.0.0
+numpy>=1.24.0,<2.0
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
+shap>=0.45.0
+lime>=0.2.0
+matplotlib>=3.7.0
+seaborn>=0.13.0
+tqdm>=4.65.0
+optuna>=3.5.0
+imbalanced-learn>=0.11.0
+pydantic>=2.0.0
+pyyaml>=6.0.0
+scipy>=1.11.0
+joblib>=1.3.0
+fpdf2>=2.7.0
+networkx>=3.1

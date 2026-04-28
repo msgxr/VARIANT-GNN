@@ -1,0 +1,26 @@
+# configs/inference.yaml — Tahmin (inference) modu yapılandırması
+
+mode: predict
+
+inference:
+  batch_size: 256
+  use_uncertainty: true
+  mc_dropout_passes: 30
+  high_risk_threshold: 0.7
+  confidence_thresholds:
+    high: 0.85
+    medium: 0.65
+    low: 0.0
+
+output:
+  include_probabilities: true
+  include_risk_score: true
+  include_uncertainty: true
+  include_confidence: true
+  include_high_risk_flag: true
+  risk_score_scale: 100
+
+export:
+  format: csv
+  output_file: reports/predictions.csv
+  jury_format: true

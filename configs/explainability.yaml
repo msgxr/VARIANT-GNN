@@ -1,0 +1,40 @@
+# configs/explainability.yaml — Açıklanabilirlik modülü ayarları
+
+shap:
+  enabled: true
+  n_background_samples: 100
+  max_display: 20
+  plots:
+    - summary
+    - bar
+    - waterfall
+  group_shap: true
+  biological_groups:
+    sequence_conservation: ["GERP++_RS", "PhyloP", "phastCons", "SiPhy"]
+    functional_prediction: ["CADD_phred", "SIFT_score", "PolyPhen2_HDIV_score", "REVEL_score"]
+    population_frequency: ["gnomAD_AF", "ExAC_AF", "AF_1000g"]
+    biochemical_change: ["Grantham", "Polarity_change", "Hydrophobicity", "MW_change"]
+    protein_structure: ["Solvent_accessibility", "Secondary_structure", "Domain_annotation"]
+    clinical_scores: ["MutPred2_score", "VEST4_score", "MetaSVM_score", "M_CAP_score"]
+
+lime:
+  enabled: true
+  n_samples: 500
+  n_features: 15
+
+gnn_explainer:
+  enabled: true
+  epochs: 100
+  n_top_edges: 10
+
+clinical_insight:
+  enabled: true
+  language: tr
+  generate_pdf: true
+  pdf_output: reports/explainability_report.pdf
+
+output:
+  save_plots: true
+  plots_dir: reports/figures
+  save_report: true
+  report_file: reports/explainability_report.json

@@ -1,0 +1,40 @@
+# configs/thresholds.yaml — Karar eşiği ve risk sınıflandırma ayarları
+
+decision_threshold:
+  default: 0.5
+  optimize: true
+  optimize_metric: macro_f1
+  search_range: [0.2, 0.8]
+  search_steps: 60
+
+risk_categories:
+  high_risk:
+    min_probability: 0.7
+    label: "Yüksek Risk"
+    action: "Uzman değerlendirmesi önerilir"
+  medium_risk:
+    min_probability: 0.4
+    max_probability: 0.7
+    label: "Orta Risk"
+    action: "Ek klinik bağlam ile değerlendirin"
+  low_risk:
+    max_probability: 0.4
+    label: "Düşük Risk"
+    action: "Rutin takip"
+
+confidence_thresholds:
+  high_confidence: 0.85
+  medium_confidence: 0.65
+  low_confidence: 0.0
+
+uncertainty_thresholds:
+  high_uncertainty: 0.35
+  medium_uncertainty: 0.20
+
+panel_specific_thresholds:
+  CFTR:
+    decision_threshold: 0.45
+    notes: "Küçük panel; eşik hassasiyeti artırılmış"
+  Hereditary_Cancer:
+    decision_threshold: 0.45
+    notes: "Yüksek klinik öneme sahip panel"

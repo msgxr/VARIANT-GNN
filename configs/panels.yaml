@@ -1,0 +1,48 @@
+# configs/panels.yaml — Panel tanımları ve ağırlıklandırma
+# TEKNOFEST 2026 şartname panel yapısına göre düzenlenmiştir.
+
+panels:
+  General:
+    display_name: "Genel Varyant Paneli"
+    train_file: data/train_general.csv
+    test_file: data/test_general.csv
+    weight: 0.40
+    expected_train_size: 3000
+    expected_test_size: 2000
+    notes: "Genel popülasyon missense varyantları"
+
+  Hereditary_Cancer:
+    display_name: "Kalıtsal Kanser Paneli"
+    train_file: data/train_hereditary_cancer.csv
+    test_file: data/test_hereditary_cancer.csv
+    weight: 0.20
+    expected_train_size: 400
+    expected_test_size: 200
+    notes: "BRCA1, BRCA2 ve diğer kanser yatkınlık genleri"
+
+  PAH:
+    display_name: "PAH (Fenilketonüri) Paneli"
+    train_file: data/train_pah.csv
+    test_file: data/test_pah.csv
+    weight: 0.20
+    expected_train_size: 400
+    expected_test_size: 200
+    notes: "Fenilalanin hidroksilaz geni varyantları"
+
+  CFTR:
+    display_name: "CFTR (Kistik Fibrozis) Paneli"
+    train_file: data/train_cftr.csv
+    test_file: data/test_cftr.csv
+    weight: 0.20
+    expected_train_size: 140
+    expected_test_size: 60
+    notes: "CFTR geni varyantları — en küçük panel, dikkatli değerlendirme gerektirir"
+
+combined:
+  train_file: data/train_variants.csv
+  test_file: data/test_variants.csv
+
+panel_evaluation:
+  report_individual: true
+  report_aggregate: true
+  aggregate_metric: weighted_macro_f1

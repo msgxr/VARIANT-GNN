@@ -1,3 +1,82 @@
-﻿# Teknik Borç
+# Teknik Borç — VARIANT-GNN
 
-> Teknik borç envanteri docs/engineering/technical_debt.md dosyasında tutulmaktadır.
+**Güncelleme tarihi:** Nisan 2026
+
+Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken alanları listeler.
+
+## Yüksek Öncelikli (PDR öncesi)
+
+### TD-001: Anonim Kolon Modu Test Eksikliği
+- **Durum:** Açık
+- **Açıklama:** `src/data/column_aligner.py` anonim kolon desteği sağlıyor ancak bu mod `tests/` içinde yeterince test edilmemiş.
+- **Risk:** Şartname anonim özellik verebilir; bu durumda çalışmayabilir.
+- **Çözüm:** `tests/unit/test_column_aligner_anonymous.py` var, integration kapsamına alınmalı.
+
+### TD-002: JSON Veri Sözleşmeleri Eksik
+- **Durum:** Açık
+- **Açıklama:** `data_contracts/variant_schema.py` Pydantic şeması mevcut; ancak `data/contracts/` JSON formatında sözleşme dosyaları yok.
+- **Risk:** Jüri export formatı ve reproducibility doğrulaması zayıf.
+- **Çözüm:** `data/contracts/` altında `train_schema.json`, `predict_schema.json`, `label_mapping.json` oluştur.
+
+### TD-003: Ablation Raporu Üretilmemiş
+- **Durum:** Açık
+- **Açıklama:** Ablation senaryoları (GNN olmadan, DNN olmadan vb.) tanımlanmış ama sistematik rapor yok.
+- **Risk:** Jüri mimari kararların gerekçesini göremez.
+- **Çözüm:** `configs/experiments/` altında ablation config'leri oluştur; rapor üret.
+
+### TD-004: LightGBM Artifact CI'da Yok
+- **Durum:** Açık
+- **Açıklama:** LightGBM modeli CI'da kaydetme/yükleme roundtrip testi yok.
+- **Risk:** LightGBM serialize/deserialize tutarsızlığı sessiz hatayla geçilebilir.
+- **Çözüm:** `tests/unit/test_modelstore_lgbm_roundtrip.py` ekle.
+
+## Orta Öncelikli (PDR sonrası, Finaller öncesi)
+
+### TD-005: CLI `--test-data` vs `--test_file` Tutarsızlığı
+- **Durum:** Düzeltildi (docs/MODEL_CARD.md güncellendi)
+- **Açıklama:** Eski dokümanlarda `--test-data` yazıyordu; gerçek parametre `--test_file`.
+- **Çözüm:** docs/MODEL_CARD.md güncellendi. `argparse` parser'a alias eklenebilir.
+
+### TD-006: Multimodal Sekans Inference Tutarlılığı
+- **Durum:** Açık
+- **Açıklama:** `configs/default.yaml` `use_multimodal: true` ama `Nuc_Context`/`AA_Context` eksikse çökmeden devam ediyor mu tüm path'lerde kontrol edilmemiş.
+- **Risk:** Eğitimde sekans kullanılıp inference'ta sekans verilmezse hatalı tahmin.
+- **Çözüm:** Integration testinde sekansız prediction path'i test et.
+
+### TD-007: `src/core/dnn.py` ve `src/models/dnn.py` Çakışması
+- **Durum:** Açık
+- **Açıklama:** İki farklı konumda DNN modeli var; hangisinin aktif olduğu net değil.
+- **Risk:** Yanlış modeli import eden kod sessizce çalışabilir.
+- **Çözüm:** `src/models/dnn.py` → `src/core/models/dnn.py`'ye proxy haline getirilmeli; belgele.
+
+### TD-008: `reports/` İçindeki PDF'ler Gitignore'a Eklendi
+- **Durum:** Düzeltildi (`.gitignore` güncellendi)
+- **Açıklama:** `reports/*.pdf` repoya girmiş; `reports/VARIANT_GNN_24h_Activity_Report.pdf` ve `reports/VARIANT_GNN_Rapor_TEKNOFEST2026.pdf` büyük binary.
+- **Çözüm:** `.gitignore`'a `reports/*.pdf` eklendi.
+
+### TD-009: `venv/` Klasörü
+- **Durum:** Açık
+- **Açıklama:** `venv/` gitignore'da `venv/` ile kapsanmış ama repoya girmiş olabilir. `git rm --cached venv/` gerekebilir.
+- **Risk:** Repo boyutu şişer.
+
+## Düşük Öncelikli
+
+### TD-010: Streamlit Pages Smoke Testi Eksik
+- **Açıklama:** `tests/smoke/test_app_import.py` var ama tüm Streamlit sayfa importları kapsamıyor.
+- **Çözüm:** Her `src/ui/*.py` modülünün importlanabilir olduğunu test et.
+
+### TD-011: `configs/` Şema Doğrulaması Yok
+- **Açıklama:** YAML config dosyaları JSON Schema ile doğrulanmıyor; geçersiz config sessiz hatayla geçebilir.
+- **Çözüm:** `configs/schemas/config_schema.json` oluştur; config yükleme sırasında doğrula.
+
+### TD-012: `mlflow` Bağımlılığı Zorunlu
+- **Açıklama:** `requirements.txt` içinde `mlflow` var ama aktif kullanım yoksa gereksiz ağır bağımlılık.
+- **Çözüm:** MLflow kullanımını belgele veya `requirements-dev.txt`'e taşı.
+
+## Tamamlanan Öğeler
+
+| ID | Açıklama | Çözüm |
+|---|---|---|
+| TD-005 | CLI parametre dokümantasyon tutarsızlığı | docs/MODEL_CARD.md düzeltildi |
+| TD-008 | reports/*.pdf gitignore | .gitignore güncellendi |
+| ARCH-001 | docs/MODEL_CARD.md 3-model/SAGE tutarsızlığı | 4-model GATv2 mimarisine güncellendi |

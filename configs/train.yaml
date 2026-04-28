@@ -1,0 +1,31 @@
+# configs/train.yaml — Eğitim modu yapılandırması
+# default.yaml değerlerini override eder
+
+mode: train
+
+training:
+  cv_folds: 5
+  test_size: 0.20
+  calibration_size: 0.15
+  optimize_weights: true
+  save_artifacts: true
+  report_panel_metrics: true
+
+preprocessing:
+  use_autoencoder: true
+  autoencoder_encoding_dim: 16
+  autoencoder_epochs: 10
+  corr_threshold: 0.25
+  smote_sampling_strategy: 0.3
+
+gnn:
+  epochs: 20
+  early_stopping_patience: 5
+  use_multimodal: true
+
+dnn:
+  epochs: 20
+
+paths:
+  output_dir: models/current
+  reports_dir: reports

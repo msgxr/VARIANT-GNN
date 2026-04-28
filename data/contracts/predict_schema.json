@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VARIANT-GNN Tahmin Veri Şeması",
+  "description": "Tahmin (predict) modu için beklenen CSV sütunları. Label sütunu olmayabilir.",
+  "version": "1.0.0",
+  "required_columns": {},
+  "optional_metadata_columns": {
+    "Variant_ID": {
+      "type": "string",
+      "description": "Benzersiz varyant tanımlayıcısı. Tahmin çıktısında korunur."
+    },
+    "Panel": {
+      "type": "string",
+      "description": "Panel tanımlayıcısı (çıktıda korunur)"
+    },
+    "Label": {
+      "type": "integer",
+      "description": "İsteğe bağlı. Varsa değerlendirme metrikleri hesaplanır."
+    },
+    "Nuc_Context": {
+      "type": "string",
+      "description": "±5 nükleotid bağlam dizesi (isteğe bağlı)"
+    },
+    "AA_Context": {
+      "type": "string",
+      "description": "±5 amino asit bağlam dizesi (isteğe bağlı)"
+    }
+  },
+  "feature_columns": {
+    "type": "numeric",
+    "description": "Metadata sütunları dışındaki tüm sayısal sütunlar özellik olarak değerlendirilir.",
+    "min_features": 5,
+    "allowed_missing_fraction": 0.8
+  },
+  "output_columns": {
+    "Variant_ID": "Girdi'den korunur (varsa)",
+    "Predicted_Label": "0 (Benign) veya 1 (Patojenik)",
+    "Predicted_Class": "Benign veya Pathogenic",
+    "Pathogenic_Probability": "0.0–1.0 (kalibre edilmiş)",
+    "Risk_Score": "0–100 (kalibre edilmiş * 100)",
+    "Confidence": "HIGH / MEDIUM / LOW",
+    "Uncertainty": "MC Dropout belirsizlik (0.0–1.0)",
+    "High_Risk_Flag": "true/false"
+  },
+  "validation_rules": [
+    "En az 5 sayısal özellik sütunu bulunmalıdır",
+    "Özellik sütunları eğitim sırasında kullanılan sütunlarla uyumlu olmalıdır",
+    "Sütun hizalaması ColumnAligner modülü tarafından otomatik yapılır"
+  ]
+}

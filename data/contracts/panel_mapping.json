@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "VARIANT-GNN panel tanımları ve eşlemeleri.",
+  "version": "1.0.0",
+  "panel_column": "Panel",
+  "panels": {
+    "General": {
+      "aliases": ["general", "GENERAL", "Genel", "genel"],
+      "train_file": "data/train_general.csv",
+      "test_file": "data/test_general.csv",
+      "description": "Genel popülasyon missense varyantları"
+    },
+    "Hereditary_Cancer": {
+      "aliases": ["hereditary_cancer", "Hereditary Cancer", "HerediterKanser", "BRCA"],
+      "train_file": "data/train_hereditary_cancer.csv",
+      "test_file": "data/test_hereditary_cancer.csv",
+      "description": "Kalıtsal kanser yatkınlık genleri (BRCA1, BRCA2 vb.)"
+    },
+    "PAH": {
+      "aliases": ["pah", "Pah", "Phenylketonuria", "PKU"],
+      "train_file": "data/train_pah.csv",
+      "test_file": "data/test_pah.csv",
+      "description": "Fenilalanin hidroksilaz (PAH) geni varyantları"
+    },
+    "CFTR": {
+      "aliases": ["cftr", "Cftr", "CysticFibrosis", "CF"],
+      "train_file": "data/train_cftr.csv",
+      "test_file": "data/test_cftr.csv",
+      "description": "CFTR geni varyantları (Kistik Fibrozis)"
+    }
+  },
+  "all_panels_file": "data/train_variants.csv",
+  "notes": "Panel sütunu isteğe bağlıdır. Yoksa tüm veri General panel gibi işlenir."
+}

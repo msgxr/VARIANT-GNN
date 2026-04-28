@@ -1,0 +1,37 @@
+# configs/export.yaml — Jüri/export çıktı ayarları
+
+jury_export:
+  output_file: reports/jury_predictions.csv
+  required_columns:
+    - Variant_ID
+    - Predicted_Label
+    - Predicted_Class
+    - Pathogenic_Probability
+    - Risk_Score
+  optional_columns:
+    - Panel
+    - Confidence
+    - Uncertainty
+    - High_Risk_Flag
+
+  probability_precision: 4
+  include_metadata: true
+  include_uncertainty: true
+
+submission_package:
+  output_dir: submission/teknofest
+  include_model_card: true
+  include_data_card: true
+  include_predictions: true
+  include_report: true
+  include_artifact_manifest: true
+  include_checksums: true
+
+report_formats:
+  - json
+  - csv
+
+figures:
+  dpi: 150
+  format: png
+  output_dir: reports/figures

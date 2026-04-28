@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Sütun adı eşlemeleri. Alternatif sütun isimleri canonical (standart) isme dönüştürülür.",
+  "version": "1.0.0",
+  "aliases": {
+    "Variant_ID": ["variant_id", "VariantID", "ID", "id", "variant", "rsid", "rsID"],
+    "Label": ["label", "LABEL", "class", "Class", "target", "Target", "y", "Y", "Pathogenic", "pathogenic"],
+    "Panel": ["panel", "PANEL", "gene_panel", "GenePanel"],
+    "Nuc_Context": ["nuc_context", "NucContext", "nucleotide_context", "nuc_seq", "NucSeq"],
+    "AA_Context": ["aa_context", "AAContext", "amino_acid_context", "aa_seq", "AASeq", "protein_context"],
+    "CADD_phred": ["CADD", "cadd", "cadd_phred", "CADD_Phred"],
+    "SIFT_score": ["SIFT", "sift", "sift_score"],
+    "PolyPhen2_HDIV_score": ["PolyPhen2", "polyphen2", "polyphen", "PPH2"],
+    "GERP++_RS": ["GERP", "gerp", "GERP_RS"],
+    "gnomAD_AF": ["gnomad_af", "gnomAD", "AF_gnomad"]
+  },
+  "notes": "Bu eşleme src/data/column_aligner.py tarafından kullanılır. Şartname anonim kolon verirse eşleme otomatik yapılamaz; positional mode aktif olur."
+}

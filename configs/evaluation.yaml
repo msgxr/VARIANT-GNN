@@ -1,0 +1,35 @@
+# configs/evaluation.yaml — Değerlendirme modu yapılandırması
+
+mode: eval
+
+evaluation:
+  primary_metric: macro_f1
+  metrics:
+    - macro_f1
+    - roc_auc
+    - pr_auc
+    - mcc
+    - brier_score
+    - ece
+    - precision
+    - recall
+    - specificity
+  report_per_panel: true
+  threshold_search: true
+  threshold_search_range: [0.3, 0.7]
+  threshold_search_steps: 40
+
+calibration_eval:
+  n_bins: 10
+  strategy: uniform
+
+external_validation:
+  compute_adversarial: false
+  save_report: true
+  report_file: reports/external_validation_report.json
+
+adversarial_validation:
+  n_estimators: 100
+  test_size: 0.2
+  save_report: true
+  report_file: reports/adversarial_validation_report.json

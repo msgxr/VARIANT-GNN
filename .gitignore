@@ -42,6 +42,12 @@ models/autoencoder.pth
 reports/*.png
 reports/*.csv
 reports/*.html
+reports/*.pdf
+reports/*.json
+reports/*.bak
+
+# Eğitim logları
+train_log.txt
 
 # Geçici dosyalar
 /tmp/
@@ -67,8 +73,20 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Büyük veri dosyaları
+# Büyük veri dosyaları (gerçek yarışma verisi repoya eklenmemeli)
 data/pretrain_100k.csv
+# Eğer aşağıdaki dosyalar gerçek yarışma verisi ise buraya ekle:
+# data/train_variants.csv
+# data/test_variants.csv
+# data/test_variants_blind.csv
+
+# submission/ büyük çıktılar
+submission/teknofest/*.zip
+submission/teknofest/*.pdf
+submission/archive/
+
+# DVC stage outputs
+*.dvc
 
 # Test ve Lint Cache
 .pytest_cache/

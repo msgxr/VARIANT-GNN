@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Özellik matrisi dışında tutulan metadata sütunları. Bu sütunlar asla model girdi özelliği olarak kullanılmaz.",
+  "version": "1.0.0",
+  "non_feature_columns": [
+    "Variant_ID",
+    "Label",
+    "Panel",
+    "Nuc_Context",
+    "AA_Context",
+    "Gene",
+    "Chromosome",
+    "Position",
+    "Ref",
+    "Alt",
+    "HGVS",
+    "rsID",
+    "ClinVar_ID",
+    "Review_Status",
+    "Source"
+  ],
+  "metadata_preserved": ["Variant_ID", "Panel", "Nuc_Context", "AA_Context"],
+  "label_column": "Label",
+  "notes": "Anonim kolon modunda tüm sütunlar sayısal değer içeriyorsa bunların tamamı özellik olarak kullanılabilir. Detaylar için column_aligner.py ve ColumnAligner sınıfına bakınız."
+}
