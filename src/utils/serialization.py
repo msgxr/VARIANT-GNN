@@ -22,6 +22,77 @@ import xgboost as xgb
 logger = logging.getLogger(__name__)
 
 
+def _build_legacy_sage_gnn(
+    numeric_dim: int,
+    hidden_dim: int,
+    num_classes: int = 2,
+    dropout: float = 0.3,
+    use_multimodal: bool = False,
+    seq_enc_dim: int = 32,
+):
+    """
+    Orijinal SAGEConv mimarisini (SAGEConv + PyGBatchNorm + tek Linear)
+    yeniden üretir. Yalnızca bu mimariye ait eski checkpoint'leri yüklemek
+    için kullanılır — eğitim için değil.
+    """
+    import torch.nn as _nn
+    import torch.nn.functional as _F
+    from torch_geometric.nn import SAGEConv as _SAGEConv
+    from torch_geometric.nn import BatchNorm as _PyGBN
+
+    class _SBlock(_nn.Module):
+        def __init__(self, in_c, out_c, drop=0.3):
+            super().__init__()
+            self.conv    = _SAGEConv(in_c, out_c)
+            self.bn      = _PyGBN(out_c)
+            self.dropout = _nn.Dropout(p=drop)
+            self.skip    = (_nn.Linear(in_c, out_c, bias=False)
+                            if in_c != out_c else _nn.Identity())
+
+        def forward(self, x, edge_index):
+            res = self.skip(x)
+            out = self.conv(x, edge_index)
+            out = self.bn(out)
+            out = _F.relu(out)
+            out = self.dropout(out)
+            return out + res
+
+    class _LegacySAGEGNN(_nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.use_multimodal = use_multimodal
+            if use_multimodal:
+                from src.features.multimodal_encoder import SequenceEncoder as _SE
+                self.seq_encoder = _SE(cnn_channels=seq_enc_dim // 2)
+                in_ch = numeric_dim + self.seq_encoder.output_dim
+            else:
+                self.seq_encoder = None
+                in_ch = numeric_dim
+            self.input_proj = _nn.Linear(in_ch, hidden_dim)
+            self.block1     = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.block2     = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.block3     = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.classifier = _nn.Linear(hidden_dim, num_classes)
+
+        def forward(self, x, edge_index,
+                    nuc_ids=None, aa_ids=None, **kw):
+            if self.use_multimodal and self.seq_encoder is not None:
+                if nuc_ids is not None and aa_ids is not None:
+                    seq = self.seq_encoder(nuc_ids, aa_ids)
+                else:
+                    import torch as _t
+                    seq = _t.zeros(x.shape[0], self.seq_encoder.output_dim,
+                                   device=x.device, dtype=x.dtype)
+                x = _t.cat([x, seq], dim=1)
+            x = _F.relu(self.input_proj(x))
+            x = self.block1(x, edge_index)
+            x = self.block2(x, edge_index)
+            x = self.block3(x, edge_index)
+            return self.classifier(x)
+
+    return _LegacySAGEGNN()
+
+
 class _LGBMBoosterWrapper:
     """
     Thin shim that wraps a raw ``lightgbm.Booster`` to expose a
@@ -259,18 +330,36 @@ class ModelStore:
         _gnn_type = _gnn_arch.get("type", "FeatureGNN")
         _seq_enc_dim = _gnn_arch.get("seq_enc_dim", getattr(cfg.gnn, "seq_enc_dim", 32))
 
-        if _gnn_type in ("VariantGATv2GNN", "VariantSAGEGNN"):
-            # Both share the same constructor (VariantSAGEGNN is a subclass alias).
-            from src.core.models.gnn import VariantGATv2GNN, VariantSAGEGNN
-            _cls = VariantSAGEGNN if _gnn_type == "VariantSAGEGNN" else VariantGATv2GNN
-            gnn_model = _cls(
+        # --- GNN model yükle ---
+        # Checkpoint anahtarlarından gerçek mimariyi tespit et;
+        # tip adına değil, state_dict içeriğine göre doğru sınıfı seç.
+        _sd_raw: dict = {}
+        if self._gnn_path.exists():
+            _sd_raw = _safe_torch_load(self._gnn_path, device)
+
+        # SAGEConv checkpoint'i tanımak için ayırt edici anahtar
+        _is_sage_conv_ckpt = any("bn.module" in k for k in _sd_raw)
+
+        if _is_sage_conv_ckpt:
+            # Checkpoint orijinal SAGEConv mimarisine ait (BatchNorm + tek Linear)
+            # Bu mimariyi inline olarak yeniden oluştur.
+            gnn_model = _build_legacy_sage_gnn(
+                numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
+                hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
+                num_classes    = 2,
+                use_multimodal = _gnn_arch.get("use_multimodal", False),
+                seq_enc_dim    = _seq_enc_dim,
+            ).to(device)
+            logger.info("GNN: SAGEConv checkpoint tespit edildi → LegacySAGEGNN yükleniyor.")
+        elif _gnn_type in ("VariantGATv2GNN", "VariantSAGEGNN"):
+            from src.core.models.gnn import VariantGATv2GNN
+            gnn_model = VariantGATv2GNN(
                 numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
                 hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
                 use_multimodal = _gnn_arch.get("use_multimodal", False),
                 seq_enc_dim    = _seq_enc_dim,
             ).to(device)
         else:
-            # Legacy FeatureGNN fallback for very old checkpoints only.
             gnn_model = FeatureGNN(
                 in_channels = 1,
                 hidden_dim  = cfg.gnn.hidden_dim,
@@ -278,9 +367,9 @@ class ModelStore:
                 use_gat     = cfg.gnn.use_gat,
             ).to(device)
 
-        if self._gnn_path.exists():
+        if _sd_raw:
             try:
-                gnn_model.load_state_dict(_safe_torch_load(self._gnn_path, device))
+                gnn_model.load_state_dict(_sd_raw)
             except RuntimeError as exc:
                 raise RuntimeError(
                     f"GNN state_dict mismatch loading '{self._gnn_path}'. "
