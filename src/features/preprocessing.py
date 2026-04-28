@@ -121,6 +121,37 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self._is_fitted: bool = False
 
     # ------------------------------------------------------------------
+    # Pickle backward-compatibility
+    # ------------------------------------------------------------------
+
+    def __setstate__(self, state: dict) -> None:
+        """Eski pickle'lardan yükleme sırasında eksik attribute'ları doldur."""
+        _defaults = {
+            "use_bio_scoring":          False,
+            "_bio_transformer":         None,
+            "use_feature_selection":    False,
+            "k_best_features":          30,
+            "use_autoencoder":          True,
+            "autoencoder_encoding_dim": 16,
+            "autoencoder_epochs":       10,
+            "smote_enabled":            True,
+            "device":                   "auto",
+            "random_state":             42,
+            "_var_selector":            None,
+            "_kb_selector":             None,
+            "_autoenc":                 None,
+            "_imputer":                 None,
+            "_scaler":                  None,
+            "edge_index":               None,
+            "edge_attr":                None,
+            "n_output_features":        0,
+            "_is_fitted":               False,
+        }
+        for key, val in _defaults.items():
+            state.setdefault(key, val)
+        self.__dict__.update(state)
+
+    # ------------------------------------------------------------------
     # sklearn interface
     # ------------------------------------------------------------------
 
