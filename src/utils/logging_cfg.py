@@ -12,14 +12,20 @@ from pathlib import Path
 from typing import Optional
 
 
-def _utf8_stdout() -> io.TextIOWrapper:
+def _utf8_stdout() -> io.TextIOWrapper | io.TextIOBase:
     """UTF-8 stream over stdout — safe on Windows Turkish locale (cp1254)."""
-    try:
-        return io.TextIOWrapper(
-            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-    except AttributeError:
+    # Streamlit overrides stdout; re-wrapping it causes "I/O operation on closed file"
+    if "streamlit" in sys.modules:
         return sys.stdout
+
+    try:
+        if hasattr(sys.stdout, "buffer"):
+            return io.TextIOWrapper(
+                sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
+            )
+    except (AttributeError, io.UnsupportedOperation):
+        pass
+    return sys.stdout
 
 
 def setup_logging(
