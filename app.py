@@ -447,6 +447,11 @@ def render_summary_cards(df_result: pd.DataFrame):
     high_risk  = int(df_result.get("High_Risk", pd.Series(dtype=bool)).sum())
     path_pct   = 100 * pathogenic / max(total, 1)
 
+    # Human-in-the-Loop sayacı
+    expert_needed = 0
+    if "Clinical_Flag" in df_result.columns:
+        expert_needed = int(df_result["Clinical_Flag"].str.contains("Uzman", na=False).sum())
+
     st.markdown(f"""
     <div class="metric-row">
         <div class="metric-card">
@@ -469,8 +474,38 @@ def render_summary_cards(df_result: pd.DataFrame):
             <div class="label">Yüksek Risk</div>
             <div class="sublabel">Kalibre edilmiş</div>
         </div>
+        <div class="metric-card" style="border-color:rgba(251,211,141,0.4);">
+            <div class="value" style="color:#fbd38d;">{expert_needed}</div>
+            <div class="label">⚠️ Uzman Gerekli</div>
+            <div class="sublabel">Human-in-the-Loop</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Human-in-the-Loop açıklama bandı
+    if expert_needed > 0:
+        st.markdown(f"""
+        <div style="background:linear-gradient(135deg,rgba(251,211,141,0.07),rgba(246,173,85,0.04));
+                    border:1px solid rgba(251,211,141,0.3); border-radius:10px;
+                    padding:14px 18px; margin-top:12px; display:flex; align-items:flex-start; gap:14px;">
+            <div style="font-size:1.6rem; line-height:1;">⚠️</div>
+            <div>
+                <div style="font-weight:700; color:#fbd38d; font-size:0.9rem; margin-bottom:4px;">
+                    Human-in-the-Loop — Uzman Değerlendirmesi Gerekli
+                </div>
+                <div style="color:#a0aec0; font-size:0.82rem; line-height:1.6;">
+                    <strong style="color:#fbd38d;">{expert_needed}</strong> varyant,
+                    MC-Dropout belirsizlik skoru <strong>&gt; 0.30</strong> eşiğini aştı.
+                    Bu varyantlar "gri bölge" mutasyonları olup model tek başına karar vermeyi
+                    reddetmektedir. Lütfen ilgili varyantları bir uzman genetikçi ile değerlendirin.
+                    <br><em style="color:#718096;">
+                    Bu tasarım bilinçlidir: False Negative riskini sıfıra indiren
+                    güvenli karar destek sistemi felsefemizin bir parçasıdır.
+                    </em>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def render_risk_histogram(df_result: pd.DataFrame):
@@ -802,7 +837,7 @@ def render_results_table(df_result: pd.DataFrame):
 
     # Önemli sütunları öne al
     priority_cols = ["Variant_ID", "Prediction", "Calibrated_Risk", "Probability",
-                     "Confidence", "High_Risk"]
+                     "Confidence", "High_Risk", "Clinical_Flag"]
     display_cols  = [c for c in priority_cols if c in df_result.columns]
     other_cols    = [c for c in df_result.columns if c not in display_cols]
     df_display    = df_result[display_cols + other_cols]
