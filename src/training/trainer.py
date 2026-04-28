@@ -432,8 +432,8 @@ class VariantTrainer:
                 logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
 
             if mlflow is not None:
-                mlflow.pytorch.log_model(ensemble.gnn_model, "gnn_model")
-                mlflow.sklearn.log_model(ensemble.xgb_model, "xgb_model")
+                mlflow.pytorch.log_model(ensemble.gnn, "gnn_model")
+                mlflow.sklearn.log_model(ensemble.xgb, "xgb_model")
             
             return TrainResult(
                 ensemble      = ensemble,

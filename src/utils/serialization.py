@@ -148,20 +148,24 @@ class ModelStore:
         if model is None:
             return
         torch.save(model.state_dict(), str(self._gnn_path))
-        # Save architecture metadata so load_all can reconstruct correctly
         import json as _json
 
-        from src.core.models.gnn import VariantSAGEGNN as _VSGNN
+        # VariantGATv2GNN is the base class; VariantSAGEGNN is a subclass alias.
+        # We check the base class so both variants are handled identically.
+        from src.core.models.gnn import VariantGATv2GNN as _VGATGNN
         arch: dict = {"type": type(model).__name__}
-        if isinstance(model, _VSGNN):
+        if isinstance(model, _VGATGNN):
             # Save true numeric_dim (pre-concat), NOT input_proj.in_features
             # which includes seq_encoder output when use_multimodal=True.
             _in_feats = model.input_proj.in_features
             if model.use_multimodal and model.seq_encoder is not None:
                 _in_feats -= model.seq_encoder.output_dim
             arch["numeric_dim"]    = _in_feats
-            arch["hidden_dim"]     = model.classifier.in_features
+            # input_proj: Linear(in_channels, hidden_dim) → out_features == hidden_dim
+            arch["hidden_dim"]     = model.input_proj.out_features
             arch["use_multimodal"] = bool(model.use_multimodal)
+            if model.seq_encoder is not None:
+                arch["seq_enc_dim"] = model.seq_encoder.output_dim
         with open(self._gnn_arch_path, "w") as _fh:
             _json.dump(arch, _fh)
         logger.info("GNN -> %s  (arch=%s)", self._gnn_path, arch["type"])
@@ -245,7 +249,7 @@ class ModelStore:
 
         n_features = preprocessor.n_output_features
 
-        # --- GNN: detect saved architecture (VariantSAGEGNN vs legacy FeatureGNN) ---
+        # --- GNN: detect saved architecture ---
         import json as _json
         _gnn_arch: dict = {"type": "FeatureGNN"}
         if self._gnn_arch_path.exists():
@@ -253,14 +257,20 @@ class ModelStore:
                 _gnn_arch = _json.load(_fh)
 
         _gnn_type = _gnn_arch.get("type", "FeatureGNN")
-        if _gnn_type == "VariantSAGEGNN":
-            from src.core.models.gnn import VariantSAGEGNN
-            gnn_model = VariantSAGEGNN(
+        _seq_enc_dim = _gnn_arch.get("seq_enc_dim", getattr(cfg.gnn, "seq_enc_dim", 32))
+
+        if _gnn_type in ("VariantGATv2GNN", "VariantSAGEGNN"):
+            # Both share the same constructor (VariantSAGEGNN is a subclass alias).
+            from src.core.models.gnn import VariantGATv2GNN, VariantSAGEGNN
+            _cls = VariantSAGEGNN if _gnn_type == "VariantSAGEGNN" else VariantGATv2GNN
+            gnn_model = _cls(
                 numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
                 hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
                 use_multimodal = _gnn_arch.get("use_multimodal", False),
+                seq_enc_dim    = _seq_enc_dim,
             ).to(device)
         else:
+            # Legacy FeatureGNN fallback for very old checkpoints only.
             gnn_model = FeatureGNN(
                 in_channels = 1,
                 hidden_dim  = cfg.gnn.hidden_dim,
@@ -269,7 +279,14 @@ class ModelStore:
             ).to(device)
 
         if self._gnn_path.exists():
-            gnn_model.load_state_dict(_safe_torch_load(self._gnn_path, device))
+            try:
+                gnn_model.load_state_dict(_safe_torch_load(self._gnn_path, device))
+            except RuntimeError as exc:
+                raise RuntimeError(
+                    f"GNN state_dict mismatch loading '{self._gnn_path}'. "
+                    f"Saved type={_gnn_type}, arch={_gnn_arch}. "
+                    f"Original error: {exc}"
+                ) from exc
             gnn_model.eval()
             logger.info("GNN <- %s  (type=%s)", self._gnn_path, _gnn_type)
 

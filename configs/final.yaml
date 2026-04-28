@@ -1,0 +1,133 @@
+seed: 42
+device: auto  # auto | cpu | cuda
+
+paths:
+  data_dir: data
+  models_dir: models
+  reports_dir: reports
+
+gnn:
+  hidden_dim: 64
+  epochs: 20
+  lr: 0.005
+  weight_decay: 1.0e-4
+  use_gat: true              # VariantGATv2GNN kullanılıyor (legacy FeatureGNN için de geçerli)
+  knn_k: 5
+  early_stopping_patience: 5
+  use_multimodal: true       # Nuc_Context/AA_Context → SequenceEncoder → GNN (TEKNOFEST şartname uyumu)
+  seq_enc_dim: 32            # SequenceEncoder output dim (cnn_channels*2)
+
+dnn:
+  hidden_dim: 128
+  epochs: 20
+  lr: 0.001
+  weight_decay: 1.0e-4
+
+xgb:
+  objective: binary:logistic
+  eval_metric: logloss
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  n_estimators: 200
+  n_jobs: -1
+  min_child_weight: 3
+  reg_alpha: 0.05
+  reg_lambda: 1.0
+
+lgbm:
+  num_leaves: 63
+  max_depth: -1
+  learning_rate: 0.05
+  n_estimators: 300
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  min_child_samples: 10
+  n_jobs: -1
+  verbose: -1
+
+ensemble:
+  weights: [0.35, 0.30, 0.25, 0.10]   # [XGB, LGB, GNN, DNN] — başlangıç; Nelder-Mead optimize eder
+  optimize_weights: true
+
+preprocessing:
+  corr_threshold: 0.25
+  use_autoencoder: true
+  autoencoder_encoding_dim: 16
+  autoencoder_epochs: 10
+  use_feature_selection: false
+  k_best_features: 30
+  smote_enabled: true
+
+calibration:
+  enabled: true
+  method: isotonic            # isotonic | sigmoid
+
+training:
+  test_size: 0.2
+  cv_folds: 5
+  batch_size: 32
+  loss_function: weighted_bce   # weighted_bce | focal
+  focal_gamma: 2.0
+
+thresholds:
+  # best_threshold=0.01 — CV raporu (cv_report.json) Nelder-Mead optimizasyonunda bulundu.
+  # default.yaml'daki 0.5, geliştirme/eğitim aşaması için nötr başlangıç değeridir.
+  # Jüri demosunda bu final.yaml kullanılmalı.
+  classification: 0.01
+  high_risk: 0.7
+
+schema:
+  target_column: Label
+  id_columns:
+    - Variant_ID
+  non_feature_columns:
+    - Panel
+    - Nuc_Context
+    - AA_Context
+  label_mapping:
+    pathogenic: 1
+    "likely pathogenic": 1
+    benign: 0
+    "likely benign": 0
+    "1": 1
+    "1.0": 1
+    "0": 0
+    "0.0": 0
+
+# ─── Panel Tanımları (TEKNOFEST 2026 Şartname Bölüm 3.2) ───
+panels:
+  General:
+    train_pathogenic: 1500
+    train_benign: 1500
+    test_pathogenic: 1000
+    test_benign: 1000
+  Hereditary_Cancer:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  PAH:
+    train_pathogenic: 200
+    train_benign: 200
+    test_pathogenic: 100
+    test_benign: 100
+  CFTR:
+    train_pathogenic: 70
+    train_benign: 70
+    test_pathogenic: 30
+    test_benign: 30
+
+# ─── External Validation ───
+external_validation:
+  enabled: true
+  metrics:
+    - f1
+    - roc_auc
+    - brier_score
+    - precision
+    - recall
+  export_predictions: true
