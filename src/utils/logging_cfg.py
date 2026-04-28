@@ -5,10 +5,21 @@ Call ``setup_logging()`` once at application entry point.
 """
 from __future__ import annotations
 
+import io
 import logging
 import sys
 from pathlib import Path
 from typing import Optional
+
+
+def _utf8_stdout() -> io.TextIOWrapper:
+    """UTF-8 stream over stdout — safe on Windows Turkish locale (cp1254)."""
+    try:
+        return io.TextIOWrapper(
+            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
+        )
+    except AttributeError:
+        return sys.stdout
 
 
 def setup_logging(
@@ -25,7 +36,7 @@ def setup_logging(
     level    : Logging level (default INFO).
     log_file : Optional path to a log file.
     """
-    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+    handlers: list[logging.Handler] = [logging.StreamHandler(_utf8_stdout())]
 
     if log_file:
         Path(log_file).parent.mkdir(parents=True, exist_ok=True)

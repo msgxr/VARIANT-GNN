@@ -271,7 +271,7 @@ class ModelStore:
         if self._gnn_path.exists():
             gnn_model.load_state_dict(_safe_torch_load(self._gnn_path, device))
             gnn_model.eval()
-            logger.info("GNN ← %s  (type=%s)", self._gnn_path, _gnn_type)
+            logger.info("GNN <- %s  (type=%s)", self._gnn_path, _gnn_type)
 
         # --- DNN ---
         dnn_model = VariantDNN(
@@ -282,13 +282,13 @@ class ModelStore:
         if self._dnn_path.exists():
             dnn_model.load_state_dict(_safe_torch_load(self._dnn_path, device))
             dnn_model.eval()
-            logger.info("DNN ← %s", self._dnn_path)
+            logger.info("DNN <- %s", self._dnn_path)
 
         # --- XGBoost ---
         xgb_model = xgb.XGBClassifier(**cfg.xgb.as_dict())
         if self._xgb_path.exists():
             xgb_model.load_model(str(self._xgb_path))
-            logger.info("XGBoost ← %s", self._xgb_path)
+            logger.info("XGBoost <- %s", self._xgb_path)
 
         # --- LightGBM (optional — absent in legacy checkpoints) ---
         lgbm_model = None
@@ -298,7 +298,7 @@ class ModelStore:
                 lgbm_model = lgb.Booster(model_file=str(self._lgbm_path))
                 # Wrap in sklearn API shim for predict_proba compatibility
                 lgbm_model = _LGBMBoosterWrapper(lgbm_model)
-                logger.info("LightGBM ← %s", self._lgbm_path)
+                logger.info("LightGBM <- %s", self._lgbm_path)
             except Exception as exc:
                 logger.warning("LightGBM load failed (skipping): %s", exc)
 
@@ -322,13 +322,13 @@ class ModelStore:
         calibrator: Optional[object] = None
         if self._calibrator_path.exists():
             calibrator = joblib.load(str(self._calibrator_path))
-            logger.info("Calibrator ← %s", self._calibrator_path)
+            logger.info("Calibrator <- %s", self._calibrator_path)
 
         # --- Meta-learner (optional stacking) ---
         if self._meta_learner_path.exists():
             try:
                 ensemble.meta_learner = joblib.load(str(self._meta_learner_path))
-                logger.info("MetaLearner ← %s", self._meta_learner_path)
+                logger.info("MetaLearner <- %s", self._meta_learner_path)
             except Exception as exc:
                 logger.warning("Meta-learner load failed (skipping): %s", exc)
 
