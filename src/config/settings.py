@@ -59,6 +59,7 @@ class GNNSettings:
     early_stopping_patience: int = 5  # 0 = disabled
     use_multimodal: bool = False      # fuse SequenceEncoder (Nuc_Context/AA_Context)
     seq_enc_dim: int = 32             # SequenceEncoder output_dim (cnn_channels*2)
+    model_type: str = "gatv2"         # used for MLflow run naming in trainer.py
 
 
 @dataclass
@@ -261,6 +262,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         early_stopping_patience  = raw_gnn.get("early_stopping_patience", 5),
         use_multimodal           = raw_gnn.get("use_multimodal", False),
         seq_enc_dim              = raw_gnn.get("seq_enc_dim", 32),
+        model_type               = raw_gnn.get("model_type", "gatv2"),
     )
 
     raw_dnn = raw.get("dnn", {})

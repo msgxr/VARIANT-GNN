@@ -15,20 +15,20 @@ from src.api.pipeline import InferencePipeline
 from src.utils.logging_cfg import setup_logging
 
 # UI Modülleri
-from src.interface.dashboard.styles import inject_styles
-from src.interface.dashboard.header import render_hero
-from src.interface.dashboard.sidebar import render_sidebar
-from src.interface.dashboard.analytics import (
-    render_summary_cards, 
-    render_results_table, 
-    render_risk_histogram, 
-    render_risk_map, 
-    render_model_comparison
+from src.ui.styles import inject_styles
+from src.ui.header import render_hero
+from src.ui.sidebar import render_sidebar
+from src.ui.analytics import (
+    render_summary_cards,
+    render_results_table,
+    render_risk_histogram,
+    render_risk_map,
+    render_model_comparison,
 )
-from src.interface.dashboard.explainability import render_xai
-from src.interface.dashboard.performance import render_performance_tab
-from src.interface.dashboard.clinvar import render_clinvar_tab
-from src.interface.dashboard.reporting import generate_pdf_report
+from src.ui.explainability import render_xai
+from src.ui.performance import render_performance_tab
+from src.ui.clinvar import render_clinvar_tab
+from src.ui.reporting import generate_pdf_report
 
 setup_logging(level=logging.WARNING)
 
@@ -42,26 +42,28 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Premium CSS Enjeksiyonu
-# Sidebar yields settings and optionally a pre-loaded dataframe (VCF/FHIR/CSV)
-pipeline: Optional[InferencePipeline] = _get_pipeline()
-sidebar_df, opts = render_sidebar() 
-
-# Apply Theme
-inject_styles(theme=opts.get("theme", "dark"))
 
 @st.cache_resource(show_spinner="🧠 Modeller yükleniyor...", ttl=None)
-def _get_pipeline() -> InferencePipeline | None:
+def _get_pipeline() -> Optional[InferencePipeline]:
     try:
-        pipeline = InferencePipeline()
-        pipeline.load()
-        return pipeline
+        p = InferencePipeline()
+        p.load()
+        return p
     except Exception as exc:
-        st.error(f"⚠️ Model yükleme hatası: {exc}")
+        st.warning(f"⚠️ Model artifact bulunamadı — demo modunda çalışılıyor. ({exc})")
         return None
+
 
 def main():
     cfg = get_settings()
+
+    # Pipeline ve sidebar main() içinde yükleniyor (module-level erken yükleme engellendi)
+    pipeline: Optional[InferencePipeline] = _get_pipeline()
+    sidebar_df, opts = render_sidebar()
+
+    # Apply Theme
+    inject_styles(theme=opts.get("theme", "dark"))
+
     render_hero()
 
     # ── Tabs ──────────────────────────────────
@@ -158,7 +160,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
             
-            from src.interface.dashboard.protein_viz import render_protein_3d, get_pdb_for_gene
+            from src.ui.protein_viz import render_protein_3d, get_pdb_for_gene
             
             # Eğer analiz edilmiş veri varsa ilk genin PDB'sini çek
             gene_sym = "BRCA1"

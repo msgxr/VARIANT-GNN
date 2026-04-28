@@ -375,7 +375,7 @@ class VariantTrainer:
         set_global_seed(self.cfg.seed)
         cfg = self.cfg
 
-        run_name = f"HybridEnsemble_{cfg.gnn.model_type}"
+        run_name = f"HybridEnsemble_{getattr(cfg.gnn, 'model_type', 'gatv2')}"
         if mlflow is not None:
             mlflow.set_experiment("VARIANT-GNN-Professional")
             run_ctx = mlflow.start_run(run_name=run_name)
