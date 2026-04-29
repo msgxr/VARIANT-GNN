@@ -22,7 +22,7 @@ import pandas as pd
 import streamlit as st
 
 from src.config import get_settings
-from src.api.pipeline import InferencePipeline
+from src.inference.pipeline import InferencePipeline
 from src.utils.logging_cfg import setup_logging
 
 setup_logging(level=logging.WARNING)
@@ -970,6 +970,20 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
                      "VUS":("#d97706","#fffbeb","#fde68a"),
                      "Likely Benign":("#16a34a","#f0fdf4","#86efac"),
                      "Benign":("#15803d","#f0fdf4","#6ee7b7")}.get(_acls,("#64748b","#f8fafc","#e2e8f0"))
+            criteria_html = []
+            for c in acmg_res["criteria"]:
+                criteria_html.append(f'''<div style="display:flex;align-items:center;gap:10px;padding:8px 0;
+                            border-bottom:1px solid {_acfg[2]};">
+                    <span style="background:{_acfg[0]};color:#fff;font-size:0.7rem;font-weight:800;
+                                padding:2px 8px;border-radius:6px;white-space:nowrap;">{c["code"]}</span>
+                    <span style="font-size:0.7rem;color:#64748b;font-weight:600;">{c["strength"]}</span>
+                    <span style="font-size:0.8rem;color:#1e293b;font-weight:500;flex:1;">{c["evidence"]}</span>
+                    <span style="font-size:0.7rem;color:{_acfg[0]};font-weight:700;white-space:nowrap;">
+                        SHAP:{c["shap_contrib"]:.2f}</span>
+                </div>''')
+            
+            criteria_str = "".join(criteria_html) if criteria_html else f'<div style="color:#475569;font-size:0.82rem;font-style:italic;">Bu varyant için ACMG kriteri karşılanmadı.</div>'
+
             st.markdown(f"""
             <div style="background:{_acfg[1]};border:2px solid {_acfg[2]};border-left:5px solid {_acfg[0]};
                         border-radius:12px;padding:16px 20px;margin:16px 0;
@@ -984,16 +998,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
                                     padding:4px 12px;border-radius:8px;">Puan: {_ascore:+d}</span>
                     </div>
                 </div>
-                {''.join([f\'\'\'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;
-                            border-bottom:1px solid {_acfg[2]};">
-                    <span style="background:{_acfg[0]};color:#fff;font-size:0.7rem;font-weight:800;
-                                padding:2px 8px;border-radius:6px;white-space:nowrap;">{c["code"]}</span>
-                    <span style="font-size:0.7rem;color:#64748b;font-weight:600;">{c["strength"]}</span>
-                    <span style="font-size:0.8rem;color:#1e293b;font-weight:500;flex:1;">{c["evidence"]}</span>
-                    <span style="font-size:0.7rem;color:{_acfg[0]};font-weight:700;white-space:nowrap;">
-                        SHAP:{c["shap_contrib"]:.2f}</span>
-                </div>\'\'\' for c in acmg_res["criteria"]] or
-                f\'<div style="color:#475569;font-size:0.82rem;font-style:italic;">Bu varyant için ACMG kriteri karşılanmadı.</div>\')}
+                {criteria_str}
             </div>""", unsafe_allow_html=True)
         except Exception as e:
             st.error(f"ACMG hatası: {e}")
