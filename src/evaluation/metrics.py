@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/evaluation/metrics.py
 Comprehensive evaluation metrics.
 
@@ -135,21 +135,12 @@ def find_best_threshold(
     metric: str = "f1",
     n_steps: int = 100,
 ) -> Tuple[float, float]:
-    """
-    Sweep classification thresholds and return (best_threshold, best_score).
-
-    Parameters
-    ----------
-    metric : ``'f1'`` or ``'mcc'``
-    """
+    """Sweep thresholds; return (best_threshold, best_score)."""
     thresholds = np.linspace(0.01, 0.99, n_steps)
-    best_thr   = 0.5
-    best_score = -np.inf
-
+    best_thr, best_score = 0.5, -np.inf
     for thr in thresholds:
         preds = (y_prob >= thr).astype(int)
         if metric == "f1":
-            # §7.3: primary metric is binary F1 (TP/FP/FN for Pathogenic class)
             score = f1_score(y_true, preds, average="binary", pos_label=1, zero_division=0)
         elif metric == "macro_f1":
             score = f1_score(y_true, preds, average="macro", zero_division=0)
@@ -157,13 +148,144 @@ def find_best_threshold(
             score = matthews_corrcoef(y_true, preds)
         else:
             raise ValueError(f"Unknown metric: {metric!r}")
-
         if score > best_score:
-            best_score = score
-            best_thr   = float(thr)
-
+            best_score, best_thr = score, float(thr)
     logger.info("Best threshold: %.3f -> %s=%.4f", best_thr, metric, best_score)
     return best_thr, float(best_score)
+
+
+# Alias used throughout the codebase
+find_f1_optimal_threshold = find_best_threshold
+
+
+def find_panel_thresholds(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    panels: np.ndarray,
+    n_steps: int = 100,
+    output_path: Optional[str] = None,
+) -> Dict[str, float]:
+    """
+    Panel bazlı F1-optimal eşik optimizasyonu.
+
+    Her panel için ayrı ayrı P-R eğrisi üzerinde F1'i maksimize eden
+    eşik değerini bulur.  Genel eşik ("General") de hesaplanır.
+
+    Parameters
+    ----------
+    y_true   : Gerçek etiketler [N]
+    y_prob   : P(Pathogenic) olasılıkları [N]
+    panels   : Panel adları [N]  (str array)
+    output_path : Kayıt yolu (None = kaydetme)
+
+    Returns
+    -------
+    Dict[panel_name -> optimal_threshold]
+    """
+    import json
+    from pathlib import Path
+
+    panel_names = ["__all__"] + sorted(set(panels))
+    results: Dict[str, float] = {}
+
+    for panel in panel_names:
+        if panel == "__all__":
+            mask = np.ones(len(y_true), dtype=bool)
+            label = "General"
+        else:
+            mask  = np.array(panels) == panel
+            label = panel
+
+        if mask.sum() < 10:
+            logger.warning("Panel %s: yetersiz örnek (%d), eşik=0.5 kullanılıyor", label, mask.sum())
+            results[label] = 0.5
+            continue
+
+        thr, score = find_best_threshold(y_true[mask], y_prob[mask], metric="macro_f1")
+        results[label] = thr
+        logger.info("Panel %-20s → eşik=%.3f  Macro-F1=%.4f", label, thr, score)
+
+    if output_path is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as fh:
+            json.dump({"panel_thresholds": results}, fh, indent=2)
+        logger.info("Panel eşikleri → %s", output_path)
+
+    return results
+
+
+def save_threshold_report(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    panels: Optional[np.ndarray] = None,
+    reports_dir: str = "reports",
+) -> None:
+    """
+    Tam eşik raporu: JSON + P-R eğrisi grafiği üretir.
+
+    Çıktılar:
+      reports/threshold_report.json
+      reports/figures/precision_recall_curve.png
+    """
+    import json
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import precision_recall_curve, average_precision_score
+    from pathlib import Path
+
+    rep_dir = Path(reports_dir)
+    fig_dir = rep_dir / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
+
+    # Global optimal threshold
+    global_thr, global_f1 = find_best_threshold(y_true, y_prob, metric="macro_f1")
+
+    # P-R eğrisi
+    prec_arr, rec_arr, thr_arr = precision_recall_curve(y_true, y_prob)
+    pr_auc = average_precision_score(y_true, y_prob)
+
+    # F1 eğrisi (her threshold için)
+    f1_arr = np.where(
+        (prec_arr + rec_arr) > 0,
+        2 * prec_arr * rec_arr / (prec_arr + rec_arr + 1e-9),
+        0.0,
+    )
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(rec_arr, prec_arr, lw=2, color="#e63946", label=f"PR Eğrisi (AUC={pr_auc:.4f})")
+    ax.axvline(rec_arr[np.argmax(f1_arr)], color="#2563eb", ls="--", lw=1.2,
+               label=f"Optimal Eşik ({global_thr:.3f}) F1={global_f1:.4f}")
+    ax.set_xlabel("Recall", fontsize=11)
+    ax.set_ylabel("Precision", fontsize=11)
+    ax.set_title("Precision-Recall Eğrisi — TEKNOFEST 2026", fontsize=12, fontweight="bold")
+    ax.legend(fontsize=9); ax.grid(alpha=0.3)
+    ax.set_xlim(0, 1.02); ax.set_ylim(0, 1.02)
+    plt.tight_layout()
+    fig_path = fig_dir / "precision_recall_curve.png"
+    plt.savefig(fig_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    logger.info("P-R eğrisi → %s", fig_path)
+
+    # Panel eşikleri
+    panel_thresholds: Dict[str, float] = {"General": global_thr}
+    if panels is not None:
+        panel_thresholds = find_panel_thresholds(
+            y_true, y_prob, panels,
+            output_path=str(rep_dir / "panel_thresholds.json"),
+        )
+
+    report = {
+        "global_optimal_threshold": global_thr,
+        "global_macro_f1_at_threshold": global_f1,
+        "pr_auc": float(pr_auc),
+        "panel_thresholds": panel_thresholds,
+        "pr_curve_path": str(fig_path),
+    }
+    json_path = rep_dir / "threshold_report.json"
+    with open(json_path, "w") as fh:
+        json.dump(report, fh, indent=2)
+    logger.info("Threshold raporu → %s", json_path)
 
 
 # ---------------------------------------------------------------------------

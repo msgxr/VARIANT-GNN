@@ -1,93 +1,155 @@
 """
-src/inference/export.py
-Standardised TEKNOFEST 2026 jury-compliant prediction CSV exporter.
+src/api/export.py
+TEKNOFEST 2026 — Jüri uyumlu deterministik tahmin exportu.
 
-Final output column spec (jüri beklentisi):
-  ┌────────────────┬─────────────────────────────────────────────┐
-  │ Variant_ID     │ Varyant kimliği (varsa)                     │
-  │ Prediction     │ "Pathogenic" veya "Benign"                  │
-  │ Predicted_Label│ 1 (Pathogenic) veya 0 (Benign)              │
-  │ Probability    │ Patojenik olasılığı [0.0-1.0]               │
-  │ Confidence     │ Tahmin güven yüzdesi [0-100]                │
-  │ Panel          │ Panel bilgisi (varsa)                       │
-  └────────────────┴─────────────────────────────────────────────┘
-
-Ek olarak, jüri için sadece minimum kolonlar içeren
-``_jury.csv`` ve tam detaylı ``_full.csv`` dosyaları üretilir.
+Garanti edilen 7 kolon (submission/predictions.csv):
+  Variant_ID            | Varyant kimliği (yoksa "VAR_<index>")
+  prediction_label      | 1 = Pathogenic, 0 = Benign
+  pathogenic_probability| Ham ensemble P(Pathogenic) [0-1]
+  calibrated_risk       | Kalibre edilmiş risk skoru [0-100]
+  confidence_level      | Güven yüzdesi [0-100]
+  uncertainty_score     | MC-Dropout std (varsa) yoksa max_prob tabanlı
+  expert_review_flag    | True = Uzman değerlendirmesi gerekli
 """
 from __future__ import annotations
 
 import logging
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+# Jüri sözleşmesi: kesinlikle bu 7 kolon + bu sırada
+JURY_COLUMNS = [
+    "Variant_ID",
+    "prediction_label",
+    "pathogenic_probability",
+    "calibrated_risk",
+    "confidence_level",
+    "uncertainty_score",
+    "expert_review_flag",
+]
+
+
+def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Pipeline çıktısından garanti edilen 7 kolonu oluşturur."""
+    out = pd.DataFrame()
+
+    # 1. Variant_ID
+    if "Variant_ID" in df.columns:
+        out["Variant_ID"] = df["Variant_ID"].astype(str)
+    else:
+        out["Variant_ID"] = [f"VAR_{i:06d}" for i in range(len(df))]
+
+    # 2. prediction_label  (1/0)
+    if "Prediction" in df.columns:
+        out["prediction_label"] = df["Prediction"].map(
+            {"Pathogenic": 1, "Benign": 0}
+        ).fillna(0).astype(int)
+    elif "Predicted_Label" in df.columns:
+        out["prediction_label"] = df["Predicted_Label"].astype(int)
+    else:
+        out["prediction_label"] = 0
+
+    # 3. pathogenic_probability [0-1]
+    if "Probability" in df.columns:
+        out["pathogenic_probability"] = df["Probability"].round(6)
+    else:
+        out["pathogenic_probability"] = out["prediction_label"].astype(float)
+
+    # 4. calibrated_risk [0-100]
+    if "Calibrated_Risk" in df.columns:
+        out["calibrated_risk"] = df["Calibrated_Risk"].round(2)
+    else:
+        out["calibrated_risk"] = (out["pathogenic_probability"] * 100).round(2)
+
+    # 5. confidence_level [0-100]
+    if "Confidence" in df.columns:
+        out["confidence_level"] = df["Confidence"].round(2)
+    else:
+        p = out["pathogenic_probability"].values
+        out["confidence_level"] = (np.maximum(p, 1 - p) * 100).round(2)
+
+    # 6. uncertainty_score  [0-1]  (0=kesin, 1=tamamen belirsiz)
+    if "OOD_Score" in df.columns:
+        out["uncertainty_score"] = df["OOD_Score"].round(4)
+    elif "Confidence" in df.columns:
+        # Güvenden türet: yüksek güven → düşük belirsizlik
+        out["uncertainty_score"] = (1 - df["Confidence"].clip(0, 100) / 100).round(4)
+    else:
+        out["uncertainty_score"] = (
+            1 - out["confidence_level"] / 100
+        ).round(4)
+
+    # 7. expert_review_flag  (bool)
+    if "Clinical_Flag" in df.columns:
+        out["expert_review_flag"] = df["Clinical_Flag"].str.contains(
+            "Uzman", na=False
+        )
+    else:
+        # Belirsizlik > 0.30 veya risk 30-70 arası → gri bölge
+        unc = out["uncertainty_score"].values
+        risk = out["calibrated_risk"].values
+        out["expert_review_flag"] = (unc > 0.30) | ((risk > 30) & (risk < 70))
+
+    return out[JURY_COLUMNS]
 
 
 def export_predictions(
     df_result: pd.DataFrame,
     output_dir: str | Path,
     prefix: str = "predictions",
+    submission_path: str | Path | None = None,
 ) -> dict[str, Path]:
     """
-    Export predictions in standardised formats for TEKNOFEST 2026 jury.
+    TEKNOFEST 2026 jüri uyumlu tahmin exportu.
 
-    Generates two files:
-        1. ``{prefix}_jury.csv``  — minimal columns (Variant_ID, Prediction, Predicted_Label)
-        2. ``{prefix}_full.csv``  — all columns including probabilities, confidence, risk
+    Üretilen dosyalar:
+      1. ``{prefix}_jury.csv``  — 7 garantili kolon (jüri sözleşmesi)
+      2. ``{prefix}_full.csv``  — tüm pipeline çıktısı
+      3. submission/predictions.csv — ``--output`` ile belirtilen path (opsiyonel)
 
-    Parameters
-    ----------
-    df_result : Prediction DataFrame from InferencePipeline.
-    output_dir : Directory to save output CSVs.
-    prefix : Filename prefix (default: "predictions").
-
-    Returns
-    -------
-    dict with keys 'jury' and 'full' mapping to saved file paths.
+    Returns dict: {'jury', 'full', 'submission'} → Path.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── 1. Jury-minimal CSV ──────────────────────────────────────────
-    jury_cols = []
-    if "Variant_ID" in df_result.columns:
-        jury_cols.append("Variant_ID")
+    jury_df = _ensure_jury_columns(df_result)
 
-    jury_cols.append("Prediction")
-
-    # Add numeric label column for easy metric computation
-    df_export = df_result.copy()
-    df_export["Predicted_Label"] = df_export["Prediction"].map(
-        {"Pathogenic": 1, "Benign": 0}
-    )
-    jury_cols.append("Predicted_Label")
-
+    # ── 1. Jury CSV (7 garantili kolon) ──────────────────────────────
     jury_path = output_dir / f"{prefix}_jury.csv"
-    df_export[jury_cols].to_csv(jury_path, index=False)
-    logger.info("Jury-format predictions → %s (%d rows)", jury_path, len(df_export))
+    jury_df.to_csv(jury_path, index=False)
+    logger.info("Jury CSV (7-kolon) → %s (%d satır)", jury_path, len(jury_df))
 
-    # ── 2. Full-detail CSV ───────────────────────────────────────────
-    full_cols = list(jury_cols)
-    for col in ["Probability", "Calibrated_Risk", "Confidence", "High_Risk", "Panel"]:
-        if col in df_export.columns:
-            full_cols.append(col)
-    # Include any remaining metadata columns not yet added
-    for col in df_export.columns:
-        if col not in full_cols:
-            full_cols.append(str(col))
-
+    # ── 2. Full CSV (tüm kolonlar) ────────────────────────────────────
+    full_df = df_result.copy()
+    # Garantili kolonları öne al
+    for col, vals in jury_df.items():
+        full_df[col] = vals.values
+    lead = [c for c in JURY_COLUMNS if c in full_df.columns]
+    rest = [c for c in full_df.columns if c not in lead]
     full_path = output_dir / f"{prefix}_full.csv"
-    df_export[full_cols].to_csv(full_path, index=False)
-    logger.info("Full predictions → %s (%d rows, %d cols)", full_path, len(df_export), len(full_cols))
+    full_df[lead + rest].to_csv(full_path, index=False)
+    logger.info("Full CSV → %s (%d satır, %d kolon)",
+                full_path, len(full_df), len(full_df.columns))
 
-    # ── 3. Summary statistics  ───────────────────────────────────────
-    n_path = len(df_export[df_export["Prediction"] == "Pathogenic"])
-    n_ben = len(df_export[df_export["Prediction"] == "Benign"])
+    # ── 3. Submission path (--output argümanı) ────────────────────────
+    sub_path = None
+    if submission_path is not None:
+        sub_path = Path(submission_path)
+        sub_path.parent.mkdir(parents=True, exist_ok=True)
+        jury_df.to_csv(sub_path, index=False)
+        logger.info("Submission CSV → %s", sub_path)
+
+    # ── Özet istatistikler ────────────────────────────────────────────
+    n_path = int((jury_df["prediction_label"] == 1).sum())
+    n_ben  = int((jury_df["prediction_label"] == 0).sum())
+    n_exp  = int(jury_df["expert_review_flag"].sum())
     logger.info(
-        "Prediction summary: %d Pathogenic, %d Benign (total %d)",
-        n_path, n_ben, len(df_export),
+        "Özet: %d Patojenik | %d Benign | %d Uzman Değerlendirmesi",
+        n_path, n_ben, n_exp,
     )
 
-    return {"jury": jury_path, "full": full_path}
+    return {"jury": jury_path, "full": full_path, "submission": sub_path}

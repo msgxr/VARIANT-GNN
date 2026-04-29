@@ -85,10 +85,38 @@ submission/teknofest/*.zip
 submission/teknofest/*.pdf
 submission/archive/
 
-# DVC stage outputs
-*.dvc
+# DVC stage outputs — sadece .dvc pointerlar repo'da kalır
+# (Gerçek veri LFS/DVC remote'ta olmalı)
+.dvc/cache/
+.dvc/tmp/
 
 # Test ve Lint Cache
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.hypothesis/
+
+# Notebook çıktıları
+*.ipynb
+!docs/**/*.ipynb
+
+# Streamlit cache
+.streamlit/
+
+# Büyük yarışma dosyaları (NDA gereği repoda olmamalı)
+*.docx
+create_*.py
+markdown_to_word.py
+VARIANT_GNN_*.docx
+
+# Locust & benchmark çıktıları
+reports/locust_results*.csv
+reports/benchmark_results.json
+
+# macOS genişletilmiş
+__MACOSX/
+*.DS_Store
+
+# Büyük scriptler (geçici)
+generate_report_pdf.py
+build_notebook.py

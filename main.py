@@ -199,19 +199,57 @@ def mode_eval(args, cfg):
 
 
 def mode_predict(args, cfg):
+    """Jüri modu: etiketlenmemiş CSV → 7-kolonlu deterministik submission CSV.
+
+    Kullanım:
+      python main.py --mode predict --config configs/final.yaml \
+                     --test_file data/test_blind.csv \
+                     --output submission/predictions.csv
+    """
     if not args.test_file:
-        logging.error("--test_file required for predict mode.")
+        logging.error("--test_file gerekli (predict modu).")
         sys.exit(1)
-    pipeline  = InferencePipeline()
+
+    logging.info("=" * 60)
+    logging.info("  VARIANT-GNN — JÜRİ TAHMİN MODU")
+    logging.info("  Giriş : %s", args.test_file)
+    logging.info("=" * 60)
+
+    pipeline = InferencePipeline()
     pipeline.load()
-    df_result = pipeline.predict_from_csv(args.test_file)
+
+    try:
+        df_result = pipeline.predict_from_csv(args.test_file)
+    except Exception as exc:
+        logging.error("Tahmin hatası: %s", exc)
+        sys.exit(1)
+
     cfg.paths.create_dirs()
 
-    # Standardised TEKNOFEST jury-compliant export
-    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="predictions")
-    logging.info("Jury CSV   -> %s", paths["jury"])
-    logging.info("Full CSV   -> %s", paths["full"])
-    print(df_result.head(10).to_string(index=False))
+    # --output argümanı varsa oraya yaz, yoksa submission/ varsayılan
+    submission_path = getattr(args, "output", None) or "submission/predictions.csv"
+
+    paths = export_predictions(
+        df_result,
+        cfg.paths.reports_dir,
+        prefix="predictions",
+        submission_path=submission_path,
+    )
+    logging.info("Jüri CSV (7-kolon) → %s", paths["jury"])
+    logging.info("Tam CSV            → %s", paths["full"])
+    logging.info("Submission CSV     → %s", paths["submission"])
+
+    # İlk 10 satır ekrana bas
+    from src.api.export import JURY_COLUMNS
+    jury_df = df_result.copy()
+    print("\n" + "=" * 60)
+    print("  İLK 10 TAHMİN")
+    print("=" * 60)
+    preview_cols = [c for c in JURY_COLUMNS if c in df_result.columns]
+    if not preview_cols:
+        preview_cols = list(df_result.columns[:7])
+    print(df_result[preview_cols].head(10).to_string(index=False))
+    print("=" * 60)
 
 
 def mode_crossval(args, cfg):
@@ -228,69 +266,119 @@ def mode_crossval(args, cfg):
 
 
 def mode_external_val(args, cfg):
-    """External validation — TEKNOFEST 2026 jüri senaryosu.
+    """External validation — TEKNOFEST 2026 tam metrik paketi.
 
-    Önceden eğitilmiş modeli yükler, yeni etiketli test verisi üzerinde
-    F1 / ROC-AUC / Brier / Precision / Recall hesaplar.
+    F1, Precision, Recall, ROC-AUC, PR-AUC, MCC, Brier, ECE
+    Confusion matrix PNG + JSON raporu reports/ altına kaydedilir.
     """
-    from sklearn.metrics import brier_score_loss
-
+    from sklearn.metrics import (
+        brier_score_loss, confusion_matrix, matthews_corrcoef,
+        average_precision_score, roc_auc_score,
+        precision_score, recall_score, f1_score,
+    )
     test_path = args.test_file or args.data_file
     if not test_path:
-        logging.error("--test_file veya --data_file gerekli (external_val modu).")
+        logging.error("--test_file veya --data_file gerekli.")
         sys.exit(1)
-
     ds = load_csv(test_path)
     if ds.labels is None:
-        logging.error("External validation i\u00e7in etiketli veri gerekli.")
+        logging.error("external_val icin etiketli veri gerekli.")
         sys.exit(1)
 
-    # Panel filtresi (iste\u011fe ba\u011fl\u0131)
     panel = getattr(args, "panel", None)
     if panel and "Panel" in ds.metadata.columns:
-        mask = ds.metadata["Panel"] == panel
         from src.data.loader import LoadedDataset
+        mask = ds.metadata["Panel"] == panel
         ds = LoadedDataset(
-            features        = ds.features[mask].reset_index(drop=True),
-            labels          = ds.labels[mask.values],
-            metadata        = ds.metadata[mask].reset_index(drop=True),
-            feature_columns = ds.feature_columns,
+            features=ds.features[mask].reset_index(drop=True),
+            labels=ds.labels[mask.values],
+            metadata=ds.metadata[mask].reset_index(drop=True),
+            feature_columns=ds.feature_columns,
         )
-        logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))
+        logging.info("Panel: %s (%d varyant)", panel, len(ds.labels))
 
     pipeline = InferencePipeline()
     pipeline.load()
     df_result = pipeline.predict_from_dataset(ds)
 
-    p1    = df_result["Probability"].values
-    proba = np.column_stack([1 - p1, p1])
-    report = evaluate(ds.labels, proba)
-    report.log(prefix="EXTERNAL_VAL")
+    y_true = ds.labels
+    p1     = df_result["Probability"].values
 
-    # Brier score
-    brier = brier_score_loss(ds.labels, p1)
-    logging.info("Brier Score: %.6f", brier)
+    # Optimal threshold (F1 maks.)
+    try:
+        from src.evaluation.metrics import find_f1_optimal_threshold
+        best_thr, _ = find_f1_optimal_threshold(y_true, p1)
+    except Exception:
+        best_thr = 0.5
 
-    # Sonuçları kaydet — jury-compliant export
+    y_pred = (p1 >= best_thr).astype(int)
+    f1   = f1_score(y_true, y_pred, average="macro", zero_division=0)
+    prec = precision_score(y_true, y_pred, average="macro", zero_division=0)
+    rec  = recall_score(y_true, y_pred, average="macro", zero_division=0)
+    roc  = roc_auc_score(y_true, p1)
+    pr   = average_precision_score(y_true, p1)
+    mcc  = matthews_corrcoef(y_true, y_pred)
+    brier= brier_score_loss(y_true, p1)
+    cm   = confusion_matrix(y_true, y_pred).tolist()
+    try:
+        from sklearn.calibration import calibration_curve
+        fp, mp = calibration_curve(y_true, p1, n_bins=10)
+        ece = float(np.abs(fp - mp).mean())
+    except Exception:
+        ece = None
+
+    logging.info("=" * 56)
+    logging.info("  EXTERNAL VALIDATION SONUCLARI")
+    logging.info("  Ornek=%d  Esik=%.3f", len(y_true), best_thr)
+    logging.info("  Macro F1=%.4f  Precision=%.4f  Recall=%.4f", f1, prec, rec)
+    logging.info("  ROC-AUC=%.4f  PR-AUC=%.4f  MCC=%.4f", roc, pr, mcc)
+    logging.info("  Brier=%.6f  ECE=%s", brier, f"{ece:.4f}" if ece else "N/A")
+    logging.info("  Confusion: %s", cm)
+    logging.info("=" * 56)
+
     cfg.paths.create_dirs()
-    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="external_val")
-    out_csv = paths["full"]
+    # Confusion matrix gorseli
+    try:
+        import matplotlib; matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.imshow(cm, cmap="Blues")
+        ax.set_xticks([0,1]); ax.set_yticks([0,1])
+        ax.set_xticklabels(["Benign","Pathogenic"])
+        ax.set_yticklabels(["Benign","Pathogenic"])
+        ax.set_xlabel("Tahmin"); ax.set_ylabel("Gercek")
+        ax.set_title(f"Confusion Matrix | F1={f1:.4f}")
+        for i in range(2):
+            for j in range(2):
+                ax.text(j, i, str(cm[i][j]), ha="center", va="center",
+                        fontsize=14, fontweight="bold")
+        plt.tight_layout()
+        cm_path = cfg.paths.reports_dir / "external_val_confusion_matrix.png"
+        plt.savefig(cm_path, dpi=150, bbox_inches="tight")
+        plt.close()
+        logging.info("Confusion Matrix -> %s", cm_path)
+    except Exception as exc:
+        logging.warning("Grafik cizilmedi: %s", exc)
 
     report_json = {
         "mode": "external_validation",
-        "test_file": str(test_path),
-        "panel": panel,
-        "n_samples": len(ds.labels),
-        "metrics": report.as_dict(),
-        "brier_score": brier,
+        "test_file": str(test_path), "panel": panel,
+        "n_samples": int(len(y_true)), "optimal_threshold": best_thr,
+        "metrics": {
+            "macro_f1": round(f1,4), "precision": round(prec,4),
+            "recall": round(rec,4), "roc_auc": round(roc,4),
+            "pr_auc": round(pr,4), "mcc": round(mcc,4),
+            "brier_score": round(brier,6),
+            "ece": round(ece,4) if ece else None,
+        },
+        "confusion_matrix": cm,
     }
     out_json = cfg.paths.reports_dir / "external_validation_report.json"
     with open(out_json, "w") as fh:
         json.dump(report_json, fh, indent=2, default=str)
-
-    logging.info("External validation results -> %s", out_csv)
-    logging.info("External validation report  -> %s", out_json)
-    logging.info("External validation tamamland\u0131.")
+    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="external_val")
+    logging.info("Tahminler -> %s", paths["jury"])
+    logging.info("JSON rapor -> %s", out_json)
 
 
 def mode_adversarial_val(args, cfg):
@@ -764,8 +852,10 @@ def build_parser():
     p.add_argument("--config",    type=str, default=None)
     p.add_argument("--n_trials",  type=int, default=30)
     p.add_argument("--log_file",  type=str, default=None)
-    p.add_argument("--panel",     type=str, default=None,
+    p.add_argument("--panel",  type=str, default=None,
                    help="Panel filtresi: General, Hereditary_Cancer, PAH, CFTR")
+    p.add_argument("--output", type=str, default=None,
+                   help="Submission CSV çıktı yolu (predict modu için)")
     return p
 
 

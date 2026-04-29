@@ -80,3 +80,32 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 | TD-005 | CLI parametre dokümantasyon tutarsızlığı | docs/MODEL_CARD.md düzeltildi |
 | TD-008 | reports/*.pdf gitignore | .gitignore güncellendi |
 | ARCH-001 | docs/MODEL_CARD.md 3-model/SAGE tutarsızlığı | 4-model GATv2 mimarisine güncellendi |
+
+---
+
+## PDR Kapsamında Kapatılanlar (Nisan 2026)
+
+| ID | Açıklama | Kapatılış |
+|---|---|---|
+| TD-001 | Anonim kolon test eksikliği | `scripts/stress_test.py` 7 senaryo eklendi |
+| TD-002 | JSON data contracts eksikliği | `data/contracts/` tam şemalarla dolduruldu |
+| TD-003 | Ablation raporu eksikliği | `scripts/run_ablation.py` — 11 konfigürasyon |
+| TD-004 | LightGBM roundtrip test | `tests/unit/test_modelstore_lgbm_roundtrip.py` |
+| TD-009 | venv/ repo boyutu | `.gitignore` güçlendirildi |
+| — | 7-kolonlu jüri çıktısı | `src/api/export.py` — deterministik submission |
+| — | Optimal F1 eşiği | `find_f1_optimal_threshold()` + panel bazlı |
+| — | External validation metrikleri | F1, PR-AUC, MCC, Brier, ECE, Confusion Matrix |
+| — | Makefile jüri komutları | `make predict-jury`, `make external-val-full` |
+| — | PDR kanıt paketi | `scripts/build_pdr_evidence.py` |
+
+## Finaller İçin Kalan Borçlar
+
+| ID | Açıklama | Öncelik |
+|---|---|---|
+| TD-006 | Multimodal sekans inference tutarlılığı | Yüksek |
+| TD-007 | src/core/dnn.py vs src/models/dnn.py çakışması | Orta |
+| TD-010 | Streamlit sayfa smoke testleri | Düşük |
+| TD-011 | YAML config JSON Schema doğrulaması | Düşük |
+| TD-012 | MLflow bağımlılığını gözden geçir | Düşük |
+| — | GPU/TensorRT optimizasyonu (Phase 2) | Yarışma sonrası |
+| — | Federated learning alt yapısı (Phase 3) | Yarışma sonrası |
