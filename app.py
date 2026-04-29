@@ -667,13 +667,13 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
             vals_  = [t[1] for t in top]
             fig, ax = plt.subplots(figsize=(9, 4.5))
             plot_dark(fig, ax)
-            colors_ = ['#fc8181' if v > np.median(vals_) else '#63b3ed' for v in vals_]
+            colors_ = ['#dc2626' if v > np.median(vals_) else '#2563eb' for v in vals_]
             bars = ax.barh(names_[::-1], vals_[::-1], color=colors_[::-1], alpha=0.9, height=0.65)
-            ax.set_xlabel("Ortalama |SHAP Değeri|")
-            ax.set_title("Top-15 Özellik (XGBoost SHAP)", fontsize=12, fontweight='bold', pad=14)
+            ax.set_xlabel("Ortalama |SHAP Değeri|", fontsize=11, color='#1e293b')
+            ax.set_title("Top-15 Özellik — XGBoost SHAP Önemi", fontsize=12, fontweight='bold', pad=14, color='#0f172a')
             for bar, val in zip(bars, vals_[::-1]):
                 ax.text(bar.get_width() + 0.002, bar.get_y() + bar.get_height()/2,
-                        f'{val:.3f}', va='center', ha='left', color='#94a3b8', fontsize=8)
+                        f'{val:.3f}', va='center', ha='left', color='#374151', fontsize=8, fontweight='600')
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
@@ -739,37 +739,59 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
         )
 
         # ── Risk rozeti
+        _zc = insight.get("zone_color","#dc2626")
+        _zl = insight.get("zone_label","Risk")
         st.markdown(f"""
-        <div style="background:#eff6ff; border:1px solid #93c5fd;
-                    border-radius:14px; padding:22px 26px; margin-bottom:18px;">
-            <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
-                <div style="font-size:1.8rem; font-weight:800; color:{insight['zone_color']};">{insight['zone_label']}</div>
-                <div style="font-size:1.4rem; font-weight:700; color:#0f172a;">{risk_val:.1f} / 100</div>
+        <div style="background:#ffffff;border:2px solid {_zc};border-radius:14px;
+                    overflow:hidden;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+            <div style="background:{_zc};padding:14px 22px;
+                        display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:1.1rem;font-weight:800;color:#fff;">{_zl}</div>
+                <div style="font-size:2.6rem;font-weight:900;color:#fff;line-height:1;">
+                    {risk_val:.1f}<span style="font-size:1rem;opacity:0.75;">/100</span>
+                </div>
             </div>
-            <div style="color:#374151; font-size:0.92rem; line-height:1.8;">{insight['summary']}</div>
+            <div style="padding:16px 22px;font-size:0.9rem;color:#1e293b;
+                        line-height:1.75;font-weight:500;">{insight['summary']}</div>
         </div>
         """, unsafe_allow_html=True)
 
         # ── Kilit bulgular
         if insight["key_findings"]:
-            st.markdown("#### 🔑 Kilit Biyolojik Bulgular")
+            st.markdown("""
+            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;text-transform:uppercase;
+                        letter-spacing:1px;margin:18px 0 10px;padding-bottom:8px;
+                        border-bottom:2px solid #e2e8f0;">
+                🔑 KİLİT BİYOLOJİK BULGULAR
+            </div>""", unsafe_allow_html=True)
             for fi, finding in enumerate(insight["key_findings"], 1):
-                dir_icon  = "⬆️" if finding["direction"] == "artırdı" else "⬇️"
-                dir_color = "#fc8181" if finding["direction"] == "artırdı" else "#68d391"
+                _artirdi   = finding["direction"] == "artırdı"
+                dir_icon   = "⬆" if _artirdi else "⬇"
+                dir_color  = "#dc2626" if _artirdi else "#16a34a"
+                dir_bg     = "#fef2f2" if _artirdi else "#f0fdf4"
+                dir_border = "#fca5a5" if _artirdi else "#86efac"
                 st.markdown(f"""
-                <div style="background:#f8fafc; border:1px solid #bfdbfe;
-                            border-left:4px solid {dir_color}; border-radius:10px;
-                            padding:14px 18px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                        <div style="font-weight:600; color:#0f172a; font-size:0.88rem;">
-                            {fi}. <code style="color:#1d4ed8;">{finding['feature']}</code>
-                            &nbsp;–&nbsp;<span style="color:#64748b;">{finding['group']}</span>
+                <div style="background:#ffffff;border:1.5px solid {dir_border};
+                            border-left:5px solid {dir_color};border-radius:10px;
+                            padding:14px 18px;margin-bottom:10px;
+                            box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+                        <div style="font-weight:700;color:#0f172a;font-size:0.88rem;">
+                            <span style="background:{dir_color};color:#fff;font-size:0.68rem;
+                                        font-weight:800;padding:2px 8px;border-radius:4px;margin-right:8px;">
+                                #{fi}
+                            </span>
+                            <code style="color:#1d4ed8;font-size:0.85rem;font-weight:700;">{finding['feature']}</code>
+                            <span style="color:#475569;font-size:0.8rem;margin-left:6px;">· {finding['group']}</span>
                         </div>
-                        <div style="font-size:0.78rem; color:{dir_color}; font-weight:600;">
-                            {dir_icon} Riski {finding['direction']} (SHAP: {finding['shap']:.4f})
+                        <div style="background:{dir_bg};border:1px solid {dir_border};
+                                    border-radius:6px;padding:4px 12px;
+                                    font-size:0.78rem;color:{dir_color};font-weight:800;">
+                            {dir_icon} Riski {finding['direction']} &nbsp;|&nbsp; SHAP: {finding['shap']:.4f}
                         </div>
                     </div>
-                    <div style="margin-top:8px; color:#64748b; font-size:0.83rem; line-height:1.65;">
+                    <div style="margin-top:10px;color:#1e293b;font-size:0.83rem;
+                                line-height:1.65;font-weight:500;">
                         {finding['insight']}
                     </div>
                 </div>
@@ -777,9 +799,11 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
 
         # ── Klinik öneri
         st.markdown(f"""
-        <div style="background:#eff6ff; border:1px solid #bfdbfe;
-                    border-radius:10px; padding:14px 18px; margin-top:8px;">
-            <div style="color:#374151; font-size:0.87rem; line-height:1.75;">
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-left:4px solid #1d4ed8;
+                    border-radius:10px;padding:14px 20px;margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:800;color:#1d4ed8;text-transform:uppercase;
+                        letter-spacing:1px;margin-bottom:6px;">💊 KLİNİK ÖNERİ</div>
+            <div style="color:#1e293b;font-size:0.88rem;line-height:1.75;font-weight:500;">
                 {insight['recommendation']}
             </div>
         </div>
@@ -792,16 +816,42 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
     if opts.get("acmg_enabled", False):
         try:
             from src.scientific.acmg_mapper import ACMGMapper
-            mapper = ACMGMapper()
+            mapper    = ACMGMapper()
             shap_vals = explainer.explain_instance(X_scaled[idx:idx+1])
-            if shap_vals is not None and len(shap_vals) > 0:
-                shap_vals = shap_vals[0]
-            else:
-                shap_vals = np.zeros_like(X_scaled[idx])
-            acmg_res = mapper.classify(X_scaled[idx], shap_vals, feature_names)
-            st.markdown(f"#### 🧬 ACMG Patojenite Değerlendirmesi: **{acmg_res['classification']}** (Skor: {acmg_res['acmg_score']})")
-            for c in acmg_res["criteria"]:
-                st.markdown(f"- **{c['code']}** ({c['strength']}): {c['evidence']} *(SHAP Katkısı: {c['shap_contrib']:.2f})*")
+            shap_vals = shap_vals[0] if (shap_vals is not None and len(shap_vals) > 0) else np.zeros_like(X_scaled[idx])
+            acmg_res  = mapper.classify(X_scaled[idx], shap_vals, feature_names)
+            _acls = acmg_res["classification"]
+            _ascore = acmg_res["acmg_score"]
+            _acfg = {"Pathogenic":("#dc2626","#fef2f2","#fca5a5"),
+                     "Likely Pathogenic":("#ea580c","#fff7ed","#fed7aa"),
+                     "VUS":("#d97706","#fffbeb","#fde68a"),
+                     "Likely Benign":("#16a34a","#f0fdf4","#86efac"),
+                     "Benign":("#15803d","#f0fdf4","#6ee7b7")}.get(_acls,("#64748b","#f8fafc","#e2e8f0"))
+            st.markdown(f"""
+            <div style="background:{_acfg[1]};border:2px solid {_acfg[2]};border-left:5px solid {_acfg[0]};
+                        border-radius:12px;padding:16px 20px;margin:16px 0;
+                        box-shadow:0 3px 12px rgba(0,0,0,0.08);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;
+                                letter-spacing:1px;color:#0f172a;">🧬 ACMG Patojenite Değerlendirmesi</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:{_acfg[0]};color:#fff;font-size:0.78rem;font-weight:800;
+                                    padding:4px 14px;border-radius:8px;">{_acls}</span>
+                        <span style="background:#0f172a;color:#fff;font-size:0.78rem;font-weight:800;
+                                    padding:4px 12px;border-radius:8px;">Puan: {_ascore:+d}</span>
+                    </div>
+                </div>
+                {''.join([f\'\'\'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;
+                            border-bottom:1px solid {_acfg[2]};">
+                    <span style="background:{_acfg[0]};color:#fff;font-size:0.7rem;font-weight:800;
+                                padding:2px 8px;border-radius:6px;white-space:nowrap;">{c["code"]}</span>
+                    <span style="font-size:0.7rem;color:#64748b;font-weight:600;">{c["strength"]}</span>
+                    <span style="font-size:0.8rem;color:#1e293b;font-weight:500;flex:1;">{c["evidence"]}</span>
+                    <span style="font-size:0.7rem;color:{_acfg[0]};font-weight:700;white-space:nowrap;">
+                        SHAP:{c["shap_contrib"]:.2f}</span>
+                </div>\'\'\' for c in acmg_res["criteria"]] or
+                f\'<div style="color:#475569;font-size:0.82rem;font-style:italic;">Bu varyant için ACMG kriteri karşılanmadı.</div>\')}
+            </div>""", unsafe_allow_html=True)
         except Exception as e:
             st.error(f"ACMG hatası: {e}")
 
@@ -810,13 +860,37 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
         try:
             from src.scientific.pubmed_rag import PubMedRAG
             rag = PubMedRAG()
-            vid = df_features["Variant_ID"].iloc[idx] if "Variant_ID" in df_features.columns else "BRCA1-variant"
-            st.markdown("#### 📚 PubMed Canlı Literatür (RAG)")
-            with st.spinner("PubMed aranıyor..."):
+            vid = df_features["Variant_ID"].iloc[idx] if "Variant_ID" in df_features.columns else "BRCA1"
+            st.markdown("""
+            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;text-transform:uppercase;
+                        letter-spacing:1px;margin:18px 0 10px;padding-bottom:8px;
+                        border-bottom:2px solid #e2e8f0;">
+                📚 PUBMED CANLI LİTERATÜR (RAG)
+            </div>""", unsafe_allow_html=True)
+            with st.spinner("PubMed aranıyor…"):
                 articles = rag.fetch_for_variant(vid, n_results=2)
                 for a in articles:
-                    st.markdown(f"- [{a['title']}]({a['url']}) ({a['year']})")
-                    st.caption(f"_{a['abstract_snippet']}_")
+                    st.markdown(f"""
+                    <div style="background:#ffffff;border:1.5px solid #c7d2fe;border-radius:12px;
+                                overflow:hidden;margin-bottom:12px;box-shadow:0 3px 12px rgba(67,56,202,0.1);">
+                        <div style="background:linear-gradient(135deg,#1e1b4b,#4338ca);
+                                    padding:10px 16px;display:flex;align-items:center;gap:10px;">
+                            <span style="color:#c7d2fe;font-size:0.72rem;font-weight:600;">
+                                {a.get('journal','?')} · {a.get('year','?')}</span>
+                            <a href="{a.get('url','#')}" target="_blank"
+                               style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;
+                                      font-size:0.7rem;font-weight:700;padding:2px 10px;
+                                      border-radius:6px;text-decoration:none;">
+                                PMID:{a.get('pmid','?')} ↗</a>
+                        </div>
+                        <div style="padding:12px 16px;">
+                            <div style="font-size:0.85rem;font-weight:700;color:#1e1b4b;
+                                        line-height:1.5;margin-bottom:6px;">{a.get('title','?')}</div>
+                            <div style="background:#f5f3ff;border-radius:6px;padding:8px 12px;
+                                        font-size:0.78rem;color:#374151;line-height:1.6;font-style:italic;">
+                                "{a.get('abstract_snippet','')}"</div>
+                        </div>
+                    </div>""", unsafe_allow_html=True)
         except Exception as e:
             st.error(f"PubMed RAG hatası: {e}")
 
@@ -831,13 +905,12 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:#eff6ff; border:1px solid #bfdbfe;
-                border-radius:10px; padding:12px 16px; margin-bottom:14px;
-                font-size:0.82rem; color:#64748b; line-height:1.7;">
-        Bu grafik, <strong style="color:#1d4ed8;">Graph Neural Network (GNN)</strong>'in girdi katmanını oluşturan
-        özellik düğümlerini ve korelasyon bağlarını (kenarları) göstermektedir.
-        GNN bu ilişkileri öğrenerek varyantlar arası biyolojik bağlamı modeller.
-        Sağ panelde ise GNN kenar oluşumunun temelini oluşturan korelasyon ısı haritası yer almaktadır.
+    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-left:4px solid #2563eb;
+                border-radius:10px;padding:12px 18px;margin-bottom:14px;">
+        <span style="font-size:0.82rem;color:#1e293b;font-weight:500;line-height:1.7;">
+        <strong style="color:#1d4ed8;">GNN</strong>'in öğrendiği özellik ilişkilerini görselleştirir.
+        Sol: korelasyon grafiği — Sağ: ısı haritası.
+        </span>
     </div>
     """, unsafe_allow_html=True)
 
