@@ -746,7 +746,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
                 <div style="font-size:1.8rem; font-weight:800; color:{insight['zone_color']};">{insight['zone_label']}</div>
                 <div style="font-size:1.4rem; font-weight:700; color:#0f172a;">{risk_val:.1f} / 100</div>
             </div>
-            <div style="color:#cbd5e0; font-size:0.92rem; line-height:1.8;">{insight['summary']}</div>
+            <div style="color:#374151; font-size:0.92rem; line-height:1.8;">{insight['summary']}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -777,9 +777,9 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
 
         # ── Klinik öneri
         st.markdown(f"""
-        <div style="background:rgba(66,153,225,0.08); border:1px solid rgba(66,153,225,0.25);
+        <div style="background:#eff6ff; border:1px solid #bfdbfe;
                     border-radius:10px; padding:14px 18px; margin-top:8px;">
-            <div style="color:#cbd5e0; font-size:0.87rem; line-height:1.75;">
+            <div style="color:#374151; font-size:0.87rem; line-height:1.75;">
                 {insight['recommendation']}
             </div>
         </div>
@@ -1604,9 +1604,9 @@ def main():
                     _lvl = _rpt["privacy_level"]
                     st.markdown(f"""
                     <div class="success-panel">
-                        <b style="color:#86efac;">✅ ε={_eps} Laplace gürültüsü uygulandı</b><br>
+                        <b style="color:#15803d;">✅ ε={_eps} Laplace gürültüsü uygulandı</b><br>
                         <span style="color:#64748b;font-size:0.85rem;">
-                        Gizlilik seviyesi: <b style="color:#fca5a5;">{_lvl}</b> ·
+                        Gizlilik seviyesi: <b style="color:#dc2626;">{_lvl}</b> ·
                         KVKK Madde 6 · GDPR Madde 89 · HIPAA Safe Harbor uyumlu
                         </span>
                     </div>""", unsafe_allow_html=True)
@@ -1651,21 +1651,31 @@ def main():
     # ─────────────────────────────────────────────────────────────
     with tab_xai:
         st.markdown("""
-        <div style="background:linear-gradient(135deg,rgba(104,211,145,0.08),rgba(56,161,105,0.04));
-                    border:1px solid rgba(104,211,145,0.25); border-radius:12px;
-                    padding:20px 24px; margin-bottom:22px;">
-            <div style="font-size:1rem; font-weight:700; color:#16a34a; margin-bottom:10px;">
-                🧠 Bu Sekme Ne Yapıyor?
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:4px solid #16a34a;
+                    border-radius:12px; padding:20px 24px; margin-bottom:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:0.72rem; font-weight:700; color:#16a34a; text-transform:uppercase;
+                        letter-spacing:1.2px; margin-bottom:10px;">🧠 Açıklanabilir Yapay Zeka (XAI)</div>
+            <div style="color:#1e293b; font-size:0.9rem; line-height:1.7; font-weight:500; margin-bottom:14px;">
+                YZ modelleri çoğu zaman <strong style="color:#dc2626;">"kara kutu"</strong>
+                gibi çalışır. Bu sekme <em>neden o kararı verdiğini</em> açıklar.
             </div>
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
-                Yapay zeka modelleri çoğu zaman <strong style="color:#9ae6b4;">"kara kutu"</strong> gibi çalışır — doğru sonuç verir ama neden verdiğini açıklamaz.
-                Bu sekme bu sorunu çözer.
-                <br><br>
-                📊 <strong style="color:#9ae6b4;">SHAP (Global)</strong> — Tüm varyantlara bakıldığında hangi biyolojik özellik (örn. CADD skoru, evrimsel korunmuşluk) modeli en çok etkiliyor?<br>
-                🌊 <strong style="color:#9ae6b4;">SHAP Waterfall (Yerel)</strong> — Seçtiğiniz tek bir varyant için "Bu varyantı neden riskli buldun?" sorusunun cevabı<br>
-                🟢 <strong style="color:#9ae6b4;">LIME</strong> — Alternatif bir açıklama yöntemi; modelin kararını daha basit kurallarla özetler
-                <br><br>
-                <em style="color:#64748b;">Klinik ortamda doktor, sadece "Patojenik" etiketini değil, gerekçesini de bilmek ister. Bu sekme tam bunu sağlar.</em>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:160px; background:#f0fdf4; border:1px solid #86efac;
+                            border-radius:8px; padding:12px 14px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#15803d; margin-bottom:3px;">📊 Global SHAP</div>
+                    <div style="font-size:0.75rem; color:#374151; line-height:1.4;">Hangi özellik modeli en çok etkiliyor?</div>
+                </div>
+                <div style="flex:1; min-width:160px; background:#eff6ff; border:1px solid #bfdbfe;
+                            border-radius:8px; padding:12px 14px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#1d4ed8; margin-bottom:3px;">🌊 Yerel Waterfall</div>
+                    <div style="font-size:0.75rem; color:#374151; line-height:1.4;">Tek varyant için karar gerekçesi</div>
+                </div>
+                <div style="flex:1; min-width:160px; background:#faf5ff; border:1px solid #e9d5ff;
+                            border-radius:8px; padding:12px 14px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#7c3aed; margin-bottom:3px;">🟢 LIME</div>
+                    <div style="font-size:0.75rem; color:#374151; line-height:1.4;">Basit kurallarla karar özeti</div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1710,93 +1720,113 @@ def main():
 
     with tab_perf:
         st.markdown("""
-        <div style="background:linear-gradient(135deg,rgba(246,173,85,0.08),rgba(221,107,32,0.04));
-                    border:1px solid rgba(246,173,85,0.25); border-radius:12px;
-                    padding:20px 24px; margin-bottom:22px;">
-            <div style="font-size:1rem; font-weight:700; color:#d97706; margin-bottom:10px;">
-                📊 Bu Sekme Ne Yapıyor?
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:4px solid #d97706;
+                    border-radius:12px; padding:20px 24px; margin-bottom:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:0.72rem; font-weight:700; color:#d97706; text-transform:uppercase;
+                        letter-spacing:1.2px; margin-bottom:10px;">📊 Model Performans Metrikleri</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#b45309; margin-bottom:2px;">📉 Confusion Matrix</div>
+                    <div style="font-size:0.74rem; color:#374151;">Doğru / yanlış sınıflandırma</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#b45309; margin-bottom:2px;">📈 ROC Eğrisi</div>
+                    <div style="font-size:0.74rem; color:#374151;">Ayrım gücü analizi</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#b45309; margin-bottom:2px;">✅ Precision-Recall</div>
+                    <div style="font-size:0.74rem; color:#374151;">Dengesiz veri güvenilirliği</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#b45309; margin-bottom:2px;">⚖️ Kalibrasyon</div>
+                    <div style="font-size:0.74rem; color:#374151;">Risk skoru doğruluğu</div>
+                </div>
             </div>
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
-                Modelimizin eğitim sürecinde elde ettiği başarım metriklerini gösterir. Bunlar dışarıdan bir veri olmadan, sadece kendi eğitim sürecimize aittir.
-                <br><br>
-                📉 <strong style="color:#d97706;">Confusion Matrix</strong> — Kaç varyantı doğru, kaçını yanlış sınıflandırdık?<br>
-                📈 <strong style="color:#d97706;">ROC Eğrisi</strong> — Model ne kadar iyi "gerçek patojenik" ile "sahte alarm" arasında ayrım yapabiliyor?<br>
-                ✅ <strong style="color:#d97706;">Precision-Recall</strong> — Özellikle dengesiz veri setlerinde ne kadar güvenilir?<br>
-                ⚖️ <strong style="color:#d97706;">Kalibrasyon</strong> — Modelin verdiği %80 risk skoru gerçekten %80 ihtimal mi?
-                <br><br>
-                <em style="color:#64748b;">5-katlı çapraz doğrulama (5-fold CV) ile Macro F1 = 1.0000 elde edilmiştir.</em>
-            </div>
+            <div style="margin-top:12px; padding:8px 12px; background:#fef9c3; border-radius:6px;
+                        font-size:0.78rem; color:#713f12; font-weight:600;">
+                🏆 5-Katlı Çapraz Doğrulama · Macro F1 = 1.0000</div>
         </div>
         """, unsafe_allow_html=True)
         render_performance_tab()
 
     with tab_clinvar:
         st.markdown("""
-        <div style="background:linear-gradient(135deg,rgba(160,130,230,0.08),rgba(128,90,213,0.04));
-                    border:1px solid rgba(160,130,230,0.25); border-radius:12px;
-                    padding:20px 24px; margin-bottom:22px;">
-            <div style="font-size:1rem; font-weight:700; color:#b794f4; margin-bottom:10px;">
-                🔍 Bu Sekme Ne Yapıyor?
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:4px solid #7c3aed;
+                    border-radius:12px; padding:20px 24px; margin-bottom:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:0.72rem; font-weight:700; color:#7c3aed; text-transform:uppercase;
+                        letter-spacing:1.2px; margin-bottom:10px;">🔍 NCBI ClinVar Canlı Arama</div>
+            <div style="color:#1e293b; font-size:0.9rem; line-height:1.7; font-weight:500; margin-bottom:12px;">
+                <strong>ClinVar</strong>, binlerce araştırmacının genetik varyantları paylaştığı
+                NCBI'nin resmi veritabanıdır. Yapay zeka tahminimizi dünya literatürüyle karşılaştırın.
             </div>
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
-                <strong style="color:#d6bcfa;">ClinVar</strong>, dünya genelinde binlerce araştırmacı ve klinisyenin
-                genetik varyantları paylaştığı NCBI'nin (ABD Ulusal Biyoteknoloji Bilgi Merkezi) resmi veritabanıdır.
-                <br><br>
-                Bu sekme, NCBI'nin <strong style="color:#d6bcfa;">canlı API'si</strong> üzerinden gerçek zamanlı sorgulama yapmanızı sağlar:
-                <br><br>
-                🧬 Bir <strong style="color:#d6bcfa;">gen adı</strong> yazın (örn. BRCA1, TP53, CFTR)<br>
-                🔑 Bir <strong style="color:#d6bcfa;">rsID</strong> kullanın (örn. rs28897672)<br>
-                📋 <strong style="color:#d6bcfa;">HGVS notasyonu</strong> ile arama yapın (örn. NM_007294.4:c.5266dupC)
-                <br><br>
-                Sonuç olarak o varyantın <em>klinik önemi, gen bilgisi ve uzman inceleme durumu</em> anında görüntülenir.
-                Böylece yapay zekamızın tahmini ile dünya literatürü karşılaştırılabilir.
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#7c3aed; margin-bottom:2px;">🧬 Gen Adı</div>
+                    <div style="font-size:0.74rem; color:#374151;">BRCA1, TP53, CFTR…</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#7c3aed; margin-bottom:2px;">🔑 rsID</div>
+                    <div style="font-size:0.74rem; color:#374151;">rs28897672…</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:11px 13px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#7c3aed; margin-bottom:2px;">📋 HGVS</div>
+                    <div style="font-size:0.74rem; color:#374151;">NM_007294.4:c.5266dupC…</div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         render_clinvar_tab()
 
     with tab_about:
-        # ── Hero Section ──
+        # ── About Hero ──
         st.markdown("""
-        <div style="background:linear-gradient(135deg,#0f2044 0%,#1a3a6e 40%,#0d2855 100%);
-                    border:1px solid rgba(99,179,237,0.3); border-radius:16px;
-                    padding:36px 40px; margin-bottom:28px; position:relative; overflow:hidden;">
-            <p style="font-size:2rem; font-weight:700; color:#0f172a; margin:0 0 8px 0; letter-spacing:-0.5px;">
-                🧬 <span style="color:#1d4ed8;">VARIANT-GNN</span>
+        <div style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 35%,#1e1b4b 70%,#1d4ed8 100%);
+                    border-radius:16px; padding:36px 40px; margin-bottom:20px;
+                    box-shadow:0 8px 32px rgba(220,38,38,0.2);">
+            <p style="font-size:2.2rem; font-weight:900; color:#ffffff; margin:0 0 8px 0; letter-spacing:-1px;">
+                🧬 VARIANT-GNN
             </p>
-            <p style="font-size:1.05rem; color:#64748b; margin:0; line-height:1.7;">
-                Genetik Varyant Patojenite Tahmini için<br>
-                <strong style="color:#2563eb;">Hibrit Grafik Sinir Ağı Sistemi</strong>
+            <p style="font-size:1rem; color:rgba(255,255,255,0.85); margin:0; line-height:1.7;">
+                Genetik Varyant Patojenite Tahmini için Hibrit Graph Neural Network Sistemi<br>
+                <strong style="color:#fef08a;">TEKNOFEST 2026 · Sağlıkta Yapay Zeka Yarışması</strong>
             </p>
-            <div style="margin-top:14px;">
-                <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
-                    🏆 TEKNOFEST 2026</span>
-                <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
-                    🔬 Sağlıkta Yapay Zeka</span>
-                <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px;">
-                    ⚡ GNN + XGBoost + LightGBM + DNN</span>
+            <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+                <span style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);
+                      color:#fff;font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:6px;">🏆 TEKNOFEST 2026</span>
+                <span style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);
+                      color:#fff;font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:6px;">⚡ GATv2GNN + XGBoost + LightGBM + DNN</span>
+                <span style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);
+                      color:#fff;font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:6px;">🛡️ ACMG · OOD · KVKK-DP · PubMed RAG</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # ── İnovasyon Özeti ──
         st.markdown("""
-        <div style="background:linear-gradient(135deg,rgba(99,179,237,0.08),rgba(66,153,225,0.04));
-                    border:1px solid rgba(99,179,237,0.25); border-radius:12px;
-                    padding:22px 26px; margin-bottom:24px;">
-            <div style="font-size:1.05rem; font-weight:700; color:#1d4ed8; margin-bottom:14px;">🌟 Proje İnovasyon Özeti</div>
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:2;">
-                <strong style="color:#90cdf4;">VARIANT-GNN</strong>, genetik varyant analizi alanında
-                <strong style="color:#d97706;">hibrit GraphSAGE-XGBoost-LightGBM-DNN ensemble sistemi</strong>dir.<br>
-                🧬 <strong>43 biyomoleküler özellik</strong> ile çok boyutlu genetik analiz<br>
-                🕸️ <strong>VariantSAGEGNN</strong>: İndüktif GraphSAGE + Multimodal Context Encoder hibrit mimarisi<br>
-                🔬 <strong>Klinik karar destek</strong>: SHAP/LIME açıklanabilir AI + Türkçe biyolojik rapor<br>
-                📊 <strong>4 uzmanlaşmış panel</strong>: Genel, Herediter Kanser, PAH, CFTR genotipi<br>
-                ⚡ <strong>Gerçek zamanlı ClinVar API</strong>: NCBI E-utilities ile doğrulama<br>
-                🎯 <strong>%94+ F1 Score</strong> performansı (makro ortalama)
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:4px solid #1d4ed8;
+                    border-radius:12px; padding:22px 26px; margin-bottom:16px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:0.72rem; font-weight:700; color:#1d4ed8; text-transform:uppercase;
+                        letter-spacing:1.2px; margin-bottom:14px;">🌟 Proje İnovasyon Özeti</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#dc2626;margin-bottom:3px;">🧬 43 Biyomoleküler Özellik</div>
+                    <div style="font-size:0.74rem;color:#374151;">Çok boyutlu genetik analiz</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#1d4ed8;margin-bottom:3px;">🕸️ GATv2GNN + Ensemble</div>
+                    <div style="font-size:0.74rem;color:#374151;">Hibrit derin öğrenme mimarisi</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#16a34a;margin-bottom:3px;">📊 4 Uzmanlaşmış Panel</div>
+                    <div style="font-size:0.74rem;color:#374151;">Genel · Herediter Kanser · PAH · CFTR</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#7c3aed;margin-bottom:3px;">🎯 %94+ Macro F1</div>
+                    <div style="font-size:0.74rem;color:#374151;">5-Katlı çapraz doğrulama</div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1959,12 +1989,12 @@ def main():
         </div>
         <div style="background:#eff6ff; border:1px solid #bfdbfe;
                     border-radius:10px; padding:18px 22px; margin-bottom:18px;">
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:2;">
-                📊 <strong style="color:#90cdf4;">SHAP (Global)</strong> — En önemli 15 biyolojik özellik: SIFT (0.23), PolyPhen2 (0.19), CADD (0.17), gnomAD_AF (0.15)...<br>
-                🌊 <strong style="color:#90cdf4;">SHAP Waterfall (Yerel)</strong> — Tekil varyant düzeyinde "Neden patojenik?" açıklaması<br>
-                🟢 <strong style="color:#90cdf4;">LIME</strong> — Basit kurallarla model kararını özetleme<br>
-                🕸️ <strong style="color:#90cdf4;">GNN Attention</strong> — Varyant benzerlik grafı + korelasyon ısı haritası görselleştirme<br>
-                🏥 <strong style="color:#90cdf4;">Klinik Rapor</strong> — Türkçe otomatik biyolojik yorum + PDF çıktı
+            <div style="color:#374151; font-size:0.88rem; line-height:2;">
+                📊 <strong style="color:#1d4ed8;">SHAP (Global)</strong> — En önemli 15 biyolojik özellik: SIFT (0.23), PolyPhen2 (0.19), CADD (0.17), gnomAD_AF (0.15)...<br>
+                🌊 <strong style="color:#1d4ed8;">SHAP Waterfall (Yerel)</strong> — Tekil varyant düzeyinde "Neden patojenik?" açıklaması<br>
+                🟢 <strong style="color:#1d4ed8;">LIME</strong> — Basit kurallarla model kararını özetleme<br>
+                🕸️ <strong style="color:#1d4ed8;">GNN Attention</strong> — Varyant benzerlik grafı + korelasyon ısı haritası görselleştirme<br>
+                🏥 <strong style="color:#1d4ed8;">Klinik Rapor</strong> — Türkçe otomatik biyolojik yorum + PDF çıktı
             </div>
         </div>
         """, unsafe_allow_html=True)
