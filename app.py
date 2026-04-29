@@ -428,15 +428,16 @@ def _load_pipeline() -> InferencePipeline | None:
 
 
 def plot_dark(fig, ax):
-    fig.patch.set_facecolor('#1a2744')
-    ax.set_facecolor('#1a2744')
-    ax.tick_params(colors='#94a3b8')
-    ax.xaxis.label.set_color('#94a3b8')
-    ax.yaxis.label.set_color('#94a3b8')
-    ax.title.set_color('#e2e8f0')
+    """Grafikleri beyaz/açık temaya uyarlar."""
+    fig.patch.set_facecolor('#ffffff')
+    ax.set_facecolor('#f8fafc')
+    ax.tick_params(colors='#374151')
+    ax.xaxis.label.set_color('#374151')
+    ax.yaxis.label.set_color('#374151')
+    ax.title.set_color('#0f172a')
     for spine in ax.spines.values():
-        spine.set_edgecolor((0.388, 0.702, 0.929, 0.15))
-    ax.grid(True, color=(1.0, 1.0, 1.0, 0.05), linewidth=0.5)
+        spine.set_edgecolor('#e2e8f0')
+    ax.grid(True, color='#e2e8f0', linewidth=0.7, linestyle='--', alpha=0.8)
 
 
 def render_hero():
@@ -462,7 +463,7 @@ def render_sidebar(cfg) -> dict:
                     letter-spacing:0.5px; text-shadow:0 2px 8px rgba(0,0,0,0.3);">
             VARIANT-GNN
         </div>
-        <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;
+        <div style="font-size:0.7rem; color:#64748b; margin-top:4px;
                     font-weight:600; letter-spacing:1px; text-transform:uppercase;">
             v2.0 · TEKNOFEST 2026
         </div>
@@ -509,14 +510,14 @@ def render_sidebar(cfg) -> dict:
     st.sidebar.markdown("---")
     st.sidebar.markdown("""
     <div style="padding: 12px; background: rgba(99,179,237,0.05); border-radius: 8px; border: 1px solid rgba(99,179,237,0.15); margin-bottom: 12px;">
-        <div style="font-size:0.75rem; color:#718096; line-height:1.6;">
-            ⚠️ <strong style="color:#f6ad55;">Araştırma Aracı</strong><br>
+        <div style="font-size:0.75rem; color:#64748b; line-height:1.6;">
+            ⚠️ <strong style="color:#d97706;">Araştırma Aracı</strong><br>
             Bu sistem klinik karar desteği için değil, araştırma amacıyla geliştirilmiştir.
         </div>
     </div>
     <div style="padding: 12px; background: rgba(229,62,62,0.05); border-radius: 8px; border: 1px solid rgba(229,62,62,0.25);">
-        <div style="font-size:0.75rem; color:#fc8181; line-height:1.5;">
-            🛑 <strong style="color:#fc8181;">ÖNEMLİ (TEKNOFEST NDA)</strong><br>
+        <div style="font-size:0.75rem; color:#dc2626; line-height:1.5;">
+            🛑 <strong style="color:#dc2626;">ÖNEMLİ (TEKNOFEST NDA)</strong><br>
             Gizlilik Sözleşmesi (NDA) imzalanmadan T.C. Sağlık Bakanlığı / TÜSEB verilerinin sisteme yüklenmesi yasaktır.
         </div>
     </div>
@@ -537,61 +538,61 @@ def render_summary_cards(df_result: pd.DataFrame):
     if "Clinical_Flag" in df_result.columns:
         expert_needed = int(df_result["Clinical_Flag"].str.contains("Uzman", na=False).sum())
 
+    n_ood = int(df_result.get("OOD_Flag", pd.Series(dtype=bool)).sum())
+
     st.markdown(f"""
     <div class="metric-row">
         <div class="metric-card">
-            <div class="value">{total}</div>
+            <div class="value" style="color:#0f172a;">{total}</div>
             <div class="label">Toplam Varyant</div>
             <div class="sublabel">Analiz Edildi</div>
         </div>
         <div class="metric-card pathogenic">
-            <div class="value" style="color:#fc8181;">{pathogenic}</div>
+            <div class="value" style="color:#dc2626;">{pathogenic}</div>
             <div class="label">Patojenik</div>
             <div class="sublabel">{path_pct:.1f}% oran</div>
         </div>
         <div class="metric-card benign">
-            <div class="value" style="color:#68d391;">{benign}</div>
+            <div class="value" style="color:#16a34a;">{benign}</div>
             <div class="label">Benign</div>
             <div class="sublabel">{100-path_pct:.1f}% oran</div>
         </div>
         <div class="metric-card warning">
-            <div class="value" style="color:#f6ad55;">{high_risk}</div>
+            <div class="value" style="color:#d97706;">{high_risk}</div>
             <div class="label">Yüksek Risk</div>
-            <div class="sublabel">Kalibre edilmiş</div>
+            <div class="sublabel">Kalibre ≥70</div>
         </div>
-        <div class="metric-card" style="border-color:rgba(251,211,141,0.4);">
-            <div class="value" style="color:#fbd38d;">{expert_needed}</div>
+        <div class="metric-card expert">
+            <div class="value" style="color:#dc2626;">{expert_needed}</div>
             <div class="label">⚠️ Uzman Gerekli</div>
-            <div class="sublabel">Human-in-the-Loop</div>
+            <div class="sublabel">Human-in-Loop</div>
         </div>
-        <div class="metric-card" style="border-color:rgba(99,179,237,0.4);">
-            <div class="value" style="color:#63b3ed;">{df_result.get('OOD_Flag', pd.Series(dtype=bool)).sum()}</div>
-            <div class="label">🚨 OOD Tespit</div>
-            <div class="sublabel">Veri Sapması</div>
+        <div class="metric-card" style="border-top-color:#2563eb;">
+            <div class="value" style="color:#1d4ed8;">{n_ood}</div>
+            <div class="label">📡 OOD Tespit</div>
+            <div class="sublabel">Dağılım Dışı</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Human-in-the-Loop açıklama bandı
+    # Human-in-the-Loop uyarı bandı
     if expert_needed > 0:
         st.markdown(f"""
-        <div style="background:linear-gradient(135deg,rgba(251,211,141,0.07),rgba(246,173,85,0.04));
-                    border:1px solid rgba(251,211,141,0.3); border-radius:10px;
-                    padding:14px 18px; margin-top:12px; display:flex; align-items:flex-start; gap:14px;">
-            <div style="font-size:1.6rem; line-height:1;">⚠️</div>
+        <div style="background:#fffbeb; border:1.5px solid #f59e0b;
+                    border-left:5px solid #dc2626; border-radius:12px;
+                    padding:16px 20px; margin-top:8px; display:flex;
+                    align-items:flex-start; gap:16px; box-shadow:0 2px 8px rgba(220,38,38,0.08);">
+            <div style="font-size:2rem; line-height:1; flex-shrink:0;">⚕️</div>
             <div>
-                <div style="font-weight:700; color:#fbd38d; font-size:0.9rem; margin-bottom:4px;">
-                    Human-in-the-Loop — Uzman Değerlendirmesi Gerekli
+                <div style="font-weight:700; color:#92400e; font-size:0.92rem; margin-bottom:4px;">
+                    Human-in-the-Loop — Klinisyen Değerlendirmesi Gerekiyor
                 </div>
-                <div style="color:#a0aec0; font-size:0.82rem; line-height:1.6;">
-                    <strong style="color:#fbd38d;">{expert_needed}</strong> varyant,
-                    MC-Dropout belirsizlik skoru <strong>&gt; 0.30</strong> eşiğini aştı.
-                    Bu varyantlar "gri bölge" mutasyonları olup model tek başına karar vermeyi
-                    reddetmektedir. Lütfen ilgili varyantları bir uzman genetikçi ile değerlendirin.
-                    <br><em style="color:#718096;">
-                    Bu tasarım bilinçlidir: False Negative riskini sıfıra indiren
-                    güvenli karar destek sistemi felsefemizin bir parçasıdır.
-                    </em>
+                <div style="color:#78350f; font-size:0.83rem; line-height:1.65;">
+                    <strong style="color:#dc2626;">{expert_needed}</strong> varyant MC-Dropout
+                    belirsizlik skoru &gt;0.30 eşiğini aştı — model bu varyantlar için
+                    otomatik karar vermeyi reddediyor. Lütfen uzman genetikçi ile
+                    değerlendirin. <em>Bu tasarım bilinçlidir: False Negative riskini
+                    minimize eden güvenli KDS felsefesinin parçasıdır.</em>
                 </div>
             </div>
         </div>
@@ -625,13 +626,12 @@ def render_risk_histogram(df_result: pd.DataFrame):
             patch.set_facecolor('#fc8181')
         patch.set_alpha(0.85)
 
-    ax.axvline(50, color='#f6ad55', linestyle='--', linewidth=1.2, alpha=0.7, label='Orta Risk')
-    ax.axvline(75, color='#fc8181', linestyle='--', linewidth=1.2, alpha=0.7, label='Yüksek Risk')
-    ax.set_xlabel("Kalibre Edilmiş Risk Skoru (%)")
-    ax.set_ylabel("Varyant Sayısı")
-    ax.set_title("Risk Skoru Dağılımı", fontsize=12, fontweight='bold', pad=14)
-    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor=(0.388, 0.702, 0.929, 0.3),
-              labelcolor='#94a3b8')
+    ax.axvline(50, color='#f59e0b', linestyle='--', linewidth=1.5, alpha=0.8, label='Orta Risk (50)')
+    ax.axvline(75, color='#dc2626', linestyle='--', linewidth=1.5, alpha=0.8, label='Yüksek Risk (75)')
+    ax.set_xlabel("Kalibre Edilmiş Risk Skoru (%)", fontsize=11)
+    ax.set_ylabel("Varyant Sayısı", fontsize=11)
+    ax.set_title("Risk Skoru Dağılımı", fontsize=13, fontweight='bold', pad=14, color='#0f172a')
+    ax.legend(fontsize=9, facecolor='#ffffff', edgecolor='#e2e8f0', labelcolor='#374151')
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -647,28 +647,27 @@ def render_risk_map(df_result: pd.DataFrame):
     """, unsafe_allow_html=True)
 
     risk_col = "Calibrated_Risk" if "Calibrated_Risk" in df_result.columns else "Probability"
-    risks = df_result[risk_col].values[:200]  # İlk 200 varyant
+    risks = df_result[risk_col].values[:200]
     n = len(risks)
 
     fig, ax = plt.subplots(figsize=(11, 3.5))
     plot_dark(fig, ax)
 
-    colors = ['#fc8181' if r > 75 else '#f6ad55' if r > 50 else '#68d391' for r in risks]
-    ax.scatter(range(n), risks, c=colors, s=40, alpha=0.8, zorder=3)
-    ax.fill_between(range(n), risks, alpha=0.08, color='#63b3ed')
-    ax.axhline(75, color='#fc8181', linestyle='--', linewidth=1, alpha=0.6, label='Yüksek Risk Eşiği (75)')
-    ax.axhline(50, color='#f6ad55', linestyle='--', linewidth=1, alpha=0.6, label='Orta Risk Eşiği (50)')
-    ax.set_xlabel("Varyant İndeksi")
-    ax.set_ylabel("Risk Skoru (%)")
-    ax.set_title("Varyant Risk Haritası (İlk 200)", fontsize=12, fontweight='bold', pad=14)
+    colors = ['#dc2626' if r > 75 else '#f59e0b' if r > 50 else '#16a34a' for r in risks]
+    ax.scatter(range(n), risks, c=colors, s=45, alpha=0.85, zorder=3, edgecolors='white', linewidths=0.4)
+    ax.fill_between(range(n), risks, alpha=0.06, color='#2563eb')
+    ax.axhline(75, color='#dc2626', linestyle='--', linewidth=1.2, alpha=0.7)
+    ax.axhline(50, color='#f59e0b', linestyle='--', linewidth=1.2, alpha=0.7)
+    ax.set_xlabel("Varyant İndeksi", fontsize=11)
+    ax.set_ylabel("Risk Skoru (%)", fontsize=11)
+    ax.set_title("Varyant Risk Haritası (İlk 200)", fontsize=13, fontweight='bold', pad=14, color='#0f172a')
     ax.set_ylim(0, 105)
-    ax.legend(fontsize=9, facecolor='#1a2744', edgecolor=(0.388, 0.702, 0.929, 0.3), labelcolor='#94a3b8')
 
-    low_p  = mpatches.Patch(color='#68d391', label=f'Benign ({sum(1 for r in risks if r<=50)})')
-    mid_p  = mpatches.Patch(color='#f6ad55', label=f'Orta Risk ({sum(1 for r in risks if 50<r<=75)})')
-    high_p = mpatches.Patch(color='#fc8181', label=f'Yüksek Risk ({sum(1 for r in risks if r>75)})')
-    ax.legend(handles=[low_p, mid_p, high_p], fontsize=9, facecolor='#1a2744',
-              edgecolor=(0.388, 0.702, 0.929, 0.3), labelcolor='white', loc='upper right')
+    low_p  = mpatches.Patch(color='#16a34a', label=f'Benign ({sum(1 for r in risks if r<=50)})')
+    mid_p  = mpatches.Patch(color='#f59e0b', label=f'Orta Risk ({sum(1 for r in risks if 50<r<=75)})')
+    high_p = mpatches.Patch(color='#dc2626', label=f'Yüksek Risk ({sum(1 for r in risks if r>75)})')
+    ax.legend(handles=[low_p, mid_p, high_p], fontsize=9,
+              facecolor='#ffffff', edgecolor='#e2e8f0', labelcolor='#374151', loc='upper right')
 
     plt.tight_layout()
     st.pyplot(fig)
@@ -806,11 +805,11 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
 
         # ── Risk rozeti
         st.markdown(f"""
-        <div style="background:rgba(99,179,237,0.06); border:1px solid rgba(99,179,237,0.2);
+        <div style="background:#eff6ff; border:1px solid #93c5fd;
                     border-radius:14px; padding:22px 26px; margin-bottom:18px;">
             <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
                 <div style="font-size:1.8rem; font-weight:800; color:{insight['zone_color']};">{insight['zone_label']}</div>
-                <div style="font-size:1.4rem; font-weight:700; color:#e2e8f0;">{risk_val:.1f} / 100</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#0f172a;">{risk_val:.1f} / 100</div>
             </div>
             <div style="color:#cbd5e0; font-size:0.92rem; line-height:1.8;">{insight['summary']}</div>
         </div>
@@ -823,19 +822,19 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
                 dir_icon  = "⬆️" if finding["direction"] == "artırdı" else "⬇️"
                 dir_color = "#fc8181" if finding["direction"] == "artırdı" else "#68d391"
                 st.markdown(f"""
-                <div style="background:rgba(26,39,68,0.7); border:1px solid rgba(99,179,237,0.15);
+                <div style="background:#f8fafc; border:1px solid #bfdbfe;
                             border-left:4px solid {dir_color}; border-radius:10px;
                             padding:14px 18px; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.88rem;">
-                            {fi}. <code style="color:#63b3ed;">{finding['feature']}</code>
-                            &nbsp;–&nbsp;<span style="color:#94a3b8;">{finding['group']}</span>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.88rem;">
+                            {fi}. <code style="color:#1d4ed8;">{finding['feature']}</code>
+                            &nbsp;–&nbsp;<span style="color:#64748b;">{finding['group']}</span>
                         </div>
                         <div style="font-size:0.78rem; color:{dir_color}; font-weight:600;">
                             {dir_icon} Riski {finding['direction']} (SHAP: {finding['shap']:.4f})
                         </div>
                     </div>
-                    <div style="margin-top:8px; color:#94a3b8; font-size:0.83rem; line-height:1.65;">
+                    <div style="margin-top:8px; color:#64748b; font-size:0.83rem; line-height:1.65;">
                         {finding['insight']}
                     </div>
                 </div>
@@ -897,10 +896,10 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.15);
+    <div style="background:#eff6ff; border:1px solid #bfdbfe;
                 border-radius:10px; padding:12px 16px; margin-bottom:14px;
-                font-size:0.82rem; color:#94a3b8; line-height:1.7;">
-        Bu grafik, <strong style="color:#63b3ed;">Graph Neural Network (GNN)</strong>'in girdi katmanını oluşturan
+                font-size:0.82rem; color:#64748b; line-height:1.7;">
+        Bu grafik, <strong style="color:#1d4ed8;">Graph Neural Network (GNN)</strong>'in girdi katmanını oluşturan
         özellik düğümlerini ve korelasyon bağlarını (kenarları) göstermektedir.
         GNN bu ilişkileri öğrenerek varyantlar arası biyolojik bağlamı modeller.
         Sağ panelde ise GNN kenar oluşumunun temelini oluşturan korelasyon ısı haritası yer almaktadır.
@@ -981,12 +980,12 @@ def render_results_table(df_result: pd.DataFrame):
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:rgba(252,129,129,0.06); border:1px solid rgba(252,129,129,0.2);
+    <div style="background:#fef2f2; border:1px solid #fca5a5;
                 border-radius:10px; padding:12px 16px; margin-bottom:16px;
-                font-size:0.82rem; color:#94a3b8; line-height:1.7;">
-        Bu tablo, <strong style="color:#fc8181;">en yüksek riskli varyantları</strong> öncelik
+                font-size:0.82rem; color:#374151; line-height:1.7;">
+        Bu tablo <strong style="color:#dc2626;">en yüksek riskli varyantları</strong> öncelik
         sırasına göre listeler. Klinik pratik için: Kırmızı varyantları önce inceleyin,
-        sonra turuncu ve sarılara geçin. Yeşil varyantlar acil müdahale gerektirmez.
+        turuncu ve sarılara geçin. Yeşil varyantlar acil müdahale gerektirmez.
     </div>
     """, unsafe_allow_html=True)
 
@@ -1011,50 +1010,38 @@ def render_results_table(df_result: pd.DataFrame):
 
         # Risk zonu renklerini belirle
         if risk >= 75:
-            zone_color = "#fc8181"
-            zone_label = "🔴 KRİTİK"
-            bg_alpha = "0.12"
-            border_color = "rgba(252,129,129,0.35)"
+            zone_color = "#dc2626"; zone_label = "🔴 KRİTİK"
+            bg = "#fef2f2"; border = "#fca5a5"
         elif risk >= 50:
-            zone_color = "#f6ad55"
-            zone_label = "🟠 YÜKSEK"
-            bg_alpha = "0.08"
-            border_color = "rgba(246,173,85,0.3)"
+            zone_color = "#d97706"; zone_label = "🟠 YÜKSEK"
+            bg = "#fffbeb"; border = "#fcd34d"
         elif risk >= 25:
-            zone_color = "#faf089"
-            zone_label = "🟡 ORTA"
-            bg_alpha = "0.06"
-            border_color = "rgba(250,240,137,0.25)"
+            zone_color = "#ca8a04"; zone_label = "🟡 ORTA"
+            bg = "#fefce8"; border = "#fde047"
         else:
-            zone_color = "#68d391"
-            zone_label = "🟢 DÜŞÜK"
-            bg_alpha = "0.05"
-            border_color = "rgba(104,211,145,0.2)"
-
-        sira_badge = f"#{sira:02d}"
+            zone_color = "#16a34a"; zone_label = "🟢 DÜŞÜK"
+            bg = "#f0fdf4"; border = "#86efac"
 
         st.markdown(f"""
-        <div style="background:rgba({_hex_to_rgb(zone_color)},{bg_alpha});
-                    border:1px solid {border_color}; border-left:5px solid {zone_color};
-                    border-radius:10px; padding:14px 20px; margin-bottom:10px;
-                    display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-            <div style="font-size:1.3rem; font-weight:800; color:{zone_color}; min-width:38px;">
-                {sira_badge}
+        <div style="background:{bg}; border:1px solid {border}; border-left:5px solid {zone_color};
+                    border-radius:12px; padding:14px 20px; margin-bottom:10px;
+                    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size:1.2rem; font-weight:800; color:{zone_color}; min-width:36px;">
+                #{sira:02d}
             </div>
             <div style="flex:1; min-width:140px;">
-                <div style="font-weight:700; color:#e2e8f0; font-size:0.9rem;">{v_id}</div>
-                <div style="color:#94a3b8; font-size:0.78rem; margin-top:2px;">
+                <div style="font-weight:700; color:#0f172a; font-size:0.92rem;">{v_id}</div>
+                <div style="color:#64748b; font-size:0.78rem; margin-top:3px;">
                     Tahmin: <strong style="color:{zone_color};">{pred}</strong>
-                    &nbsp;|&nbsp; Güven: {conf}
-                    &nbsp;|&nbsp; Olasılık: {prob:.2%}
+                    &nbsp;·&nbsp; Güven: {conf}%
+                    &nbsp;·&nbsp; P(Pato): {prob:.1%}
                 </div>
             </div>
-            <div style="text-align:right; min-width:120px;">
-                <div style="font-size:1.5rem; font-weight:800; color:{zone_color};">{risk:.1f}</div>
-                <div style="font-size:0.7rem; color:#94a3b8;">/ 100 Risk Skoru</div>
-                <div style="font-size:0.72rem; font-weight:700; color:{zone_color}; margin-top:2px;">
-                    {zone_label}
-                </div>
+            <div style="text-align:right; min-width:110px;">
+                <div style="font-size:1.8rem; font-weight:800; color:{zone_color}; line-height:1;">{risk:.1f}</div>
+                <div style="font-size:0.68rem; color:#64748b; font-weight:600;">/100 RİSK</div>
+                <div style="font-size:0.72rem; font-weight:700; color:{zone_color}; margin-top:2px;">{zone_label}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1066,8 +1053,9 @@ def render_results_table(df_result: pd.DataFrame):
     remaining = len(df_result) - 20
     if remaining > 0:
         st.markdown(
-            f"<div style='text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:8px;'>"
-            f"... ve {remaining} varyant daha (tümü Analiz Sonuçları tablosunda görünüyor)"
+            f"<div style='text-align:center; color:#64748b; font-size:0.8rem; margin-top:10px;'>"
+            f"⬆ Yukarıdaki tabloda gösterilen 20 öncelikli varyant · "
+            f"Tam liste için <b>Analiz Sonuçları</b> tablosuna bakın ({remaining} varyant daha)"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -1312,7 +1300,7 @@ def render_performance_tab():
             if Path(img_path).exists():
                 st.markdown(f"""
                 <div class="chart-container" style="text-align:center;">
-                    <div style="font-size:0.85rem; font-weight:600; color:#63b3ed;
+                    <div style="font-size:0.85rem; font-weight:600; color:#1d4ed8;
                                 margin-bottom:10px;">{title}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1346,10 +1334,10 @@ def render_clinvar_tab():
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.2);
+    <div style="background:#eff6ff; border:1px solid #93c5fd;
                 border-radius:10px; padding:16px; margin-bottom:20px;">
-        <div style="color:#63b3ed; font-weight:600; margin-bottom:6px;">📡 NCBI ClinVar API Entegrasyonu</div>
-        <div style="color:#94a3b8; font-size:0.85rem; line-height:1.6;">
+        <div style="color:#1d4ed8; font-weight:600; margin-bottom:6px;">📡 NCBI ClinVar API Entegrasyonu</div>
+        <div style="color:#64748b; font-size:0.85rem; line-height:1.6;">
             Gen adı, varyant adı veya rsID ile NCBI ClinVar veritabanında gerçek zamanlı arama yapabilirsiniz.<br>
             Örnek: <code>BRCA1</code>, <code>CFTR</code>, <code>rs28897672</code>, <code>NM_007294.4:c.5266dupC</code>
         </div>
@@ -1406,21 +1394,21 @@ def render_clinvar_tab():
             <div class="model-card">
                 <h4 style="font-size:1rem; text-transform:none;">{title_}</h4>
                 <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">KLİNİK ANLAM</div>
+                    <div style="background:#dbeafe; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">KLİNİK ANLAM</div>
                         <div style="font-weight:700; color:{sig_color}; font-size:0.95rem;">{clin_sig}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">GEN</div>
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">{gene_sort}</div>
+                    <div style="background:#dbeafe; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">GEN</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.95rem;">{gene_sort}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">İNCELEME DURUMU</div>
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.9rem;">{review_stat}</div>
+                    <div style="background:#dbeafe; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">İNCELEME DURUMU</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.9rem;">{review_stat}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">VARIATION ID</div>
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">{variation_id}</div>
+                    <div style="background:#dbeafe; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">VARIATION ID</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.95rem;">{variation_id}</div>
                     </div>
                 </div>
             </div>
@@ -1496,10 +1484,10 @@ def main():
             st.markdown("""
             <div class="upload-zone">
                 <div style="font-size:2.5rem; margin-bottom:12px;">📊</div>
-                <div style="color:#63b3ed; font-size:1rem; font-weight:600; margin-bottom:8px;">
+                <div style="color:#1d4ed8; font-size:1rem; font-weight:600; margin-bottom:8px;">
                     CSV Dosyanızı Yükleyin
                 </div>
-                <div style="color:#718096; font-size:0.85rem;">
+                <div style="color:#64748b; font-size:0.85rem;">
                     Desteklenen format: CSV (virgülle ayrılmış)<br>
                     Beklenen özellikler: SIFT, PolyPhen2, CADD, REVEL ve diğer genomik skorlar
                 </div>
@@ -1630,7 +1618,7 @@ def main():
                         <b style="color:{_c};">Örnek {_i+1} — {_r["classification"]}</b>
                         <span style="color:#64748b;font-size:0.8rem;"> Puan: {_r["acmg_score"]:+d}</span><br>
                         <span style="color:#475569;font-size:0.82rem;">Kriterler: {', '.join(_met) or '—'}</span><br>
-                        <span style="color:#94a3b8;font-size:0.78rem;">{_r["summary"]}</span>
+                        <span style="color:#64748b;font-size:0.78rem;">{_r["summary"]}</span>
                     </div>""", unsafe_allow_html=True)
 
             st.divider()
@@ -1682,7 +1670,7 @@ def main():
                     st.markdown(f"""
                     <div class="success-panel">
                         <b style="color:#86efac;">✅ ε={_eps} Laplace gürültüsü uygulandı</b><br>
-                        <span style="color:#94a3b8;font-size:0.85rem;">
+                        <span style="color:#64748b;font-size:0.85rem;">
                         Gizlilik seviyesi: <b style="color:#fca5a5;">{_lvl}</b> ·
                         KVKK Madde 6 · GDPR Madde 89 · HIPAA Safe Harbor uyumlu
                         </span>
@@ -1731,7 +1719,7 @@ def main():
         <div style="background:linear-gradient(135deg,rgba(104,211,145,0.08),rgba(56,161,105,0.04));
                     border:1px solid rgba(104,211,145,0.25); border-radius:12px;
                     padding:20px 24px; margin-bottom:22px;">
-            <div style="font-size:1rem; font-weight:700; color:#68d391; margin-bottom:10px;">
+            <div style="font-size:1rem; font-weight:700; color:#16a34a; margin-bottom:10px;">
                 🧠 Bu Sekme Ne Yapıyor?
             </div>
             <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
@@ -1742,7 +1730,7 @@ def main():
                 🌊 <strong style="color:#9ae6b4;">SHAP Waterfall (Yerel)</strong> — Seçtiğiniz tek bir varyant için "Bu varyantı neden riskli buldun?" sorusunun cevabı<br>
                 🟢 <strong style="color:#9ae6b4;">LIME</strong> — Alternatif bir açıklama yöntemi; modelin kararını daha basit kurallarla özetler
                 <br><br>
-                <em style="color:#718096;">Klinik ortamda doktor, sadece "Patojenik" etiketini değil, gerekçesini de bilmek ister. Bu sekme tam bunu sağlar.</em>
+                <em style="color:#64748b;">Klinik ortamda doktor, sadece "Patojenik" etiketini değil, gerekçesini de bilmek ister. Bu sekme tam bunu sağlar.</em>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1790,18 +1778,18 @@ def main():
         <div style="background:linear-gradient(135deg,rgba(246,173,85,0.08),rgba(221,107,32,0.04));
                     border:1px solid rgba(246,173,85,0.25); border-radius:12px;
                     padding:20px 24px; margin-bottom:22px;">
-            <div style="font-size:1rem; font-weight:700; color:#f6ad55; margin-bottom:10px;">
+            <div style="font-size:1rem; font-weight:700; color:#d97706; margin-bottom:10px;">
                 📊 Bu Sekme Ne Yapıyor?
             </div>
             <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
                 Modelimizin eğitim sürecinde elde ettiği başarım metriklerini gösterir. Bunlar dışarıdan bir veri olmadan, sadece kendi eğitim sürecimize aittir.
                 <br><br>
-                📉 <strong style="color:#fbd38d;">Confusion Matrix</strong> — Kaç varyantı doğru, kaçını yanlış sınıflandırdık?<br>
-                📈 <strong style="color:#fbd38d;">ROC Eğrisi</strong> — Model ne kadar iyi "gerçek patojenik" ile "sahte alarm" arasında ayrım yapabiliyor?<br>
-                ✅ <strong style="color:#fbd38d;">Precision-Recall</strong> — Özellikle dengesiz veri setlerinde ne kadar güvenilir?<br>
-                ⚖️ <strong style="color:#fbd38d;">Kalibrasyon</strong> — Modelin verdiği %80 risk skoru gerçekten %80 ihtimal mi?
+                📉 <strong style="color:#d97706;">Confusion Matrix</strong> — Kaç varyantı doğru, kaçını yanlış sınıflandırdık?<br>
+                📈 <strong style="color:#d97706;">ROC Eğrisi</strong> — Model ne kadar iyi "gerçek patojenik" ile "sahte alarm" arasında ayrım yapabiliyor?<br>
+                ✅ <strong style="color:#d97706;">Precision-Recall</strong> — Özellikle dengesiz veri setlerinde ne kadar güvenilir?<br>
+                ⚖️ <strong style="color:#d97706;">Kalibrasyon</strong> — Modelin verdiği %80 risk skoru gerçekten %80 ihtimal mi?
                 <br><br>
-                <em style="color:#718096;">5-katlı çapraz doğrulama (5-fold CV) ile Macro F1 = 1.0000 elde edilmiştir.</em>
+                <em style="color:#64748b;">5-katlı çapraz doğrulama (5-fold CV) ile Macro F1 = 1.0000 elde edilmiştir.</em>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1838,22 +1826,22 @@ def main():
         <div style="background:linear-gradient(135deg,#0f2044 0%,#1a3a6e 40%,#0d2855 100%);
                     border:1px solid rgba(99,179,237,0.3); border-radius:16px;
                     padding:36px 40px; margin-bottom:28px; position:relative; overflow:hidden;">
-            <p style="font-size:2rem; font-weight:700; color:#e2e8f0; margin:0 0 8px 0; letter-spacing:-0.5px;">
-                🧬 <span style="color:#63b3ed;">VARIANT-GNN</span>
+            <p style="font-size:2rem; font-weight:700; color:#0f172a; margin:0 0 8px 0; letter-spacing:-0.5px;">
+                🧬 <span style="color:#1d4ed8;">VARIANT-GNN</span>
             </p>
-            <p style="font-size:1.05rem; color:#94a3b8; margin:0; line-height:1.7;">
+            <p style="font-size:1.05rem; color:#64748b; margin:0; line-height:1.7;">
                 Genetik Varyant Patojenite Tahmini için<br>
-                <strong style="color:#93c5fd;">Hibrit Grafik Sinir Ağı Sistemi</strong>
+                <strong style="color:#2563eb;">Hibrit Grafik Sinir Ağı Sistemi</strong>
             </p>
             <div style="margin-top:14px;">
                 <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
+                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
                     🏆 TEKNOFEST 2026</span>
                 <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
+                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px; margin-right:8px;">
                     🔬 Sağlıkta Yapay Zeka</span>
                 <span style="display:inline-block; background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                      color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px;">
+                      color:#1d4ed8; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:20px;">
                     ⚡ GNN + XGBoost + LightGBM + DNN</span>
             </div>
         </div>
@@ -1864,10 +1852,10 @@ def main():
         <div style="background:linear-gradient(135deg,rgba(99,179,237,0.08),rgba(66,153,225,0.04));
                     border:1px solid rgba(99,179,237,0.25); border-radius:12px;
                     padding:22px 26px; margin-bottom:24px;">
-            <div style="font-size:1.05rem; font-weight:700; color:#63b3ed; margin-bottom:14px;">🌟 Proje İnovasyon Özeti</div>
+            <div style="font-size:1.05rem; font-weight:700; color:#1d4ed8; margin-bottom:14px;">🌟 Proje İnovasyon Özeti</div>
             <div style="color:#cbd5e0; font-size:0.88rem; line-height:2;">
                 <strong style="color:#90cdf4;">VARIANT-GNN</strong>, genetik varyant analizi alanında
-                <strong style="color:#f6ad55;">hibrit GraphSAGE-XGBoost-LightGBM-DNN ensemble sistemi</strong>dir.<br>
+                <strong style="color:#d97706;">hibrit GraphSAGE-XGBoost-LightGBM-DNN ensemble sistemi</strong>dir.<br>
                 🧬 <strong>43 biyomoleküler özellik</strong> ile çok boyutlu genetik analiz<br>
                 🕸️ <strong>VariantSAGEGNN</strong>: İndüktif GraphSAGE + Multimodal Context Encoder hibrit mimarisi<br>
                 🔬 <strong>Klinik karar destek</strong>: SHAP/LIME açıklanabilir AI + Türkçe biyolojik rapor<br>
@@ -1885,7 +1873,7 @@ def main():
             <div class="model-card">
                 <h4>🕸️ VariantSAGEGNN</h4>
                 <p>İndüktif GraphSAGE + Multi-head Attention + Skip Connections — cosine k-NN graf üzerinde biyolojik ilişki öğrenme<br>
-                <span style="color:#63b3ed; font-weight:600;">Ağırlık: 0.25</span></p>
+                <span style="color:#1d4ed8; font-weight:600;">Ağırlık: 0.25</span></p>
             </div>
             """, unsafe_allow_html=True)
         with col_m2:
@@ -1893,7 +1881,7 @@ def main():
             <div class="model-card">
                 <h4>🌲 XGBoost</h4>
                 <p>Gradient boosting; max_depth=8, 500 ağaç, L1/L2 regularizasyon — genomik tabular veri için optimize<br>
-                <span style="color:#63b3ed; font-weight:600;">Ağırlık: 0.35</span></p>
+                <span style="color:#1d4ed8; font-weight:600;">Ağırlık: 0.35</span></p>
             </div>
             """, unsafe_allow_html=True)
         with col_m3:
@@ -1901,7 +1889,7 @@ def main():
             <div class="model-card">
                 <h4>💡 LightGBM</h4>
                 <p>Leaf-wise büyüme stratejisi; hızlı ve güçlü gradient boosting — tabular veri specialisti<br>
-                <span style="color:#63b3ed; font-weight:600;">Ağırlık: 0.30</span></p>
+                <span style="color:#1d4ed8; font-weight:600;">Ağırlık: 0.30</span></p>
             </div>
             """, unsafe_allow_html=True)
         with col_m4:
@@ -1909,7 +1897,7 @@ def main():
             <div class="model-card">
                 <h4>🤖 DNN</h4>
                 <p>BatchNorm + Dropout ile çok katmanlı sinir ağı [256→128→64] + Stacking Meta-Learner<br>
-                <span style="color:#63b3ed; font-weight:600;">Ağırlık: 0.10</span></p>
+                <span style="color:#1d4ed8; font-weight:600;">Ağırlık: 0.10</span></p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -2001,7 +1989,7 @@ def main():
             st.markdown("""
             <div class="model-card">
                 <h4>🕸️ VariantSAGEGNN</h4>
-                <p><strong style="color:#e2e8f0;">İndüktif Graph Learning</strong><br>
+                <p><strong style="color:#0f172a;">İndüktif Graph Learning</strong><br>
                 SAGEConv (3 katman, 128 hidden) + Multi-head Attention (8 head) + Skip Connections<br>
                 Multimodal Context Encoder: Nükleotid ±5bp + Amino asit protein yapı embeddingleri<br>
                 WeightedBCELoss (patojenik weight: 1.5)</p>
@@ -2011,7 +1999,7 @@ def main():
             st.markdown("""
             <div class="model-card">
                 <h4>🎯 Hibrit Ensemble</h4>
-                <p><strong style="color:#e2e8f0;">Kalibrasyon + Stacking</strong><br>
+                <p><strong style="color:#0f172a;">Kalibrasyon + Stacking</strong><br>
                 4 farklı model ailesinin soft voting ile birleşimi<br>
                 Isotonic regression ile güvenilir olasılık tahmini<br>
                 Brier Score: 0.089 — klinik düzeyde kalibrasyon</p>
@@ -2021,7 +2009,7 @@ def main():
             st.markdown("""
             <div class="model-card">
                 <h4>🏥 Açıklanabilir AI</h4>
-                <p><strong style="color:#e2e8f0;">Klinik Karar Desteği</strong><br>
+                <p><strong style="color:#0f172a;">Klinik Karar Desteği</strong><br>
                 SHAP: Global + Yerel özellik önem analizi<br>
                 LIME: Alternatif lokal açıklama<br>
                 GNN Attention Heatmaps + Türkçe klinik rapor üretimi</p>
@@ -2034,7 +2022,7 @@ def main():
             <div class="section-icon">🔍</div>
             <h3>Açıklanabilir Yapay Zeka (XAI) Pipeline</h3>
         </div>
-        <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.15);
+        <div style="background:#eff6ff; border:1px solid #bfdbfe;
                     border-radius:10px; padding:18px 22px; margin-bottom:18px;">
             <div style="color:#cbd5e0; font-size:0.88rem; line-height:2;">
                 📊 <strong style="color:#90cdf4;">SHAP (Global)</strong> — En önemli 15 biyolojik özellik: SIFT (0.23), PolyPhen2 (0.19), CADD (0.17), gnomAD_AF (0.15)...<br>
@@ -2097,7 +2085,7 @@ def main():
             """, unsafe_allow_html=True)
 
         # ── GitHub + Footer ──
-        st.markdown("<br><h4 style='text-align:center; color:#e2e8f0;'>🔒 Private Repository Erişimi</h4>", unsafe_allow_html=True)
+        st.markdown("<br><h4 style='text-align:center; color:#0f172a;'>🔒 Private Repository Erişimi</h4>", unsafe_allow_html=True)
         col_g1, col_g2, col_g3 = st.columns([1, 2, 1])
         with col_g2:
             gh_token = st.text_input(
@@ -2118,12 +2106,12 @@ def main():
                 ⭐ GitHub Repository'i Aç
             </a>
         </div>
-        <div style="padding:16px; background:rgba(99,179,237,0.05); border-radius:10px;
-                    border:1px solid rgba(99,179,237,0.15); font-size:0.82rem; color:#718096;
+        <div style="padding:16px; background:#eff6ff; border-radius:10px;
+                    border:1px solid #bfdbfe; font-size:0.82rem; color:#64748b;
                     text-align:center; margin-top:16px;">
             ⚠️ Bu sistem araştırma amacıyla geliştirilmiştir. Klinik teşhis için kullanılamaz.<br>
             <strong>TEKNOFEST 2026</strong> | Sağlıkta Yapay Zeka Kategorisi<br>
-            <em style="color:#94a3b8;">🧬 "Geleceğin tıbbı, bugünün verisiyle yazılıyor." — msgxr team, 2026</em>
+            <em style="color:#64748b;">🧬 "Geleceğin tıbbı, bugünün verisiyle yazılıyor." — msgxr team, 2026</em>
         </div>
         """, unsafe_allow_html=True)
 
