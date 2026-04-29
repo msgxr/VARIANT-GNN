@@ -39,291 +39,465 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap');
 
-/* ═══════════════════════════════════════════════════
-   TEMEL AYARLAR
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   TEMEL — Outfit font, beyaz zemin, yumuşak gri arka plan
+══════════════════════════════════════════════════════════════ */
 *, html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
 }
-.stApp { background: #f0f2f6; }
-.main .block-container { padding: 1.5rem 2rem; max-width: 1440px; }
-header[data-testid="stHeader"] { display: none; }
+.stApp { background: #f0f2f8; }
+header[data-testid="stHeader"] { display: none !important; }
+.main .block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
 
-/* ═══════════════════════════════════════════════════
-   SIDEBAR — Profesyonel Lacivert
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   TOPBAR — Animasyonlu gradient şerit
+══════════════════════════════════════════════════════════════ */
+.topbar {
+    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+    border-bottom: none;
+    border-radius: 20px;
+    padding: 16px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.8) inset,
+        0 4px 24px rgba(15,23,42,0.08),
+        0 1px 4px rgba(15,23,42,0.04);
+    position: relative;
+    overflow: hidden;
+}
+.topbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #e63946 0%, #ff6b6b 30%, #2563eb 70%, #3b82f6 100%);
+    border-radius: 20px 20px 0 0;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-logo {
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, #e63946, #c1121f);
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.35), 0 1px 3px rgba(0,0,0,0.1);
+}
+.topbar-name {
+    font-size: 1.35rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;
+}
+.topbar-name span { color: #e63946; }
+.topbar-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 500; margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.topbar-chip {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 8px; padding: 6px 13px;
+    font-size: 0.72rem; font-weight: 600; color: #64748b;
+    transition: all 0.2s ease;
+}
+.topbar-chip.red {
+    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+    border-color: #fecdd3; color: #e63946; font-weight: 700;
+}
+.topbar-chip.blue {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: #bfdbfe; color: #2563eb; font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR — Ultra-premium koyu
+══════════════════════════════════════════════════════════════ */
 section[data-testid="stSidebar"] {
-    background: #0f172a;
-    border-right: none;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+    background: linear-gradient(180deg, #080c14 0%, #0d1424 60%, #0a1020 100%);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 4px 0 30px rgba(0,0,0,0.25);
 }
 section[data-testid="stSidebar"] > div { padding-top: 0 !important; }
 section[data-testid="stSidebar"] .stMarkdown,
 section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span { color: #94a3b8 !important; }
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 { color: #f1f5f9 !important; }
-section[data-testid="stSidebar"] label { color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; }
+section[data-testid="stSidebar"] span { color: #8892a4 !important; }
+section[data-testid="stSidebar"] label {
+    color: #8892a4 !important; font-size: 0.75rem !important;
+    font-weight: 600 !important; letter-spacing: 0.3px !important;
+}
 section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"],
 section[data-testid="stSidebar"] .stTextInput input {
-    background: #1e293b !important; border: 1px solid #334155 !important; color: #f1f5f9 !important;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px !important;
 }
-section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] > div { background: #dc2626 !important; }
-section[data-testid="stSidebar"] .stCheckbox label span { color: #cbd5e1 !important; }
-section[data-testid="stSidebar"] hr { border-color: #1e293b !important; }
+section[data-testid="stSidebar"] .stCheckbox label span { color: #94a3b8 !important; }
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.06) !important; }
 
-/* ═══════════════════════════════════════════════════
-   TOPBAR — Klinik Başlık Şeridi
-═══════════════════════════════════════════════════ */
-.topbar {
-    background: #ffffff;
-    border-bottom: 3px solid #dc2626;
-    border-radius: 16px 16px 0 0;
-    padding: 18px 32px;
-    margin-bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+.sidebar-logo-wrap {
+    padding: 22px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 4px;
 }
-.topbar-left { display: flex; align-items: center; gap: 16px; }
-.topbar-logo {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    border-radius: 12px;
+.sidebar-logo-row { display: flex; align-items: center; gap: 12px; }
+.sidebar-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #e63946, #c1121f);
+    border-radius: 11px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+    font-size: 1.2rem;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.4);
+    flex-shrink: 0;
 }
-.topbar-name { font-size: 1.4rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
-.topbar-name span { color: #dc2626; }
-.topbar-sub { font-size: 0.72rem; color: #64748b; font-weight: 500; margin-top: 1px; }
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-.topbar-chip {
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 8px; padding: 6px 14px;
-    font-size: 0.75rem; font-weight: 600; color: #475569;
+.sidebar-logo-name {
+    font-size: 1rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.2px;
 }
-.topbar-chip.red { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
-.topbar-chip.blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.sidebar-logo-tag {
+    font-size: 0.62rem; color: #4b5563; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+}
+.sidebar-section-label {
+    font-size: 0.62rem; font-weight: 700; color: #374151 !important;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    padding: 14px 20px 6px;
+}
+.sidebar-model-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid #e63946;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 0 14px 8px;
+    font-size: 0.78rem; line-height: 1.6;
+}
+.sidebar-model-card .sm-title { color: #f87171; font-weight: 700; margin-bottom: 4px; font-size: 0.76rem; }
+.sidebar-model-card .sm-body  { color: #64748b; }
+.sidebar-warn {
+    margin: 12px 14px 0;
+    background: rgba(230,57,70,0.08);
+    border: 1px solid rgba(230,57,70,0.2);
+    border-left: 3px solid #e63946;
+    border-radius: 10px;
+    padding: 10px 13px;
+}
+.sidebar-warn .sw-title { font-size: 0.72rem; color: #f87171; font-weight: 700; margin-bottom: 3px; }
+.sidebar-warn .sw-body  { font-size: 0.68rem; color: #64748b; line-height: 1.5; }
 
-/* ═══════════════════════════════════════════════════
-   KART SİSTEMİ
-═══════════════════════════════════════════════════ */
-.card {
-    background: #ffffff;
-    border-radius: 0 0 16px 16px;
-    border: 1px solid #e2e8f0;
-    border-top: none;
-    padding: 28px 32px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+/* ══════════════════════════════════════════════════════════════
+   METRİK KARTLAR — Glassmorphism + hover glow
+══════════════════════════════════════════════════════════════ */
+.metric-row {
+    display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;
 }
-.card-standalone {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    padding: 24px 28px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-/* ═══════════════════════════════════════════════════
-   METRİK KARTLAR
-═══════════════════════════════════════════════════ */
-.metric-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
 .metric-card {
     flex: 1; min-width: 120px;
-    background: #ffffff;
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
-    padding: 20px 16px 16px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 18px;
+    padding: 22px 16px 18px;
     text-align: center;
     position: relative; overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.8) inset,
+        0 4px 24px rgba(15,23,42,0.07),
+        0 1px 4px rgba(15,23,42,0.04);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    cursor: default;
 }
-.metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+.metric-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.9) inset,
+        0 20px 48px rgba(15,23,42,0.12),
+        0 4px 12px rgba(15,23,42,0.06);
+}
 .metric-card::before {
-    content: ''; position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: #2563eb; border-radius: 14px 14px 0 0;
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    border-radius: 18px 18px 0 0;
 }
-.metric-card.pathogenic::before { background: linear-gradient(90deg,#dc2626,#ef4444); }
-.metric-card.benign::before     { background: linear-gradient(90deg,#16a34a,#22c55e); }
-.metric-card.warning::before    { background: linear-gradient(90deg,#d97706,#f59e0b); }
-.metric-card.expert::before     { background: linear-gradient(90deg,#dc2626,#7c3aed); }
-.metric-card .value { font-size: 2.4rem; font-weight: 800; color: #0f172a; line-height:1; margin-bottom:4px; }
-.metric-card .label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-.metric-card .sublabel { font-size: 0.78rem; color: #64748b; margin-top: 3px; }
+.metric-card.pathogenic::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.metric-card.benign::before     { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.metric-card.warning::before    { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.metric-card.expert::before     { background: linear-gradient(90deg, #e63946, #7c3aed); }
+.metric-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top, rgba(255,255,255,0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+.metric-card .value {
+    font-size: 2.6rem; font-weight: 900; color: #0f172a;
+    line-height: 1; margin-bottom: 5px; letter-spacing: -1px;
+}
+.metric-card .label {
+    font-size: 0.64rem; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 1.3px;
+}
+.metric-card .sublabel { font-size: 0.76rem; color: #64748b; margin-top: 3px; }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    BÖLÜM BAŞLIKLARI
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════ */
 .section-header {
     display: flex; align-items: center; gap: 12px;
-    margin: 28px 0 16px; padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
+    margin: 32px 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eef0f6;
 }
-.section-header h3 { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0; }
+.section-header h3 {
+    font-size: 0.9rem; font-weight: 700; color: #1e293b; margin: 0;
+    letter-spacing: -0.2px;
+}
 .section-icon {
     width: 34px; height: 34px;
-    background: linear-gradient(135deg,#fef2f2,#fee2e2);
-    border: 1px solid #fca5a5; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+    border: 1px solid #fecdd3;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(230,57,70,0.12);
 }
 
-/* ═══════════════════════════════════════════════════
-   SEKMELER (TABS)
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   SEKMELER (TABS) — Apple style
+══════════════════════════════════════════════════════════════ */
 .stTabs [data-baseweb="tab-list"] {
-    background: #ffffff; border-radius: 12px; padding: 5px;
-    gap: 3px; border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
-    margin-bottom: 0;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(16px);
+    border-radius: 14px;
+    padding: 5px;
+    gap: 2px;
+    border: 1px solid rgba(255,255,255,0.9);
+    box-shadow: 0 2px 12px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.03);
 }
 .stTabs [data-baseweb="tab"] {
-    background: transparent; color: #64748b;
-    font-weight: 600; border-radius: 8px;
-    font-size: 0.82rem; padding: 9px 18px;
-    transition: all 0.15s;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    padding: 9px 18px;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif !important;
 }
-.stTabs [data-baseweb="tab"]:hover { background: #f8fafc !important; color: #374151 !important; }
+.stTabs [data-baseweb="tab"]:hover {
+    background: rgba(15,23,42,0.04) !important;
+    color: #374151 !important;
+}
 .stTabs [aria-selected="true"] {
-    background: #dc2626 !important; color: #ffffff !important;
-    font-weight: 700 !important; box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+    background: linear-gradient(135deg, #e63946, #c1121f) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.35), 0 1px 3px rgba(0,0,0,0.1) !important;
 }
 .stTabs [data-baseweb="tab-panel"] {
-    background: #ffffff; border: 1px solid #e2e8f0; border-top: none;
-    border-radius: 0 0 14px 14px; padding: 24px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 24px 28px;
+    box-shadow: 0 8px 32px rgba(15,23,42,0.06);
 }
 
-/* ═══════════════════════════════════════════════════
-   BUTONLAR
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   BUTONLAR — Animasyonlu hover glow
+══════════════════════════════════════════════════════════════ */
 .stButton > button {
-    background: #dc2626; color: #ffffff;
-    border: none; border-radius: 8px;
-    font-weight: 700; font-size: 0.85rem; padding: 9px 22px;
-    transition: all 0.15s ease; letter-spacing: 0.2px;
-    box-shadow: 0 2px 8px rgba(220,38,38,0.25);
+    background: linear-gradient(135deg, #e63946, #c1121f);
+    color: #ffffff; border: none;
+    border-radius: 11px;
+    font-weight: 700; font-size: 0.86rem;
+    padding: 10px 22px;
+    font-family: 'Outfit', sans-serif !important;
+    letter-spacing: 0.1px;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 14px rgba(230,57,70,0.3), 0 1px 3px rgba(0,0,0,0.08);
+    position: relative; overflow: hidden;
+}
+.stButton > button::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    border-radius: 11px;
 }
 .stButton > button:hover {
-    background: #b91c1c; transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(220,38,38,0.35);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(230,57,70,0.45), 0 2px 6px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
 }
-.stButton > button[kind="primary"] {
-    background: #dc2626; font-size: 1rem; padding: 12px 32px; border-radius: 10px;
-}
+.stButton > button:active { transform: translateY(0) scale(0.99); }
+
 .stDownloadButton > button {
-    background: #1d4ed8; color: #fff; border: none; border-radius: 8px;
-    font-weight: 700; box-shadow: 0 2px 8px rgba(29,78,216,0.25);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff; border: none;
+    border-radius: 11px; font-weight: 700;
+    font-family: 'Outfit', sans-serif !important;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 .stDownloadButton > button:hover {
-    background: #1e40af; transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(29,78,216,0.35);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(37,99,235,0.45);
 }
 
-/* ═══════════════════════════════════════════════════
-   TABLOLAR & VERİ
-═══════════════════════════════════════════════════ */
-.stDataFrame {
-    background: #ffffff !important; border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 6px rgba(0,0,0,0.04) !important;
-}
-
-/* ═══════════════════════════════════════════════════
-   PANEL SİSTEMİ
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   PANELLER — Glass + renkli sol şerit
+══════════════════════════════════════════════════════════════ */
 .info-panel {
-    background: #eff6ff; border: 1px solid #bfdbfe;
-    border-left: 4px solid #2563eb; border-radius: 10px;
-    padding: 16px 20px; margin-bottom: 16px;
+    background: rgba(239,246,255,0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(191,219,254,0.8);
+    border-left: 4px solid #2563eb;
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.07);
 }
 .warn-panel {
-    background: #fff7ed; border: 1px solid #fed7aa;
-    border-left: 4px solid #ea580c; border-radius: 10px;
+    background: rgba(255,251,235,0.9);
+    border: 1px solid rgba(253,230,138,0.8);
+    border-left: 4px solid #f59e0b;
+    border-radius: 14px;
     padding: 14px 18px; margin-top: 10px;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.08);
 }
 .alert-panel {
-    background: #fef2f2; border: 1px solid #fca5a5;
-    border-left: 4px solid #dc2626; border-radius: 10px;
+    background: rgba(254,242,242,0.9);
+    border: 1px solid rgba(252,165,165,0.8);
+    border-left: 4px solid #e63946;
+    border-radius: 14px;
     padding: 14px 18px; margin-top: 10px;
 }
 .success-panel {
-    background: #f0fdf4; border: 1px solid #86efac;
-    border-left: 4px solid #16a34a; border-radius: 10px;
+    background: rgba(240,253,244,0.9);
+    border: 1px solid rgba(134,239,172,0.8);
+    border-left: 4px solid #16a34a;
+    border-radius: 14px;
     padding: 14px 18px; margin-top: 10px;
 }
 .model-card {
-    background: #ffffff; border: 1px solid #e2e8f0;
-    border-left: 4px solid #2563eb; border-radius: 10px;
-    padding: 16px 20px; margin-bottom: 10px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226,232,240,0.8);
+    border-left: 4px solid #2563eb;
+    border-radius: 13px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
 }
-.model-card h4 { color: #1d4ed8; font-size: 0.8rem; font-weight: 700; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.model-card h4 {
+    color: #1d4ed8; font-size: 0.78rem; font-weight: 700;
+    margin: 0 0 5px; text-transform: uppercase; letter-spacing: 0.5px;
+}
 .model-card p { color: #475569; font-size: 0.82rem; margin: 0; line-height: 1.5; }
 .acmg-card {
-    background: #ffffff; border: 1px solid #e2e8f0;
-    border-left: 4px solid #64748b; border-radius: 10px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(226,232,240,0.8);
+    border-left: 4px solid #94a3b8;
+    border-radius: 12px;
     padding: 12px 16px; margin-bottom: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
 }
 
-/* ═══════════════════════════════════════════════════
-   BADGE & ETİKET
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   BADGE SİSTEMİ
+══════════════════════════════════════════════════════════════ */
 .badge-pathogenic {
     display: inline-flex; align-items: center; gap: 4px;
-    background: #fef2f2; border: 1px solid #fca5a5;
-    color: #dc2626; font-size: 0.75rem; font-weight: 700;
-    padding: 3px 10px; border-radius: 6px;
+    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+    border: 1px solid #fecdd3; color: #e63946;
+    font-size: 0.74rem; font-weight: 700;
+    padding: 3px 11px; border-radius: 7px;
+    box-shadow: 0 1px 4px rgba(230,57,70,0.12);
 }
 .badge-benign {
     display: inline-flex; align-items: center; gap: 4px;
-    background: #eff6ff; border: 1px solid #bfdbfe;
-    color: #1d4ed8; font-size: 0.75rem; font-weight: 700;
-    padding: 3px 10px; border-radius: 6px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1px solid #bfdbfe; color: #1d4ed8;
+    font-size: 0.74rem; font-weight: 700;
+    padding: 3px 11px; border-radius: 7px;
+    box-shadow: 0 1px 4px rgba(37,99,235,0.12);
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    UPLOAD ALANI
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════ */
 .upload-zone {
-    background: #f8fafc; border: 2px dashed #cbd5e1;
-    border-radius: 12px; padding: 40px 32px;
-    text-align: center; margin-bottom: 16px;
-    transition: all 0.2s;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(12px);
+    border: 2px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    transition: all 0.3s ease;
 }
-.upload-zone:hover { border-color: #dc2626; background: #fef2f2; }
+.upload-zone:hover { border-color: #e63946; background: rgba(254,242,242,0.6); }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
+   TABLOLAR
+══════════════════════════════════════════════════════════════ */
+.stDataFrame {
+    background: rgba(255,255,255,0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(226,232,240,0.8) !important;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.05) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
    FORM ALANLARI
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════ */
 .stTextInput input, .stNumberInput input {
-    background: #ffffff !important; border: 1.5px solid #e2e8f0 !important;
-    border-radius: 8px !important; color: #0f172a !important;
-    font-size: 0.9rem !important; padding: 9px 14px !important;
+    background: rgba(255,255,255,0.9) !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    color: #0f172a !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 0.9rem !important;
+    padding: 9px 14px !important;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.stTextInput input:focus { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.1) !important; }
-.stSelectbox [data-baseweb="select"] { background: #ffffff !important; border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; }
+.stTextInput input:focus {
+    border-color: #e63946 !important;
+    box-shadow: 0 0 0 3px rgba(230,57,70,0.1) !important;
+}
+.stSelectbox [data-baseweb="select"] {
+    background: rgba(255,255,255,0.9) !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+}
 
-/* ═══════════════════════════════════════════════════
-   METRİK WİDGET & GENEL
-═══════════════════════════════════════════════════ */
-[data-testid="stMetricValue"] { color: #0f172a !important; font-weight: 800 !important; }
-[data-testid="stMetricLabel"] { color: #64748b !important; font-size: 0.78rem !important; }
-.stAlert { border-radius: 10px !important; }
-div[data-testid="stNotification"] { border-radius: 10px; }
-.stSpinner > div { border-top-color: #dc2626 !important; }
+/* ══════════════════════════════════════════════════════════════
+   GENEL / METRİK / ANİMASYON
+══════════════════════════════════════════════════════════════ */
+@keyframes fadeInUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.metric-row { animation: fadeInUp 0.5s ease forwards; }
+
+[data-testid="stMetricValue"] {
+    color: #0f172a !important; font-weight: 800 !important;
+    font-family: 'Outfit', sans-serif !important;
+}
+[data-testid="stMetricLabel"] {
+    color: #64748b !important; font-size: 0.78rem !important;
+    font-family: 'Outfit', sans-serif !important;
+}
+.stAlert { border-radius: 13px !important; }
+div[data-testid="stNotification"] { border-radius: 13px; }
+.stSpinner > div { border-top-color: #e63946 !important; }
 .stSlider [data-baseweb="slider"] { padding: 0; }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # ─────────────────────────────────────────────
@@ -378,46 +552,24 @@ def render_hero():
 
 
 def render_sidebar(cfg) -> dict:
-    # ── Logo alanı
-    st.sidebar.markdown("""
-    <div style="padding:24px 20px 16px; border-bottom:1px solid #1e293b;">
-        <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:42px;height:42px;background:linear-gradient(135deg,#dc2626,#b91c1c);
-                        border-radius:10px;display:flex;align-items:center;justify-content:center;
-                        font-size:1.3rem;flex-shrink:0;">🧬</div>
+    st.sidebar.markdown(f"""
+    <div class="sidebar-logo-wrap">
+        <div class="sidebar-logo-row">
+            <div class="sidebar-logo-icon">🧬</div>
             <div>
-                <div style="font-size:1rem;font-weight:800;color:#f8fafc;letter-spacing:-0.3px;">VARIANT-GNN</div>
-                <div style="font-size:0.65rem;color:#475569;font-weight:600;
-                            text-transform:uppercase;letter-spacing:1px;margin-top:1px;">
-                    Klinik Karar Destek
-                </div>
+                <div class="sidebar-logo-name">VARIANT-GNN</div>
+                <div class="sidebar-logo-tag">Klinik Karar Destek · v2.0</div>
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
-
-    st.sidebar.markdown("""
-    <div style="padding:12px 20px;border-bottom:1px solid #1e293b;">
-        <div style="font-size:0.65rem;font-weight:700;color:#475569;
-                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Model Bilgisi</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-    <div style="padding:0 16px;margin-top:8px;">
-    <div class="model-card" style="background:#1e293b;border-color:#334155;border-left-color:#dc2626;">
-        <h4 style="color:#f87171;">🤖 Ensemble</h4>
-        <p style="color:#94a3b8;">XGBoost · LightGBM · GATv2GNN · DNN<br>
+    <div class="sidebar-section-label">Model</div>
+    <div class="sidebar-model-card">
+        <div class="sm-title">🤖 Hibrit Ensemble</div>
+        <div class="sm-body">GATv2GNN · XGBoost · LightGBM · DNN<br>
         Ağırlıklar: {cfg.ensemble.weights}<br>
-        Kalibrasyon: {cfg.calibration.method}</p>
+        Kalibrasyon: {cfg.calibration.method}</div>
     </div>
-    """, unsafe_allow_html=True)
-
-    st.sidebar.markdown("""
-    <div style="padding:12px 20px 4px;border-top:1px solid #1e293b;margin-top:4px;">
-        <div style="font-size:0.65rem;font-weight:700;color:#475569;
-                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Analiz Ayarları</div>
-    </div>
+    <div class="sidebar-section-label">Analiz Ayarları</div>
     """, unsafe_allow_html=True)
 
     threshold = st.sidebar.slider(
@@ -427,34 +579,25 @@ def render_sidebar(cfg) -> dict:
         help="Bu değerin üzerindeki risk skoru Pathogenic olarak sınıflandırılır",
     )
 
-    st.sidebar.markdown("""
-    <div style="padding:12px 20px 4px;border-top:1px solid #1e293b;margin-top:4px;">
-        <div style="font-size:0.65rem;font-weight:700;color:#475569;
-                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">XAI & Modüller</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-section-label">XAI & Modüller</div>',
+                        unsafe_allow_html=True)
 
     opts = {
-        "show_shap":      st.sidebar.checkbox("📊 Global SHAP Özeti",      value=True),
-        "show_waterfall": st.sidebar.checkbox("🌊 Yerel SHAP Waterfall",   value=True),
-        "show_lime":      st.sidebar.checkbox("🟢 LIME Açıklaması",        value=False),
+        "show_shap":      st.sidebar.checkbox("📊 Global SHAP",         value=True),
+        "show_waterfall": st.sidebar.checkbox("🌊 SHAP Waterfall",       value=True),
+        "show_lime":      st.sidebar.checkbox("🟢 LIME",                 value=False),
         "variant_index":  st.sidebar.number_input("📍 Varyant İndeksi:", min_value=0, value=0, step=1),
         "threshold":      threshold,
-        "dp_enabled":     st.sidebar.checkbox("🔒 Diferansiyel Gizlilik",  value=False),
-        "acmg_enabled":   st.sidebar.checkbox("🧬 ACMG Kuralları",         value=True),
-        "rag_enabled":    st.sidebar.checkbox("📚 PubMed RAG",              value=True),
+        "dp_enabled":     st.sidebar.checkbox("🔒 Diferansiyel Gizlilik", value=False),
+        "acmg_enabled":   st.sidebar.checkbox("🧬 ACMG Kuralları",        value=True),
+        "rag_enabled":    st.sidebar.checkbox("📚 PubMed RAG",            value=True),
     }
 
     st.sidebar.markdown("""
-    <div style="margin:16px 16px 0;padding:12px 14px;background:#1e293b;
-                border-radius:8px;border-left:3px solid #dc2626;">
-        <div style="font-size:0.72rem;color:#f87171;font-weight:700;margin-bottom:4px;">
-            ⚠️ Araştırma Aracı
-        </div>
-        <div style="font-size:0.7rem;color:#64748b;line-height:1.5;">
-            Bu sistem yalnızca araştırma amaçlıdır. Klinik tanı yerine geçmez.
-            TEKNOFEST NDA kapsamında gizlilik kuralları geçerlidir.
-        </div>
+    <div class="sidebar-warn">
+        <div class="sw-title">⚠️ Araştırma Aracı</div>
+        <div class="sw-body">Yalnızca araştırma amaçlıdır.
+        Klinik tanı yerine geçmez. TEKNOFEST NDA geçerlidir.</div>
     </div>
     """, unsafe_allow_html=True)
 
