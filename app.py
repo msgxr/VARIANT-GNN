@@ -39,462 +39,504 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ══════════════════════════════════════════════════════════════
-   TEMEL — Outfit font, beyaz zemin, yumuşak gri arka plan
-══════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   VARIANT-GNN TRIAGE COCKPIT — Full Dark Theme v3.0
+   ════════════════════════════════════════════════════════════ */
+:root {
+  --bg-base:    #0b0f1a;
+  --bg-panel:   #111827;
+  --bg-card:    #1a2236;
+  --bg-card2:   #141c2e;
+  --border:     rgba(255,255,255,0.07);
+  --border-hi:  rgba(255,255,255,0.13);
+  --neon-red:   #e63946;
+  --neon-cyan:  #0ea5e9;
+  --neon-amber: #f59e0b;
+  --neon-lime:  #22c55e;
+  --neon-violet:#7c3aed;
+  --text-hi:    #f1f5f9;
+  --text-mid:   #94a3b8;
+  --text-lo:    #475569;
+  --glow-red:   rgba(230,57,70,0.35);
+  --glow-cyan:  rgba(14,165,233,0.35);
+  --glow-lime:  rgba(34,197,94,0.3);
+  --glow-amber: rgba(245,158,11,0.3);
+}
+
 *, html, body, [class*="css"] {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Outfit', -apple-system, sans-serif !important;
     -webkit-font-smoothing: antialiased;
     box-sizing: border-box;
 }
-.stApp { background: #f0f2f8; }
-header[data-testid="stHeader"] { display: none !important; }
-.main .block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
 
-/* ══════════════════════════════════════════════════════════════
-   TOPBAR — Animasyonlu gradient şerit
-══════════════════════════════════════════════════════════════ */
+/* ── FULL DARK APP BACKGROUND ── */
+.stApp { background: var(--bg-base) !important; }
+.stApp > div > div { background: var(--bg-base) !important; }
+header[data-testid="stHeader"] { display: none !important; }
+.main .block-container { padding: 0.75rem 1.5rem 3rem; max-width: 1600px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ════ HUD STRIP ════ */
 .topbar {
-    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-    border-bottom: none;
-    border-radius: 20px;
-    padding: 16px 28px;
-    margin-bottom: 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hi);
+    border-radius: 12px;
+    padding: 9px 18px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.8) inset,
-        0 4px 24px rgba(15,23,42,0.08),
-        0 1px 4px rgba(15,23,42,0.04);
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
 }
 .topbar::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #e63946 0%, #ff6b6b 30%, #2563eb 70%, #3b82f6 100%);
-    border-radius: 20px 20px 0 0;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--neon-red), #ff6b6b 30%, var(--neon-cyan) 70%, #38bdf8);
 }
-.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
 .topbar-logo {
-    width: 46px; height: 46px;
-    background: linear-gradient(135deg, #e63946, #c1121f);
-    border-radius: 13px;
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #ff5c6c, var(--neon-red), #c1121f);
+    border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 14px rgba(230,57,70,0.35), 0 1px 3px rgba(0,0,0,0.1);
+    font-size: 1.15rem;
+    box-shadow: 0 0 20px var(--glow-red), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.topbar-name {
-    font-size: 1.35rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;
+.topbar-name { font-size: 1rem; font-weight: 900; color: var(--text-hi); letter-spacing: -0.3px; }
+.topbar-name span { color: #ff6b6b; }
+.topbar-sub {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.48rem; color: var(--text-lo);
+    letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px;
 }
-.topbar-name span { color: #e63946; }
-.topbar-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 500; margin-top: 1px; }
-.topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.topbar-right { display: flex; align-items: center; gap: 0; }
+.hud-stat {
+    display: flex; flex-direction: column; line-height: 1.1;
+    padding: 4px 13px;
+    border-left: 1px solid var(--border-hi);
+}
+.hud-stat .v {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 14px; font-weight: 800; color: var(--text-hi);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.5px;
+}
+.hud-stat .l {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 7.5px; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: 0.18em; margin-top: 2px;
+}
+.hud-stat.crit .v  { color: var(--neon-red);   text-shadow: 0 0 10px var(--glow-red); }
+.hud-stat.ok   .v  { color: var(--neon-lime);  text-shadow: 0 0 10px var(--glow-lime); }
+.hud-stat.warn .v  { color: var(--neon-amber); text-shadow: 0 0 10px var(--glow-amber); }
+.hud-stat.cyan .v  { color: var(--neon-cyan);  text-shadow: 0 0 10px var(--glow-cyan); }
+.hud-stat.clock .v { color: var(--neon-cyan);  font-size: 16px; text-shadow: 0 0 14px var(--glow-cyan); }
 .topbar-chip {
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 8px; padding: 6px 13px;
-    font-size: 0.72rem; font-weight: 600; color: #64748b;
-    transition: all 0.2s ease;
+    font-family: 'JetBrains Mono', monospace !important;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border-hi);
+    border-radius: 7px; padding: 3px 9px;
+    font-size: 0.58rem; font-weight: 700; color: var(--text-mid); margin-left: 8px;
 }
-.topbar-chip.red {
-    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
-    border-color: #fecdd3; color: #e63946; font-weight: 700;
-}
-.topbar-chip.blue {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border-color: #bfdbfe; color: #2563eb; font-weight: 700;
-}
+.topbar-chip.red  { background: rgba(230,57,70,0.1);  border-color: rgba(230,57,70,0.25);  color: #ff6b6b; }
+.topbar-chip.blue { background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.25); color: var(--neon-cyan); }
 
-/* ══════════════════════════════════════════════════════════════
-   SIDEBAR — Ultra-premium koyu
-══════════════════════════════════════════════════════════════ */
+/* ════ SIDEBAR — Mission Console ════ */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #080c14 0%, #0d1424 60%, #0a1020 100%);
-    border-right: 1px solid rgba(255,255,255,0.05);
-    box-shadow: 4px 0 30px rgba(0,0,0,0.25);
+    border-right: 1px solid var(--border);
+    box-shadow: 4px 0 40px rgba(0,0,0,0.6);
 }
 section[data-testid="stSidebar"] > div { padding-top: 0 !important; }
 section[data-testid="stSidebar"] .stMarkdown,
 section[data-testid="stSidebar"] p,
 section[data-testid="stSidebar"] span { color: #8892a4 !important; }
 section[data-testid="stSidebar"] label {
-    color: #8892a4 !important; font-size: 0.75rem !important;
+    color: #8892a4 !important; font-size: 0.73rem !important;
     font-weight: 600 !important; letter-spacing: 0.3px !important;
 }
 section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"],
-section[data-testid="stSidebar"] .stTextInput input {
+section[data-testid="stSidebar"] .stTextInput input,
+section[data-testid="stSidebar"] .stNumberInput input {
     background: rgba(255,255,255,0.06) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #e2e8f0 !important;
-    border-radius: 10px !important;
+    color: var(--text-hi) !important; border-radius: 9px !important;
 }
 section[data-testid="stSidebar"] .stCheckbox label span { color: #94a3b8 !important; }
 section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.06) !important; }
-
+section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] [role="slider"] {
+    background: var(--neon-cyan) !important;
+    border-color: var(--neon-cyan) !important;
+    box-shadow: 0 0 12px var(--glow-cyan) !important;
+}
 .sidebar-logo-wrap {
-    padding: 22px 20px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    margin-bottom: 4px;
+    padding: 18px 16px 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px;
 }
-.sidebar-logo-row { display: flex; align-items: center; gap: 12px; }
+.sidebar-logo-row { display: flex; align-items: center; gap: 10px; }
 .sidebar-logo-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, #e63946, #c1121f);
-    border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 14px rgba(230,57,70,0.4);
-    flex-shrink: 0;
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #ff5c6c, var(--neon-red), #c1121f);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; box-shadow: 0 0 18px var(--glow-red); flex-shrink: 0;
 }
-.sidebar-logo-name {
-    font-size: 1rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.2px;
-}
+.sidebar-logo-name { font-size: 0.92rem; font-weight: 900; color: var(--text-hi); }
+.sidebar-logo-name span { color: #ff6b6b; }
 .sidebar-logo-tag {
-    font-size: 0.62rem; color: #4b5563; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.48rem; color: var(--text-lo);
+    letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px;
 }
 .sidebar-section-label {
-    font-size: 0.62rem; font-weight: 700; color: #374151 !important;
-    text-transform: uppercase; letter-spacing: 1.2px;
-    padding: 14px 20px 6px;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.5rem; font-weight: 700; color: var(--neon-cyan) !important;
+    text-transform: uppercase; letter-spacing: 0.24em;
+    padding: 12px 16px 5px;
+    display: flex; align-items: center; gap: 8px;
+}
+.sidebar-section-label::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06);
 }
 .sidebar-model-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-left: 3px solid #e63946;
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin: 0 14px 8px;
-    font-size: 0.78rem; line-height: 1.6;
+    background: rgba(230,57,70,0.07);
+    border: 1px solid rgba(230,57,70,0.16);
+    border-left: 3px solid var(--neon-red);
+    border-radius: 9px; padding: 10px 12px; margin: 0 12px 8px;
+    font-size: 0.75rem; line-height: 1.6;
 }
-.sidebar-model-card .sm-title { color: #f87171; font-weight: 700; margin-bottom: 4px; font-size: 0.76rem; }
-.sidebar-model-card .sm-body  { color: #64748b; }
+.sidebar-model-card .sm-title { color: #ff6b6b; font-weight: 800; margin-bottom: 4px; font-size: 0.72rem; }
+.sidebar-model-card .sm-body {
+    color: var(--text-lo);
+    font-family: 'JetBrains Mono', monospace !important; font-size: 0.65rem;
+}
+.sidebar-model-card .sm-body b { color: var(--text-mid); }
+.dial-wrap { padding: 6px 14px 2px; text-align: center; }
+.dial-label {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.48rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 2px;
+}
+.dial-value {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 1.5rem; font-weight: 800; color: var(--neon-cyan);
+    text-shadow: 0 0 18px var(--glow-cyan); line-height: 1;
+}
+.mod-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 11px; margin: 0 10px 3px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03); transition: background 0.15s;
+}
+.mod-row:hover { background: rgba(255,255,255,0.06); }
+.mod-name { font-size: 0.76rem; color: var(--text-mid); font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.mod-badge {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.54rem; font-weight: 800;
+    padding: 2px 7px; border-radius: 5px; letter-spacing: 0.08em;
+}
+.mod-badge.active {
+    background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.3);
+    color: var(--neon-lime);
+}
+.mod-badge.idle {
+    background: rgba(71,85,105,0.16); border: 1px solid rgba(71,85,105,0.25);
+    color: var(--text-lo);
+}
 .sidebar-warn {
-    margin: 12px 14px 0;
-    background: rgba(230,57,70,0.08);
-    border: 1px solid rgba(230,57,70,0.2);
-    border-left: 3px solid #e63946;
-    border-radius: 10px;
-    padding: 10px 13px;
+    margin: 10px 12px 0;
+    background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.16);
+    border-left: 3px solid var(--neon-amber); border-radius: 8px; padding: 8px 10px;
 }
-.sidebar-warn .sw-title { font-size: 0.72rem; color: #f87171; font-weight: 700; margin-bottom: 3px; }
-.sidebar-warn .sw-body  { font-size: 0.68rem; color: #64748b; line-height: 1.5; }
+.sidebar-warn .sw-title { font-size: 0.68rem; color: #fbbf24; font-weight: 800; margin-bottom: 2px; }
+.sidebar-warn .sw-body  { font-size: 0.63rem; color: var(--text-lo); line-height: 1.5; }
 
-/* ══════════════════════════════════════════════════════════════
-   METRİK KARTLAR — Glassmorphism + hover glow
-══════════════════════════════════════════════════════════════ */
+/* ════ METRIC CARDS — Dark neon ════ */
 .metric-row {
-    display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    animation: fadeInUp 0.4s ease forwards;
 }
 .metric-card {
-    flex: 1; min-width: 120px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 18px;
-    padding: 22px 16px 18px;
-    text-align: center;
-    position: relative; overflow: hidden;
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.8) inset,
-        0 4px 24px rgba(15,23,42,0.07),
-        0 1px 4px rgba(15,23,42,0.04);
-    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    cursor: default;
+    flex: 1; min-width: 100px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 11px; padding: 13px 10px 11px;
+    text-align: center; position: relative; overflow: hidden;
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
-.metric-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.9) inset,
-        0 20px 48px rgba(15,23,42,0.12),
-        0 4px 12px rgba(15,23,42,0.06);
-}
+.metric-card:hover { transform: translateY(-2px); border-color: var(--border-hi); }
 .metric-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #3b82f6, #2563eb);
-    border-radius: 18px 18px 0 0;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--neon-cyan), #38bdf8);
+    border-radius: 11px 11px 0 0;
 }
-.metric-card.pathogenic::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.metric-card.benign::before     { background: linear-gradient(90deg, #22c55e, #16a34a); }
-.metric-card.warning::before    { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.metric-card.expert::before     { background: linear-gradient(90deg, #e63946, #7c3aed); }
-.metric-card::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at top, rgba(255,255,255,0.4) 0%, transparent 70%);
-    pointer-events: none;
-}
+.metric-card.pathogenic::before { background: linear-gradient(90deg, var(--neon-red), #ff6b6b); }
+.metric-card.benign::before     { background: linear-gradient(90deg, var(--neon-lime), #86efac); }
+.metric-card.warning::before    { background: linear-gradient(90deg, var(--neon-amber), #fcd34d); }
+.metric-card.expert::before     { background: linear-gradient(90deg, var(--neon-red), var(--neon-violet)); }
 .metric-card .value {
-    font-size: 2.6rem; font-weight: 900; color: #0f172a;
-    line-height: 1; margin-bottom: 5px; letter-spacing: -1px;
+    font-size: 2rem; font-weight: 900; color: var(--text-hi);
+    line-height: 1; margin-bottom: 3px; letter-spacing: -1.5px;
+    font-variant-numeric: tabular-nums;
 }
+.metric-card.pathogenic .value { color: var(--neon-red);   text-shadow: 0 0 14px var(--glow-red); }
+.metric-card.benign     .value { color: var(--neon-lime);  text-shadow: 0 0 14px var(--glow-lime); }
+.metric-card.warning    .value { color: var(--neon-amber); text-shadow: 0 0 12px var(--glow-amber); }
+.metric-card.expert     .value { color: #f87171; }
 .metric-card .label {
-    font-size: 0.64rem; font-weight: 700; color: #94a3b8;
-    text-transform: uppercase; letter-spacing: 1.3px;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.54rem; font-weight: 700; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: 0.14em;
 }
-.metric-card .sublabel { font-size: 0.76rem; color: #64748b; margin-top: 3px; }
+.metric-card .sublabel { font-size: 0.68rem; color: var(--text-mid); margin-top: 2px; }
 
-/* ══════════════════════════════════════════════════════════════
-   BÖLÜM BAŞLIKLARI
-══════════════════════════════════════════════════════════════ */
+/* ════ SECTION HEADERS ════ */
 .section-header {
-    display: flex; align-items: center; gap: 12px;
-    margin: 32px 0 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #eef0f6;
+    display: flex; align-items: center; gap: 10px;
+    margin: 20px 0 11px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
 }
-.section-header h3 {
-    font-size: 0.9rem; font-weight: 700; color: #1e293b; margin: 0;
-    letter-spacing: -0.2px;
-}
+.section-header h3 { font-size: 0.84rem; font-weight: 800; color: var(--text-hi); margin: 0; }
 .section-icon {
-    width: 34px; height: 34px;
-    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
-    border: 1px solid #fecdd3;
-    border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(230,57,70,0.12);
+    width: 28px; height: 28px;
+    background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.22);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SEKMELER (TABS) — Apple style
-══════════════════════════════════════════════════════════════ */
+/* ════ TABS — Dark cockpit ════ */
 .stTabs [data-baseweb="tab-list"] {
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(16px);
-    border-radius: 14px;
-    padding: 5px;
-    gap: 2px;
-    border: 1px solid rgba(255,255,255,0.9);
-    box-shadow: 0 2px 12px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.03);
+    background: var(--bg-panel); border-radius: 9px;
+    padding: 3px; gap: 2px; border: 1px solid var(--border-hi);
 }
 .stTabs [data-baseweb="tab"] {
-    background: transparent;
-    color: #64748b;
-    font-weight: 600;
-    border-radius: 10px;
-    font-size: 0.82rem;
-    padding: 9px 18px;
-    transition: all 0.2s ease;
-    font-family: 'Outfit', sans-serif !important;
+    background: transparent; color: var(--text-lo); font-weight: 700;
+    border-radius: 7px; font-size: 0.75rem; padding: 6px 13px;
+    transition: all 0.15s; font-family: 'Outfit', sans-serif !important;
 }
-.stTabs [data-baseweb="tab"]:hover {
-    background: rgba(15,23,42,0.04) !important;
-    color: #374151 !important;
-}
+.stTabs [data-baseweb="tab"]:hover { background: rgba(255,255,255,0.06) !important; color: var(--text-mid) !important; }
 .stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, #e63946, #c1121f) !important;
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(230,57,70,0.35), 0 1px 3px rgba(0,0,0,0.1) !important;
+    background: linear-gradient(135deg, var(--neon-red), #c1121f) !important;
+    color: #fff !important; font-weight: 700 !important;
+    box-shadow: 0 0 18px var(--glow-red) !important;
 }
 .stTabs [data-baseweb="tab-panel"] {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-top: none;
-    border-radius: 0 0 16px 16px;
-    padding: 24px 28px;
-    box-shadow: 0 8px 32px rgba(15,23,42,0.06);
+    background: var(--bg-panel);
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 11px 11px; padding: 18px 20px;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   BUTONLAR — Animasyonlu hover glow
-══════════════════════════════════════════════════════════════ */
+/* ════ BUTTONS ════ */
 .stButton > button {
-    background: linear-gradient(135deg, #e63946, #c1121f);
-    color: #ffffff; border: none;
-    border-radius: 11px;
-    font-weight: 700; font-size: 0.86rem;
-    padding: 10px 22px;
+    background: linear-gradient(135deg, var(--neon-red), #c1121f);
+    color: #fff; border: none; border-radius: 9px; font-weight: 700;
+    font-size: 0.82rem; padding: 9px 20px;
     font-family: 'Outfit', sans-serif !important;
-    letter-spacing: 0.1px;
-    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 4px 14px rgba(230,57,70,0.3), 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 0 18px var(--glow-red);
+    transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
     position: relative; overflow: hidden;
 }
-.stButton > button::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-    border-radius: 11px;
-}
-.stButton > button:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(230,57,70,0.45), 0 2px 6px rgba(0,0,0,0.1);
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-}
-.stButton > button:active { transform: translateY(0) scale(0.99); }
-
+.stButton > button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 0 28px var(--glow-red); }
+.stButton > button:active { transform: scale(0.99); }
 .stDownloadButton > button {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #ffffff; border: none;
-    border-radius: 11px; font-weight: 700;
+    background: linear-gradient(135deg, var(--neon-cyan), #0369a1);
+    color: #fff; border: none; border-radius: 9px; font-weight: 700;
     font-family: 'Outfit', sans-serif !important;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 0 14px var(--glow-cyan); transition: all 0.2s;
 }
-.stDownloadButton > button:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(37,99,235,0.45);
-}
+.stDownloadButton > button:hover { transform: translateY(-2px); box-shadow: 0 0 24px var(--glow-cyan); }
 
-/* ══════════════════════════════════════════════════════════════
-   PANELLER — Glass + renkli sol şerit
-══════════════════════════════════════════════════════════════ */
+/* ════ PANELS ════ */
 .info-panel {
-    background: rgba(239,246,255,0.9);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(191,219,254,0.8);
-    border-left: 4px solid #2563eb;
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(37,99,235,0.07);
+    background: rgba(14,165,233,0.07); border: 1px solid rgba(14,165,233,0.2);
+    border-left: 4px solid var(--neon-cyan); border-radius: 9px;
+    padding: 13px 17px; margin-bottom: 11px; color: var(--text-mid) !important;
 }
+.info-panel b, .info-panel strong { color: var(--neon-cyan) !important; }
+.info-panel div, .info-panel p { color: var(--text-mid) !important; }
 .warn-panel {
-    background: rgba(255,251,235,0.9);
-    border: 1px solid rgba(253,230,138,0.8);
-    border-left: 4px solid #f59e0b;
-    border-radius: 14px;
-    padding: 14px 18px; margin-top: 10px;
-    box-shadow: 0 2px 8px rgba(245,158,11,0.08);
+    background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);
+    border-left: 4px solid var(--neon-amber); border-radius: 9px; padding: 12px 16px; margin-top: 8px;
 }
 .alert-panel {
-    background: rgba(254,242,242,0.9);
-    border: 1px solid rgba(252,165,165,0.8);
-    border-left: 4px solid #e63946;
-    border-radius: 14px;
-    padding: 14px 18px; margin-top: 10px;
+    background: rgba(230,57,70,0.07); border: 1px solid rgba(230,57,70,0.2);
+    border-left: 4px solid var(--neon-red); border-radius: 9px; padding: 12px 16px; margin-top: 8px;
 }
 .success-panel {
-    background: rgba(240,253,244,0.9);
-    border: 1px solid rgba(134,239,172,0.8);
-    border-left: 4px solid #16a34a;
-    border-radius: 14px;
-    padding: 14px 18px; margin-top: 10px;
+    background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2);
+    border-left: 4px solid var(--neon-lime); border-radius: 9px; padding: 12px 16px; margin-top: 8px;
 }
 .model-card {
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(226,232,240,0.8);
-    border-left: 4px solid #2563eb;
-    border-radius: 13px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-left: 4px solid var(--neon-cyan); border-radius: 9px;
+    padding: 12px 15px; margin-bottom: 8px;
 }
 .model-card h4 {
-    color: #1d4ed8; font-size: 0.78rem; font-weight: 700;
-    margin: 0 0 5px; text-transform: uppercase; letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace !important;
+    color: var(--neon-cyan); font-size: 0.66rem; font-weight: 700;
+    margin: 0 0 5px; text-transform: uppercase; letter-spacing: 0.12em;
 }
-.model-card p { color: #475569; font-size: 0.82rem; margin: 0; line-height: 1.5; }
+.model-card p { color: var(--text-mid); font-size: 0.79rem; margin: 0; line-height: 1.55; }
 .acmg-card {
-    background: rgba(255,255,255,0.9);
-    border: 1px solid rgba(226,232,240,0.8);
-    border-left: 4px solid #94a3b8;
-    border-radius: 12px;
-    padding: 12px 16px; margin-bottom: 8px;
-    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-left: 4px solid var(--neon-red); border-radius: 9px;
+    padding: 10px 13px; margin-bottom: 7px;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   BADGE SİSTEMİ
-══════════════════════════════════════════════════════════════ */
+/* ════ BADGES ════ */
 .badge-pathogenic {
     display: inline-flex; align-items: center; gap: 4px;
-    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
-    border: 1px solid #fecdd3; color: #e63946;
-    font-size: 0.74rem; font-weight: 700;
-    padding: 3px 11px; border-radius: 7px;
-    box-shadow: 0 1px 4px rgba(230,57,70,0.12);
+    background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3);
+    color: #ff6b6b; font-size: 0.72rem; font-weight: 800;
+    padding: 2px 9px; border-radius: 6px;
 }
 .badge-benign {
     display: inline-flex; align-items: center; gap: 4px;
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border: 1px solid #bfdbfe; color: #1d4ed8;
-    font-size: 0.74rem; font-weight: 700;
-    padding: 3px 11px; border-radius: 7px;
-    box-shadow: 0 1px 4px rgba(37,99,235,0.12);
+    background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3);
+    color: var(--neon-cyan); font-size: 0.72rem; font-weight: 800;
+    padding: 2px 9px; border-radius: 6px;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   UPLOAD ALANI
-══════════════════════════════════════════════════════════════ */
+/* ════ UPLOAD ZONE ════ */
 .upload-zone {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(12px);
-    border: 2px dashed #cbd5e1;
-    border-radius: 16px;
-    padding: 40px 32px;
-    text-align: center;
-    transition: all 0.3s ease;
+    border: 1.5px dashed rgba(14,165,233,0.4); border-radius: 9px;
+    padding: 26px 22px; text-align: center;
+    background: rgba(14,165,233,0.04); transition: all 200ms;
 }
-.upload-zone:hover { border-color: #e63946; background: rgba(254,242,242,0.6); }
+.upload-zone:hover { border-color: var(--neon-cyan); background: rgba(14,165,233,0.09); }
 
-/* ══════════════════════════════════════════════════════════════
-   TABLOLAR
-══════════════════════════════════════════════════════════════ */
-.stDataFrame {
-    background: rgba(255,255,255,0.9) !important;
-    backdrop-filter: blur(12px) !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(226,232,240,0.8) !important;
-    box-shadow: 0 2px 12px rgba(15,23,42,0.05) !important;
-}
+/* ════ TABLES ════ */
+.stDataFrame { background: var(--bg-card) !important; border-radius: 9px !important; border: 1px solid var(--border) !important; }
 
-/* ══════════════════════════════════════════════════════════════
-   FORM ALANLARI
-══════════════════════════════════════════════════════════════ */
+/* ════ FORM FIELDS ════ */
 .stTextInput input, .stNumberInput input {
-    background: rgba(255,255,255,0.9) !important;
-    border: 1.5px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    color: #0f172a !important;
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 0.9rem !important;
-    padding: 9px 14px !important;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--bg-card) !important; border: 1.5px solid var(--border-hi) !important;
+    border-radius: 9px !important; color: var(--text-hi) !important;
+    font-family: 'Outfit', sans-serif !important; font-size: 0.88rem !important;
+    padding: 8px 13px !important; transition: border-color 0.2s;
 }
-.stTextInput input:focus {
-    border-color: #e63946 !important;
-    box-shadow: 0 0 0 3px rgba(230,57,70,0.1) !important;
-}
+.stTextInput input:focus { border-color: var(--neon-cyan) !important; box-shadow: 0 0 0 3px var(--glow-cyan) !important; }
 .stSelectbox [data-baseweb="select"] {
-    background: rgba(255,255,255,0.9) !important;
-    border: 1.5px solid #e2e8f0 !important;
-    border-radius: 10px !important;
+    background: var(--bg-card) !important; border: 1.5px solid var(--border-hi) !important;
+    border-radius: 9px !important; color: var(--text-hi) !important;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   GENEL / METRİK / ANİMASYON
-══════════════════════════════════════════════════════════════ */
-@keyframes fadeInUp {
-    from { opacity:0; transform:translateY(16px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-.metric-row { animation: fadeInUp 0.5s ease forwards; }
+/* ════ MISC OVERRIDES ════ */
+[data-testid="stMetricValue"] { color: var(--text-hi) !important; font-weight: 800 !important; }
+[data-testid="stMetricLabel"] { color: var(--text-mid) !important; font-size: 0.78rem !important; }
+.stAlert { border-radius: 9px !important; background: var(--bg-card) !important; color: var(--text-mid) !important; }
+div[data-testid="stNotification"] { border-radius: 9px; background: var(--bg-card) !important; color: var(--text-hi) !important; }
+.stSpinner > div { border-top-color: var(--neon-cyan) !important; }
 
-[data-testid="stMetricValue"] {
-    color: #0f172a !important; font-weight: 800 !important;
-    font-family: 'Outfit', sans-serif !important;
+/* ════ ANIMATIONS ════ */
+@keyframes fadeInUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scroll   { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+@keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+/* ════ TELEMETRY FEED ════ */
+.tele-feed {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 9px; padding: 7px 13px; margin-top: 10px;
+    display: flex; align-items: center; gap: 11px;
+    overflow: hidden; position: relative;
 }
-[data-testid="stMetricLabel"] {
-    color: #64748b !important; font-size: 0.78rem !important;
-    font-family: 'Outfit', sans-serif !important;
+.tele-feed::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--neon-lime); box-shadow: 0 0 8px var(--glow-lime);
 }
-.stAlert { border-radius: 13px !important; }
-div[data-testid="stNotification"] { border-radius: 13px; }
-.stSpinner > div { border-top-color: #e63946 !important; }
-.stSlider [data-baseweb="slider"] { padding: 0; }
+.tele-title {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 8px; color: var(--neon-lime);
+    letter-spacing: 0.22em; text-transform: uppercase;
+    flex-shrink: 0; font-weight: 800; text-shadow: 0 0 8px var(--glow-lime);
+}
+.tele-track {
+    display: flex; gap: 26px;
+    animation: scroll 30s linear infinite; white-space: nowrap;
+}
+.tele-track span { font-family: 'JetBrains Mono', monospace !important; font-size: 9.5px; color: var(--text-lo); }
+.tele-track b { color: var(--neon-cyan); font-weight: 700; }
+.tele-track i { color: var(--neon-red); font-style: normal; font-weight: 700; }
+
+/* ════ SCOPE / RADAR CARD ════ */
+.scope-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 11px; padding: 12px; position: relative;
+}
+.scope-title {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.52rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: 0.2em;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 7px;
+}
+.scope-title .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--neon-lime); box-shadow: 0 0 8px var(--glow-lime);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ════ PRIORITY VARIANT ROWS ════ */
+.prior-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 9px;
+    padding: 9px 12px; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 9px;
+    transition: border-color 0.15s;
+}
+.prior-card:hover { border-color: rgba(230,57,70,0.3); }
+.prior-rank {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.6rem; font-weight: 800; color: var(--text-lo); min-width: 16px;
+}
+.prior-name { font-size: 0.8rem; font-weight: 800; color: var(--text-hi); }
+.prior-sub  { font-size: 0.67rem; color: var(--text-lo); margin-top: 1px; }
+.prior-score {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.95rem; font-weight: 900; margin-left: auto;
+}
+.prior-score.crit { color: var(--neon-red);   text-shadow: 0 0 8px var(--glow-red); }
+.prior-score.warn { color: var(--neon-amber); }
+.prior-score.ok   { color: var(--neon-lime);  }
+
+/* ════ FOCAL VARIANT CARD ════ */
+.focal-card {
+    background: var(--bg-card); border: 1px solid var(--border-hi);
+    border-radius: 11px; padding: 13px 15px; margin-top: 9px;
+}
+.focal-title {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.5rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 5px;
+}
+.focal-name {
+    font-size: 1.4rem; font-weight: 900; color: var(--neon-red);
+    text-shadow: 0 0 18px var(--glow-red); letter-spacing: -1px;
+}
+.focal-sub { font-size: 0.73rem; color: var(--text-lo); margin-top: 2px; }
+.focal-score-bar {
+    background: var(--bg-base); border-radius: 5px; height: 5px; margin: 7px 0; overflow: hidden;
+}
+.focal-score-fill {
+    height: 100%; border-radius: 5px;
+    background: linear-gradient(90deg, var(--neon-amber), var(--neon-red));
+    box-shadow: 0 0 10px var(--glow-red);
+}
+
+/* ════ PUBMED RAG CARD ════ */
+.rag-card {
+    background: rgba(14,165,233,0.06); border: 1px solid rgba(14,165,233,0.2);
+    border-radius: 9px; padding: 11px 13px; margin-top: 7px;
+}
+.rag-journal {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.56rem; color: var(--neon-cyan); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+}
+.rag-pmid { font-family: 'JetBrains Mono', monospace !important; font-size: 0.56rem; color: var(--text-lo); }
+.rag-title { font-size: 0.78rem; font-weight: 700; color: var(--text-hi); line-height: 1.4; margin: 5px 0; }
+.rag-quote {
+    font-size: 0.7rem; color: var(--text-mid);
+    background: rgba(14,165,233,0.08); border-left: 3px solid var(--neon-cyan);
+    border-radius: 0 5px 5px 0; padding: 6px 9px; line-height: 1.55; font-style: italic;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -520,34 +562,70 @@ def _load_pipeline() -> InferencePipeline | None:
 
 
 def plot_dark(fig, ax):
-    """Grafikleri beyaz/açık temaya uyarlar."""
-    fig.patch.set_facecolor('#ffffff')
-    ax.set_facecolor('#f8fafc')
-    ax.tick_params(colors='#374151')
-    ax.xaxis.label.set_color('#374151')
-    ax.yaxis.label.set_color('#374151')
-    ax.title.set_color('#0f172a')
+    """Grafikleri tam karanlık Cockpit temaya uyarlar."""
+    fig.patch.set_facecolor('#1a2236')
+    ax.set_facecolor('#141c2e')
+    ax.tick_params(colors='#94a3b8', labelsize=9)
+    ax.xaxis.label.set_color('#94a3b8')
+    ax.yaxis.label.set_color('#94a3b8')
+    ax.title.set_color('#f1f5f9')
     for spine in ax.spines.values():
-        spine.set_edgecolor('#e2e8f0')
-    ax.grid(True, color='#e2e8f0', linewidth=0.7, linestyle='--', alpha=0.8)
+        spine.set_edgecolor('rgba(255,255,255,0.08)')
+    ax.grid(True, color='rgba(255,255,255,0.06)', linewidth=0.4, linestyle='--', alpha=0.7)
 
 
 def render_hero():
-    st.markdown("""
+    import datetime
+    now = datetime.datetime.utcnow().strftime("%H:%M:%S")
+    st.markdown(f"""
     <div class="topbar">
         <div class="topbar-left">
             <div class="topbar-logo">🧬</div>
             <div>
                 <div class="topbar-name">VARIANT-<span>GNN</span></div>
-                <div class="topbar-sub">Genetik Varyant Patojenite Klinik Karar Destek Sistemi &nbsp;·&nbsp; TEKNOFEST 2026</div>
+                <div class="topbar-sub">Triage Cockpit &nbsp;·&nbsp; Klinik Karar Destek &nbsp;·&nbsp; TEKNOFEST 2026</div>
             </div>
         </div>
         <div class="topbar-right">
-            <span class="topbar-chip blue">⚡ GATv2GNN + XGBoost + LightGBM + DNN</span>
-            <span class="topbar-chip red">🛡️ ACMG · OOD · KVKK-DP</span>
-            <span class="topbar-chip">v2.0</span>
+            <div class="hud-stat clock">
+                <span class="v" id="utc-clock">{now}</span>
+                <span class="l">UTC</span>
+            </div>
+            <div class="hud-stat">
+                <span class="v">—</span>
+                <span class="l">Toplam Varyant</span>
+            </div>
+            <div class="hud-stat crit">
+                <span class="v">—</span>
+                <span class="l">Patojenik</span>
+            </div>
+            <div class="hud-stat ok">
+                <span class="v">—</span>
+                <span class="l">Benign</span>
+            </div>
+            <div class="hud-stat warn">
+                <span class="v">—</span>
+                <span class="l">Yüksek Risk</span>
+            </div>
+            <div class="hud-stat crit">
+                <span class="v">—</span>
+                <span class="l">Uzman Gerekli</span>
+            </div>
+            <div class="hud-stat cyan">
+                <span class="v">—</span>
+                <span class="l">OOD Tespit</span>
+            </div>
         </div>
     </div>
+    <script>
+    (function() {{
+        function tick() {{
+            var el = document.getElementById('utc-clock');
+            if (el) el.textContent = new Date().toUTCString().slice(17,25);
+        }}
+        setInterval(tick, 1000);
+    }})();
+    </script>
     """, unsafe_allow_html=True)
 
 
@@ -557,19 +635,19 @@ def render_sidebar(cfg) -> dict:
         <div class="sidebar-logo-row">
             <div class="sidebar-logo-icon">🧬</div>
             <div>
-                <div class="sidebar-logo-name">VARIANT-GNN</div>
-                <div class="sidebar-logo-tag">Klinik Karar Destek · v2.0</div>
+                <div class="sidebar-logo-name">VARIANT-<span>GNN</span></div>
+                <div class="sidebar-logo-tag">Triage Cockpit · v3.0</div>
             </div>
         </div>
     </div>
-    <div class="sidebar-section-label">Model</div>
+    <div class="sidebar-section-label">Hibrit Ensemble</div>
     <div class="sidebar-model-card">
-        <div class="sm-title">🤖 Hibrit Ensemble</div>
-        <div class="sm-body">GATv2GNN · XGBoost · LightGBM · DNN<br>
+        <div class="sm-title">🤖 Model Dossier</div>
+        <div class="sm-body"><b>GATv2GNN</b> · <b>XGBoost</b> · <b>LightGBM</b> · <b>DNN</b><br>
         Ağırlıklar: {cfg.ensemble.weights}<br>
         Kalibrasyon: {cfg.calibration.method}</div>
     </div>
-    <div class="sidebar-section-label">Analiz Ayarları</div>
+    <div class="sidebar-section-label">Sensitivity Dial</div>
     """, unsafe_allow_html=True)
 
     threshold = st.sidebar.slider(
@@ -579,29 +657,72 @@ def render_sidebar(cfg) -> dict:
         help="Bu değerin üzerindeki risk skoru Pathogenic olarak sınıflandırılır",
     )
 
-    st.sidebar.markdown('<div class="sidebar-section-label">XAI & Modüller</div>',
-                        unsafe_allow_html=True)
+    st.sidebar.markdown(f"""
+    <div class="dial-wrap">
+        <div class="dial-label">Patojenite Eşiği</div>
+        <div class="dial-value">{threshold:.2f}</div>
+    </div>
+    <div class="sidebar-section-label">Modules · XAI Chain</div>
+    """, unsafe_allow_html=True)
 
-    opts = {
-        "show_shap":      st.sidebar.checkbox("📊 Global SHAP",         value=True),
-        "show_waterfall": st.sidebar.checkbox("🌊 SHAP Waterfall",       value=True),
-        "show_lime":      st.sidebar.checkbox("🟢 LIME",                 value=False),
-        "variant_index":  st.sidebar.number_input("📍 Varyant İndeksi:", min_value=0, value=0, step=1),
-        "threshold":      threshold,
-        "dp_enabled":     st.sidebar.checkbox("🔒 Diferansiyel Gizlilik", value=False),
-        "acmg_enabled":   st.sidebar.checkbox("🧬 ACMG Kuralları",        value=True),
-        "rag_enabled":    st.sidebar.checkbox("📚 PubMed RAG",            value=True),
-    }
+    show_shap = st.sidebar.checkbox("📊 Global SHAP", value=True, key="cb_shap")
+    badge_shap = "active" if show_shap else "idle"
+    label_shap = "ACTIVE" if show_shap else "IDLE"
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">📊 Global SHAP</span>' +
+        f'<span class="mod-badge {badge_shap}">{label_shap}</span></div>',
+        unsafe_allow_html=True)
+
+    show_waterfall = st.sidebar.checkbox("🌊 SHAP Waterfall", value=True, key="cb_wfall")
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">🌊 SHAP Waterfall</span>' +
+        f'<span class="mod-badge {"active" if show_waterfall else "idle"}">{"ACTIVE" if show_waterfall else "IDLE"}</span></div>',
+        unsafe_allow_html=True)
+
+    show_lime = st.sidebar.checkbox("🟢 LIME", value=False, key="cb_lime")
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">🟢 LIME</span>' +
+        f'<span class="mod-badge {"active" if show_lime else "idle"}">{"ACTIVE" if show_lime else "IDLE"}</span></div>',
+        unsafe_allow_html=True)
+
+    dp_enabled = st.sidebar.checkbox("🔒 Differential Privacy", value=False, key="cb_dp")
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">🔒 Differential Privacy</span>' +
+        f'<span class="mod-badge {"active" if dp_enabled else "idle"}">{"ACTIVE" if dp_enabled else "IDLE"}</span></div>',
+        unsafe_allow_html=True)
+
+    acmg_enabled = st.sidebar.checkbox("🧬 ACMG Engine", value=True, key="cb_acmg")
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">🧬 ACMG Engine</span>' +
+        f'<span class="mod-badge {"active" if acmg_enabled else "idle"}">{"ACTIVE" if acmg_enabled else "IDLE"}</span></div>',
+        unsafe_allow_html=True)
+
+    rag_enabled = st.sidebar.checkbox("📚 PubMed RAG", value=True, key="cb_rag")
+    st.sidebar.markdown(
+        f'<div class="mod-row"><span class="mod-name">📚 PubMed RAG</span>' +
+        f'<span class="mod-badge {"active" if rag_enabled else "idle"}">{"ACTIVE" if rag_enabled else "IDLE"}</span></div>',
+        unsafe_allow_html=True)
+
+    variant_index = st.sidebar.number_input("📍 Varyant İndeksi:", min_value=0, value=0, step=1)
 
     st.sidebar.markdown("""
     <div class="sidebar-warn">
         <div class="sw-title">⚠️ Araştırma Aracı</div>
-        <div class="sw-body">Yalnızca araştırma amaçlıdır.
+        <div class="sw-body">Yalnızca araştırma amacıyla.
         Klinik tanı yerine geçmez. TEKNOFEST NDA geçerlidir.</div>
     </div>
     """, unsafe_allow_html=True)
 
-    return opts
+    return {
+        "show_shap":      show_shap,
+        "show_waterfall": show_waterfall,
+        "show_lime":      show_lime,
+        "variant_index":  variant_index,
+        "threshold":      threshold,
+        "dp_enabled":     dp_enabled,
+        "acmg_enabled":   acmg_enabled,
+        "rag_enabled":    rag_enabled,
+    }
 
 
 def render_summary_cards(df_result: pd.DataFrame):
@@ -621,32 +742,32 @@ def render_summary_cards(df_result: pd.DataFrame):
     st.markdown(f"""
     <div class="metric-row">
         <div class="metric-card">
-            <div class="value" style="color:#0f172a;">{total}</div>
+            <div class="value">{total}</div>
             <div class="label">Toplam Varyant</div>
             <div class="sublabel">Analiz Edildi</div>
         </div>
         <div class="metric-card pathogenic">
-            <div class="value" style="color:#dc2626;">{pathogenic}</div>
+            <div class="value">{pathogenic}</div>
             <div class="label">Patojenik</div>
             <div class="sublabel">{path_pct:.1f}% oran</div>
         </div>
         <div class="metric-card benign">
-            <div class="value" style="color:#16a34a;">{benign}</div>
+            <div class="value">{benign}</div>
             <div class="label">Benign</div>
             <div class="sublabel">{100-path_pct:.1f}% oran</div>
         </div>
         <div class="metric-card warning">
-            <div class="value" style="color:#d97706;">{high_risk}</div>
+            <div class="value">{high_risk}</div>
             <div class="label">Yüksek Risk</div>
             <div class="sublabel">Kalibre ≥70</div>
         </div>
         <div class="metric-card expert">
-            <div class="value" style="color:#dc2626;">{expert_needed}</div>
+            <div class="value">{expert_needed}</div>
             <div class="label">⚠️ Uzman Gerekli</div>
             <div class="sublabel">Human-in-Loop</div>
         </div>
-        <div class="metric-card" style="border-top-color:#2563eb;">
-            <div class="value" style="color:#1d4ed8;">{n_ood}</div>
+        <div class="metric-card">
+            <div class="value" style="color:var(--neon-cyan);text-shadow:0 0 12px var(--glow-cyan)">{n_ood}</div>
             <div class="label">📡 OOD Tespit</div>
             <div class="sublabel">Dağılım Dışı</div>
         </div>
@@ -690,19 +811,15 @@ def render_risk_histogram(df_result: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(9, 3.5))
     plot_dark(fig, ax)
 
-    colors = ['#68d391' if v < 50 else '#f6ad55' if v < 75 else '#fc8181'
-              for v in df_result["Calibrated_Risk"]]
     n, bins, patches = ax.hist(df_result["Calibrated_Risk"], bins=30, edgecolor='none')
-    for patch, c in zip(patches, colors):
-        patch.set_facecolor(c)
     for patch, left in zip(patches, bins[:-1]):
         if left < 50:
-            patch.set_facecolor('#68d391')
+            patch.set_facecolor('#16a34a')  # neon-lime
         elif left < 75:
-            patch.set_facecolor('#f6ad55')
+            patch.set_facecolor('#d97706')  # neon-amber
         else:
-            patch.set_facecolor('#fc8181')
-        patch.set_alpha(0.85)
+            patch.set_facecolor('#e63946')  # neon-mag
+        patch.set_alpha(0.88)
 
     ax.axvline(50, color='#f59e0b', linestyle='--', linewidth=1.5, alpha=0.8, label='Orta Risk (50)')
     ax.axvline(75, color='#dc2626', linestyle='--', linewidth=1.5, alpha=0.8, label='Yüksek Risk (75)')
@@ -766,14 +883,14 @@ def render_model_comparison(df_result: pd.DataFrame):
     """, unsafe_allow_html=True)
 
     fig, axes = plt.subplots(1, len(prob_cols), figsize=(4 * len(prob_cols), 3.5))
-    model_colors = ['#63b3ed', '#68d391', '#f6ad55', '#a78bfa']
+    model_colors = ['#0891b2', '#16a34a', '#d97706', '#7c3aed']  # neon: cyan, lime, amber, violet
     for i, (col, ax_, color) in enumerate(zip(prob_cols, axes if len(prob_cols) > 1 else [axes], model_colors)):
         plot_dark(fig, ax_)
-        ax_.hist(df_result[col], bins=20, color=color, alpha=0.85, edgecolor='none')
+        ax_.hist(df_result[col], bins=20, color=color, alpha=0.88, edgecolor='none')
         ax_.set_xlabel("Patojenite Olasılığı")
         ax_.set_ylabel("Sayı" if i == 0 else "")
         ax_.set_title(col.replace("_Prob", "").replace("_", " "), fontsize=10, fontweight='bold')
-    plt.suptitle("Model Bazlı Olasılık Dağılımları", color='#e2e8f0', fontsize=12, fontweight='bold')
+    plt.suptitle("Model Bazlı Olasılık Dağılımları", color='#0f172a', fontsize=12, fontweight='bold')
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -2481,12 +2598,33 @@ def main():
                 ⭐ GitHub Repository'i Aç
             </a>
         </div>
-        <div style="padding:16px; background:#eff6ff; border-radius:10px;
-                    border:1px solid #bfdbfe; font-size:0.82rem; color:#64748b;
+        <div style="padding:16px; background:linear-gradient(135deg,#ecfeff,#f0f9ff); border-radius:12px;
+                    border:1px solid #a5f3fc; font-size:0.82rem; color:#475569;
                     text-align:center; margin-top:16px;">
             ⚠️ Bu sistem araştırma amacıyla geliştirilmiştir. Klinik teşhis için kullanılamaz.<br>
-            <strong>TEKNOFEST 2026</strong> | Sağlıkta Yapay Zeka Kategorisi<br>
-            <em style="color:#64748b;">🧬 "Geleceğin tıbbı, bugünün verisiyle yazılıyor." — msgxr team, 2026</em>
+            <strong style="color:#0e7490;">TEKNOFEST 2026</strong> | Sağlıkta Yapay Zeka Kategorisi<br>
+            <em style="color:#475569;">🧬 "Geleceğin tıbbı, bugünün verisiyle yazılıyor." — msgxr team, 2026</em>
+        </div>
+        <div class="tele-feed">
+            <span class="tele-title">Telemetry</span>
+            <div class="tele-track">
+                <span>Engine <b>GATv2-GNN</b></span>
+                <span>Ensemble <b>4-Model Fusion</b></span>
+                <span>Risk <i>Real-Time</i></span>
+                <span>ACMG <b>28 Criteria</b></span>
+                <span>Privacy <b>DP ε=1.0</b></span>
+                <span>OOD <b>Mahalanobis</b></span>
+                <span>XAI <b>SHAP + LIME</b></span>
+                <span>RAG <b>PubMed</b></span>
+                <span>Engine <b>GATv2-GNN</b></span>
+                <span>Ensemble <b>4-Model Fusion</b></span>
+                <span>Risk <i>Real-Time</i></span>
+                <span>ACMG <b>28 Criteria</b></span>
+                <span>Privacy <b>DP ε=1.0</b></span>
+                <span>OOD <b>Mahalanobis</b></span>
+                <span>XAI <b>SHAP + LIME</b></span>
+                <span>RAG <b>PubMed</b></span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
