@@ -38,7 +38,7 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-# TEMA: KIRMIZI · BEYAZ · MAVİ · SİYAH
+# TEMA: BEYAZ · KIRMIZI · MAVİ · SİYAH
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -48,116 +48,132 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* ── Ana arka plan: derin siyah-lacivert ── */
+    /* ── Ana arka plan: parlak beyaz ── */
     .stApp {
-        background: linear-gradient(160deg, #060912 0%, #0a0f1e 45%, #080b17 100%);
+        background: #f8fafc;
     }
 
-    header[data-testid="stHeader"] { background: transparent; }
+    header[data-testid="stHeader"] {
+        background: #ffffff;
+        border-bottom: 2px solid #e2e8f0;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
 
-    /* ── Sidebar ── */
+    /* ── Sidebar: koyu kırmızı-lacivert ── */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0b0e1c 0%, #10141f 100%);
-        border-right: 2px solid rgba(220,38,38,0.25);
+        background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #1a0a0a 100%);
+        border-right: 3px solid #dc2626;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
     }
-    section[data-testid="stSidebar"] .stMarkdown { color: #cbd5e1; }
+    section[data-testid="stSidebar"] .stMarkdown { color: #e2e8f0; }
+    section[data-testid="stSidebar"] label { color: #cbd5e1 !important; }
+    section[data-testid="stSidebar"] .stSelectbox label { color: #cbd5e1 !important; }
 
-    /* ── Hero Banner ── */
+    /* ── Hero Banner: kırmızı-mavi gradient ── */
     .hero-banner {
         background: linear-gradient(135deg,
-            #1a0505 0%, #2a0a0a 25%, #0a1535 70%, #060912 100%);
-        border: 1px solid rgba(220,38,38,0.4);
+            #dc2626 0%, #b91c1c 30%, #1e1b4b 70%, #1d4ed8 100%);
         border-radius: 20px;
-        padding: 40px 48px;
+        padding: 44px 52px;
         margin-bottom: 28px;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 8px 40px rgba(220,38,38,0.12), 0 2px 8px rgba(0,0,0,0.5);
+        box-shadow: 0 12px 48px rgba(220,38,38,0.25), 0 4px 16px rgba(0,0,0,0.1);
     }
     .hero-banner::before {
         content: '';
-        position: absolute; top: -40%; right: -10%;
-        width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(220,38,38,0.07) 0%, transparent 65%);
+        position: absolute; top: -50%; right: -10%;
+        width: 450px; height: 450px;
+        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%);
         border-radius: 50%;
     }
     .hero-banner::after {
         content: '';
-        position: absolute; bottom: -30%; left: -5%;
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 65%);
+        position: absolute; bottom: -40%; left: 30%;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%);
         border-radius: 50%;
     }
     .hero-title {
-        font-size: 2.6rem;
+        font-size: 2.8rem;
         font-weight: 800;
-        color: #f8fafc;
+        color: #ffffff;
         margin: 0 0 10px 0;
-        letter-spacing: -1px;
+        letter-spacing: -1.5px;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
-    .hero-title span { color: #ef4444; }
+    .hero-title span { color: #fef08a; }
     .hero-subtitle {
-        font-size: 0.95rem;
-        color: #94a3b8;
+        font-size: 1rem;
+        color: rgba(255,255,255,0.85);
         margin: 0;
         line-height: 1.7;
     }
     .hero-badge {
         display: inline-block;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.35);
+        color: #ffffff;
         font-size: 0.72rem;
         font-weight: 700;
-        padding: 4px 14px;
+        padding: 5px 14px;
         border-radius: 20px;
         margin-right: 8px;
-        margin-top: 14px;
+        margin-top: 16px;
         letter-spacing: 0.5px;
         text-transform: uppercase;
+        backdrop-filter: blur(4px);
     }
-    .hero-badge.red   { background: rgba(220,38,38,0.18); border: 1px solid rgba(220,38,38,0.5); color: #f87171; }
-    .hero-badge.blue  { background: rgba(37,99,235,0.18);  border: 1px solid rgba(37,99,235,0.5);  color: #60a5fa; }
-    .hero-badge.white { background: rgba(248,250,252,0.08); border: 1px solid rgba(248,250,252,0.3); color: #e2e8f0; }
+    .hero-badge.red   { background: rgba(220,38,38,0.4);  border-color: rgba(255,255,255,0.5); }
+    .hero-badge.blue  { background: rgba(37,99,235,0.4);   border-color: rgba(255,255,255,0.5); }
+    .hero-badge.white { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
 
-    /* ── Metric cards ── */
+    /* ── Metric cards: beyaz kart, renkli üst şerit ── */
     .metric-row {
         display: flex;
-        gap: 14px;
-        margin-bottom: 24px;
+        gap: 16px;
+        margin-bottom: 28px;
         flex-wrap: wrap;
     }
     .metric-card {
         flex: 1;
         min-width: 130px;
-        background: linear-gradient(145deg, #111827 0%, #1a1f2e 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 20px 20px 16px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 22px 20px 18px;
         text-align: center;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .metric-card::after {
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .metric-card::before {
         content: '';
         position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 3px;
+        top: 0; left: 0; right: 0;
+        height: 4px;
         background: linear-gradient(90deg, #3b82f6, #2563eb);
-        border-radius: 0 0 14px 14px;
+        border-radius: 16px 16px 0 0;
     }
-    .metric-card.pathogenic::after { background: linear-gradient(90deg, #ef4444, #dc2626); }
-    .metric-card.benign::after     { background: linear-gradient(90deg, #22c55e, #16a34a); }
-    .metric-card.warning::after    { background: linear-gradient(90deg, #f59e0b, #d97706); }
-    .metric-card.expert::after     { background: linear-gradient(90deg, #ef4444, #3b82f6); }
+    .metric-card.pathogenic::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .metric-card.benign::before     { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .metric-card.warning::before    { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .metric-card.expert::before     { background: linear-gradient(90deg, #ef4444, #3b82f6); }
     .metric-card .value {
-        font-size: 2.5rem;
+        font-size: 2.6rem;
         font-weight: 800;
-        color: #f8fafc;
+        color: #0f172a;
         line-height: 1;
         margin-bottom: 6px;
     }
     .metric-card .label {
-        font-size: 0.72rem;
-        font-weight: 600;
+        font-size: 0.7rem;
+        font-weight: 700;
         color: #64748b;
         text-transform: uppercase;
         letter-spacing: 1.2px;
@@ -173,21 +189,20 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 12px;
-        margin: 28px 0 16px 0;
-        padding-bottom: 12px;
-        border-bottom: 2px solid rgba(220,38,38,0.2);
+        margin: 32px 0 18px 0;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #e2e8f0;
     }
     .section-header h3 {
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         font-weight: 700;
-        color: #f1f5f9;
+        color: #0f172a;
         margin: 0;
-        letter-spacing: -0.3px;
     }
     .section-icon {
-        width: 38px; height: 38px;
-        background: rgba(220,38,38,0.15);
-        border: 1px solid rgba(220,38,38,0.3);
+        width: 40px; height: 40px;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        border: 1px solid #fca5a5;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -198,65 +213,68 @@ st.markdown("""
     /* ── Prediction badges ── */
     .badge-pathogenic {
         display: inline-block;
-        background: rgba(220,38,38,0.18);
-        border: 1px solid rgba(220,38,38,0.6);
-        color: #fca5a5;
+        background: #fef2f2;
+        border: 1.5px solid #ef4444;
+        color: #dc2626;
         font-size: 0.8rem; font-weight: 700;
-        padding: 3px 12px; border-radius: 20px;
+        padding: 3px 14px; border-radius: 20px;
     }
     .badge-benign {
         display: inline-block;
-        background: rgba(37,99,235,0.18);
-        border: 1px solid rgba(37,99,235,0.6);
-        color: #93c5fd;
+        background: #eff6ff;
+        border: 1.5px solid #3b82f6;
+        color: #1d4ed8;
         font-size: 0.8rem; font-weight: 700;
-        padding: 3px 12px; border-radius: 20px;
+        padding: 3px 14px; border-radius: 20px;
     }
 
     /* ── Risk bar ── */
     .risk-bar-container {
-        background: rgba(255,255,255,0.06);
+        background: #f1f5f9;
         border-radius: 100px;
         height: 8px;
         overflow: hidden;
-        margin-top: 6px;
+        margin-top: 8px;
+        border: 1px solid #e2e8f0;
     }
     .risk-bar-fill {
         height: 100%;
         border-radius: 100px;
-        background: linear-gradient(90deg, #2563eb 0%, #f59e0b 50%, #dc2626 100%);
+        background: linear-gradient(90deg, #22c55e 0%, #f59e0b 50%, #ef4444 100%);
     }
 
     /* ── Upload zone ── */
     .upload-zone {
-        background: rgba(220,38,38,0.04);
-        border: 2px dashed rgba(220,38,38,0.35);
-        border-radius: 14px;
+        background: linear-gradient(135deg, #fef2f2, #eff6ff);
+        border: 2px dashed #93c5fd;
+        border-radius: 16px;
         padding: 40px 32px;
         text-align: center;
         margin-bottom: 20px;
     }
 
-    /* ── Model cards ── */
+    /* ── Model/info cards ── */
     .model-card {
-        background: linear-gradient(145deg, #111827 0%, #1c2133 100%);
-        border: 1px solid rgba(37,99,235,0.2);
-        border-radius: 14px;
-        padding: 20px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 18px 20px;
         margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .model-card h4 {
-        color: #60a5fa;
+        color: #1d4ed8;
         font-size: 0.88rem; font-weight: 700;
         margin: 0 0 8px 0;
         text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .model-card p { color: #94a3b8; font-size: 0.84rem; margin: 0; }
+    .model-card p { color: #475569; font-size: 0.84rem; margin: 0; }
 
-    /* ── Buttons: kırmızı primary ── */
+    /* ── Primary Buttons: kırmızı ── */
     .stButton > button {
         background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-        color: #fff;
+        color: #ffffff;
         border: none;
         border-radius: 10px;
         font-weight: 700;
@@ -264,17 +282,18 @@ st.markdown("""
         padding: 10px 24px;
         transition: all 0.2s ease;
         box-shadow: 0 4px 14px rgba(220,38,38,0.3);
+        letter-spacing: 0.2px;
     }
     .stButton > button:hover {
         background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(220,38,38,0.45);
+        box-shadow: 0 6px 24px rgba(220,38,38,0.4);
     }
 
     /* ── Download buttons: mavi ── */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-        color: #fff;
+        color: #ffffff;
         border: none;
         border-radius: 10px;
         font-weight: 700;
@@ -282,82 +301,108 @@ st.markdown("""
     }
     .stDownloadButton > button:hover {
         background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-        box-shadow: 0 6px 20px rgba(37,99,235,0.45);
+        box-shadow: 0 6px 24px rgba(37,99,235,0.4);
+        transform: translateY(-1px);
     }
 
     /* ── Tabs ── */
     .stTabs [data-baseweb="tab-list"] {
-        background: rgba(220,38,38,0.05);
-        border-radius: 10px;
+        background: #ffffff;
+        border-radius: 12px;
         padding: 4px;
         gap: 2px;
-        border: 1px solid rgba(220,38,38,0.15);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .stTabs [data-baseweb="tab"] {
         background: transparent;
         color: #64748b;
         font-weight: 600;
         border-radius: 8px;
-        font-size: 0.88rem;
+        font-size: 0.87rem;
+        padding: 8px 16px;
     }
     .stTabs [aria-selected="true"] {
-        background: rgba(220,38,38,0.15) !important;
-        color: #f87171 !important;
-        box-shadow: 0 2px 8px rgba(220,38,38,0.2);
+        background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(220,38,38,0.35);
+        font-weight: 700 !important;
     }
 
     /* ── Data tables ── */
     .stDataFrame {
-        background: #111827 !important;
+        background: #ffffff !important;
         border-radius: 12px !important;
-        border: 1px solid rgba(255,255,255,0.07) !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
     }
-
-    /* ── Alerts / info boxes ── */
-    .stAlert { border-radius: 12px; }
-    div[data-testid="stNotification"] { border-radius: 12px; }
-
-    /* ── Spinner ── */
-    .stSpinner > div { border-top-color: #ef4444 !important; }
-
-    /* ── Selectbox ── */
-    .stSelectbox [data-baseweb="select"] {
-        background: #111827;
-        border-color: rgba(220,38,38,0.3);
-    }
-
-    /* ── Slider ── */
-    .stSlider [data-baseweb="slider"] { padding: 0; }
-    .stSlider [data-testid="stSliderThumbValue"] { color: #f87171 !important; }
 
     /* ── Info panels ── */
     .info-panel {
-        background: linear-gradient(135deg, rgba(37,99,235,0.07), rgba(37,99,235,0.03));
-        border: 1px solid rgba(37,99,235,0.25);
+        background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+        border: 1px solid #bfdbfe;
+        border-left: 4px solid #3b82f6;
         border-radius: 12px;
         padding: 20px 24px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.06);
     }
     .warn-panel {
-        background: linear-gradient(135deg, rgba(220,38,38,0.07), rgba(220,38,38,0.03));
-        border: 1px solid rgba(220,38,38,0.3);
+        background: linear-gradient(135deg, #fef2f2, #fff7ed);
+        border: 1px solid #fca5a5;
+        border-left: 4px solid #ef4444;
         border-radius: 12px;
         padding: 14px 18px;
         margin-top: 12px;
     }
     .success-panel {
-        background: linear-gradient(135deg, rgba(22,163,74,0.07), rgba(22,163,74,0.03));
-        border: 1px solid rgba(22,163,74,0.3);
+        background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        border: 1px solid #86efac;
+        border-left: 4px solid #22c55e;
         border-radius: 12px;
         padding: 14px 18px;
         margin-top: 12px;
     }
     .acmg-card {
-        background: rgba(0,0,0,0.25);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 10px;
-        padding: 12px 16px;
+        padding: 14px 18px;
         margin-bottom: 10px;
-        border-left: 4px solid #64748b;
+        border-left: 4px solid #94a3b8;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    /* ── Alerts ── */
+    .stAlert { border-radius: 12px !important; }
+    div[data-testid="stNotification"] { border-radius: 12px; }
+
+    /* ── Spinner ── */
+    .stSpinner > div { border-top-color: #dc2626 !important; }
+
+    /* ── Inputs ── */
+    .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        color: #0f172a !important;
+    }
+    .stTextInput input:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
+    }
+
+    /* ── Slider ── */
+    .stSlider [data-baseweb="slider"] { padding: 0; }
+
+    /* ── Metric widget ── */
+    [data-testid="stMetricValue"] { color: #0f172a !important; font-weight: 700 !important; }
+    [data-testid="stMetricLabel"] { color: #64748b !important; }
+
+    /* ── Content area padding ── */
+    .main .block-container {
+        padding-top: 2rem;
+        max-width: 1400px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -397,10 +442,10 @@ def plot_dark(fig, ax):
 def render_hero():
     st.markdown("""
     <div class="hero-banner">
-        <p class="hero-title">🧬 <span>VARIANT-GNN</span></p>
+        <p class="hero-title">🧬 VARIANT-<span>GNN</span></p>
         <p class="hero-subtitle">
             Graph Neural Network + Açıklanabilir YZ + Human-in-the-Loop ile<br>
-            <strong style="color:#fca5a5;">Genetik Varyant Patojenite Karar Destek Sistemi</strong>
+            <strong>Genetik Varyant Patojenite Klinik Karar Destek Sistemi</strong>
         </p>
         <span class="hero-badge red">🏆 TEKNOFEST 2026 · PSR 93/100</span>
         <span class="hero-badge blue">⚡ GATv2GNN + XGBoost + LightGBM + DNN</span>
@@ -411,11 +456,20 @@ def render_hero():
 
 def render_sidebar(cfg) -> dict:
     st.sidebar.markdown("""
-    <div style="text-align:center; padding: 16px 0 8px;">
-        <div style="font-size:2.2rem;">🧬</div>
-        <div style="font-size:1.1rem; font-weight:800; color:#ef4444; letter-spacing:0.5px;">VARIANT-GNN</div>
-        <div style="font-size:0.72rem; color:#64748b; margin-top:2px; font-weight:600; letter-spacing:1px;">
-            v2.0 · TEKNOFEST 2026 · PSR 93/100
+    <div style="text-align:center; padding: 20px 0 12px;">
+        <div style="font-size:2.4rem; margin-bottom:6px;">🧬</div>
+        <div style="font-size:1.2rem; font-weight:800; color:#fef08a;
+                    letter-spacing:0.5px; text-shadow:0 2px 8px rgba(0,0,0,0.3);">
+            VARIANT-GNN
+        </div>
+        <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;
+                    font-weight:600; letter-spacing:1px; text-transform:uppercase;">
+            v2.0 · TEKNOFEST 2026
+        </div>
+        <div style="margin-top:10px; display:inline-block; background:rgba(220,38,38,0.3);
+                    border:1px solid rgba(255,255,255,0.3); border-radius:12px;
+                    padding:3px 12px; font-size:0.7rem; color:#fca5a5; font-weight:700;">
+            PSR 93 / 100
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1408,19 +1462,19 @@ def main():
     with tab_analyze:
         st.markdown("""
         <div class="info-panel">
-            <div style="font-size:1rem; font-weight:700; color:#60a5fa; margin-bottom:10px;">
+            <div style="font-size:1rem; font-weight:700; color:#1d4ed8; margin-bottom:10px;">
                 🤖 Yapay Zeka Destekli Genetik Varyant Analizi
             </div>
-            <div style="color:#cbd5e0; font-size:0.88rem; line-height:1.75;">
-                CSV formatında yüklenen her varyant <strong style="color:#fca5a5;">4 farklı yapay zeka modeli</strong> ile analiz edilir:
+            <div style="color:#374151; font-size:0.88rem; line-height:1.75;">
+                CSV formatında yüklenen her varyant <strong style="color:#dc2626;">4 farklı yapay zeka modeli</strong> ile analiz edilir:
                 <br><br>
-                🕸️ <strong style="color:#fca5a5;">GATv2 Graph Neural Network</strong> — Varyantlar arası biyolojik ilişkileri öğrenir + MC-Dropout belirsizliği<br>
-                🌲 <strong style="color:#60a5fa;">XGBoost</strong> — Sayısal genomik özellikleri hızlı ve güçlü sınıflandırır<br>
-                💡 <strong style="color:#60a5fa;">LightGBM</strong> — Tabular genomik veri için optimize gradient boosting<br>
-                🤖 <strong style="color:#f8fafc;">Derin Sinir Ağı (DNN)</strong> — Gizli karmaşık örüntüleri keşfeder
+                🕸️ <strong style="color:#dc2626;">GATv2 Graph Neural Network</strong> — Varyantlar arası biyolojik ilişkileri öğrenir + MC-Dropout belirsizliği<br>
+                🌲 <strong style="color:#1d4ed8;">XGBoost</strong> — Sayısal genomik özellikleri hızlı ve güçlü sınıflandırır<br>
+                💡 <strong style="color:#1d4ed8;">LightGBM</strong> — Tabular genomik veri için optimize gradient boosting<br>
+                🤖 <strong style="color:#0f172a;">Derin Sinir Ağı (DNN)</strong> — Gizli karmaşık örüntüleri keşfeder
                 <br><br>
-                Her varyant için: <strong style="color:#fca5a5;">Risk Skoru</strong> · <strong style="color:#60a5fa;">Clinical_Flag</strong> ·
-                <strong style="color:#f8fafc;">OOD Tespiti</strong> · <strong style="color:#f87171;">Human-in-the-Loop Bayrağı</strong>
+                Her varyant için: <strong style="color:#dc2626;">Risk Skoru</strong> · <strong style="color:#1d4ed8;">Clinical_Flag</strong> ·
+                <strong style="color:#0f172a;">OOD Tespiti</strong> · <strong style="color:#dc2626;">Human-in-the-Loop Bayrağı</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1527,14 +1581,14 @@ def main():
     with tab_acmg:
         st.markdown("""
         <div class="info-panel">
-            <div style="font-size:1rem;font-weight:700;color:#ef4444;margin-bottom:10px;">
+            <div style="font-size:1rem;font-weight:700;color:#dc2626;margin-bottom:10px;">
                 🧬 İleri Düzey Güvenlik & Klinik Uyum Modülleri
             </div>
-            <div style="color:#cbd5e0;font-size:0.87rem;line-height:1.75;">
-                🧬 <b style="color:#fca5a5;">ACMG/AMP Haritalayıcı</b> — SHAP + ham özellikler → PM2, PP3, BA1 kriterleri<br>
-                📡 <b style="color:#60a5fa;">OOD Dedektör</b> — Z-score + Mahalanobis ile dağılım sapma tespiti<br>
-                📚 <b style="color:#f8fafc;">PubMed RAG</b> — Canlı NCBI literatür çekimi<br>
-                🔒 <b style="color:#fca5a5;">Diferansiyel Gizlilik</b> — KVKK/GDPR Laplace mekanizması
+            <div style="color:#374151;font-size:0.87rem;line-height:1.75;">
+                🧬 <b style="color:#dc2626;">ACMG/AMP Haritalayıcı</b> — SHAP + ham özellikler → PM2, PP3, BA1 kriterleri<br>
+                📡 <b style="color:#1d4ed8;">OOD Dedektör</b> — Z-score + Mahalanobis ile dağılım sapma tespiti<br>
+                📚 <b style="color:#0f172a;">PubMed RAG</b> — Canlı NCBI literatür çekimi<br>
+                🔒 <b style="color:#dc2626;">Diferansiyel Gizlilik</b> — KVKK/GDPR Laplace mekanizması
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1542,7 +1596,7 @@ def main():
         if "df_result" not in st.session_state or "df_raw" not in st.session_state:
             st.markdown("""
             <div class="warn-panel">
-                <b style="color:#f87171;">⚠️ Önce Varyant Analizi sekmesinden CSV yükleyip analizi başlatın.</b>
+                <b style="color:#dc2626;">⚠️ Önce Varyant Analizi sekmesinden CSV yükleyip analizi başlatın.</b>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -1575,8 +1629,8 @@ def main():
                     <div class="acmg-card" style="border-left-color:{_c};">
                         <b style="color:{_c};">Örnek {_i+1} — {_r["classification"]}</b>
                         <span style="color:#64748b;font-size:0.8rem;"> Puan: {_r["acmg_score"]:+d}</span><br>
-                        <span style="color:#94a3b8;font-size:0.82rem;">Kriterler: {', '.join(_met) or '—'}</span><br>
-                        <span style="color:#64748b;font-size:0.78rem;">{_r["summary"]}</span>
+                        <span style="color:#475569;font-size:0.82rem;">Kriterler: {', '.join(_met) or '—'}</span><br>
+                        <span style="color:#94a3b8;font-size:0.78rem;">{_r["summary"]}</span>
                     </div>""", unsafe_allow_html=True)
 
             st.divider()
