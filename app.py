@@ -37,373 +37,291 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
-# TEMA: BEYAZ · KIRMIZI · MAVİ · SİYAH
-# ─────────────────────────────────────────────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
+/* ═══════════════════════════════════════════════════
+   TEMEL AYARLAR
+═══════════════════════════════════════════════════ */
+*, html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+}
+.stApp { background: #f0f2f6; }
+.main .block-container { padding: 1.5rem 2rem; max-width: 1440px; }
+header[data-testid="stHeader"] { display: none; }
 
-    /* ── Ana arka plan: parlak beyaz ── */
-    .stApp {
-        background: #f8fafc;
-    }
+/* ═══════════════════════════════════════════════════
+   SIDEBAR — Profesyonel Lacivert
+═══════════════════════════════════════════════════ */
+section[data-testid="stSidebar"] {
+    background: #0f172a;
+    border-right: none;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+}
+section[data-testid="stSidebar"] > div { padding-top: 0 !important; }
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span { color: #94a3b8 !important; }
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 { color: #f1f5f9 !important; }
+section[data-testid="stSidebar"] label { color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; }
+section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"],
+section[data-testid="stSidebar"] .stTextInput input {
+    background: #1e293b !important; border: 1px solid #334155 !important; color: #f1f5f9 !important;
+}
+section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] > div { background: #dc2626 !important; }
+section[data-testid="stSidebar"] .stCheckbox label span { color: #cbd5e1 !important; }
+section[data-testid="stSidebar"] hr { border-color: #1e293b !important; }
 
-    header[data-testid="stHeader"] {
-        background: #ffffff;
-        border-bottom: 2px solid #e2e8f0;
-        box-shadow: 0 1px 8px rgba(0,0,0,0.06);
-    }
+/* ═══════════════════════════════════════════════════
+   TOPBAR — Klinik Başlık Şeridi
+═══════════════════════════════════════════════════ */
+.topbar {
+    background: #ffffff;
+    border-bottom: 3px solid #dc2626;
+    border-radius: 16px 16px 0 0;
+    padding: 18px 32px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+}
+.topbar-name { font-size: 1.4rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+.topbar-name span { color: #dc2626; }
+.topbar-sub { font-size: 0.72rem; color: #64748b; font-weight: 500; margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-chip {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 8px; padding: 6px 14px;
+    font-size: 0.75rem; font-weight: 600; color: #475569;
+}
+.topbar-chip.red { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.topbar-chip.blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
 
-    /* ── Sidebar: koyu kırmızı-lacivert ── */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #1a0a0a 100%);
-        border-right: 3px solid #dc2626;
-        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    }
-    section[data-testid="stSidebar"] .stMarkdown { color: #e2e8f0; }
-    section[data-testid="stSidebar"] label { color: #cbd5e1 !important; }
-    section[data-testid="stSidebar"] .stSelectbox label { color: #cbd5e1 !important; }
+/* ═══════════════════════════════════════════════════
+   KART SİSTEMİ
+═══════════════════════════════════════════════════ */
+.card {
+    background: #ffffff;
+    border-radius: 0 0 16px 16px;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+}
+.card-standalone {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
 
-    /* ── Hero Banner: kırmızı-mavi gradient ── */
-    .hero-banner {
-        background: linear-gradient(135deg,
-            #dc2626 0%, #b91c1c 30%, #1e1b4b 70%, #1d4ed8 100%);
-        border-radius: 20px;
-        padding: 44px 52px;
-        margin-bottom: 28px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 12px 48px rgba(220,38,38,0.25), 0 4px 16px rgba(0,0,0,0.1);
-    }
-    .hero-banner::before {
-        content: '';
-        position: absolute; top: -50%; right: -10%;
-        width: 450px; height: 450px;
-        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%);
-        border-radius: 50%;
-    }
-    .hero-banner::after {
-        content: '';
-        position: absolute; bottom: -40%; left: 30%;
-        width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%);
-        border-radius: 50%;
-    }
-    .hero-title {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 10px 0;
-        letter-spacing: -1.5px;
-        text-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    }
-    .hero-title span { color: #fef08a; }
-    .hero-subtitle {
-        font-size: 1rem;
-        color: rgba(255,255,255,0.85);
-        margin: 0;
-        line-height: 1.7;
-    }
-    .hero-badge {
-        display: inline-block;
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.35);
-        color: #ffffff;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 5px 14px;
-        border-radius: 20px;
-        margin-right: 8px;
-        margin-top: 16px;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        backdrop-filter: blur(4px);
-    }
-    .hero-badge.red   { background: rgba(220,38,38,0.4);  border-color: rgba(255,255,255,0.5); }
-    .hero-badge.blue  { background: rgba(37,99,235,0.4);   border-color: rgba(255,255,255,0.5); }
-    .hero-badge.white { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+/* ═══════════════════════════════════════════════════
+   METRİK KARTLAR
+═══════════════════════════════════════════════════ */
+.metric-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.metric-card {
+    flex: 1; min-width: 120px;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    padding: 20px 16px 16px;
+    text-align: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+.metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+.metric-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: #2563eb; border-radius: 14px 14px 0 0;
+}
+.metric-card.pathogenic::before { background: linear-gradient(90deg,#dc2626,#ef4444); }
+.metric-card.benign::before     { background: linear-gradient(90deg,#16a34a,#22c55e); }
+.metric-card.warning::before    { background: linear-gradient(90deg,#d97706,#f59e0b); }
+.metric-card.expert::before     { background: linear-gradient(90deg,#dc2626,#7c3aed); }
+.metric-card .value { font-size: 2.4rem; font-weight: 800; color: #0f172a; line-height:1; margin-bottom:4px; }
+.metric-card .label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+.metric-card .sublabel { font-size: 0.78rem; color: #64748b; margin-top: 3px; }
 
-    /* ── Metric cards: beyaz kart, renkli üst şerit ── */
-    .metric-row {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-    }
-    .metric-card {
-        flex: 1;
-        min-width: 130px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 22px 20px 18px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        border-radius: 16px 16px 0 0;
-    }
-    .metric-card.pathogenic::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
-    .metric-card.benign::before     { background: linear-gradient(90deg, #22c55e, #16a34a); }
-    .metric-card.warning::before    { background: linear-gradient(90deg, #f59e0b, #d97706); }
-    .metric-card.expert::before     { background: linear-gradient(90deg, #ef4444, #3b82f6); }
-    .metric-card .value {
-        font-size: 2.6rem;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1;
-        margin-bottom: 6px;
-    }
-    .metric-card .label {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-    }
-    .metric-card .sublabel {
-        font-size: 0.82rem;
-        color: #94a3b8;
-        margin-top: 4px;
-    }
+/* ═══════════════════════════════════════════════════
+   BÖLÜM BAŞLIKLARI
+═══════════════════════════════════════════════════ */
+.section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 16px; padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.section-header h3 { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0; }
+.section-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg,#fef2f2,#fee2e2);
+    border: 1px solid #fca5a5; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
 
-    /* ── Section headers ── */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 32px 0 18px 0;
-        padding-bottom: 14px;
-        border-bottom: 2px solid #e2e8f0;
-    }
-    .section-header h3 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0;
-    }
-    .section-icon {
-        width: 40px; height: 40px;
-        background: linear-gradient(135deg, #fef2f2, #fee2e2);
-        border: 1px solid #fca5a5;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-    }
+/* ═══════════════════════════════════════════════════
+   SEKMELER (TABS)
+═══════════════════════════════════════════════════ */
+.stTabs [data-baseweb="tab-list"] {
+    background: #ffffff; border-radius: 12px; padding: 5px;
+    gap: 3px; border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    margin-bottom: 0;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent; color: #64748b;
+    font-weight: 600; border-radius: 8px;
+    font-size: 0.82rem; padding: 9px 18px;
+    transition: all 0.15s;
+}
+.stTabs [data-baseweb="tab"]:hover { background: #f8fafc !important; color: #374151 !important; }
+.stTabs [aria-selected="true"] {
+    background: #dc2626 !important; color: #ffffff !important;
+    font-weight: 700 !important; box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+}
+.stTabs [data-baseweb="tab-panel"] {
+    background: #ffffff; border: 1px solid #e2e8f0; border-top: none;
+    border-radius: 0 0 14px 14px; padding: 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
 
-    /* ── Prediction badges ── */
-    .badge-pathogenic {
-        display: inline-block;
-        background: #fef2f2;
-        border: 1.5px solid #ef4444;
-        color: #dc2626;
-        font-size: 0.8rem; font-weight: 700;
-        padding: 3px 14px; border-radius: 20px;
-    }
-    .badge-benign {
-        display: inline-block;
-        background: #eff6ff;
-        border: 1.5px solid #3b82f6;
-        color: #1d4ed8;
-        font-size: 0.8rem; font-weight: 700;
-        padding: 3px 14px; border-radius: 20px;
-    }
+/* ═══════════════════════════════════════════════════
+   BUTONLAR
+═══════════════════════════════════════════════════ */
+.stButton > button {
+    background: #dc2626; color: #ffffff;
+    border: none; border-radius: 8px;
+    font-weight: 700; font-size: 0.85rem; padding: 9px 22px;
+    transition: all 0.15s ease; letter-spacing: 0.2px;
+    box-shadow: 0 2px 8px rgba(220,38,38,0.25);
+}
+.stButton > button:hover {
+    background: #b91c1c; transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(220,38,38,0.35);
+}
+.stButton > button[kind="primary"] {
+    background: #dc2626; font-size: 1rem; padding: 12px 32px; border-radius: 10px;
+}
+.stDownloadButton > button {
+    background: #1d4ed8; color: #fff; border: none; border-radius: 8px;
+    font-weight: 700; box-shadow: 0 2px 8px rgba(29,78,216,0.25);
+}
+.stDownloadButton > button:hover {
+    background: #1e40af; transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(29,78,216,0.35);
+}
 
-    /* ── Risk bar ── */
-    .risk-bar-container {
-        background: #f1f5f9;
-        border-radius: 100px;
-        height: 8px;
-        overflow: hidden;
-        margin-top: 8px;
-        border: 1px solid #e2e8f0;
-    }
-    .risk-bar-fill {
-        height: 100%;
-        border-radius: 100px;
-        background: linear-gradient(90deg, #22c55e 0%, #f59e0b 50%, #ef4444 100%);
-    }
+/* ═══════════════════════════════════════════════════
+   TABLOLAR & VERİ
+═══════════════════════════════════════════════════ */
+.stDataFrame {
+    background: #ffffff !important; border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 6px rgba(0,0,0,0.04) !important;
+}
 
-    /* ── Upload zone ── */
-    .upload-zone {
-        background: linear-gradient(135deg, #fef2f2, #eff6ff);
-        border: 2px dashed #93c5fd;
-        border-radius: 16px;
-        padding: 40px 32px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
+/* ═══════════════════════════════════════════════════
+   PANEL SİSTEMİ
+═══════════════════════════════════════════════════ */
+.info-panel {
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-left: 4px solid #2563eb; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 16px;
+}
+.warn-panel {
+    background: #fff7ed; border: 1px solid #fed7aa;
+    border-left: 4px solid #ea580c; border-radius: 10px;
+    padding: 14px 18px; margin-top: 10px;
+}
+.alert-panel {
+    background: #fef2f2; border: 1px solid #fca5a5;
+    border-left: 4px solid #dc2626; border-radius: 10px;
+    padding: 14px 18px; margin-top: 10px;
+}
+.success-panel {
+    background: #f0fdf4; border: 1px solid #86efac;
+    border-left: 4px solid #16a34a; border-radius: 10px;
+    padding: 14px 18px; margin-top: 10px;
+}
+.model-card {
+    background: #ffffff; border: 1px solid #e2e8f0;
+    border-left: 4px solid #2563eb; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.model-card h4 { color: #1d4ed8; font-size: 0.8rem; font-weight: 700; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.model-card p { color: #475569; font-size: 0.82rem; margin: 0; line-height: 1.5; }
+.acmg-card {
+    background: #ffffff; border: 1px solid #e2e8f0;
+    border-left: 4px solid #64748b; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
 
-    /* ── Model/info cards ── */
-    .model-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-left: 4px solid #3b82f6;
-        border-radius: 12px;
-        padding: 18px 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .model-card h4 {
-        color: #1d4ed8;
-        font-size: 0.88rem; font-weight: 700;
-        margin: 0 0 8px 0;
-        text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .model-card p { color: #475569; font-size: 0.84rem; margin: 0; }
+/* ═══════════════════════════════════════════════════
+   BADGE & ETİKET
+═══════════════════════════════════════════════════ */
+.badge-pathogenic {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fef2f2; border: 1px solid #fca5a5;
+    color: #dc2626; font-size: 0.75rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+}
+.badge-benign {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    color: #1d4ed8; font-size: 0.75rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+}
 
-    /* ── Primary Buttons: kırmızı ── */
-    .stButton > button {
-        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-        color: #ffffff;
-        border: none;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        padding: 10px 24px;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 14px rgba(220,38,38,0.3);
-        letter-spacing: 0.2px;
-    }
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 24px rgba(220,38,38,0.4);
-    }
+/* ═══════════════════════════════════════════════════
+   UPLOAD ALANI
+═══════════════════════════════════════════════════ */
+.upload-zone {
+    background: #f8fafc; border: 2px dashed #cbd5e1;
+    border-radius: 12px; padding: 40px 32px;
+    text-align: center; margin-bottom: 16px;
+    transition: all 0.2s;
+}
+.upload-zone:hover { border-color: #dc2626; background: #fef2f2; }
 
-    /* ── Download buttons: mavi ── */
-    .stDownloadButton > button {
-        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-        color: #ffffff;
-        border: none;
-        border-radius: 10px;
-        font-weight: 700;
-        box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-    }
-    .stDownloadButton > button:hover {
-        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-        box-shadow: 0 6px 24px rgba(37,99,235,0.4);
-        transform: translateY(-1px);
-    }
+/* ═══════════════════════════════════════════════════
+   FORM ALANLARI
+═══════════════════════════════════════════════════ */
+.stTextInput input, .stNumberInput input {
+    background: #ffffff !important; border: 1.5px solid #e2e8f0 !important;
+    border-radius: 8px !important; color: #0f172a !important;
+    font-size: 0.9rem !important; padding: 9px 14px !important;
+}
+.stTextInput input:focus { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.1) !important; }
+.stSelectbox [data-baseweb="select"] { background: #ffffff !important; border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; }
 
-    /* ── Tabs ── */
-    .stTabs [data-baseweb="tab-list"] {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 4px;
-        gap: 2px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        color: #64748b;
-        font-weight: 600;
-        border-radius: 8px;
-        font-size: 0.87rem;
-        padding: 8px 16px;
-    }
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #dc2626, #ef4444) !important;
-        color: #ffffff !important;
-        box-shadow: 0 3px 10px rgba(220,38,38,0.35);
-        font-weight: 700 !important;
-    }
-
-    /* ── Data tables ── */
-    .stDataFrame {
-        background: #ffffff !important;
-        border-radius: 12px !important;
-        border: 1px solid #e2e8f0 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-    }
-
-    /* ── Info panels ── */
-    .info-panel {
-        background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-        border: 1px solid #bfdbfe;
-        border-left: 4px solid #3b82f6;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(37,99,235,0.06);
-    }
-    .warn-panel {
-        background: linear-gradient(135deg, #fef2f2, #fff7ed);
-        border: 1px solid #fca5a5;
-        border-left: 4px solid #ef4444;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-top: 12px;
-    }
-    .success-panel {
-        background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-        border: 1px solid #86efac;
-        border-left: 4px solid #22c55e;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-top: 12px;
-    }
-    .acmg-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px 18px;
-        margin-bottom: 10px;
-        border-left: 4px solid #94a3b8;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
-
-    /* ── Alerts ── */
-    .stAlert { border-radius: 12px !important; }
-    div[data-testid="stNotification"] { border-radius: 12px; }
-
-    /* ── Spinner ── */
-    .stSpinner > div { border-top-color: #dc2626 !important; }
-
-    /* ── Inputs ── */
-    .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
-        background: #ffffff !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        color: #0f172a !important;
-    }
-    .stTextInput input:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
-    }
-
-    /* ── Slider ── */
-    .stSlider [data-baseweb="slider"] { padding: 0; }
-
-    /* ── Metric widget ── */
-    [data-testid="stMetricValue"] { color: #0f172a !important; font-weight: 700 !important; }
-    [data-testid="stMetricLabel"] { color: #64748b !important; }
-
-    /* ── Content area padding ── */
-    .main .block-container {
-        padding-top: 2rem;
-        max-width: 1400px;
-    }
+/* ═══════════════════════════════════════════════════
+   METRİK WİDGET & GENEL
+═══════════════════════════════════════════════════ */
+[data-testid="stMetricValue"] { color: #0f172a !important; font-weight: 800 !important; }
+[data-testid="stMetricLabel"] { color: #64748b !important; font-size: 0.78rem !important; }
+.stAlert { border-radius: 10px !important; }
+div[data-testid="stNotification"] { border-radius: 10px; }
+.stSpinner > div { border-top-color: #dc2626 !important; }
+.stSlider [data-baseweb="slider"] { padding: 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -442,83 +360,100 @@ def plot_dark(fig, ax):
 
 def render_hero():
     st.markdown("""
-    <div class="hero-banner">
-        <p class="hero-title">🧬 VARIANT-<span>GNN</span></p>
-        <p class="hero-subtitle">
-            Graph Neural Network + Açıklanabilir YZ + Human-in-the-Loop ile<br>
-            <strong>Genetik Varyant Patojenite Klinik Karar Destek Sistemi</strong>
-        </p>
-        <span class="hero-badge red">🏆 TEKNOFEST 2026 · PSR 93/100</span>
-        <span class="hero-badge blue">⚡ GATv2GNN + XGBoost + LightGBM + DNN</span>
-        <span class="hero-badge white">🛡️ ACMG · OOD · KVKK-DP · PubMed RAG</span>
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-logo">🧬</div>
+            <div>
+                <div class="topbar-name">VARIANT-<span>GNN</span></div>
+                <div class="topbar-sub">Genetik Varyant Patojenite Klinik Karar Destek Sistemi &nbsp;·&nbsp; TEKNOFEST 2026</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <span class="topbar-chip blue">⚡ GATv2GNN + XGBoost + LightGBM + DNN</span>
+            <span class="topbar-chip red">🛡️ ACMG · OOD · KVKK-DP</span>
+            <span class="topbar-chip">v2.0</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def render_sidebar(cfg) -> dict:
+    # ── Logo alanı
     st.sidebar.markdown("""
-    <div style="text-align:center; padding: 20px 0 12px;">
-        <div style="font-size:2.4rem; margin-bottom:6px;">🧬</div>
-        <div style="font-size:1.2rem; font-weight:800; color:#fef08a;
-                    letter-spacing:0.5px; text-shadow:0 2px 8px rgba(0,0,0,0.3);">
-            VARIANT-GNN
-        </div>
-        <div style="font-size:0.7rem; color:#64748b; margin-top:4px;
-                    font-weight:600; letter-spacing:1px; text-transform:uppercase;">
-            v2.0 · TEKNOFEST 2026
-        </div>
-        <div style="margin-top:10px; display:inline-block; background:rgba(220,38,38,0.3);
-                    border:1px solid rgba(255,255,255,0.3); border-radius:12px;
-                    padding:3px 12px; font-size:0.7rem; color:#fca5a5; font-weight:700;">
-            PSR 93 / 100
+    <div style="padding:24px 20px 16px; border-bottom:1px solid #1e293b;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;background:linear-gradient(135deg,#dc2626,#b91c1c);
+                        border-radius:10px;display:flex;align-items:center;justify-content:center;
+                        font-size:1.3rem;flex-shrink:0;">🧬</div>
+            <div>
+                <div style="font-size:1rem;font-weight:800;color:#f8fafc;letter-spacing:-0.3px;">VARIANT-GNN</div>
+                <div style="font-size:0.65rem;color:#475569;font-weight:600;
+                            text-transform:uppercase;letter-spacing:1px;margin-top:1px;">
+                    Klinik Karar Destek
+                </div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### ⚙️ Model Ayarları")
+    st.sidebar.markdown("""
+    <div style="padding:12px 20px;border-bottom:1px solid #1e293b;">
+        <div style="font-size:0.65rem;font-weight:700;color:#475569;
+                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Model Bilgisi</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.sidebar.markdown(f"""
-    <div class="model-card">
-        <h4>🤖 Ensemble Modeli</h4>
-        <p>XGBoost + LightGBM + GNN + DNN Hibrit<br>
+    <div style="padding:0 16px;margin-top:8px;">
+    <div class="model-card" style="background:#1e293b;border-color:#334155;border-left-color:#dc2626;">
+        <h4 style="color:#f87171;">🤖 Ensemble</h4>
+        <p style="color:#94a3b8;">XGBoost · LightGBM · GATv2GNN · DNN<br>
         Ağırlıklar: {cfg.ensemble.weights}<br>
         Kalibrasyon: {cfg.calibration.method}</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.sidebar.markdown("### 🎚️ Sınıflandırma Eşiği")
+    st.sidebar.markdown("""
+    <div style="padding:12px 20px 4px;border-top:1px solid #1e293b;margin-top:4px;">
+        <div style="font-size:0.65rem;font-weight:700;color:#475569;
+                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Analiz Ayarları</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     threshold = st.sidebar.slider(
         "Patojenite Eşiği",
         min_value=0.1, max_value=0.9,
         value=float(cfg.thresholds.classification), step=0.01,
-        help="Bu değerin üzerindeki risk skoru Pathogenic olarak sınıflandırılır"
+        help="Bu değerin üzerindeki risk skoru Pathogenic olarak sınıflandırılır",
     )
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔬 XAI Seçenekleri")
+    st.sidebar.markdown("""
+    <div style="padding:12px 20px 4px;border-top:1px solid #1e293b;margin-top:4px;">
+        <div style="font-size:0.65rem;font-weight:700;color:#475569;
+                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">XAI & Modüller</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     opts = {
-        "show_shap":     st.sidebar.checkbox("📊 Global SHAP Özeti", value=True),
-        "show_waterfall": st.sidebar.checkbox("🌊 Yerel SHAP Waterfall", value=True),
-        "show_lime":     st.sidebar.checkbox("🟢 LIME Açıklaması", value=False),
-        "variant_index": st.sidebar.number_input("📍 Varyant İndeksi (Yerel XAI):", min_value=0, value=0, step=1),
-        "threshold":     threshold,
-        "dp_enabled":    st.sidebar.checkbox("🔏 Diferansiyel Gizlilik (DP)", value=False, help="Laplace Noise Ekler"),
-        "acmg_enabled":  st.sidebar.checkbox("🧬 ACMG Kuralları", value=True),
-        "rag_enabled":   st.sidebar.checkbox("📚 PubMed Canlı Makale RAG", value=True),
+        "show_shap":      st.sidebar.checkbox("📊 Global SHAP Özeti",      value=True),
+        "show_waterfall": st.sidebar.checkbox("🌊 Yerel SHAP Waterfall",   value=True),
+        "show_lime":      st.sidebar.checkbox("🟢 LIME Açıklaması",        value=False),
+        "variant_index":  st.sidebar.number_input("📍 Varyant İndeksi:", min_value=0, value=0, step=1),
+        "threshold":      threshold,
+        "dp_enabled":     st.sidebar.checkbox("🔒 Diferansiyel Gizlilik",  value=False),
+        "acmg_enabled":   st.sidebar.checkbox("🧬 ACMG Kuralları",         value=True),
+        "rag_enabled":    st.sidebar.checkbox("📚 PubMed RAG",              value=True),
     }
 
-    st.sidebar.markdown("---")
     st.sidebar.markdown("""
-    <div style="padding: 12px; background: rgba(99,179,237,0.05); border-radius: 8px; border: 1px solid rgba(99,179,237,0.15); margin-bottom: 12px;">
-        <div style="font-size:0.75rem; color:#64748b; line-height:1.6;">
-            ⚠️ <strong style="color:#d97706;">Araştırma Aracı</strong><br>
-            Bu sistem klinik karar desteği için değil, araştırma amacıyla geliştirilmiştir.
+    <div style="margin:16px 16px 0;padding:12px 14px;background:#1e293b;
+                border-radius:8px;border-left:3px solid #dc2626;">
+        <div style="font-size:0.72rem;color:#f87171;font-weight:700;margin-bottom:4px;">
+            ⚠️ Araştırma Aracı
         </div>
-    </div>
-    <div style="padding: 12px; background: rgba(229,62,62,0.05); border-radius: 8px; border: 1px solid rgba(229,62,62,0.25);">
-        <div style="font-size:0.75rem; color:#dc2626; line-height:1.5;">
-            🛑 <strong style="color:#dc2626;">ÖNEMLİ (TEKNOFEST NDA)</strong><br>
-            Gizlilik Sözleşmesi (NDA) imzalanmadan T.C. Sağlık Bakanlığı / TÜSEB verilerinin sisteme yüklenmesi yasaktır.
+        <div style="font-size:0.7rem;color:#64748b;line-height:1.5;">
+            Bu sistem yalnızca araştırma amaçlıdır. Klinik tanı yerine geçmez.
+            TEKNOFEST NDA kapsamında gizlilik kuralları geçerlidir.
         </div>
     </div>
     """, unsafe_allow_html=True)
