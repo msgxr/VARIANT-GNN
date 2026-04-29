@@ -1518,17 +1518,37 @@ def main():
 
         if "df_result" not in st.session_state or "df_raw" not in st.session_state:
             st.markdown("""
-            <div class="warn-panel">
-                <b style="color:#dc2626;">⚠️ Önce Varyant Analizi sekmesinden CSV yükleyip analizi başlatın.</b>
+            <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-left:5px solid #dc2626;
+                        border-radius:12px;padding:18px 22px;margin-top:8px;">
+                <b style="color:#991b1b;font-size:0.95rem;">⚠️ Önce Varyant Analizi sekmesinden CSV yükleyip analizi başlatın.</b>
             </div>
             """, unsafe_allow_html=True)
         else:
             _df_res = st.session_state["df_result"]
             _df_raw = st.session_state["df_raw"]
 
-            # ── ACMG ─────────────────────────────────────────────────────────
-            st.markdown("### 🧬 ACMG/AMP 2015 Kriter Haritası")
-            if st.button("ACMG Analizi Çalıştır (İlk 5 Varyant)", key="btn_acmg"):
+            # ═══════════════════════════════════════════════════════════════════
+            # BÖLÜM 1 — ACMG/AMP KRİTER HARİTALAYICI
+            # ═══════════════════════════════════════════════════════════════════
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+                        border-radius:14px;padding:18px 24px;margin-bottom:14px;
+                        box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:1.8rem;line-height:1;">🧬</div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">
+                            ACMG/AMP 2015 Kriter Haritalayıcı
+                        </div>
+                        <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">
+                            SHAP değerleri + ham özellikler → PM2, PP3, BA1, BS1, PS3 kriterleri · Tavtigian puan sistemi
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.button("▶  ACMG Analizi Çalıştır — İlk 5 Varyant", key="btn_acmg"):
                 with st.spinner("ACMG kriterleri hesaplanıyor…"):
                     try:
                         from src.scientific.acmg_mapper import ACMGMapper
@@ -1538,29 +1558,86 @@ def main():
                         )
                         _res_acmg = ACMGMapper().classify_batch(_X)
                         st.session_state["acmg_results"] = _res_acmg
-                        st.success(f"✅ {len(_res_acmg)} varyant ACMG ile sınıflandırıldı.")
                     except Exception as _e:
                         st.warning(f"ACMG analizi: {_e}")
 
             if "acmg_results" in st.session_state:
-                _colors = {"Pathogenic":"#ef4444","Likely Pathogenic":"#f97316",
-                           "VUS":"#f59e0b","Likely Benign":"#22c55e","Benign":"#16a34a"}
+                _cls_cfg = {
+                    "Pathogenic":      {"bg":"#dc2626","light":"#fef2f2","border":"#fca5a5","icon":"🔴"},
+                    "Likely Pathogenic":{"bg":"#ea580c","light":"#fff7ed","border":"#fed7aa","icon":"🟠"},
+                    "VUS":             {"bg":"#d97706","light":"#fffbeb","border":"#fde68a","icon":"🟡"},
+                    "Likely Benign":   {"bg":"#16a34a","light":"#f0fdf4","border":"#86efac","icon":"🟢"},
+                    "Benign":          {"bg":"#15803d","light":"#f0fdf4","border":"#6ee7b7","icon":"✅"},
+                }
                 for _i, _r in enumerate(st.session_state["acmg_results"]):
-                    _c = _colors.get(_r["classification"],"#94a3b8")
-                    _met = [x["code"] for x in _r["criteria"]]
+                    _cls = _r["classification"]
+                    _cfg = _cls_cfg.get(_cls, {"bg":"#64748b","light":"#f8fafc","border":"#e2e8f0","icon":"⚪"})
+                    _met = _r["criteria"]
+                    _score = _r["acmg_score"]
+                    _met_codes = [x["code"] for x in _met]
+
+                    # Ana kart
                     st.markdown(f"""
-                    <div class="acmg-card" style="border-left-color:{_c};">
-                        <b style="color:{_c};">Örnek {_i+1} — {_r["classification"]}</b>
-                        <span style="color:#64748b;font-size:0.8rem;"> Puan: {_r["acmg_score"]:+d}</span><br>
-                        <span style="color:#475569;font-size:0.82rem;">Kriterler: {', '.join(_met) or '—'}</span><br>
-                        <span style="color:#64748b;font-size:0.78rem;">{_r["summary"]}</span>
-                    </div>""", unsafe_allow_html=True)
+                    <div style="background:{_cfg['light']};border:2px solid {_cfg['border']};
+                                border-radius:14px;overflow:hidden;margin-bottom:14px;
+                                box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+                        <!-- Başlık -->
+                        <div style="background:{_cfg['bg']};padding:14px 20px;
+                                    display:flex;align-items:center;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <span style="font-size:1.4rem;">{_cfg['icon']}</span>
+                                <div>
+                                    <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.75);
+                                                text-transform:uppercase;letter-spacing:1px;">Örnek {_i+1}</div>
+                                    <div style="font-size:1rem;font-weight:800;color:#ffffff;">{_cls}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:2rem;font-weight:900;color:#ffffff;line-height:1;">{_score:+d}</div>
+                                <div style="font-size:0.65rem;color:rgba(255,255,255,0.7);font-weight:600;">ACMG PUANI</div>
+                            </div>
+                        </div>
+                        <!-- Kriterler -->
+                        <div style="padding:14px 20px;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#64748b;
+                                        text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+                                Karşılanan Kriterler ({len(_met_codes)})
+                            </div>
+                            {''.join([f'''<div style="background:#ffffff;border:1px solid {_cfg["border"]};
+                                border-radius:8px;padding:10px 14px;margin-bottom:8px;
+                                border-left:3px solid {_cfg["bg"]};">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                    <span style="background:{_cfg["bg"]};color:#fff;font-size:0.72rem;
+                                                font-weight:800;padding:2px 10px;border-radius:12px;">
+                                        {c["code"]}</span>
+                                    <span style="font-size:0.7rem;color:#64748b;font-weight:600;">{c["strength"]}</span>
+                                </div>
+                                <div style="font-size:0.78rem;color:#1e293b;line-height:1.5;">{c["evidence"]}</div>
+                            </div>''' for c in _met]) or f'<div style="color:#94a3b8;font-size:0.82rem;font-style:italic;">Bu örnek için kriter karşılanmadı.</div>'}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            st.divider()
+            # ═══════════════════════════════════════════════════════════════════
+            # BÖLÜM 2 — OOD DEDEKTÖR
+            # ═══════════════════════════════════════════════════════════════════
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 100%);
+                        border-radius:14px;padding:18px 24px;margin:20px 0 14px;
+                        box-shadow:0 4px 20px rgba(29,78,216,0.2);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:1.8rem;line-height:1;">📡</div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#ffffff;">OOD & Data Drift Dedektörü</div>
+                        <div style="font-size:0.75rem;color:#bfdbfe;margin-top:2px;">
+                            Z-score + Mahalanobis · Eğitim dağılımından sapma tespiti
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # ── OOD ──────────────────────────────────────────────────────────
-            st.markdown("### 📡 OOD & Data Drift Dedektörü")
-            if st.button("OOD Analizi Çalıştır", key="btn_ood"):
+            if st.button("▶  OOD Analizi Çalıştır", key="btn_ood"):
                 with st.spinner("Dağılım sapması analiz ediliyor…"):
                     try:
                         from src.scientific.ood_detector import OODDetector
@@ -1573,27 +1650,79 @@ def main():
                         _ood_r = _det.detect(_X2)
                         _drft  = _det.drift_report(_X2)
                         st.session_state["ood_report"] = (_ood_r, _drft)
-                        st.success(f"✅ {_ood_r['summary']}")
                     except Exception as _e:
                         st.warning(f"OOD analizi: {_e}")
 
             if "ood_report" in st.session_state:
                 _ood_r, _drft = st.session_state["ood_report"]
-                _c1, _c2, _c3 = st.columns(3)
-                _c1.metric("OOD Varyant", f"{_ood_r['n_ood']}/{_ood_r['n_total']}", delta=None)
-                _c2.metric("Drift Skoru", f"{_drft['mean_drift_score']:.3f}")
-                _c3.metric("En Çok Sapan", _drft.get("max_drift_feature","?")[:18])
-                if _drft.get("top_drifted_features"):
-                    st.dataframe(pd.DataFrame(_drft["top_drifted_features"]), height=180)
+                _n_ood = _ood_r["n_ood"]; _n_tot = _ood_r["n_total"]
+                _drift = _drft["mean_drift_score"]; _flag = _drft["drift_flag"]
+                st.markdown(f"""
+                <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:130px;background:#1d4ed8;border-radius:12px;
+                                padding:18px;text-align:center;box-shadow:0 4px 14px rgba(29,78,216,0.3);">
+                        <div style="font-size:2.2rem;font-weight:900;color:#fff;">{_n_ood}</div>
+                        <div style="font-size:0.65rem;font-weight:700;color:#bfdbfe;
+                                    text-transform:uppercase;letter-spacing:1px;">OOD Varyant</div>
+                        <div style="font-size:0.75rem;color:#e0f2fe;margin-top:2px;">/ {_n_tot} toplam</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;background:{'#dc2626' if _flag else '#16a34a'};border-radius:12px;
+                                padding:18px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.15);">
+                        <div style="font-size:2.2rem;font-weight:900;color:#fff;">{_drift:.3f}</div>
+                        <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.75);
+                                    text-transform:uppercase;letter-spacing:1px;">Drift Skoru</div>
+                        <div style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin-top:2px;">
+                            {'⚠️ Yüksek Drift' if _flag else '✅ Normal Dağılım'}</div>
+                    </div>
+                    <div style="flex:2;min-width:200px;background:#0f172a;border-radius:12px;
+                                padding:18px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">
+                        <div style="font-size:0.65rem;font-weight:700;color:#64748b;
+                                    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">En Çok Sapan Özellikler</div>
+                        {''.join([f'''<div style="display:flex;justify-content:space-between;align-items:center;
+                                    padding:4px 0;border-bottom:1px solid #1e293b;">
+                                <span style="color:#e2e8f0;font-size:0.78rem;font-weight:600;">{f["feature"][:25]}</span>
+                                <span style="background:#1d4ed8;color:#fff;font-size:0.68rem;font-weight:700;
+                                            padding:2px 8px;border-radius:8px;">{f["normalized_shift"]:.3f}</span>
+                            </div>''' for f in _drft.get("top_drifted_features",[])[:4]])}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            st.divider()
+            # ═══════════════════════════════════════════════════════════════════
+            # BÖLÜM 3 — DİFERANSİYEL GİZLİLİK
+            # ═══════════════════════════════════════════════════════════════════
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#065f46 0%,#047857 100%);
+                        border-radius:14px;padding:18px 24px;margin:20px 0 14px;
+                        box-shadow:0 4px 20px rgba(5,150,105,0.2);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:1.8rem;line-height:1;">🔒</div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#ffffff;">Diferansiyel Gizlilik (KVKK/GDPR)</div>
+                        <div style="font-size:0.75rem;color:#a7f3d0;margin-top:2px;">
+                            Laplace mekanizması · ε-Differential Privacy · KVKK Madde 6 · GDPR Madde 89
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # ── Diferansiyel Gizlilik ─────────────────────────────────────────
-            st.markdown("### 🔒 Diferansiyel Gizlilik (KVKK/GDPR)")
-            _eps = st.slider("Gizlilik Bütçesi ε", 0.1, 5.0, 1.0, 0.1,
-                             help="Küçük ε = yüksek gizlilik. Tıbbi veri için ε ≤ 2.0 önerilir.",
+            _eps = st.slider("Gizlilik Bütçesi ε  (küçük = daha gizli)", 0.1, 5.0, 1.0, 0.1,
                              key="dp_eps_slider")
-            if st.button("DP Uygula & Rapor Göster", key="btn_dp"):
+            _lvl_map = {0.1:"Maksimum",0.5:"Yüksek",1.0:"Standart",2.0:"Düşük",5.0:"Çok Düşük"}
+            _cur_lvl = min(_lvl_map.keys(), key=lambda k: abs(k - _eps))
+            st.markdown(f"""
+            <div style="display:flex;gap:6px;margin:8px 0 12px;flex-wrap:wrap;">
+                {''.join([f'''<div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;
+                    border-radius:8px;border:2px solid {'#16a34a' if abs(k-_eps)<0.3 else '#e2e8f0'};
+                    background:{'#f0fdf4' if abs(k-_eps)<0.3 else '#f8fafc'};">
+                    <div style="font-size:0.75rem;font-weight:800;color:{'#15803d' if abs(k-_eps)<0.3 else '#94a3b8'};">ε={k}</div>
+                    <div style="font-size:0.65rem;color:{'#374151' if abs(k-_eps)<0.3 else '#94a3b8'};">{v}</div>
+                </div>''' for k,v in _lvl_map.items()])}
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.button("▶  DP Uygula & Gizliliği Korunmuş CSV İndir", key="btn_dp"):
                 try:
                     from src.scientific.differential_privacy import DifferentialPrivacy
                     import numpy as _np
@@ -1601,52 +1730,112 @@ def main():
                     _Xd = _df_raw.select_dtypes(include=[_np.number]).fillna(0).values
                     _Xp = _dp.apply(_Xd)
                     _rpt = _dp.privacy_report()
-                    _lvl = _rpt["privacy_level"]
                     st.markdown(f"""
-                    <div class="success-panel">
-                        <b style="color:#15803d;">✅ ε={_eps} Laplace gürültüsü uygulandı</b><br>
-                        <span style="color:#64748b;font-size:0.85rem;">
-                        Gizlilik seviyesi: <b style="color:#dc2626;">{_lvl}</b> ·
-                        KVKK Madde 6 · GDPR Madde 89 · HIPAA Safe Harbor uyumlu
-                        </span>
+                    <div style="background:#f0fdf4;border:2px solid #86efac;border-left:5px solid #16a34a;
+                                border-radius:12px;padding:16px 20px;margin:8px 0;">
+                        <div style="font-size:0.9rem;font-weight:800;color:#15803d;margin-bottom:8px;">
+                            ✅ ε={_eps} — Laplace Gürültüsü Uygulandı
+                        </div>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                            <span style="font-size:0.8rem;color:#374151;">
+                                🛡️ Seviye: <b style="color:#dc2626;">{_rpt["privacy_level"]}</b></span>
+                            <span style="font-size:0.8rem;color:#374151;">📜 KVKK Madde 6</span>
+                            <span style="font-size:0.8rem;color:#374151;">🇪🇺 GDPR Madde 89</span>
+                            <span style="font-size:0.8rem;color:#374151;">🏥 HIPAA Safe Harbor</span>
+                        </div>
                     </div>""", unsafe_allow_html=True)
                     st.download_button(
-                        "⬇️ Gizliliği Korunmuş CSV İndir",
-                        data=pd.DataFrame(
-                            _Xp,
+                        "⬇️  Gizliliği Korunmuş CSV'yi İndir",
+                        data=pd.DataFrame(_Xp,
                             columns=_df_raw.select_dtypes(include=[_np.number]).columns
                         ).to_csv(index=False).encode(),
                         file_name=f"variant_dp_eps{_eps}.csv",
-                        mime="text/csv",
-                        key="dl_dp_csv",
+                        mime="text/csv", key="dl_dp_csv",
                     )
                 except Exception as _e:
                     st.warning(f"DP modülü: {_e}")
 
-            st.divider()
+            # ═══════════════════════════════════════════════════════════════════
+            # BÖLÜM 4 — PUBMED RAG
+            # ═══════════════════════════════════════════════════════════════════
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 100%);
+                        border-radius:14px;padding:18px 24px;margin:20px 0 14px;
+                        box-shadow:0 4px 20px rgba(67,56,202,0.25);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:1.8rem;line-height:1;">📚</div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#ffffff;">PubMed Canlı Literatür (RAG)</div>
+                        <div style="font-size:0.75rem;color:#c7d2fe;margin-top:2px;">
+                            NCBI E-utilities · Retrieval-Augmented Generation · Canlı makale özetleri
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # ── PubMed RAG ───────────────────────────────────────────────────
-            st.markdown("### 📚 PubMed Canlı Literatür (RAG)")
-            _gene_in = st.text_input("Gen adı veya varyant ID", value="BRCA1", key="pubmed_input")
-            if st.button("PubMed'de Ara", key="btn_pubmed"):
+            _col_pub1, _col_pub2 = st.columns([3, 1])
+            with _col_pub1:
+                _gene_in = st.text_input("Gen adı, rsID veya varyant ID", value="BRCA1", key="pubmed_input",
+                                          placeholder="Örn: BRCA1 · TP53 · rs28897672")
+            with _col_pub2:
+                st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+                _do_search = st.button("🔍  Ara", key="btn_pubmed")
+
+            if _do_search:
                 with st.spinner("NCBI PubMed sorgulanıyor…"):
                     try:
                         from src.scientific.pubmed_rag import PubMedRAG
                         _arts = PubMedRAG(cache_ttl=3600).fetch(gene=_gene_in, n_results=3)
                         if _arts:
-                            for _a in _arts:
-                                st.markdown(f"""
-                                <div class="model-card">
-                                    <h4>{_a.get('title','?')[:80]}</h4>
-                                    <p>{_a.get('authors','?')} · {_a.get('journal','?')} · {_a.get('year','?')} ·
-                                    <a href="{_a.get('url','#')}" target="_blank" style="color:#60a5fa;">PMID:{_a.get('pmid','?')}</a></p>
-                                    <p style="color:#64748b;font-style:italic;margin-top:6px;">
-                                    {_a.get('abstract_snippet','')}</p>
-                                </div>""", unsafe_allow_html=True)
+                            st.session_state["pubmed_results"] = _arts
                         else:
                             st.info("Sonuç bulunamadı (internet bağlantısı gereklidir).")
                     except Exception as _e:
-                        st.warning(f"PubMed sorgusunda hata: {_e}")
+                        st.warning(f"PubMed hatası: {_e}")
+
+            if "pubmed_results" in st.session_state:
+                for _idx_a, _a in enumerate(st.session_state["pubmed_results"]):
+                    st.markdown(f"""
+                    <div style="background:#ffffff;border:1px solid #c7d2fe;border-radius:14px;
+                                overflow:hidden;margin-bottom:14px;
+                                box-shadow:0 4px 16px rgba(67,56,202,0.1);">
+                        <!-- Başlık şeridi -->
+                        <div style="background:linear-gradient(135deg,#1e1b4b,#4338ca);
+                                    padding:12px 18px;display:flex;align-items:center;gap:10px;">
+                            <span style="background:rgba(255,255,255,0.2);color:#fff;
+                                        font-size:0.7rem;font-weight:800;padding:3px 10px;
+                                        border-radius:10px;border:1px solid rgba(255,255,255,0.3);">
+                                #{_idx_a+1}
+                            </span>
+                            <span style="color:rgba(255,255,255,0.6);font-size:0.72rem;font-weight:600;">
+                                {_a.get('journal','?')} · {_a.get('year','?')}
+                            </span>
+                            <a href="{_a.get('url','#')}" target="_blank"
+                               style="margin-left:auto;background:rgba(255,255,255,0.15);
+                                      color:#fff;font-size:0.7rem;font-weight:700;
+                                      padding:3px 12px;border-radius:8px;text-decoration:none;
+                                      border:1px solid rgba(255,255,255,0.3);">
+                                PMID:{_a.get('pmid','?')} ↗
+                            </a>
+                        </div>
+                        <!-- İçerik -->
+                        <div style="padding:16px 20px;">
+                            <div style="font-size:0.9rem;font-weight:700;color:#1e1b4b;
+                                        line-height:1.5;margin-bottom:8px;">
+                                {_a.get('title','?')}
+                            </div>
+                            <div style="font-size:0.76rem;color:#6366f1;font-weight:600;margin-bottom:10px;">
+                                👤 {_a.get('authors','?')}
+                            </div>
+                            <div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:8px;
+                                        padding:10px 14px;font-size:0.8rem;color:#374151;
+                                        line-height:1.6;font-style:italic;">
+                                💬 "{_a.get('abstract_snippet','Özet mevcut değil.')}"
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
     # ─────────────────────────────────────────────────────────────
     with tab_xai:
