@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VARIANT-GNN Submission Schema",
+  "type": "object",
+  "required": ["Variant_ID", "prediction_label", "pathogenic_probability", "calibrated_risk", "confidence_level", "uncertainty_score", "expert_review_flag"],
+  "properties": {
+    "Variant_ID": { "type": "string" },
+    "prediction_label": { "type": "integer", "enum": [0, 1] },
+    "pathogenic_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+    "calibrated_risk": { "type": "number", "minimum": 0, "maximum": 100 },
+    "confidence_level": { "type": "number", "minimum": 0, "maximum": 100 },
+    "uncertainty_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "expert_review_flag": { "type": "boolean" }
+  }
+}

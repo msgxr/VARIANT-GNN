@@ -271,31 +271,17 @@ def mode_external_val(args, cfg):
     F1, Precision, Recall, ROC-AUC, PR-AUC, MCC, Brier, ECE
     Confusion matrix PNG + JSON raporu reports/ altına kaydedilir.
     """
-    from sklearn.metrics import (
-        brier_score_loss, confusion_matrix, matthews_corrcoef,
-        average_precision_score, roc_auc_score,
-        precision_score, recall_score, f1_score,
-    )
+    from src.evaluation.metrics import evaluate, find_f1_optimal_threshold, save_threshold_report
+    
     test_path = args.test_file or args.data_file
     if not test_path:
         logging.error("--test_file veya --data_file gerekli.")
         sys.exit(1)
+    
     ds = load_csv(test_path)
     if ds.labels is None:
         logging.error("external_val icin etiketli veri gerekli.")
         sys.exit(1)
-
-    panel = getattr(args, "panel", None)
-    if panel and "Panel" in ds.metadata.columns:
-        from src.data.loader import LoadedDataset
-        mask = ds.metadata["Panel"] == panel
-        ds = LoadedDataset(
-            features=ds.features[mask].reset_index(drop=True),
-            labels=ds.labels[mask.values],
-            metadata=ds.metadata[mask].reset_index(drop=True),
-            feature_columns=ds.feature_columns,
-        )
-        logging.info("Panel: %s (%d varyant)", panel, len(ds.labels))
 
     pipeline = InferencePipeline()
     pipeline.load()
@@ -303,51 +289,31 @@ def mode_external_val(args, cfg):
 
     y_true = ds.labels
     p1     = df_result["Probability"].values
+    y_prob = np.column_stack([1 - p1, p1])
 
-    # Optimal threshold (F1 maks.)
-    try:
-        from src.evaluation.metrics import find_f1_optimal_threshold
-        best_thr, _ = find_f1_optimal_threshold(y_true, p1)
-    except Exception:
-        best_thr = 0.5
+    # 1. Optimize threshold for F1 on this test set
+    best_thr, best_f1 = find_f1_optimal_threshold(y_true, p1, metric="f1")
+    
+    # 2. Comprehensive evaluation
+    report = evaluate(y_true, y_prob, threshold=best_thr)
+    report.log(prefix="EXTERNAL_VAL")
 
-    y_pred = (p1 >= best_thr).astype(int)
-    f1   = f1_score(y_true, y_pred, average="macro", zero_division=0)
-    prec = precision_score(y_true, y_pred, average="macro", zero_division=0)
-    rec  = recall_score(y_true, y_pred, average="macro", zero_division=0)
-    roc  = roc_auc_score(y_true, p1)
-    pr   = average_precision_score(y_true, p1)
-    mcc  = matthews_corrcoef(y_true, y_pred)
-    brier= brier_score_loss(y_true, p1)
-    cm   = confusion_matrix(y_true, y_pred).tolist()
-    try:
-        from sklearn.calibration import calibration_curve
-        fp, mp = calibration_curve(y_true, p1, n_bins=10)
-        ece = float(np.abs(fp - mp).mean())
-    except Exception:
-        ece = None
-
-    logging.info("=" * 56)
-    logging.info("  EXTERNAL VALIDATION SONUCLARI")
-    logging.info("  Ornek=%d  Esik=%.3f", len(y_true), best_thr)
-    logging.info("  Macro F1=%.4f  Precision=%.4f  Recall=%.4f", f1, prec, rec)
-    logging.info("  ROC-AUC=%.4f  PR-AUC=%.4f  MCC=%.4f", roc, pr, mcc)
-    logging.info("  Brier=%.6f  ECE=%s", brier, f"{ece:.4f}" if ece else "N/A")
-    logging.info("  Confusion: %s", cm)
-    logging.info("=" * 56)
-
+    # 3. Save threshold report and PLOTS
     cfg.paths.create_dirs()
-    # Confusion matrix gorseli
+    save_threshold_report(y_true, p1, reports_dir=str(cfg.paths.reports_dir))
+
+    # 4. Save Confusion Matrix Plot
     try:
         import matplotlib; matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        cm = report.conf_matrix
         fig, ax = plt.subplots(figsize=(5, 4))
         ax.imshow(cm, cmap="Blues")
-        ax.set_xticks([0,1]); ax.set_yticks([0,1])
-        ax.set_xticklabels(["Benign","Pathogenic"])
-        ax.set_yticklabels(["Benign","Pathogenic"])
-        ax.set_xlabel("Tahmin"); ax.set_ylabel("Gercek")
-        ax.set_title(f"Confusion Matrix | F1={f1:.4f}")
+        ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
+        ax.set_xticklabels(["Benign", "Pathogenic"])
+        ax.set_yticklabels(["Benign", "Pathogenic"])
+        ax.set_xlabel("Tahmin"); ax.set_ylabel("Gerçek")
+        ax.set_title(f"Confusion Matrix | F1={report.binary_f1:.4f}")
         for i in range(2):
             for j in range(2):
                 ax.text(j, i, str(cm[i][j]), ha="center", va="center",
@@ -358,27 +324,32 @@ def mode_external_val(args, cfg):
         plt.close()
         logging.info("Confusion Matrix -> %s", cm_path)
     except Exception as exc:
-        logging.warning("Grafik cizilmedi: %s", exc)
+        logging.warning("Grafik çizilemedi: %s", exc)
 
+    # 5. Export Predictions
+    paths = export_predictions(
+        df_result, 
+        cfg.paths.reports_dir, 
+        prefix="external_val",
+        submission_path=getattr(args, "output", None)
+    )
+    
+    # 6. JSON Summary
     report_json = {
         "mode": "external_validation",
-        "test_file": str(test_path), "panel": panel,
-        "n_samples": int(len(y_true)), "optimal_threshold": best_thr,
-        "metrics": {
-            "macro_f1": round(f1,4), "precision": round(prec,4),
-            "recall": round(rec,4), "roc_auc": round(roc,4),
-            "pr_auc": round(pr,4), "mcc": round(mcc,4),
-            "brier_score": round(brier,6),
-            "ece": round(ece,4) if ece else None,
-        },
-        "confusion_matrix": cm,
+        "test_file": str(test_path),
+        "n_samples": int(len(y_true)),
+        "optimal_threshold": best_thr,
+        "metrics": report.as_dict(),
+        "confusion_matrix": report.conf_matrix.tolist() if report.conf_matrix is not None else None,
     }
     out_json = cfg.paths.reports_dir / "external_validation_report.json"
     with open(out_json, "w") as fh:
         json.dump(report_json, fh, indent=2, default=str)
-    paths = export_predictions(df_result, cfg.paths.reports_dir, prefix="external_val")
-    logging.info("Tahminler -> %s", paths["jury"])
+    
     logging.info("JSON rapor -> %s", out_json)
+    logging.info("External validation tamamlandı.")
+
 
 
 def mode_adversarial_val(args, cfg):

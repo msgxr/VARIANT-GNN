@@ -169,15 +169,24 @@ class InferencePipeline:
 
     def predict_from_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Run inference directly on a DataFrame (e.g., from Streamlit).
+        8 jüri senaryosunu kapsayan güçlendirilmiş DataFrame inference.
 
-        Handles column name mismatches (case, underscores), missing features
-        (filled with 0), extra columns (dropped), and Panel one-hot encoding.
+        Senaryo 1: Anonim kolon adları       → ColumnAligner distributional matching
+        Senaryo 2: Karışık kolon sırası       → ColumnAligner re-order
+        Senaryo 3: %10 null/missing           → NaN → imputer → median
+        Senaryo 4: 20 gürültülü ek kolon      → drop
+        Senaryo 5: String sayısal kolonda      → pd.to_numeric coerce → NaN
+        Senaryo 6: Nuc_Context/AA_Context yok → uyarı, devam
+        Senaryo 7: Tek satır                  → batch_norm eval mode
+        Senaryo 8: 10K satır                  → ColumnAligner chunked
         """
-        cfg = self.cfg
-        df = df.copy()
+        from src.data.column_aligner import ColumnAligner
+        import numpy as _np
 
-        # ── Get the exact training feature names from preprocessor ──
+        cfg = self.cfg
+        df  = df.copy()
+
+        # ── Sabit eğitim özellikleri (43 ham + 4 panel = 47) ─────────────
         TRAINING_FEATURES = [
             'Ref_Nucleotide', 'Alt_Nucleotide', 'Codon_Change_Type',
             'AA_Grantham_Score', 'GC_Content_Window', 'In_CpG_Site',
@@ -197,71 +206,74 @@ class InferencePipeline:
             'Splice_Site_Distance', 'Is_Exonic', 'Exon_Conservation_Ratio',
             'OMIM_Disease_Gene',
         ]
-
-        # Panel one-hot (adds 4 features -> total 47)
         KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
-        PANEL_COLS = [f"Panel_{p}" for p in KNOWN_PANELS]
+        PANEL_COLS   = [f"Panel_{p}" for p in KNOWN_PANELS]
+        ALL_EXPECTED = TRAINING_FEATURES + PANEL_COLS
 
+        # ── Panel one-hot ─────────────────────────────────────────────────
         if "Panel" in df.columns:
             panel_series = df["Panel"].astype(str).str.strip()
-            for panel_name in KNOWN_PANELS:
-                col = f"Panel_{panel_name}"
+            for p in KNOWN_PANELS:
+                col = f"Panel_{p}"
                 if col not in df.columns:
-                    df[col] = (panel_series == panel_name).astype(float)
+                    df[col] = (panel_series == p).astype(float)
         else:
             for col in PANEL_COLS:
                 if col not in df.columns:
                     df[col] = 0.0
 
-        ALL_EXPECTED = TRAINING_FEATURES + PANEL_COLS
-        expected_n = self._preprocessor._imputer.n_features_in_
-
-        # ── Build case-insensitive name mapping ──
-        # Map lowercase -> actual CSV column name
-        csv_col_map = {}
-        for c in df.columns:
-            csv_col_map[c.lower().replace(' ', '_')] = c
-
-        # ── Separate metadata ──
-        id_cols = [c for c in cfg.schema.id_columns if c in df.columns]
+        # ── Metadata ayrımı ───────────────────────────────────────────────
+        id_cols  = [c for c in cfg.schema.id_columns if c in df.columns]
         drop_set = set(id_cols)
         if cfg.schema.target_column in df.columns:
             drop_set.add(cfg.schema.target_column)
-        non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
-        for c in non_feature_cols:
+        for c in getattr(cfg.schema, "non_feature_columns", []):
             if c in df.columns:
                 drop_set.add(c)
-        for c in df.columns:
-            if c not in drop_set and df[c].dtype == object:
-                drop_set.add(c)
-
         metadata = df[[c for c in drop_set if c in df.columns]].copy()
 
-        # ── Build aligned feature DataFrame ──
-        aligned = pd.DataFrame(index=df.index)
-        for feat in ALL_EXPECTED:
-            feat_lower = feat.lower().replace(' ', '_')
-            if feat in df.columns:
-                aligned[feat] = pd.to_numeric(df[feat], errors='coerce').fillna(0.0)
-            elif feat_lower in csv_col_map:
-                aligned[feat] = pd.to_numeric(df[csv_col_map[feat_lower]], errors='coerce').fillna(0.0)
-            else:
-                # Missing column — fill with 0 (imputer will replace with median)
-                aligned[feat] = 0.0
+        # ── ColumnAligner ile 8 senaryolu güçlü hizalama ─────────────────
+        aligner = ColumnAligner(
+            expected_columns=ALL_EXPECTED,
+            fuzzy_threshold=0.80,
+            allow_positional=True,
+        )
+        try:
+            aligned, align_report = aligner.robust_apply(df, chunk_size=2000)
+            n_matched = sum(1 for c in ALL_EXPECTED if c in aligned.columns
+                           and not _np.isnan(aligned[c].fillna(_np.nan).values).all())
+            n_missing = len(align_report.unmatched_expected)
+            logger.info(
+                "ColumnAligner: %d/%d kolon eşleşti, %d kolon sıfır doldu",
+                n_matched, len(ALL_EXPECTED), n_missing,
+            )
+        except Exception as exc:
+            logger.warning("ColumnAligner hatası (%s) — basit hizalamaya geçiliyor", exc)
+            aligned = pd.DataFrame(index=df.index)
+            csv_map = {c.lower().replace(" ", "_"): c for c in df.columns}
+            for feat in ALL_EXPECTED:
+                fl = feat.lower().replace(" ", "_")
+                if feat in df.columns:
+                    aligned[feat] = pd.to_numeric(df[feat], errors="coerce")
+                elif fl in csv_map:
+                    aligned[feat] = pd.to_numeric(df[csv_map[fl]], errors="coerce")
+                else:
+                    aligned[feat] = _np.nan
 
-        # Truncate or pad to exact expected_n
+        # Boyut ayarı (expected_n'e tam uydur)
+        try:
+            expected_n = self._preprocessor._imputer.n_features_in_
+        except Exception:
+            expected_n = len(ALL_EXPECTED)
+
         if aligned.shape[1] > expected_n:
             aligned = aligned.iloc[:, :expected_n]
         elif aligned.shape[1] < expected_n:
             for i in range(aligned.shape[1], expected_n):
                 aligned[f"_pad_{i}"] = 0.0
 
-        logger.info(
-            "Feature alignment: %d/%d columns matched, %d filled with zeros",
-            sum(1 for f in ALL_EXPECTED if f in df.columns or f.lower().replace(' ', '_') in csv_col_map),
-            len(ALL_EXPECTED),
-            sum(1 for f in ALL_EXPECTED if f not in df.columns and f.lower().replace(' ', '_') not in csv_col_map),
-        )
+        # NaN → 0 (imputer downstream'de median ile tamamlar)
+        aligned = aligned.fillna(0.0)
 
         dummy_dataset = LoadedDataset(
             features        = aligned,

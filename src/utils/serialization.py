@@ -184,6 +184,9 @@ class ModelStore:
         calibrator=None,
     ) -> None:
         """Persist all artefacts.  ``ensemble`` is a ``HybridEnsemble``."""
+        import json
+        from datetime import datetime
+        
         self._save_xgb(ensemble.xgb)
         self._save_lgbm(ensemble.lgbm)
         self._save_gnn(ensemble.gnn)
@@ -194,7 +197,22 @@ class ModelStore:
         self._save_meta_learner(ensemble)
         if calibrator is not None:
             self._save_calibrator(calibrator)
-        logger.info("All artefacts saved -> %s", self.model_dir)
+        
+        # ── Intrinsic Metadata (Task 6) ──
+        metadata = {
+            "version": "1.0.0",
+            "timestamp": datetime.now().isoformat(),
+            "sha256_checksums": {
+                "xgb": _sha256(self._xgb_path) if self._xgb_path.exists() else None,
+                "gnn": _sha256(self._gnn_path) if self._gnn_path.exists() else None,
+                "dnn": _sha256(self._dnn_path) if self._dnn_path.exists() else None,
+            },
+            "training_config": ensemble.weights if hasattr(ensemble, "weights") else None
+        }
+        with open(self.model_dir / "metadata.json", "w") as f:
+            json.dump(metadata, f, indent=2)
+            
+        logger.info("All artefacts saved with metadata.json -> %s", self.model_dir)
 
     def _save_xgb(self, model) -> None:
         if model is not None:

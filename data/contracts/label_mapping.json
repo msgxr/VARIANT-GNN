@@ -1,26 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "VARIANT-GNN etiket eşlemesi. Tüm etiket değerleri bu haritaya göre normalleştirilir.",
-  "version": "1.0.0",
-  "label_column": "Label",
-  "binary_mapping": {
-    "0": "Benign",
-    "1": "Pathogenic"
-  },
-  "string_to_int": {
-    "Benign": 0,
-    "benign": 0,
-    "B": 0,
-    "b": 0,
-    "Likely_Benign": 0,
-    "Likely Benign": 0,
-    "Pathogenic": 1,
-    "pathogenic": 1,
-    "P": 1,
-    "p": 1,
-    "Likely_Pathogenic": 1,
-    "Likely Pathogenic": 1
-  },
-  "excluded_labels": ["VUS", "Uncertain_Significance", "Conflicting", "Unknown"],
-  "notes": "VUS (Önemi Belirsiz Varyant) örnekleri bu yarışma kapsamında eğitim setinden çıkarılmıştır."
+  "0": "Benign",
+  "1": "Pathogenic",
+  "Benign": 0,
+  "Pathogenic": 1
 }

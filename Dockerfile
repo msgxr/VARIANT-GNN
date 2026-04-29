@@ -24,11 +24,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Create a jüri-ready prediction script
+RUN echo "#!/bin/bash\npython main.py --mode predict --config configs/final.yaml --test_file \"\$1\" --output submission/predictions.csv" > /app/predict.sh \
+    && chmod +x /app/predict.sh
+
+# Create non-root user for security (PSR §6.1)
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose Streamlit port
 EXPOSE 8501
 
-# Healthcheck
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-
-# Run Streamlit
+# Run Streamlit (default)
 ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

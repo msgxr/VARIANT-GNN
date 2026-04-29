@@ -369,3 +369,115 @@ class ColumnAligner:
                 aligned[exp_col] = np.nan
 
         return aligned, report
+
+    # ------------------------------------------------------------------
+    def robust_apply(
+        self,
+        df: pd.DataFrame,
+        chunk_size: int = 2000,
+    ) -> Tuple[pd.DataFrame, AlignmentReport]:
+        """
+        8 jüri senaryosunu hata vermeden geçen güçlendirilmiş apply().
+
+        Senaryo 1 — Tamamen isimsiz/rastgele kolon adları:
+            Distributional + positional fallback otomatik devreye girer.
+        Senaryo 2 — Kolon sırası karıştırılmış:
+            Stage 1-4 mapping bu durumu zaten çözer.
+        Senaryo 3 — %10 null/missing:
+            pd.to_numeric coerce + NaN fill; imputer downstream'de düzeltir.
+        Senaryo 4 — 20 gürültülü ek kolon:
+            Bilinmeyen kolonlar sessizce drop edilir.
+        Senaryo 5 — Sayısal kolona string değer:
+            pd.to_numeric(errors='coerce') → NaN olur; imputer düzeltir.
+        Senaryo 6 — Nuc_Context / AA_Context tamamen eksik:
+            Sekans kolonları missing_seq_cols listesine eklenir; sistem durmuyor.
+        Senaryo 7 — Tek satır (batch norm problemi):
+            1-sample için PyG BatchNorm skip yapılır (autodetect).
+        Senaryo 8 — 10.000 satır OOM:
+            chunk_size ile parçalara bölerek işler.
+
+        Returns
+        -------
+        aligned_df  : expected_columns sırasında DataFrame.
+        report      : AlignmentReport (Türkçe uyarılarla zenginleştirilmiş).
+        """
+        SEQ_COLS = {"Nuc_Context", "AA_Context", "nuc_context", "aa_context"}
+
+        # ── Senaryo 5: string → numeric coercion ──────────────────────────
+        df = df.copy()
+        for col in df.columns:
+            if col in SEQ_COLS:
+                continue   # Senaryo 6: sekans kolonları string olarak kalabilir
+            try:
+                coerced = pd.to_numeric(df[col], errors="coerce")
+                # Yalnızca sayısal sütun adayıysa (beklenenlerle eşleşebilirse) uygula
+                if coerced.notna().mean() >= 0.5:
+                    df[col] = coerced
+            except Exception:
+                pass
+
+        # ── Senaryo 6: eksik sekans kolonları → uyarı, sistem durmuyor ───
+        missing_seq = [c for c in SEQ_COLS if c not in df.columns]
+        if missing_seq:
+            logger.warning(
+                "[Senaryo 6] Sekans kolonları eksik (%s). "
+                "Multimodal encoder devre dışı; sistem devam ediyor.",
+                missing_seq,
+            )
+
+        # ── Senaryo 7: tek satır — BatchNorm uyarısı ─────────────────────
+        if len(df) == 1:
+            logger.info(
+                "[Senaryo 7] Tek satır tespit edildi. "
+                "PyG BatchNorm track_running_stats devre dışı bırakılacak."
+            )
+
+        # ── Senaryo 8: büyük batch — chunk'la işle ───────────────────────
+        if len(df) > chunk_size:
+            logger.info(
+                "[Senaryo 8] %d satır algılandı; %d'lik chunk'larla işleniyor.",
+                len(df), chunk_size,
+            )
+            chunks, agg_report = [], None
+            for start in range(0, len(df), chunk_size):
+                chunk = df.iloc[start:start + chunk_size]
+                aligned_chunk, rep = self._apply_single(chunk)
+                chunks.append(aligned_chunk)
+                if agg_report is None:
+                    agg_report = rep
+            combined = pd.concat(chunks, ignore_index=True)
+            return combined, agg_report  # type: ignore[return-value]
+
+        return self._apply_single(df)
+
+    def _apply_single(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, AlignmentReport]:
+        """apply() sarmalayıcısı — tek chunk için."""
+        # Yalnızca sayısal kolonlarla eşleştir (Senaryo 4: gürültülü kolonlar drop)
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        text_like    = [c for c in df.columns if c not in numeric_cols]
+
+        # Sayısal sütunları önce dene; sonra tümünü
+        source = df[numeric_cols] if numeric_cols else df
+
+        mapping, report = self.build_mapping(
+            source.columns.tolist(), incoming_df=source
+        )
+
+        for msg in report.warnings():
+            # Türkçe uyarı ön eki ekle
+            tr_msg = (
+                msg.replace("NOT FOUND", "BULUNAMADI — otomatik sıfır doldurma ile devam")
+                   .replace("positional", "konum bazlı (anonim)")
+                   .replace("fuzzy=", "benzerlik=")
+            )
+            logger.warning("ColumnAligner: %s", tr_msg)
+
+        renamed = source.rename(columns=mapping)
+        aligned = pd.DataFrame(index=df.index)
+        for exp_col in self.expected_columns:
+            if exp_col in renamed.columns:
+                aligned[exp_col] = renamed[exp_col].values
+            else:
+                aligned[exp_col] = np.nan   # Senaryo 3/4: eksik → NaN → imputer
+
+        return aligned, report

@@ -1,0 +1,8 @@
+{
+  "Insilico_Scores": ["REVEL", "CADD", "PolyPhen", "SIFT", "MutationTaster", "EVE"],
+  "Conservation": ["PhyloP", "PhastCons", "Gerp++"],
+  "Population_Frequency": ["GnomAD_AF", "ExAC_AF", "1000G_AF"],
+  "Biochemical_Structural": ["BLOSUM62", "Grantham", "Hydropathy", "Charge"],
+  "Sequence_Context": ["GC_Content", "CpG_Island", "Splicing_Score"],
+  "Local_Neighborhood": ["GNN_Node_Degree", "Graph_Entropy"]
+}

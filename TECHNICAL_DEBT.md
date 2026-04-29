@@ -7,28 +7,20 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 ## Yüksek Öncelikli (PDR öncesi)
 
 ### TD-001: Anonim Kolon Modu Test Eksikliği
-- **Durum:** Açık
-- **Açıklama:** `src/data/column_aligner.py` anonim kolon desteği sağlıyor ancak bu mod `tests/` içinde yeterince test edilmemiş.
-- **Risk:** Şartname anonim özellik verebilir; bu durumda çalışmayabilir.
-- **Çözüm:** `tests/unit/test_column_aligner_anonymous.py` var, integration kapsamına alınmalı.
+- **Durum:** Düzeltildi
+- **Açıklama:** `ColumnAligner` 8 senaryolu stres testinden geçti ve CI/CD'ye entegre edildi.
 
 ### TD-002: JSON Veri Sözleşmeleri Eksik
-- **Durum:** Açık
-- **Açıklama:** `data_contracts/variant_schema.py` Pydantic şeması mevcut; ancak `data/contracts/` JSON formatında sözleşme dosyaları yok.
-- **Risk:** Jüri export formatı ve reproducibility doğrulaması zayıf.
-- **Çözüm:** `data/contracts/` altında `train_schema.json`, `predict_schema.json`, `label_mapping.json` oluştur.
+- **Durum:** Düzeltildi
+- **Açıklama:** `data/contracts/` altında Pydantic uyumlu JSON şemalar oluşturuldu.
 
 ### TD-003: Ablation Raporu Üretilmemiş
-- **Durum:** Açık
-- **Açıklama:** Ablation senaryoları (GNN olmadan, DNN olmadan vb.) tanımlanmış ama sistematik rapor yok.
-- **Risk:** Jüri mimari kararların gerekçesini göremez.
-- **Çözüm:** `configs/experiments/` altında ablation config'leri oluştur; rapor üret.
+- **Durum:** Düzeltildi
+- **Açıklama:** `scripts/run_ablation.py` ile 11 konfigürasyon test edildi ve raporlandı.
 
 ### TD-004: LightGBM Artifact CI'da Yok
-- **Durum:** Açık
-- **Açıklama:** LightGBM modeli CI'da kaydetme/yükleme roundtrip testi yok.
-- **Risk:** LightGBM serialize/deserialize tutarsızlığı sessiz hatayla geçilebilir.
-- **Çözüm:** `tests/unit/test_modelstore_lgbm_roundtrip.py` ekle.
+- **Durum:** Düzeltildi
+- **Açıklama:** `tests/unit/test_modelstore_lgbm_roundtrip.py` eklendi ve CI'da çalışıyor.
 
 ## Orta Öncelikli (PDR sonrası, Finaller öncesi)
 

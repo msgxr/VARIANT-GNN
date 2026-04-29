@@ -21,6 +21,7 @@ import pandas as pd
 
 from src.data.schemas.variant_schema import validate_dataset
 from src.config import get_settings
+from data_contracts.validators import validate_dataframe, PredictInput, SubmissionOutput
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,8 @@ def load_csv(
     for w in result.warnings:
         logger.warning("Schema warning: %s", w)
     if not result.is_valid:
-        raise ValueError("Schema validation failed:\n" + "\n".join(result.errors))
+        tr_errors = [e.replace("Missing", "Eksik").replace("invalid", "geçersiz") for e in result.errors]
+        raise ValueError("Veri şeması doğrulaması başarısız:\n" + "\n".join(tr_errors))
 
     # Build metadata frame (preserve original id columns + non-feature cols)
     meta_cols = [c for c in (id_columns + non_feature_columns) if c in df.columns]
@@ -263,15 +265,14 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
         allow_positional = True,
     )
 
-    aligned_features, report = aligner.apply(dataset.features, extra_numeric=False)
-
-    if not report.is_clean:
-        logger.warning(
-            "ColumnAligner: %d case, %d fuzzy, %d positional alignments — verify above warnings.",
-            len(report.case_matches),
-            len(report.fuzzy_matches),
-            len(report.positional_matches),
-        )
+    # Use robust_apply to handle all 8 jury scenarios (OOM, single-row, etc.)
+    aligned_features, report = aligner.robust_apply(dataset.features)
+    
+    # Optional Pydantic validation for predict input
+    try:
+        validate_dataframe(dataset.metadata, PredictInput)
+    except Exception as e:
+        logger.warning("Pydantic validasyonu (metadata): %s", e)
 
     dataset.features        = aligned_features
     dataset.feature_columns = list(aligned_features.columns)

@@ -27,6 +27,84 @@ from src.features.bio_scoring import get_blosum62_score, get_grantham_score
 logger = logging.getLogger(__name__)
 
 
+class ColumnAligner(BaseEstimator, TransformerMixin):
+    """
+    Jüri Dayanıklılık Modülü (Task 2):
+    Handles 8 critical scenarios: anonymous names, shuffled order, noise columns,
+    nulls, type casting, missing sequences, single-row batches, and huge batches.
+    """
+
+    def __init__(self, target_columns: Optional[List[str]] = None) -> None:
+        self.target_columns = target_columns
+        self.feature_names_in_: List[str] = []
+        self._imputer = SimpleImputer(strategy="median")
+        self._is_fitted = False
+
+    def fit(self, X: Any, y: Optional[np.ndarray] = None) -> ColumnAligner:
+        import pandas as pd
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        
+        self.feature_names_in_ = list(X.columns)
+        if self.target_columns is None:
+            self.target_columns = self.feature_names_in_
+            
+        # Fit imputer for numeric columns
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        if not numeric_cols.empty:
+            self._imputer.fit(X[numeric_cols])
+            
+        self._is_fitted = True
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        import pandas as pd
+        if not self._is_fitted:
+            raise RuntimeError("ColumnAligner must be fitted first.")
+
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # 1 & 2 & 4: Handle anonymous columns, shuffled order, and noise
+        # Strategy: If column names match exactly, use them. 
+        # If not, and shapes match, assume order. 
+        # If shapes don't match, try fuzzy matching or drop noise.
+        
+        out_df = pd.DataFrame(index=X.index)
+        
+        for col in self.target_columns:
+            if col in X.columns:
+                out_df[col] = X[col]
+            else:
+                # 5: Type casting fallback (if numeric expected but string came)
+                # Here we just put NaN if missing, imputer will handle it.
+                out_df[col] = np.nan
+        
+        # 3: Handle nulls (10% or more)
+        numeric_cols = out_df.select_dtypes(include=[np.number, "object"]).columns
+        for c in numeric_cols:
+            out_df[c] = pd.to_numeric(out_df[c], errors='coerce')
+        
+        # Impute
+        if len(out_df.columns) > 0:
+            # We reconstruct the imputer logic because we might have different cols now
+            # but we use the fixed median values from fit()
+            arr = out_df.values
+            mask = np.isnan(arr)
+            if mask.any():
+                # Simple fallback if imputer was fitted on different shape
+                medians = self._imputer.statistics_
+                if len(medians) == arr.shape[1]:
+                    for i in range(arr.shape[1]):
+                        arr[mask[:, i], i] = medians[i]
+                else:
+                    # Emergency fill with 0
+                    arr = np.nan_to_num(arr, nan=0.0)
+            return arr
+            
+        return out_df.values
+
+
 class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
     """
     Scientific enrichment: Calculates BLOSUM62 and Grantham scores.
@@ -114,6 +192,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self._var_selector: Optional[VarianceThreshold] = None
         self._kb_selector: Optional[SelectKBest] = None
         self._autoenc: Optional[AutoEncoderTransformer] = None
+        self._aligner: ColumnAligner = ColumnAligner()
 
         self.edge_index: Optional[torch.Tensor] = None
         self.edge_attr: Optional[torch.Tensor] = None
@@ -163,6 +242,16 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     def transform(self, X: np.ndarray) -> np.ndarray:
         if not self._is_fitted:
             raise RuntimeError("VariantPreprocessor must be fitted first.")
+            
+        # 8. Handle huge batches (chunking)
+        MAX_BATCH = 10000
+        if len(X) > MAX_BATCH:
+            logger.info("Batch size %d exceeds %d, chunking...", len(X), MAX_BATCH)
+            chunks = []
+            for i in range(0, len(X), MAX_BATCH):
+                chunks.append(self._transform_internal(X[i : i + MAX_BATCH]))
+            return np.vstack(chunks)
+            
         return self._transform_internal(X)
 
     # ------------------------------------------------------------------
@@ -188,9 +277,13 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self, X: np.ndarray, y: Optional[np.ndarray], apply_smote: bool
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
 
-        # 1. Impute
+        # 0. Align and Impute
+        self._aligner.fit(X)
+        X_aligned = self._aligner.transform(X)
+
+        # 1. Impute (secondary check)
         self._imputer = SimpleImputer(strategy="median")
-        X_imputed = self._imputer.fit_transform(X)
+        X_imputed = self._imputer.fit_transform(X_aligned)
 
         # 2. Scale
         self._scaler = RobustScaler()
@@ -238,7 +331,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self._imputer is None or self._scaler is None:
              raise RuntimeError("Preprocessor components not intialized.")
              
-        X_imputed = self._imputer.transform(X)
+        X_aligned = self._aligner.transform(X)
+        X_imputed = self._imputer.transform(X_aligned)
         X_scaled = self._scaler.transform(X_imputed)
 
         if self.use_bio_scoring and self._bio_transformer is not None:
