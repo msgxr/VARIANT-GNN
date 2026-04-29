@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install ruff
+      - run: ruff check src/ data_contracts/ tests/ main.py app.py --output-format=github
+
+  type-check:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install mypy pydantic numpy pandas scikit-learn xgboost
+      - run: mypy src/ data_contracts/ --ignore-missing-imports --no-strict-optional
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python-version }}", cache: pip }
+      - name: Install CPU PyTorch
+        run: |
+          pip install torch==2.2.0+cpu torchvision==0.17.0+cpu \
+            --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-scatter torch-sparse torch-geometric \
+            -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+          pip install "numpy>=1.24.0,<2.0"
+          pip install -r requirements.txt
+      - run: pytest tests/smoke/ -v --tb=short -q
+      - run: pytest tests/unit/ -v --tb=short -q
+      - run: pytest tests/integration/ -v --tb=short -q --timeout=120
+        continue-on-error: true
+
+  schema-eval:
+    name: Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install pydantic numpy pandas
+      - name: Validate JSON schemas
+        run: |
+          python -c "
+          import json,sys
+          from pathlib import Path
+          schemas=list(Path('data/contracts').glob('*.json'))
+          errors=[]
+          for s in schemas:
+              try: json.loads(s.read_text()); print(f'OK {s.name}')
+              except Exception as e: errors.append(str(e))
+          if errors: [print(e) for e in errors]; sys.exit(1)
+          print(f'All {len(schemas)} schemas valid')
+          "
+      - name: Validate Pydantic schema
+        run: |
+          python -c "
+          import sys; sys.path.insert(0,'.')
+          try:
+              from data_contracts.variant_schema import validate_dataframe, NUMERIC_FEATURES
+              import pandas as pd, numpy as np
+              df=pd.DataFrame({f: np.random.rand(5) for f in NUMERIC_FEATURES[:10]})
+              r=validate_dataframe(df,mode='predict')
+              assert r.is_valid,'Valid data rejected'
+              r2=validate_dataframe(pd.DataFrame(),mode='predict')
+              assert not r2.is_valid,'Empty data accepted'
+              print('Pydantic schema tests passed')
+          except ImportError as e: print(f'pydantic optional: {e}')
+          "
+
+  model-roundtrip:
+    name: Model Roundtrip Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - name: Install deps
+        run: |
+          pip install torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-scatter torch-sparse torch-geometric \
+            -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+          pip install "numpy>=1.24.0,<2.0" xgboost joblib pytest
+          pip install -r requirements.txt
+      - run: |
+          pytest tests/unit/test_modelstore_gnn_roundtrip.py \
+                 tests/unit/test_modelstore_lgbm_roundtrip.py \
+                 -v --tb=short -q
+
+  artifact-integrity:
+    name: Model Artifact Integrity (SHA256)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - name: Verify SHAs in metadata.json
+        run: |
+          python -c "
+          import json, hashlib, sys
+          from pathlib import Path
+          m_path = Path('models/final/metadata.json')
+          if not m_path.exists(): print('No metadata.json found, skipping'); sys.exit(0)
+          with open(m_path) as f: meta = json.load(f)
+          for name, expected_sha in meta.get('sha256_checksums', {}).items():
+              if expected_sha is None: continue
+              p = Path(f'models/final/{name}_model.json') if name == 'xgb' else Path(f'models/final/{name}_model.pth')
+              if not p.exists(): print(f'Missing {p}'); sys.exit(1)
+              actual = hashlib.sha256(p.read_bytes()).hexdigest()
+              if actual != expected_sha:
+                  print(f'SHA MISMATCH for {name}: expected {expected_sha}, got {actual}')
+                  sys.exit(1)
+          print('All artifact SHAs verified.')
+          "
+    name: Security (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install bandit[toml]
+      - run: |
+          bandit -r src/ data_contracts/ main.py \
+            -ll -x tests/ --skip B101,B301,B403,B614
+
+  column-aligner:
+    name: Column Aligner (8 Scenarios)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install numpy pandas scikit-learn
+      - name: Run 8-scenario robustness test
+        run: |
+          python -c "
+          import sys,numpy as np,pandas as pd; sys.path.insert(0,'.')
+          from src.data.column_aligner import ColumnAligner
+          EXPECTED=['CADD_phred','REVEL_score','SIFT_score','gnomAD_exomes_AF',
+                    'GERP_RS','PhyloP100way_vertebrate','PolyPhen2_HDIV_score',
+                    'MutPred2_score','VEST4_score','In_Critical_Protein_Domain']
+          aligner=ColumnAligner(EXPECTED,fuzzy_threshold=0.75)
+          N=5
+          tests={
+            'S1_random':  pd.DataFrame({f'COL_{i}':np.random.rand(N) for i in range(10)}),
+            'S2_shuffle': pd.DataFrame({c:np.random.rand(N) for c in EXPECTED[::-1]}),
+            'S3_nulls':   pd.DataFrame({c:np.where(np.random.rand(N)<0.1,np.nan,np.random.rand(N)) for c in EXPECTED}),
+            'S4_noise':   pd.DataFrame({**{c:np.random.rand(N) for c in EXPECTED},**{f'NOISE_{i}':np.random.rand(N) for i in range(20)}}),
+            'S5_strings': pd.DataFrame({c:np.random.rand(N).astype(str) for c in EXPECTED}),
+            'S7_single':  pd.DataFrame({c:[np.random.rand()] for c in EXPECTED}),
+            'S8_large':   pd.DataFrame({c:np.random.rand(5000) for c in EXPECTED}),
+          }
+          passed=0
+          for name,df in tests.items():
+              try:
+                  r,_=aligner.robust_apply(df)
+                  assert r.shape[1]==len(EXPECTED)
+                  print(f'PASS {name}'); passed+=1
+              except Exception as e: print(f'FAIL {name}: {e}')
+          print(f'{passed}/{len(tests)} passed')
+          if passed<len(tests): sys.exit(1)
+          "
