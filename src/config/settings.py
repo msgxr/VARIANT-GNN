@@ -50,14 +50,14 @@ class PathSettings:
 
 @dataclass
 class GNNSettings:
-    hidden_dim: int = 64
-    epochs: int = 20
-    lr: float = 0.005
+    hidden_dim: int = 128
+    epochs: int = 50
+    lr: float = 0.001
     weight_decay: float = 1e-4
-    use_gat: bool = False
-    knn_k: int = 5                    # k for cosine k-NN sample graph
-    early_stopping_patience: int = 5  # 0 = disabled
-    use_multimodal: bool = False      # fuse SequenceEncoder (Nuc_Context/AA_Context)
+    use_gat: bool = True
+    knn_k: int = 10                   # PSR §3.3: cosine k-NN k=10
+    early_stopping_patience: int = 20 # PSR §4.5
+    use_multimodal: bool = True       # fuse SequenceEncoder (Nuc_Context/AA_Context)
     seq_enc_dim: int = 32             # SequenceEncoder output_dim (cnn_channels*2)
     model_type: str = "gatv2"         # used for MLflow run naming in trainer.py
 
@@ -136,7 +136,7 @@ class LGBMSettings:
 @dataclass
 class EnsembleSettings:
     # 4 weights: [XGB, LGB, GNN, DNN]  (auto-normalised in HybridEnsemble)
-    weights: List[float] = field(default_factory=lambda: [0.35, 0.30, 0.25, 0.10])
+    weights: List[float] = field(default_factory=lambda: [0.30, 0.30, 0.25, 0.15])  # PSR §5.3
     optimize_weights: bool = True
 
 
@@ -169,7 +169,7 @@ class TrainingSettings:
 
 @dataclass
 class ThresholdSettings:
-    classification: float = 0.5
+    classification: float = 0.40  # PSR §3.5: duyarlılık öncelikli karar eşiği
     high_risk: float = 0.7
 
 
@@ -253,14 +253,14 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_gnn = raw.get("gnn", {})
     gnn = GNNSettings(
-        hidden_dim               = raw_gnn.get("hidden_dim", 64),
-        epochs                   = raw_gnn.get("epochs", 20),
-        lr                       = raw_gnn.get("lr", 0.005),
+        hidden_dim               = raw_gnn.get("hidden_dim", 128),
+        epochs                   = raw_gnn.get("epochs", 50),
+        lr                       = raw_gnn.get("lr", 0.001),
         weight_decay             = raw_gnn.get("weight_decay", 1e-4),
-        use_gat                  = raw_gnn.get("use_gat", False),
-        knn_k                    = raw_gnn.get("knn_k", 5),
-        early_stopping_patience  = raw_gnn.get("early_stopping_patience", 5),
-        use_multimodal           = raw_gnn.get("use_multimodal", False),
+        use_gat                  = raw_gnn.get("use_gat", True),
+        knn_k                    = raw_gnn.get("knn_k", 10),
+        early_stopping_patience  = raw_gnn.get("early_stopping_patience", 20),
+        use_multimodal           = raw_gnn.get("use_multimodal", True),
         seq_enc_dim              = raw_gnn.get("seq_enc_dim", 32),
         model_type               = raw_gnn.get("model_type", "gatv2"),
     )
@@ -305,7 +305,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_ens = raw.get("ensemble", {})
     ensemble = EnsembleSettings(
-        weights          = raw_ens.get("weights", [0.35, 0.30, 0.25, 0.10]),
+        weights          = raw_ens.get("weights", [0.30, 0.30, 0.25, 0.15]),
         optimize_weights = raw_ens.get("optimize_weights", True),
     )
 

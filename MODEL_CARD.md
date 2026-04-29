@@ -16,10 +16,10 @@
 
 | Model | Ağırlık | Açıklama |
 |---|---|---|
-| XGBoost | %35 | Gradyan güçlendirilmiş karar ağaçları |
+| XGBoost | %30 | Gradyan güçlendirilmiş karar ağaçları |
 | LightGBM | %30 | Yaprak bazlı gradyan güçlendirme |
 | VariantGATv2GNN | %25 | GATv2 dikkat mekanizmalı grafik sinir ağı |
-| DNN | %10 | İleri beslemeli sinir ağı |
+| DNN | %15 | İleri beslemeli sinir ağı |
 
 Ağırlıklar `configs/default.yaml` üzerinden yapılandırılabilir ve otomatik optimize edilebilir.
 

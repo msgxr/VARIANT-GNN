@@ -17,10 +17,11 @@ preprocessing:
   autoencoder_epochs: 10
   corr_threshold: 0.25
   smote_sampling_strategy: 0.3
+  use_bio_scoring: true              # BLOSUM62 + Grantham skorları
 
 gnn:
-  epochs: 20
-  early_stopping_patience: 5
+  epochs: 50                         # PSR uyumlu (early stopping koruyucu)
+  early_stopping_patience: 20        # PSR §4.5
   use_multimodal: true
 
 dnn:

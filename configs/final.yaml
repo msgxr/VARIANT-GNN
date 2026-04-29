@@ -7,14 +7,14 @@ paths:
   reports_dir: reports
 
 gnn:
-  hidden_dim: 64
-  epochs: 20
-  lr: 0.005
+  hidden_dim: 128            # PSR §5.3: "GNN hidden_dim: 128"
+  epochs: 50
+  lr: 0.001                  # PSR §5.3: "lr: 1e-3 (Adam)"
   weight_decay: 1.0e-4
-  use_gat: true              # VariantGATv2GNN kullanılıyor (legacy FeatureGNN için de geçerli)
-  knn_k: 5
-  early_stopping_patience: 5
-  use_multimodal: true       # Nuc_Context/AA_Context → SequenceEncoder → GNN (TEKNOFEST şartname uyumu)
+  use_gat: true              # VariantGATv2GNN kullanılıyor
+  knn_k: 10                  # PSR §3.3: "Cosine k-NN Graf: en yakın 10 komşu"
+  early_stopping_patience: 20  # PSR §4.5
+  use_multimodal: true       # Nuc_Context/AA_Context → SequenceEncoder → GNN
   seq_enc_dim: 32            # SequenceEncoder output dim (cnn_channels*2)
 
 dnn:
@@ -49,8 +49,9 @@ lgbm:
   n_jobs: -1
   verbose: -1
 
+# PSR §5.3: "XGBoost: 0.30 / LightGBM: 0.30 / GNN: 0.25 / DNN: 0.15"
 ensemble:
-  weights: [0.35, 0.30, 0.25, 0.10]   # [XGB, LGB, GNN, DNN] — başlangıç; Nelder-Mead optimize eder
+  weights: [0.30, 0.30, 0.25, 0.15]
   optimize_weights: true
 
 preprocessing:
@@ -58,9 +59,10 @@ preprocessing:
   use_autoencoder: true
   autoencoder_encoding_dim: 16
   autoencoder_epochs: 10
-  use_feature_selection: false
-  k_best_features: 30
+  use_feature_selection: true   # PSR §3.3: aktif
+  k_best_features: 35           # PSR §3.3: "SelectKBest (ANOVA, k=35)"
   smote_enabled: true
+  use_bio_scoring: true          # BLOSUM62 + Grantham skorları
 
 calibration:
   enabled: true
@@ -73,11 +75,9 @@ training:
   loss_function: weighted_bce   # weighted_bce | focal
   focal_gamma: 2.0
 
+# PSR §3.5: "karar eşiği 0.40 (Duyarlılık Öncelikli)"
 thresholds:
-  # best_threshold=0.01 — CV raporu (cv_report.json) Nelder-Mead optimizasyonunda bulundu.
-  # default.yaml'daki 0.5, geliştirme/eğitim aşaması için nötr başlangıç değeridir.
-  # Jüri demosunda bu final.yaml kullanılmalı.
-  classification: 0.01
+  classification: 0.40
   high_risk: 0.7
 
 schema:

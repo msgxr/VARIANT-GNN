@@ -8,10 +8,10 @@ paths:
 
 gnn:
   hidden_dim: 128
-  epochs: 150
+  epochs: 50
   lr: 0.001
   weight_decay: 1.0e-4
-  use_gat: false
+  use_gat: true
   knn_k: 10                          # Rapor §3.3: cosine k-NN k=10
   knn_threshold: 0.3                  # Rapor §3.3: cosine similarity eşiği
   early_stopping_patience: 20         # Rapor §3.5/§4.5: patience 15-50 arası
@@ -62,6 +62,7 @@ preprocessing:
   use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
   k_best_features: 35                  # Rapor §3.3: k=35
   smote_enabled: true
+  use_bio_scoring: true              # BLOSUM62 + Grantham skorları
 
 calibration:
   enabled: true

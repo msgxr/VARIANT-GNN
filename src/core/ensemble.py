@@ -83,7 +83,7 @@ class HybridEnsemble:
         
         raw_w = list(weights) if weights is not None else list(cfg.ensemble.weights)
         if len(raw_w) != 4:
-            raw_w = [0.35, 0.30, 0.25, 0.10]
+            raw_w = [0.30, 0.30, 0.25, 0.15]  # PSR §5.3 uyumlu
             
         w_sum = sum(raw_w)
         self.weights = [w / w_sum for w in raw_w]
@@ -223,6 +223,96 @@ class HybridEnsemble:
         proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
         preds = (proba[:, 1] >= threshold).astype(int)
         return preds, proba
+
+    # ------------------------------------------------------------------
+    # Weight optimisation — Nelder-Mead (PSR §5.3)
+    # ------------------------------------------------------------------
+
+    def optimise_weights(
+        self,
+        X_val: np.ndarray,
+        loader: Optional[Any],
+        y_val: np.ndarray,
+    ) -> None:
+        """Optimise ensemble weights on a validation set via Nelder-Mead.
+
+        Maximises Macro F1 by searching the 4-weight simplex.
+        The result overwrites ``self.weights`` in-place.
+        """
+        xp, lp, gp, dp = self.predict_proba_all(X_val)
+        matrices = [xp, lp, gp, dp]
+        avail_idx = [i for i, m in enumerate(matrices) if m is not None]
+        if len(avail_idx) < 2:
+            logger.info("optimise_weights: <2 models available — skipping.")
+            return
+
+        avail_matrices = [matrices[i] for i in avail_idx]
+
+        def _neg_f1(w_raw: np.ndarray) -> float:
+            w = np.abs(w_raw)
+            w = w / w.sum()
+            blended = sum(wi * mi for wi, mi in zip(w, avail_matrices))
+            preds = (blended[:, 1] >= 0.5).astype(int)
+            return -f1_score(y_val, preds, average="macro", zero_division=0)
+
+        x0 = np.array([self.weights[i] for i in avail_idx])
+        res = minimize(_neg_f1, x0, method="Nelder-Mead",
+                       options={"maxiter": 500, "xatol": 1e-4})
+
+        opt_w = np.abs(res.x)
+        opt_w = opt_w / opt_w.sum()
+
+        new_weights = [0.0] * 4
+        for idx, ai in enumerate(avail_idx):
+            new_weights[ai] = float(opt_w[idx])
+        # Re-normalise full vector
+        ws = sum(new_weights)
+        if ws > 0:
+            new_weights = [w / ws for w in new_weights]
+        self.weights = new_weights
+        logger.info(
+            "Nelder-Mead optimised weights: %s  (val F1=%.4f)",
+            [round(w, 4) for w in self.weights], -res.fun,
+        )
+
+    # ------------------------------------------------------------------
+    # Stacking meta-learner (PSR §5.3)
+    # ------------------------------------------------------------------
+
+    def fit_meta_learner(
+        self,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+    ) -> None:
+        """Fit a LogisticRegression meta-learner on base-model predictions.
+
+        The meta-learner replaces weighted-average combination with an
+        adaptive stacking layer.  Falls back gracefully if fitting fails.
+        """
+        from sklearn.linear_model import LogisticRegression
+
+        xp, lp, gp, dp = self.predict_proba_all(X_val)
+        cols = [
+            p[:, 1] for p in [xp, lp, gp, dp] if p is not None
+        ]
+        if len(cols) < 2:
+            logger.info("fit_meta_learner: <2 models available — skipping.")
+            return
+
+        meta_X = np.column_stack(cols)  # (N, n_models)
+        lr = LogisticRegression(
+            solver="lbfgs", max_iter=1000, random_state=42, C=1.0,
+        )
+        lr.fit(meta_X, y_val)
+        self.meta_learner = lr
+        logger.info(
+            "Meta-learner fitted (LogisticRegression) on %d samples, %d model cols.",
+            len(y_val), meta_X.shape[1],
+        )
+
+    # ------------------------------------------------------------------
+    # Utilities
+    # ------------------------------------------------------------------
 
     @staticmethod
     def pathogenic_risk_score(ensemble_proba: np.ndarray) -> np.ndarray:

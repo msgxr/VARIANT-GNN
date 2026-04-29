@@ -9,7 +9,7 @@ paths:
 # ─── GNN ─── (PSR Bölüm 5.3: hidden_dim=128, knn_k=10)
 gnn:
   hidden_dim: 128            # PSR §5.3: "GNN hidden_dim: 128"
-  epochs: 20
+  epochs: 50                   # artırıldı (early stopping patience=20 koruyucu)
   lr: 0.001                  # PSR §5.3: "lr: 1e-3 (Adam)"
   weight_decay: 1.0e-4
   use_gat: true
@@ -64,6 +64,7 @@ preprocessing:
   use_feature_selection: true   # PSR §3.3: aktif
   k_best_features: 35           # PSR §3.3: "SelectKBest (ANOVA, k=35)"
   smote_enabled: true           # PSR §3.3 & §3.5: "SMOTE %30 artırım"
+  use_bio_scoring: true          # BLOSUM62 + Grantham skorları
 
 calibration:
   enabled: true
