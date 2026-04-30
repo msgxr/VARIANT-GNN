@@ -948,7 +948,7 @@ def render_xai(pipeline, df_features: pd.DataFrame, opts: dict):
         path = "reports/shap_waterfall.png"
         explainer.plot_waterfall(X_scaled[idx], output_path=path)
         if Path(path).exists():
-            st.image(path, width="stretch")
+            st.image(path, use_container_width=True)
 
     if opts["show_lime"]:
         st.markdown(f"""
@@ -1577,7 +1577,7 @@ def render_performance_tab():
                                 margin-bottom:10px;">{title}</div>
                 </div>
                 """, unsafe_allow_html=True)
-                st.image(img_path, width="stretch")
+                st.image(img_path, use_container_width=True)
             else:
                 st.info(f"{title} — Henüz mevcut değil. `python3 main.py --mode train` çalıştırın.")
 

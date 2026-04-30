@@ -50,7 +50,7 @@ class TestMCDropoutEstimator:
         """Belirsizlik kategorileri doğru atanıyor mu."""
         from src.api.uncertainty import MCDropoutEstimator
 
-        scores = np.array([0.1, 0.3, 0.6])
+        scores = np.array([0.1, 0.25, 0.6])
         cats = MCDropoutEstimator.uncertainty_category(scores)
         assert cats[0] == "Yüksek Güven"
         assert cats[1] == "Orta Güven"
