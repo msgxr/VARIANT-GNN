@@ -66,8 +66,6 @@ services:
       start_period: 90s
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Shared named volumes (gelecek: PostgreSQL / Redis entegrasyonu için)
+# Note: Services use bind mounts (./models, ./data, ./reports), not named
+# Docker volumes. Named volumes may be added for future PostgreSQL/Redis.
 # ─────────────────────────────────────────────────────────────────────────────
-volumes:
-  models:
-  reports:

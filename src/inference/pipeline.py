@@ -126,18 +126,42 @@ class InferencePipeline:
             )
 
         # VariantSAGEGNN builds its own sample graph; FeatureGNN needs a GeoLoader
-        from src.models.gnn import VariantSAGEGNN
-        if not isinstance(self._ensemble.gnn, VariantSAGEGNN):
-            # Keep _build_gnn_loader call just in case it's used later or the user needs it
-            _ = _build_gnn_loader(
+        if isinstance(self._ensemble.gnn, VariantSAGEGNN):
+            loader = None
+        else:
+            loader = _build_gnn_loader(
                 self._preprocessor, X_scaled, cfg.training.batch_size
             )
 
         threshold = cfg.thresholds.classification
-        preds, raw_proba = self._ensemble.predict(
-            X_scaled, threshold=threshold,
-            nuc_ids=nuc_ids, aa_ids=aa_ids,
-        )
+
+        # ── Uncertainty-aware prediction (MC-Dropout) if GATv2 ────────────
+        from src.models.gnn import VariantSAGEGNN
+        if (
+            isinstance(self._ensemble.gnn, VariantSAGEGNN)
+            and hasattr(self._ensemble, 'predict_with_uncertainty')
+        ):
+            preds, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
+                X_scaled, n_iter=10, threshold=threshold,
+            )
+            confidence = ((1.0 - uncertainty) * 100).round(2)
+            clinical_flag = np.where(
+                uncertainty > 0.30,
+                "⚠️ Uzman Değerlendirmesi Gerekli",
+                np.where(uncertainty <= 0.15, "✅ Yüksek Güven", "🔶 Orta Güven"),
+            )
+        else:
+            preds, raw_proba = self._ensemble.predict(
+                X_scaled, threshold=threshold,
+                nuc_ids=nuc_ids, aa_ids=aa_ids,
+            )
+            confidence = (np.max(raw_proba, axis=1) * 100).round(2)
+            conf_frac = np.max(raw_proba, axis=1)
+            clinical_flag = np.where(
+                conf_frac < 0.70,
+                "⚠️ Uzman Değerlendirmesi Gerekli",
+                np.where(conf_frac >= 0.90, "✅ Yüksek Güven", "🔶 Orta Güven"),
+            )
 
         # Calibrated probabilities
         if self._calibrator is not None:
@@ -146,7 +170,6 @@ class InferencePipeline:
             cal_proba = raw_proba
 
         cal_risk   = HybridEnsemble.pathogenic_risk_score(cal_proba)
-        confidence = (np.max(raw_proba, axis=1) * 100).round(2)
 
         # Build output DataFrame
         result = dataset.metadata.copy()
@@ -155,6 +178,18 @@ class InferencePipeline:
         result["Calibrated_Risk"] = cal_risk
         result["Confidence"]      = confidence
         result["High_Risk"]       = cal_proba[:, 1] >= cfg.thresholds.high_risk
+        result["Clinical_Flag"]   = clinical_flag
+
+        # ── OOD Detection (optional — silently skipped on error) ────────
+        try:
+            from src.scientific.ood_detector import OODDetector
+            _ood_det = OODDetector(z_threshold=3.5, ood_frac_thresh=0.25)
+            _ood_det.fit(X_scaled)
+            _ood_out = _ood_det.detect(X_scaled)
+            result["OOD_Score"] = _ood_out["ood_scores"].round(3)
+            result["OOD_Flag"]  = _ood_out["ood_flags"]
+        except Exception:
+            pass   # OOD module optional — does not affect core pipeline
 
         return result
 
@@ -169,24 +204,15 @@ class InferencePipeline:
 
     def predict_from_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        8 jüri senaryosunu kapsayan güçlendirilmiş DataFrame inference.
+        Run inference directly on a DataFrame (e.g., from Streamlit).
 
-        Senaryo 1: Anonim kolon adları       → ColumnAligner distributional matching
-        Senaryo 2: Karışık kolon sırası       → ColumnAligner re-order
-        Senaryo 3: %10 null/missing           → NaN → imputer → median
-        Senaryo 4: 20 gürültülü ek kolon      → drop
-        Senaryo 5: String sayısal kolonda      → pd.to_numeric coerce → NaN
-        Senaryo 6: Nuc_Context/AA_Context yok → uyarı, devam
-        Senaryo 7: Tek satır                  → batch_norm eval mode
-        Senaryo 8: 10K satır                  → ColumnAligner chunked
+        Handles column name mismatches (case, underscores), missing features
+        (filled with 0), extra columns (dropped), and Panel one-hot encoding.
         """
-        from src.data.column_aligner import ColumnAligner
-        import numpy as _np
-
         cfg = self.cfg
-        df  = df.copy()
+        df = df.copy()
 
-        # ── Sabit eğitim özellikleri (43 ham + 4 panel = 47) ─────────────
+        # ── Get the exact training feature names from preprocessor ──
         TRAINING_FEATURES = [
             'Ref_Nucleotide', 'Alt_Nucleotide', 'Codon_Change_Type',
             'AA_Grantham_Score', 'GC_Content_Window', 'In_CpG_Site',
@@ -206,74 +232,71 @@ class InferencePipeline:
             'Splice_Site_Distance', 'Is_Exonic', 'Exon_Conservation_Ratio',
             'OMIM_Disease_Gene',
         ]
-        KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
-        PANEL_COLS   = [f"Panel_{p}" for p in KNOWN_PANELS]
-        ALL_EXPECTED = TRAINING_FEATURES + PANEL_COLS
 
-        # ── Panel one-hot ─────────────────────────────────────────────────
+        # Panel one-hot (adds 4 features -> total 47)
+        KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
+        PANEL_COLS = [f"Panel_{p}" for p in KNOWN_PANELS]
+
         if "Panel" in df.columns:
             panel_series = df["Panel"].astype(str).str.strip()
-            for p in KNOWN_PANELS:
-                col = f"Panel_{p}"
+            for panel_name in KNOWN_PANELS:
+                col = f"Panel_{panel_name}"
                 if col not in df.columns:
-                    df[col] = (panel_series == p).astype(float)
+                    df[col] = (panel_series == panel_name).astype(float)
         else:
             for col in PANEL_COLS:
                 if col not in df.columns:
                     df[col] = 0.0
 
-        # ── Metadata ayrımı ───────────────────────────────────────────────
-        id_cols  = [c for c in cfg.schema.id_columns if c in df.columns]
+        ALL_EXPECTED = TRAINING_FEATURES + PANEL_COLS
+        expected_n = self._preprocessor._imputer.n_features_in_
+
+        # ── Build case-insensitive name mapping ──
+        # Map lowercase -> actual CSV column name
+        csv_col_map = {}
+        for c in df.columns:
+            csv_col_map[c.lower().replace(' ', '_')] = c
+
+        # ── Separate metadata ──
+        id_cols = [c for c in cfg.schema.id_columns if c in df.columns]
         drop_set = set(id_cols)
         if cfg.schema.target_column in df.columns:
             drop_set.add(cfg.schema.target_column)
-        for c in getattr(cfg.schema, "non_feature_columns", []):
+        non_feature_cols = getattr(cfg.schema, 'non_feature_columns', [])
+        for c in non_feature_cols:
             if c in df.columns:
                 drop_set.add(c)
+        for c in df.columns:
+            if c not in drop_set and df[c].dtype == object:
+                drop_set.add(c)
+
         metadata = df[[c for c in drop_set if c in df.columns]].copy()
 
-        # ── ColumnAligner ile 8 senaryolu güçlü hizalama ─────────────────
-        aligner = ColumnAligner(
-            expected_columns=ALL_EXPECTED,
-            fuzzy_threshold=0.80,
-            allow_positional=True,
-        )
-        try:
-            aligned, align_report = aligner.robust_apply(df, chunk_size=2000)
-            n_matched = sum(1 for c in ALL_EXPECTED if c in aligned.columns
-                           and not _np.isnan(aligned[c].fillna(_np.nan).values).all())
-            n_missing = len(align_report.unmatched_expected)
-            logger.info(
-                "ColumnAligner: %d/%d kolon eşleşti, %d kolon sıfır doldu",
-                n_matched, len(ALL_EXPECTED), n_missing,
-            )
-        except Exception as exc:
-            logger.warning("ColumnAligner hatası (%s) — basit hizalamaya geçiliyor", exc)
-            aligned = pd.DataFrame(index=df.index)
-            csv_map = {c.lower().replace(" ", "_"): c for c in df.columns}
-            for feat in ALL_EXPECTED:
-                fl = feat.lower().replace(" ", "_")
-                if feat in df.columns:
-                    aligned[feat] = pd.to_numeric(df[feat], errors="coerce")
-                elif fl in csv_map:
-                    aligned[feat] = pd.to_numeric(df[csv_map[fl]], errors="coerce")
-                else:
-                    aligned[feat] = _np.nan
+        # ── Build aligned feature DataFrame ──
+        aligned = pd.DataFrame(index=df.index)
+        for feat in ALL_EXPECTED:
+            feat_lower = feat.lower().replace(' ', '_')
+            if feat in df.columns:
+                aligned[feat] = pd.to_numeric(df[feat], errors='coerce').fillna(0.0)
+            elif feat_lower in csv_col_map:
+                aligned[feat] = pd.to_numeric(df[csv_col_map[feat_lower]], errors='coerce').fillna(0.0)
+            else:
+                # Missing column — fill with 0 (imputer will replace with median)
+                aligned[feat] = 0.0
 
-        # Boyut ayarı (expected_n'e tam uydur)
-        try:
-            expected_n = self._preprocessor._imputer.n_features_in_
-        except Exception:
-            expected_n = len(ALL_EXPECTED)
-
+        # Truncate or pad to exact expected_n
         if aligned.shape[1] > expected_n:
             aligned = aligned.iloc[:, :expected_n]
         elif aligned.shape[1] < expected_n:
             for i in range(aligned.shape[1], expected_n):
                 aligned[f"_pad_{i}"] = 0.0
 
-        # NaN → 0 (imputer downstream'de median ile tamamlar)
-        aligned = aligned.fillna(0.0)
+        logger.info(
+            "Feature alignment: %d/%d columns matched, %d filled with zeros",
+            sum(1 for f in ALL_EXPECTED if f in df.columns or f.lower().replace(' ', '_') in csv_col_map),
+            len(ALL_EXPECTED),
+            sum(1 for f in ALL_EXPECTED if f not in df.columns and f.lower().replace(' ', '_') not in csv_col_map),
+        )
 
         dummy_dataset = LoadedDataset(
             features        = aligned,

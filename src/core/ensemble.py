@@ -212,6 +212,94 @@ class HybridEnsemble:
         total_w = sum(w for _, w in available)
         return sum((w / total_w) * p for p, w in available)
 
+    def optimise_weights(
+        self,
+        X_val: np.ndarray,
+        loader: Any,
+        y_val: np.ndarray,
+        metric: str = "f1",
+    ) -> None:
+        """Optimise ensemble weights on a held-out validation set.
+
+        Uses Nelder-Mead to maximise Macro F1 over the 4-model weight space.
+        Updates ``self.weights`` in-place.
+
+        Parameters
+        ----------
+        X_val  : Preprocessed validation feature matrix.
+        loader : Unused (kept for API compatibility). Pass ``None``.
+        y_val  : True binary labels for the validation set.
+        """
+        xp, lp, gp, dp = self.predict_proba_all(X_val)
+        components = [xp, lp, gp, dp]
+        active_idx = [i for i, p in enumerate(components) if p is not None]
+        if len(active_idx) < 2:
+            logger.info("optimise_weights: fewer than 2 active models — skipping.")
+            return
+
+        active_probs = [components[i] for i in active_idx]
+
+        def _neg_f1(raw_w: np.ndarray) -> float:
+            w = np.abs(raw_w)
+            w = w / w.sum()
+            blended = sum(wi * pi for wi, pi in zip(w, active_probs))
+            preds = (blended[:, 1] >= 0.5).astype(int)
+            return -f1_score(y_val, preds, average="macro", zero_division=0)
+
+        x0 = np.array([self.weights[i] for i in active_idx])
+        result = minimize(_neg_f1, x0, method="Nelder-Mead",
+                          options={"maxiter": 500, "xatol": 1e-4})
+        opt_w = np.abs(result.x)
+        opt_w = opt_w / opt_w.sum()
+
+        new_weights = list(self.weights)
+        for j, idx in enumerate(active_idx):
+            new_weights[idx] = float(opt_w[j])
+        w_sum = sum(new_weights)
+        self.weights = [w / w_sum for w in new_weights]
+        logger.info(
+            "optimise_weights: updated weights=%s (val F1=%.4f)",
+            [round(w, 4) for w in self.weights], -result.fun,
+        )
+
+    def fit_meta_learner(
+        self,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+    ) -> None:
+        """Fit a stacking meta-learner (LogisticRegression) on validation predictions.
+
+        After fitting, ``self.combine()`` will use the meta-learner instead of
+        weighted averaging for future predictions.
+
+        Parameters
+        ----------
+        X_val : Preprocessed validation feature matrix.
+        y_val : True binary labels for the validation set.
+        """
+        from sklearn.linear_model import LogisticRegression
+
+        xp, lp, gp, dp = self.predict_proba_all(X_val)
+        cols = [
+            p[:, 1]
+            for p in [xp, lp, gp, dp]
+            if p is not None
+        ]
+        if len(cols) < 2:
+            logger.info("fit_meta_learner: fewer than 2 active models — skipping.")
+            return
+
+        meta_X = np.column_stack(cols)
+        lr = LogisticRegression(C=1.0, solver="lbfgs", max_iter=500, random_state=42)
+        lr.fit(meta_X, y_val)
+        self.meta_learner = lr
+        meta_preds = lr.predict(meta_X)
+        meta_f1 = f1_score(y_val, meta_preds, average="macro", zero_division=0)
+        logger.info(
+            "fit_meta_learner: fitted on %d samples, %d models → val F1=%.4f",
+            len(y_val), len(cols), meta_f1,
+        )
+
     def predict(
         self,
         X_scaled: np.ndarray,

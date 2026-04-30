@@ -83,6 +83,7 @@ class XGBSettings:
     min_child_weight: int = 3
     reg_alpha: float = 0.05
     reg_lambda: float = 1.0
+    random_state: int = 42  # overridden by global seed at load_settings()
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -97,7 +98,7 @@ class XGBSettings:
             "min_child_weight": self.min_child_weight,
             "reg_alpha": self.reg_alpha,
             "reg_lambda": self.reg_lambda,
-            "random_state": 42,
+            "random_state": self.random_state,
         }
 
 
@@ -115,6 +116,7 @@ class LGBMSettings:
     min_child_samples: int = 10
     n_jobs: int = -1
     verbose: int = -1
+    random_state: int = 42  # overridden by global seed at load_settings()
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -129,7 +131,7 @@ class LGBMSettings:
             "min_child_samples": self.min_child_samples,
             "n_jobs": self.n_jobs,
             "verbose": self.verbose,
-            "random_state": 42,
+            "random_state": self.random_state,
         }
 
 
@@ -286,6 +288,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         min_child_weight = raw_xgb.get("min_child_weight", 3),
         reg_alpha        = raw_xgb.get("reg_alpha", 0.05),
         reg_lambda       = raw_xgb.get("reg_lambda", 1.0),
+        random_state     = raw.get("seed", 42),
     )
 
     raw_lgbm = raw.get("lgbm", {})
@@ -301,6 +304,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         min_child_samples= raw_lgbm.get("min_child_samples", 10),
         n_jobs           = raw_lgbm.get("n_jobs", -1),
         verbose          = raw_lgbm.get("verbose", -1),
+        random_state     = raw.get("seed", 42),
     )
 
     raw_ens = raw.get("ensemble", {})
