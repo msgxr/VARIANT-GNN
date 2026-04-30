@@ -204,10 +204,11 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     # ------------------------------------------------------------------
 
     def __setstate__(self, state: dict) -> None:
-        """Eski pickle'lardan yükleme sırasında eksik attribute'ları doldur."""
+        """Eski pickle'lardan yükleme sırasında eksik attribute'ları güvenli doldur."""
         _defaults = {
             "use_bio_scoring":          False,
             "_bio_transformer":         None,
+            "_aligner":                 ColumnAligner(),   # KRİTİK: yeni eklendi
             "use_feature_selection":    False,
             "k_best_features":          30,
             "use_autoencoder":          True,
@@ -330,8 +331,14 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     def _transform_internal(self, X: np.ndarray) -> np.ndarray:
         if self._imputer is None or self._scaler is None:
              raise RuntimeError("Preprocessor components not intialized.")
-             
-        X_aligned = self._aligner.transform(X)
+
+        # _aligner fit edilmişse kullan; değilse (eski pickle) ham X geç
+        if hasattr(self, '_aligner') and self._aligner._is_fitted:
+            X_aligned = self._aligner.transform(X)
+        else:
+            import numpy as _np
+            X_aligned = _np.array(X, dtype=float)
+
         X_imputed = self._imputer.transform(X_aligned)
         X_scaled = self._scaler.transform(X_imputed)
 

@@ -44,10 +44,12 @@ try:
     _FASTAPI_AVAILABLE = True
 except ImportError:
     _FASTAPI_AVAILABLE = False
-    # Stub so module imports without crashing
+    # Stub — FastAPI kurulu değilken modül import hatası vermesin
     class FastAPI:           # type: ignore
+        def __init__(self, *a, **kw): pass
         def get(self, *a, **kw):  return lambda f: f
         def post(self, *a, **kw): return lambda f: f
+        def add_middleware(self, *a, **kw): pass
     class BaseModel: pass    # type: ignore
     def Field(*a, **kw): return None  # type: ignore
 
