@@ -16,7 +16,7 @@ preprocessing:
   autoencoder_encoding_dim: 16
   autoencoder_epochs: 10
   corr_threshold: 0.25
-  smote_sampling_strategy: 0.3
+  smote_enabled: false               # TEKNOFEST §3.2: veri dengeli, SMOTE gereksiz
   use_bio_scoring: true              # BLOSUM62 + Grantham skorları
 
 gnn:

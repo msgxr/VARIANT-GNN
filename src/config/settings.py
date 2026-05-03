@@ -169,7 +169,7 @@ class TrainingSettings:
 
 @dataclass
 class ThresholdSettings:
-    classification: float = 0.40  # PSR §3.5: duyarlılık öncelikli karar eşiği
+    classification: float = 0.50  # TEKNOFEST §7.3: dengeli veri için F1-optimal eşik
     high_risk: float = 0.7
 
 

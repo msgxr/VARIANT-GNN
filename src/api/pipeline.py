@@ -104,8 +104,9 @@ class InferencePipeline:
                     tokenize_amino_acids(dataset.aa_sequences), dtype=torch.long
                 ).to(device)
         
-        # Determine prediction method (Uncertainty-aware if GATv2)
-        threshold = cfg.thresholds.classification
+        # Load F1-optimal threshold saved during training (TEKNOFEST §7.3)
+        # Falls back to config value (0.50) when no saved threshold exists.
+        threshold = self.store.load_threshold(default=cfg.thresholds.classification)
 
         if isinstance(self._ensemble.gnn, VariantGATv2GNN):
             # MC-Dropout ile belirsizlik tahmini

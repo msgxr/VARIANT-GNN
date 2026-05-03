@@ -623,7 +623,7 @@ class VariantTrainer:
                 eval_set=[(X_val_proc, y_val)], verbose=False,
             )
             xgb_preds   = xgb_model.predict(X_val_proc)
-            xgb_f1      = float(f1_score(y_val, xgb_preds, average="macro", zero_division=0))
+            xgb_f1      = float(f1_score(y_val, xgb_preds, average="binary", pos_label=1, zero_division=0))
 
             # --- LightGBM ---
             lgbm_f1 = 0.0
@@ -638,7 +638,7 @@ class VariantTrainer:
                                lgb.log_evaluation(-1)],
                 )
                 lgbm_preds = lgbm_model_fold.predict(X_val_proc)
-                lgbm_f1    = float(f1_score(y_val, lgbm_preds, average="macro", zero_division=0))
+                lgbm_f1    = float(f1_score(y_val, lgbm_preds, average="binary", pos_label=1, zero_division=0))
             except Exception:
                 pass
 
@@ -670,7 +670,7 @@ class VariantTrainer:
             gnn_preds, gnn_probs_fold = _gatv2_eval(gat_model, val_graph, self.device,
                                                    nuc_ids=nuc_val_t, aa_ids=aa_val_t)
             gnn_f1 = float(f1_score(y_val, gnn_preds[:len(y_val)],
-                                    average="macro", zero_division=0))
+                                    average="binary", pos_label=1, zero_division=0))
 
             # --- DNN ---
             dnn_model     = VariantDNN(X_tr_proc.shape[1], cfg.dnn.hidden_dim, 2).to(self.device)
@@ -679,7 +679,7 @@ class VariantTrainer:
             dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_train=y_tr_res)
             dnn_preds, _  = _dnn_eval(dnn_model, dnn_val_loader, self.device)
             dnn_f1        = float(f1_score(y_val, dnn_preds[:len(y_val)],
-                                           average="macro", zero_division=0))
+                                           average="binary", pos_label=1, zero_division=0))
 
             # --- Ensemble ---
             w         = cfg.ensemble.weights
@@ -698,10 +698,11 @@ class VariantTrainer:
                 w3 = [x/t for x in w3]
                 ens_probs = w3[0] * xgb_probs + w3[1] * gnn_probs + w3[2] * dnn_probs
             ens_preds = np.argmax(ens_probs, axis=1)
-            ens_f1    = float(f1_score(y_val, ens_preds, average="macro", zero_division=0))
+            # TEKNOFEST §7.3: temel metrik binary F1 (Pathogenic sınıfı, pos_label=1)
+            ens_f1    = float(f1_score(y_val, ens_preds, average="binary", pos_label=1, zero_division=0))
 
             logger.info(
-                "Fold %d | Ensemble Macro F1: %.4f  (XGB=%.4f, LGB=%.4f, GNN=%.4f, DNN=%.4f)",
+                "Fold %d | Ensemble Binary F1 (Pathogenic): %.4f  (XGB=%.4f, LGB=%.4f, GNN=%.4f, DNN=%.4f)",
                 fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1,
             )
             results.append(FoldResult(fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1))
@@ -778,7 +779,7 @@ class VariantTrainer:
             tr_preds, _ = _gatv2_eval(model, train_graph, self.device,
                                       nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
             train_f1 = float(f1_score(
-                y_tr, tr_preds[:len(y_tr)], average="macro", zero_division=0
+                y_tr, tr_preds[:len(y_tr)], average="binary", pos_label=1, zero_division=0
             ))
 
             epoch_entry: dict = {"epoch": epoch, "loss": round(loss, 6), "train_f1": round(train_f1, 4)}
@@ -787,7 +788,7 @@ class VariantTrainer:
                 preds, _ = _gatv2_eval(model, val_graph, self.device,
                                       nuc_ids=nuc_val_t, aa_ids=aa_val_t)
                 val_f1   = float(f1_score(
-                    y_val, preds[:len(y_val)], average="macro", zero_division=0
+                    y_val, preds[:len(y_val)], average="binary", pos_label=1, zero_division=0
                 ))
                 epoch_entry["val_f1"] = round(val_f1, 4)
 
@@ -874,7 +875,7 @@ class VariantTrainer:
                 preds, _ = _gnn_eval(model, val_loader, self.device)
                 val_labels = [d.y.item() for batch in val_loader for d in batch.to_data_list()]
                 val_f1 = float(f1_score(
-                    val_labels, preds[:len(val_labels)], average="macro", zero_division=0
+                    val_labels, preds[:len(val_labels)], average="binary", pos_label=1, zero_division=0
                 ))
                 if val_f1 > best_f1:
                     best_f1      = val_f1
@@ -921,7 +922,7 @@ class VariantTrainer:
                 y_val    = [batch[1].numpy() for batch in val_loader]
                 y_val    = np.concatenate(y_val)
                 val_f1   = float(f1_score(
-                    y_val, preds[:len(y_val)], average="macro", zero_division=0
+                    y_val, preds[:len(y_val)], average="binary", pos_label=1, zero_division=0
                 ))
                 if val_f1 > best_f1:
                     best_f1      = val_f1

@@ -103,7 +103,7 @@ def mode_train(args, cfg):
     # Pass sequences for multimodal SequenceEncoder (TEKNOFEST şartname uyumu)
     trainer = VariantTrainer()
     result  = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
-    logging.info("CV summary — Mean Macro F1: %.4f +/- %.4f",
+    logging.info("CV summary — Mean Binary F1 (Pathogenic, §7.3): %.4f +/- %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
     preprocessor = result.preprocessor
@@ -138,6 +138,7 @@ def mode_train(args, cfg):
 
     store = ModelStore(cfg.paths.models_dir)
     store.save_all(preprocessor, ensemble, calibrator)
+    store.save_threshold(best_thr)
 
     save_all_plots(report, y_test, raw_test_proba, cfg.paths.reports_dir)
 
@@ -153,15 +154,16 @@ def mode_train(args, cfg):
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:
         json.dump({
-            # §7.3 primary ranking metric
-            "competition_metric": "binary_f1 (TP/FP/FN, Pathogenic class, TEKNOFEST §7.3)",
-            "mean_cv_binary_f1":  result.mean_cv_f1,
-            "std_cv_binary_f1":   result.std_cv_f1,
-            "mean_cv_macro_f1":   result.mean_cv_f1,
-            "std_cv_macro_f1":    result.std_cv_f1,
+            # TEKNOFEST 2026 §7.3: Temel sıralama metriği F1 Skoru (TP/FP/FN)
+            "competition_metric": "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
+            "note": "CV folds dengeli veri üzerinde eğitildi; Macro F1 ≈ Binary F1 (Pathogenic) for 50/50 data",
+            "mean_cv_macro_f1":  result.mean_cv_f1,
+            "std_cv_macro_f1":   result.std_cv_f1,
+            "test_binary_f1":    report.binary_f1,
+            "test_macro_f1":     report.macro_f1,
+            "best_threshold":    best_thr,
             "folds": [vars(r) for r in result.fold_results],
             "test_metrics": report.as_dict(),
-            "best_threshold": best_thr,
             "panel_metrics": panel_reports_dict,
         }, fh, indent=2)
     logging.info("CV report saved -> %s", report_path)
@@ -259,7 +261,7 @@ def mode_crossval(args, cfg):
     folds   = trainer._cross_validate(ds.features.values, ds.labels)
     mean_f1 = float(np.mean([r.f1 for r in folds]))
     std_f1  = float(np.std( [r.f1 for r in folds]))
-    logging.info("Cross-val complete | Macro F1 = %.4f +/- %.4f", mean_f1, std_f1)
+    logging.info("Cross-val complete | Binary F1 (Pathogenic, §7.3) = %.4f +/- %.4f", mean_f1, std_f1)
     for r in folds:
         logging.info("  Fold %d | Ens=%.4f  XGB=%.4f  LGB=%.4f  GNN=%.4f  DNN=%.4f",
                      r.fold, r.f1, r.xgb_f1, getattr(r, 'lgbm_f1', 0.0), r.gnn_f1, r.dnn_f1)
@@ -412,7 +414,7 @@ def mode_train_panels(args, cfg):
 
     trainer = VariantTrainer()
     result  = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
-    logging.info("CV summary — Mean Macro F1: %.4f +/- %.4f",
+    logging.info("CV summary — Mean Binary F1 (Pathogenic, §7.3): %.4f +/- %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
     preprocessor = result.preprocessor

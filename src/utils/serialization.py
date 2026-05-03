@@ -172,6 +172,8 @@ class ModelStore:
     def _calibrator_path(self)   -> Path: return self.model_dir / "calibrator.pkl"
     @property
     def _ensemble_cfg_path(self) -> Path: return self.model_dir / "ensemble_config.json"
+    @property
+    def _threshold_path(self)    -> Path: return self.model_dir / "threshold.json"
 
     # ------------------------------------------------------------------
     # Save
@@ -288,6 +290,24 @@ class ModelStore:
     def _save_calibrator(self, calibrator) -> None:
         joblib.dump(calibrator, str(self._calibrator_path))
         logger.info("Calibrator -> %s", self._calibrator_path)
+
+    def save_threshold(self, threshold: float) -> None:
+        """Persist the F1-optimal classification threshold (TEKNOFEST §7.3)."""
+        import json
+        with open(self._threshold_path, "w") as fh:
+            json.dump({"classification_threshold": threshold}, fh)
+        logger.info("Threshold -> %s  (thr=%.4f)", self._threshold_path, threshold)
+
+    def load_threshold(self, default: float = 0.50) -> float:
+        """Load saved threshold; return default if not found."""
+        import json
+        if not self._threshold_path.exists():
+            return default
+        try:
+            with open(self._threshold_path) as fh:
+                return float(json.load(fh).get("classification_threshold", default))
+        except Exception:
+            return default
 
     # ------------------------------------------------------------------
     # Load

@@ -61,7 +61,7 @@ preprocessing:
   autoencoder_epochs: 10
   use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
   k_best_features: 35                  # Rapor §3.3: k=35
-  smote_enabled: true
+  smote_enabled: false                 # TEKNOFEST §3.2: veri zaten dengeli (50/50 P/B), SMOTE gereksiz
   use_bio_scoring: true              # BLOSUM62 + Grantham skorları
 
 calibration:
@@ -76,7 +76,7 @@ training:
   focal_gamma: 2.0              # FocalLoss gamma parametresi (sadece loss_function=focal)
 
 thresholds:
-  classification: 0.40                # Rapor §3.5: Duyarlılık öncelikli karar eşiği
+  classification: 0.50                # TEKNOFEST 2026 §7.3: Dengeli veri için F1-optimal eşik
   high_risk: 0.7
 
 schema:
