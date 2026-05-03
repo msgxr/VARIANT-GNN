@@ -1,15 +1,23 @@
 """
-src/graph/builder.py
-Pluggable graph construction layer.
+src/core/graph/builder.py
+==========================
+TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Graf Oluşturma Katmanı
 
-Strategies:
-  - CorrelationGraphBuilder : Feature-interaction graph (features as nodes).
-  - KNNGraphBuilder         : Legacy k-NN sample graph via sklearn.
-  - SampleKNNGraphBuilder   : TEKNOFEST 2026 — coordinate-free, cosine-similarity
-                             k-NN graph where each VARIANT is a node.
-                             Uses torch_geometric.nn.knn_graph with cosine=True.
+Strateji hiyerarşisi:
+  CorrelationGraphBuilder — özellikler arası korelasyon grafı (özellikler = düğüm)
+  KNNGraphBuilder         — sklearn tabanlı k-NN örnek grafı (legacy)
+  SampleKNNGraphBuilder   — TEKNOFEST 2026 birincil seçim:
+                            Koordinat-bağımsız, kosinüs-benzerlik tabanlı k-NN
+                            örnek grafı.  Her VARİANT bir düğümdür.
+                            Genomik adres (Chr/Pos) kullanılmaz — §3.2 uyumlu.
 
-All builders implement the ``GraphBuilder`` protocol so they can be swapped.
+Yapılandırma uyumu:
+  configs/default.yaml → gnn.knn_k = 10
+                          gnn.knn_threshold = 0.30  (kenar budama eşiği)
+
+Şartname §3.2:
+  "Yarışma veri setinde varyantların genomik adres bilgileri tamamen
+   gizlenmiştir."  →  Yalnızca biyolojik/hesaplamalı özellikler kullanılır.
 """
 from __future__ import annotations
 
@@ -19,68 +27,68 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch_geometric.data import Data
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Abstract base
+# Soyut temel sınıf
 # ---------------------------------------------------------------------------
 
 
 class GraphBuilder(ABC):
-    """Protocol for feature-interaction graph builders."""
+    """Tüm graf oluşturma stratejileri için ortak protokol."""
 
     @abstractmethod
     def fit(self, X_train: np.ndarray) -> "GraphBuilder":
-        """Learn graph topology from training data."""
+        """Eğitim verisinden graf topolojisini öğren."""
         ...
 
     @abstractmethod
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
-        """Convert a single processed feature vector to a PyG Data object."""
+        """Tek bir ön işlenmiş özellik vektörünü PyG Data nesnesine dönüştür."""
         ...
 
     @property
     @abstractmethod
-    def edge_index(self) -> torch.Tensor:
-        ...
+    def edge_index(self) -> torch.Tensor: ...
 
     @property
     @abstractmethod
-    def edge_attr(self) -> torch.Tensor:
-        ...
+    def edge_attr(self) -> torch.Tensor: ...
 
 
 # ---------------------------------------------------------------------------
-# Correlation-based builder (default)
+# Korelasyon bazlı özellik grafı
 # ---------------------------------------------------------------------------
 
 
 class CorrelationGraphBuilder(GraphBuilder):
     """
-    Builds a feature-interaction graph where edges connect feature nodes
-    whose absolute Pearson correlation exceeds ``corr_threshold``.
+    Özellikler arasındaki Pearson korelasyonuna dayalı özellik-etkileşim grafı.
 
-    This is the original VARIANT-GNN approach, now extracted into a
-    modular class so it can be replaced with any other strategy.
+    Her düğüm bir özelliktir.  Korelasyonu ``corr_threshold``'u aşan özellik
+    çiftleri kenar ile bağlanır; kenar ağırlığı |korelasyon| değeridir.
+
+    Bu yapı orijinal VARIANT-GNN'in özellik-grafidir; VariantGATv2GNN'de
+    "özellik düğümü" yaklaşımı için kullanılır.
     """
 
     def __init__(self, corr_threshold: float = 0.25) -> None:
-        self.corr_threshold = corr_threshold
+        self.corr_threshold   = corr_threshold
         self._edge_index: Optional[torch.Tensor] = None
         self._edge_attr:  Optional[torch.Tensor] = None
         self._n_features: int = 0
 
-    # ------------------------------------------------------------------
     def fit(self, X_train: np.ndarray) -> "CorrelationGraphBuilder":
         corr = np.corrcoef(X_train, rowvar=False)
         corr = np.nan_to_num(corr, nan=0.0)
+        n    = X_train.shape[1]
 
-        n = X_train.shape[1]
-        edges: List[List[int]] = []
-        weights: List[float]   = []
+        edges:   List[List[int]] = []
+        weights: List[float]     = []
 
         for i in range(n):
             for j in range(n):
@@ -97,52 +105,49 @@ class CorrelationGraphBuilder(GraphBuilder):
 
         self._n_features = n
         logger.info(
-            "CorrelationGraph: %d nodes, %d directed edges (threshold=%.2f)",
+            "CorrelationGraph: %d özellik düğümü, %d yönlü kenar (eşik=%.2f)",
             n, len(edges), self.corr_threshold,
         )
         return self
 
-    # ------------------------------------------------------------------
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
-        x_tensor = torch.tensor(x_row, dtype=torch.float).unsqueeze(1)  # [N, 1]
-        y_tensor = torch.tensor([label], dtype=torch.long) if label is not None else None
+        x_t = torch.tensor(x_row, dtype=torch.float).unsqueeze(1)  # [N_feats, 1]
+        y_t = torch.tensor([label], dtype=torch.long) if label is not None else None
         return Data(
-            x=x_tensor,
-            edge_index=self._edge_index,
-            edge_attr=self._edge_attr,
-            y=y_tensor,
+            x          = x_t,
+            edge_index = self._edge_index,
+            edge_attr  = self._edge_attr,
+            y          = y_t,
         )
 
-    # ------------------------------------------------------------------
     @property
     def edge_index(self) -> torch.Tensor:
         if self._edge_index is None:
-            raise RuntimeError("CorrelationGraphBuilder has not been fitted yet.")
+            raise RuntimeError("CorrelationGraphBuilder henüz fit edilmedi.")
         return self._edge_index
 
     @property
     def edge_attr(self) -> torch.Tensor:
         if self._edge_attr is None:
-            raise RuntimeError("CorrelationGraphBuilder has not been fitted yet.")
+            raise RuntimeError("CorrelationGraphBuilder henüz fit edilmedi.")
         return self._edge_attr
 
 
 # ---------------------------------------------------------------------------
-# KNN sample-level graph builder (alternative strategy)
+# Legacy sklearn k-NN örnek grafı
 # ---------------------------------------------------------------------------
 
 
 class KNNGraphBuilder(GraphBuilder):
     """
-    Builds a sample-connectivity graph using k-nearest-neighbours in feature space.
-    Each sample becomes a node; samples close in feature space are connected.
+    Öklid mesafesi tabanlı k-NN örnek grafı (sklearn backend).
 
-    NOTE: In the current VARIANT-GNN architecture the GNN treats *features*
-    as nodes, not samples.  This builder is provided as an architectural
-    alternative for future work.
+    Her ÖRNEK (varyant) bir düğümdür.  Özellik uzayında komşu olan
+    varyantlar kenar ile bağlanır.  SampleKNNGraphBuilder'ın daha eski,
+    sklearn-bağımlı versiyonudur.  Yeni kod için SampleKNNGraphBuilder tercih edin.
     """
 
-    def __init__(self, k: int = 5) -> None:
+    def __init__(self, k: int = 10) -> None:
         self.k = k
         self._edge_index: Optional[torch.Tensor] = None
         self._edge_attr:  Optional[torch.Tensor] = None
@@ -150,92 +155,97 @@ class KNNGraphBuilder(GraphBuilder):
     def fit(self, X_train: np.ndarray) -> "KNNGraphBuilder":
         from sklearn.neighbors import NearestNeighbors
 
-        nn = NearestNeighbors(n_neighbors=self.k + 1, metric="euclidean")
+        nn = NearestNeighbors(n_neighbors=min(self.k + 1, len(X_train)), metric="euclidean")
         nn.fit(X_train)
         distances, indices = nn.kneighbors(X_train)
 
-        edges: List[Tuple[int, int]] = []
-        weights: List[float] = []
+        edges:   List[Tuple[int, int]] = []
+        weights: List[float]           = []
+
         for i, (dists, nbrs) in enumerate(zip(distances, indices)):
             for dist, j in zip(dists[1:], nbrs[1:]):
                 edges.append((i, j))
                 edges.append((j, i))
-                weights.extend([dist, dist])
+                weights.extend([float(dist), float(dist)])
 
-        self._edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-        self._edge_attr  = torch.tensor(weights, dtype=torch.float)
-        logger.info("KNNGraph: %d samples, k=%d, %d edges", len(X_train), self.k, len(edges))
+        if edges:
+            self._edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+            self._edge_attr  = torch.tensor(weights, dtype=torch.float)
+        else:
+            self._edge_index = torch.empty((2, 0), dtype=torch.long)
+            self._edge_attr  = torch.empty((0,), dtype=torch.float)
+
+        logger.info(
+            "KNNGraph: %d örnek, k=%d, %d kenar",
+            len(X_train), self.k, len(edges),
+        )
         return self
 
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
         raise NotImplementedError(
-            "KNNGraphBuilder creates a sample graph, not a per-row feature graph. "
-            "Use CorrelationGraphBuilder for per-variant inference."
+            "KNNGraphBuilder örnek grafı oluşturur, satır başına değil. "
+            "CorrelationGraphBuilder.row_to_graph() kullanın."
         )
 
     @property
     def edge_index(self) -> torch.Tensor:
         if self._edge_index is None:
-            raise RuntimeError("KNNGraphBuilder not fitted.")
+            raise RuntimeError("KNNGraphBuilder henüz fit edilmedi.")
         return self._edge_index
 
     @property
     def edge_attr(self) -> torch.Tensor:
         if self._edge_attr is None:
-            raise RuntimeError("KNNGraphBuilder not fitted.")
+            raise RuntimeError("KNNGraphBuilder henüz fit edilmedi.")
         return self._edge_attr
 
 
 # ---------------------------------------------------------------------------
-# Factory
-# ---------------------------------------------------------------------------
-
-
-def get_graph_builder(strategy: str = "correlation", **kwargs) -> GraphBuilder:
-    """
-    Return a graph builder by name.
-
-    Supported strategies:
-        - ``"correlation"`` (default): feature-correlation graph.
-        - ``"knn"``                  : legacy sample k-NN graph.
-        - ``"sample_knn"``           : TEKNOFEST 2026 coordinate-free cosine kNN.
-    """
-    strategy = strategy.lower()
-    if strategy == "correlation":
-        return CorrelationGraphBuilder(**kwargs)
-    if strategy == "knn":
-        return KNNGraphBuilder(**kwargs)
-    if strategy == "sample_knn":
-        return SampleKNNGraphBuilder(**kwargs)
-    raise ValueError(f"Unknown graph strategy: {strategy!r}")
-
-
-# ---------------------------------------------------------------------------
-# SampleKNNGraphBuilder — TEKNOFEST 2026 primary builder
+# SampleKNNGraphBuilder — TEKNOFEST 2026 birincil seçim
 # ---------------------------------------------------------------------------
 
 
 class SampleKNNGraphBuilder:
     """
-    Coordinate-free, feature-similarity k-NN graph builder.
+    Koordinat-bağımsız, kosinüs-benzerlik k-NN örnek grafı oluşturucu.
 
-    Per TEKNOFEST 2026 spec, chromosome/position identifiers are hidden to
-    prevent label leakage.  This builder connects variants purely based on
-    their biochemical/evolutionary feature similarity using cosine distance.
+    TEKNOFEST 2026 §3.2 uyumu:
+      - Genomik adres (Chr/Pos) kullanılmaz — tamamen özellik-bazlı.
+      - Bağlantılar kosinüs benzerliği ile kurulur (öklid değil).
+      - ``cosine_threshold`` ile zayıf kenarlar budanır (isteğe bağlı).
 
-    Each VARIANT becomes a node whose feature vector is the full numeric
-    feature vector after preprocessing.  torch_geometric.nn.knn_graph is
-    used to connect each node to its k=5 nearest neighbours in feature space.
+    Yapılandırma:
+      configs/default.yaml → gnn.knn_k = 10, gnn.knn_threshold = 0.30
 
-    Typical usage
-    -------------
-    >>> builder = SampleKNNGraphBuilder(k=5)
-    >>> data = builder.build(X_scaled, y)   # train graph
-    >>> test_data = builder.build(X_test)   # inference — fully inductive
+    Her varyant bir düğümdür.  Düğüm özellikleri: ön işlenmiş sayısal özellik
+    vektörü (biyokimyasal + evrimsel + popülasyon + in-silico).
+
+    Kullanım
+    --------
+    >>> builder = SampleKNNGraphBuilder(k=10, cosine_threshold=0.30)
+    >>> train_data = builder.build(X_train_scaled, y_train)  # eğitim grafı
+    >>> test_data  = builder.build(X_test_scaled)            # çıkarım grafı
     """
 
-    def __init__(self, k: int = 5) -> None:
-        self.k = k
+    def __init__(
+        self,
+        k:                int   = 10,
+        cosine_threshold: float = 0.0,   # 0.0 = budama yok
+        add_self_loops:   bool  = False,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        k                : Her düğümün bağlanacağı komşu sayısı.
+                           Şartname ve default.yaml uyumu: k=10.
+        cosine_threshold : Bu değerin altındaki kosinüs benzerliğine sahip
+                           kenarlar kaldırılır.  0.0 = budama yok.
+                           Önerilen: 0.30 (default.yaml gnn.knn_threshold).
+        add_self_loops   : Her düğüme kendi kendine döngü ekle (True/False).
+        """
+        self.k                = k
+        self.cosine_threshold = cosine_threshold
+        self.add_self_loops   = add_self_loops
 
     # ------------------------------------------------------------------
     def build(
@@ -244,34 +254,60 @@ class SampleKNNGraphBuilder:
         y: Optional[np.ndarray] = None,
     ) -> Data:
         """
-        Build a PyG ``Data`` object where every sample is a node.
+        [N_samples, N_features] özellik matrisinden PyG Data nesnesi oluştur.
 
         Parameters
         ----------
-        X : [N_samples, N_features] scaled feature matrix.
-        y : Optional integer label array of length N_samples.
+        X : Ön işlenmiş ve normalize edilmiş özellik matrisi (N, F).
+        y : Opsiyonel etiket dizisi (N,) — None ise etiket eklenmez.
 
         Returns
         -------
-        PyG Data with:
-          - ``x``          : [N, N_features] node feature matrix
-          - ``edge_index`` : [2, E] kNN edges built with cosine similarity
-          - ``edge_attr``  : [E] cosine similarities for each edge
-          - ``y``          : [N] or None
+        PyG Data:
+          x          : (N, F)  düğüm özellik matrisi
+          edge_index : (2, E)  kenar bağlantı indeksleri
+          edge_attr  : (E,)    kenar ağırlıkları (kosinüs benzerliği)
+          y          : (N,) veya None
+          num_nodes  : N (açık olarak ayarlanır)
         """
         N = X.shape[0]
-        x_tensor = torch.tensor(X, dtype=torch.float)
-        k_actual  = min(self.k, N - 1)
+        if N < 2:
+            # Tek örnek: boş kenar indexi ile oluştur
+            x_t  = torch.tensor(X, dtype=torch.float)
+            y_t  = torch.tensor(y, dtype=torch.long) if y is not None else None
+            return Data(
+                x          = x_t,
+                edge_index = torch.empty((2, 0), dtype=torch.long),
+                edge_attr  = torch.empty((0,),   dtype=torch.float),
+                y          = y_t,
+                num_nodes  = N,
+            )
 
-        edge_index, cos_sim = self._knn_cosine(x_tensor, k_actual)
+        x_tensor = torch.tensor(X, dtype=torch.float)
+        k_actual = min(self.k, N - 1)
+
+        edge_index, cos_sim = self._build_knn_cosine(x_tensor, k_actual)
+
+        # Kosinüs eşiği ile budama
+        if self.cosine_threshold > 0.0 and edge_index.shape[1] > 0:
+            keep_mask  = cos_sim >= self.cosine_threshold
+            edge_index = edge_index[:, keep_mask]
+            cos_sim    = cos_sim[keep_mask]
+
+        # Self-loop ekleme (opsiyonel)
+        if self.add_self_loops:
+            self_idx   = torch.arange(N, dtype=torch.long).unsqueeze(0).expand(2, -1)
+            self_sim   = torch.ones(N, dtype=torch.float)
+            edge_index = torch.cat([edge_index, self_idx], dim=1)
+            cos_sim    = torch.cat([cos_sim, self_sim], dim=0)
 
         y_tensor: Optional[torch.Tensor] = None
         if y is not None:
             y_tensor = torch.tensor(y, dtype=torch.long)
 
-        logger.info(
-            "SampleKNNGraph: %d nodes, k=%d, %d edges (cosine similarity)",
-            N, k_actual, edge_index.shape[1],
+        logger.debug(
+            "SampleKNNGraph: N=%d, k=%d, eşik=%.2f, kenar=%d",
+            N, k_actual, self.cosine_threshold, edge_index.shape[1],
         )
 
         return Data(
@@ -279,67 +315,111 @@ class SampleKNNGraphBuilder:
             edge_index = edge_index,
             edge_attr  = cos_sim,
             y          = y_tensor,
+            num_nodes  = N,
         )
 
     # ------------------------------------------------------------------
     @staticmethod
-    def _knn_cosine(
+    def _build_knn_cosine(
         x: torch.Tensor,
         k: int,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Build directed k-NN edges using cosine similarity.
+        Kosinüs benzerliği tabanlı k-NN kenarları oluştur.
 
-        Tries torch_geometric.nn.knn_graph (requires torch-cluster); falls
-        back to a pure-PyTorch batched cosine matrix when that package is
-        unavailable.
+        Önce torch_geometric.nn.knn_graph (torch-cluster backend) dener.
+        Kurulu değilse saf PyTorch matris çarpımı ile yedek hesaplama yapar.
 
         Returns
         -------
-        edge_index : [2, N*k] long tensor
-        cos_sim    : [N*k] float tensor of cosine similarities
+        edge_index : (2, N*k) yönlü kenar indeksleri
+        cos_sim    : (N*k,)   her kenar için kosinüs benzerliği [−1, 1]
         """
+        # ── Yol 1: torch_geometric.nn.knn_graph (tercih edilen) ─────────
         try:
             from torch_geometric.nn import knn_graph as _knn_graph
-            edge_index = _knn_graph(x, k=k, cosine=True)
+            edge_index = _knn_graph(x, k=k, cosine=True)   # (2, N*k) — yönlü
             src, dst   = edge_index
-            x_norm     = torch.nn.functional.normalize(x, p=2, dim=1)
+            x_norm     = F.normalize(x, p=2, dim=1)
             cos_sim    = (x_norm[src] * x_norm[dst]).sum(dim=1).clamp(-1.0, 1.0)
             return edge_index, cos_sim
-        except ImportError:
-            pass  # fall through to pure-PyTorch implementation
 
-        # Pure-PyTorch fallback (no torch-cluster dependency)
-        # Compute full cosine similarity matrix and pick top-k per row
-        x_norm  = torch.nn.functional.normalize(x, p=2, dim=1)
-        sim_mat = x_norm @ x_norm.t()               # [N, N]
-        # Exclude self-loops by setting diagonal to -2
-        sim_mat.fill_diagonal_(-2.0)
+        except (ImportError, RuntimeError):
+            pass  # yedek hesaplamaya geç
 
-        topk_sim, topk_idx = sim_mat.topk(k, dim=1)   # [N, k]
+        # ── Yol 2: Saf PyTorch (torch-cluster yoksa) ────────────────────
+        # Tam kosinüs benzerlik matrisi: (N, N)
+        x_norm  = F.normalize(x, p=2, dim=1)
+        sim_mat = x_norm @ x_norm.t()           # (N, N)
+        # Self-loop'ları dışla: köşegen −∞
+        sim_mat.fill_diagonal_(float("-inf"))
+
         N = x.shape[0]
+        topk_sim, topk_idx = sim_mat.topk(k, dim=1)   # (N, k)
 
-        src = torch.arange(N, dtype=torch.long).unsqueeze(1).expand(-1, k).reshape(-1)
-        dst = topk_idx.reshape(-1)
-        edge_index = torch.stack([src, dst], dim=0)    # [2, N*k]
-        cos_sim    = topk_sim.reshape(-1)
+        src = (
+            torch.arange(N, dtype=torch.long)
+            .unsqueeze(1)
+            .expand(-1, k)
+            .reshape(-1)
+        )
+        dst        = topk_idx.reshape(-1)
+        edge_index = torch.stack([src, dst], dim=0)    # (2, N*k)
+        cos_sim    = topk_sim.reshape(-1).clamp(-1.0, 1.0)
 
         return edge_index, cos_sim
 
-    # Stub to satisfy GraphBuilder protocol if needed
+    # ------------------------------------------------------------------
+    # GraphBuilder protokol uyumu (kullanılmaz ama tip uyumu için)
+    # ------------------------------------------------------------------
+
     def fit(self, X_train: np.ndarray) -> "SampleKNNGraphBuilder":
+        """Durum tutmaz; dönüşte self döner (API uyumluluğu)."""
         return self
 
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
         raise NotImplementedError(
-            "SampleKNNGraphBuilder works on the full sample matrix. "
-            "Call build(X, y) instead."
+            "SampleKNNGraphBuilder tam örnek matrisi üzerinde çalışır. "
+            "build(X, y) kullanın."
         )
 
     @property
     def edge_index(self) -> torch.Tensor:
-        raise NotImplementedError("Call build(X) to get the full graph.")
+        raise NotImplementedError("build(X) ile tam grafı oluşturun.")
 
     @property
     def edge_attr(self) -> torch.Tensor:
-        raise NotImplementedError("Call build(X) to get the full graph.")
+        raise NotImplementedError("build(X) ile tam grafı oluşturun.")
+
+
+# ---------------------------------------------------------------------------
+# Fabrika fonksiyonu
+# ---------------------------------------------------------------------------
+
+
+def get_graph_builder(strategy: str = "sample_knn", **kwargs) -> "GraphBuilder | SampleKNNGraphBuilder":
+    """
+    Strateji adına göre bir GraphBuilder örneği döndür.
+
+    Desteklenen stratejiler
+    -----------------------
+    ``"sample_knn"``   (default) — TEKNOFEST 2026 birincil; SampleKNNGraphBuilder.
+    ``"correlation"``            — Korelasyon bazlı özellik grafı.
+    ``"knn"``                    — Legacy sklearn k-NN örnek grafı.
+
+    Parameters
+    ----------
+    strategy : Strateji adı (büyük/küçük harf duyarsız).
+    **kwargs : İlgili builder sınıfına aktarılan anahtar sözcük argümanları.
+    """
+    s = strategy.lower()
+    if s == "sample_knn":
+        return SampleKNNGraphBuilder(**kwargs)
+    if s == "correlation":
+        return CorrelationGraphBuilder(**kwargs)
+    if s == "knn":
+        return KNNGraphBuilder(**kwargs)
+    raise ValueError(
+        f"Bilinmeyen graf stratejisi: {strategy!r}. "
+        f"Desteklenenler: 'sample_knn', 'correlation', 'knn'"
+    )

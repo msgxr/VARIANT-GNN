@@ -1,14 +1,30 @@
 """
-src/models/ensemble.py
-Multi-modal ensemble: XGBoost + LightGBM + GNN + DNN.
+src/core/ensemble.py
+=====================
+TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Hibrit Topluluk Modeli
 
-Ensemble weights are loaded from config and can optionally be optimised on
-a held-out validation set via ``optimise_weights``.
+Dört baz modelin ağırlıklı topluluğu:
+  1. XGBoost      (gradient boosting, tabular güç)
+  2. LightGBM     (hızlı gradient boosting, düşük bellek)
+  3. VariantGATv2GNN  (graf dikkat ağı — özellikler arası ilişkiler)
+  4. VariantDNN       (derin sinir ağı — doğrusal-olmayan örüntüler)
+
+Birleştirme stratejisi (öncelik sırası):
+  a) Meta-öğrenici stacking (LogisticRegression; fit_meta_learner() çağrıldıysa)
+  b) Nelder-Mead optimize edilmiş ağırlıklı ortalama (optimise_weights() çağrıldıysa)
+  c) Yapılandırma dosyasındaki varsayılan ağırlıklar
+
+TEKNOFEST §7.3: Birincil değerlendirme metriği —
+  F1 = 2·TP / (2·TP + FP + FN)  (Pathogenic sınıfı, pos_label=1, binary F1)
+
+Belirsizlik nicemleme: GATv2 MC-Dropout ile epistemik belirsizlik tahmini.
+Panel bazlı eşik: Her panel (General / Hereditary_Cancer / PAH / CFTR) için
+  ayrı optimal eşik kullanılabilir (predict_with_panel_threshold()).
 """
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -17,7 +33,6 @@ import torch.nn.functional as F
 import xgboost as xgb
 from scipy.optimize import minimize
 from sklearn.metrics import f1_score
-from torch_geometric.loader import DataLoader
 
 from src.config import get_settings
 from src.core.models.dnn import VariantDNN
@@ -26,382 +41,642 @@ from src.core.models.gnn import VariantGATv2GNN
 logger = logging.getLogger(__name__)
 
 
-def _gnn_predict_proba(
-    model: VariantGATv2GNN, 
-    loader: DataLoader, 
-    device: torch.device
-) -> np.ndarray:
-    """Return (N, num_classes) probability array from a GNN DataLoader."""
-    model.eval()
-    probs_list: List[np.ndarray] = []
-    with torch.no_grad():
-        for data in loader:
-            data = data.to(device)
-            out = model(data.x, data.edge_index)
-            probs_list.append(F.softmax(out, dim=1).cpu().numpy())
-    return np.vstack(probs_list)
+# ---------------------------------------------------------------------------
+# Yardımcı işlevler
+# ---------------------------------------------------------------------------
 
 
 def _dnn_predict_proba(
-    model: VariantDNN, 
-    X: np.ndarray, 
-    device: torch.device
+    model: VariantDNN,
+    X: np.ndarray,
+    device: torch.device,
 ) -> np.ndarray:
-    """Return (N, num_classes) probability array from a DNN."""
+    """DNN'den (N, 2) olasılık matrisi döndür."""
     model.eval()
     with torch.no_grad():
-        tensor_x = torch.FloatTensor(X).to(device)
-        out = model(tensor_x)
-        return F.softmax(out, dim=1).cpu().numpy()
+        logits = model(torch.FloatTensor(X).to(device))
+        return F.softmax(logits, dim=1).cpu().numpy()
+
+
+def _build_knn_graph(X_scaled: np.ndarray, knn_k: int):
+    """X_scaled üzerinde k-NN örnek grafiği kurar (PyG Data nesnesi)."""
+    from src.core.graph.builder import SampleKNNGraphBuilder
+    return SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
+
+
+# ---------------------------------------------------------------------------
+# HybridEnsemble
+# ---------------------------------------------------------------------------
 
 
 class HybridEnsemble:
     """
-    Weighted ensemble of XGBoost, LightGBM, GATv2, and DNN models.
-    Supports Uncertainty Quantification via GNN MC-Dropout.
+    TEKNOFEST 2026 Hibrit Topluluk Modeli.
+
+    Parameters
+    ----------
+    xgb_model   : Eğitilmiş XGBClassifier (veya None).
+    lgbm_model  : Eğitilmiş LGBMClassifier (veya None).
+    gnn_model   : Eğitilmiş VariantGATv2GNN (veya None).
+    dnn_model   : Eğitilmiş VariantDNN (veya None).
+    weights     : [w_xgb, w_lgb, w_gnn, w_dnn] — otomatik normalize edilir.
+    device      : Torch device (None → CUDA varsa CUDA, yoksa CPU).
     """
 
     LABEL_MAP: Dict[int, str] = {0: "Benign", 1: "Pathogenic"}
 
+    # TEKNOFEST §3.2: desteklenen 4 panel
+    KNOWN_PANELS: Tuple[str, ...] = (
+        "General", "Hereditary_Cancer", "PAH", "CFTR",
+    )
+
     def __init__(
         self,
-        xgb_model: Optional[xgb.XGBClassifier] = None,
-        lgbm_model: Optional[Any] = None,
-        gnn_model: Optional[VariantGATv2GNN] = None,
-        dnn_model: Optional[VariantDNN] = None,
-        weights: Optional[List[float]] = None,
-        device: Optional[torch.device] = None,
+        xgb_model:  Optional[xgb.XGBClassifier] = None,
+        lgbm_model: Optional[Any]                = None,
+        gnn_model:  Optional[VariantGATv2GNN]    = None,
+        dnn_model:  Optional[VariantDNN]          = None,
+        weights:    Optional[List[float]]         = None,
+        device:     Optional[torch.device]        = None,
     ) -> None:
         cfg = get_settings()
-        self.xgb = xgb_model
+
+        self.xgb  = xgb_model
         self.lgbm = lgbm_model
-        self.gnn = gnn_model
-        self.dnn = dnn_model
+        self.gnn  = gnn_model
+        self.dnn  = dnn_model
+
         self.device = device or torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
-        
+
+        # Ağırlıkları normalize et; eksikse yapılandırmadan al
         raw_w = list(weights) if weights is not None else list(cfg.ensemble.weights)
         if len(raw_w) != 4:
-            raw_w = [0.30, 0.30, 0.25, 0.15]  # PSR §5.3 uyumlu
-            
+            raw_w = [0.30, 0.30, 0.25, 0.15]
         w_sum = sum(raw_w)
-        self.weights = [w / w_sum for w in raw_w]
-        
+        self.weights: List[float] = [w / w_sum for w in raw_w]
+
+        # Stacking meta-öğrenicisi (fit_meta_learner() ile doldurulur)
         self.meta_learner: Optional[Any] = None
+
+        # Panel bazlı optimal eşikler (optimise_panel_thresholds() ile)
+        self.panel_thresholds: Dict[str, float] = {}
+
+        logger.info(
+            "HybridEnsemble: models=%s, weights=%s, device=%s",
+            [m for m, v in [("XGB", xgb_model), ("LGB", lgbm_model),
+                             ("GNN", gnn_model), ("DNN", dnn_model)] if v is not None],
+            [round(w, 3) for w in self.weights],
+            self.device,
+        )
+
+    # ------------------------------------------------------------------
+    # Baz model olasılıkları
+    # ------------------------------------------------------------------
 
     def predict_proba_all(
         self,
         X_scaled: np.ndarray,
-        **kwargs: Any,
-    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
-        """Return (xgb_probs, lgb_probs, gnn_probs, dnn_probs) each shape (N, C)."""
-        xgb_probs = self.xgb.predict_proba(X_scaled) if self.xgb is not None else None
-        lgb_probs = self.lgbm.predict_proba(X_scaled) if self.lgbm is not None else None
+        nuc_ids:  Optional[torch.Tensor] = None,
+        aa_ids:   Optional[torch.Tensor] = None,
+    ) -> Tuple[
+        Optional[np.ndarray],  # xgb  (N, 2)
+        Optional[np.ndarray],  # lgbm (N, 2)
+        Optional[np.ndarray],  # gnn  (N, 2)
+        Optional[np.ndarray],  # dnn  (N, 2)
+    ]:
+        """
+        Dört baz modelden ham olasılık matrislerini döndür.
+        Her çıktı (N, 2) şeklinde [P(Benign), P(Pathogenic)] içerir
+        veya model yoksa None olur.
+        """
+        # XGBoost
+        xgb_probs: Optional[np.ndarray] = None
+        if self.xgb is not None:
+            xgb_probs = self.xgb.predict_proba(X_scaled)
 
-        gnn_probs = None
+        # LightGBM
+        lgb_probs: Optional[np.ndarray] = None
+        if self.lgbm is not None:
+            lgb_probs = self.lgbm.predict_proba(X_scaled)
+
+        # GNN (GAT v2 — örnek grafiği üzerinde)
+        gnn_probs: Optional[np.ndarray] = None
         if self.gnn is not None:
-             gnn_probs = self._gat_predict_proba(X_scaled, **kwargs)
+            gnn_probs = self._gat_predict_proba(
+                X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids
+            )
 
-        dnn_probs = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device) if self.dnn is not None else None
+        # DNN
+        dnn_probs: Optional[np.ndarray] = None
+        if self.dnn is not None:
+            dnn_probs = _dnn_predict_proba(
+                self.dnn.to(self.device), X_scaled, self.device
+            )
 
         return xgb_probs, lgb_probs, gnn_probs, dnn_probs
 
     def _gat_predict_proba(
         self,
         X_scaled: np.ndarray,
-        **kwargs: Any,
+        nuc_ids:  Optional[torch.Tensor] = None,
+        aa_ids:   Optional[torch.Tensor] = None,
     ) -> np.ndarray:
-        """Run VariantGATv2GNN inference using KNN graph building."""
-        from src.core.graph.builder import SampleKNNGraphBuilder
-        knn_k = getattr(get_settings().gnn, "knn_k", 5)
-        data = SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
-        
+        """
+        VariantGATv2GNN'den örnek k-NN grafiği üzerinde olasılık döndür.
+        Tek satırlık batch'ler de güvenle çalışır (BatchNorm bypass).
+        """
+        cfg   = get_settings()
+        knn_k = getattr(cfg.gnn, "knn_k", 10)
+        data  = _build_knn_graph(X_scaled, knn_k)
+
         model = self.gnn.to(self.device)
         model.eval()
-        data = data.to(self.device)
-        
+        data  = data.to(self.device)
+
         with torch.no_grad():
+            kwargs: Dict[str, Any] = {}
+            if nuc_ids is not None:
+                kwargs["nuc_ids"] = nuc_ids.to(self.device)
+            if aa_ids is not None:
+                kwargs["aa_ids"] = aa_ids.to(self.device)
             logits = model(data.x, data.edge_index, **kwargs)
-            probs = F.softmax(logits, dim=1).cpu().numpy()
+            probs  = F.softmax(logits, dim=1).cpu().numpy()
+
         return probs
 
-    def predict_with_uncertainty(
-        self,
-        X_scaled: np.ndarray,
-        n_iter: int = 15,
-        threshold: float = 0.5,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Calculates ensemble prediction with an added 'Uncertainty' (std) 
-        from the GATv2 model's MC Dropout passes.
-        
-        Returns: (preds, combined_probs, uncertainty_std)
-        """
-        # 1. GATv2 Uncertainty estimate
-        from src.core.graph.builder import SampleKNNGraphBuilder
-        knn_k = getattr(get_settings().gnn, "knn_k", 5)
-        data = SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
-        
-        model = self.gnn.to(self.device)
-        data = data.to(self.device)
-        
-        # MC Dropout passes on GNN
-        gnn_mean, gnn_std = model.predict_with_uncertainty(
-            data.x, data.edge_index, n_iter=n_iter
-        )
-        gnn_probs = gnn_mean.cpu().numpy()
-        
-        # 2. Others (Normal)
-        xp = self.xgb.predict_proba(X_scaled) if self.xgb is not None else None
-        lp = self.lgbm.predict_proba(X_scaled) if self.lgbm is not None else None
-        dp = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device) if self.dnn is not None else None
-        
-        # 3. Combine
-        combined_proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gnn_probs, dnn_proba=dp)
-        preds = (combined_proba[:, 1] >= threshold).astype(int)
-        
-        # Uncertainty is based on GNN variance (main stochastic component)
-        uncertainty = gnn_std[:, 1].cpu().numpy()
-        
-        return preds, combined_proba, uncertainty
+    # ------------------------------------------------------------------
+    # Birleştirme
+    # ------------------------------------------------------------------
 
     def combine(
         self,
-        xgb_proba: Optional[np.ndarray],
-        lgb_proba: Optional[np.ndarray],
-        gnn_proba: Optional[np.ndarray],
-        dnn_proba: Optional[np.ndarray],
+        xgb_proba:  Optional[np.ndarray],
+        lgb_proba:  Optional[np.ndarray],
+        gnn_proba:  Optional[np.ndarray],
+        dnn_proba:  Optional[np.ndarray],
     ) -> np.ndarray:
         """
-        Combine base-model probability matrices.
+        Baz model olasılıklarını birleştirir.
 
-        Stacking path (meta-learner mevcutsa):
-            [xgb_p1, lgb_p1, gnn_p1, dnn_p1] → LogisticRegression → (N, 2)
-        Fallback (meta-learner yoksa):
-            Ağırlıklı ortalama (self.weights).
+        Öncelik:
+          1. Meta-öğrenici stacking (fit_meta_learner() çağrıldıysa)
+          2. Ağırlıklı ortalama (self.weights)
+
+        Returns
+        -------
+        (N, 2) birleşik olasılık matrisi.
         """
-        # ── Meta-learner stacking (adaptif birleştirme) ───────────────────
+        # ── Stacking yolu ──────────────────────────────────────────────
         if self.meta_learner is not None:
             cols = [
                 p[:, 1]
                 for p in [xgb_proba, lgb_proba, gnn_proba, dnn_proba]
                 if p is not None
             ]
-            if cols:
+            if len(cols) >= 2:
                 try:
-                    meta_X = np.column_stack(cols)             # (N, n_models)
-                    return self.meta_learner.predict_proba(meta_X)  # (N, 2)
+                    meta_X    = np.column_stack(cols)            # (N, n_models)
+                    meta_proba = self.meta_learner.predict_proba(meta_X)  # (N, 2)
+                    return meta_proba
                 except Exception as exc:
                     logger.warning(
-                        "Meta-learner predict_proba başarısız (%s) — "
-                        "ağırlıklı ortalamaya geçiliyor.", exc
+                        "Meta-öğrenici tahmin başarısız (%s) — "
+                        "ağırlıklı ortalamaya geçildi.", exc
                     )
 
-        # ── Weighted-average fallback ─────────────────────────────────────
+        # ── Ağırlıklı ortalama ────────────────────────────────────────
         pairs = [
-            (xgb_proba, self.weights[0]),
-            (lgb_proba, self.weights[1]),
-            (gnn_proba, self.weights[2]),
-            (dnn_proba, self.weights[3]),
+            (xgb_proba,  self.weights[0]),
+            (lgb_proba,  self.weights[1]),
+            (gnn_proba,  self.weights[2]),
+            (dnn_proba,  self.weights[3]),
         ]
         available = [(p, w) for p, w in pairs if p is not None]
         if not available:
-            raise ValueError("No predictions available.")
+            raise ValueError(
+                "HybridEnsemble.combine(): Hiçbir baz modelden tahmin alınamadı."
+            )
 
         total_w = sum(w for _, w in available)
         return sum((w / total_w) * p for p, w in available)
 
-    def optimise_weights(
-        self,
-        X_val: np.ndarray,
-        loader: Any,
-        y_val: np.ndarray,
-        metric: str = "f1",
-    ) -> None:
-        """Optimise ensemble weights on a held-out validation set.
+    # ------------------------------------------------------------------
+    # Tahmin API'si
+    # ------------------------------------------------------------------
 
-        Uses Nelder-Mead to maximise Macro F1 over the 4-model weight space.
-        Updates ``self.weights`` in-place.
+    def predict(
+        self,
+        X_scaled:  np.ndarray,
+        threshold: float = 0.50,
+        nuc_ids:   Optional[torch.Tensor] = None,
+        aa_ids:    Optional[torch.Tensor] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Klasik ensemble tahmini.
 
         Parameters
         ----------
-        X_val  : Preprocessed validation feature matrix.
-        loader : Unused (kept for API compatibility). Pass ``None``.
-        y_val  : True binary labels for the validation set.
+        X_scaled  : Ön işlenmiş özellik matrisi (N, F).
+        threshold : Sınıflandırma eşiği (§7.3: default 0.50 dengeli veri için).
+        nuc_ids   : (opsiyonel) GNN multimodal nükleotid token tensörü.
+        aa_ids    : (opsiyonel) GNN multimodal amino asit token tensörü.
+
+        Returns
+        -------
+        preds : (N,) binary tahmin dizisi (0=Benign, 1=Pathogenic).
+        proba : (N, 2) olasılık matrisi [P(Benign), P(Pathogenic)].
         """
-        xp, lp, gp, dp = self.predict_proba_all(X_val)
-        components = [xp, lp, gp, dp]
-        active_idx = [i for i, p in enumerate(components) if p is not None]
-        if len(active_idx) < 2:
-            logger.info("optimise_weights: fewer than 2 active models — skipping.")
+        xp, lp, gp, dp = self.predict_proba_all(X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids)
+        proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
+        preds = (proba[:, 1] >= threshold).astype(int)
+        return preds, proba
+
+    def predict_with_uncertainty(
+        self,
+        X_scaled:  np.ndarray,
+        n_iter:    int   = 15,
+        threshold: float = 0.50,
+        nuc_ids:   Optional[torch.Tensor] = None,
+        aa_ids:    Optional[torch.Tensor] = None,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        MC-Dropout ile epistemik belirsizlik nicemleme.
+
+        GATv2 modeli ``n_iter`` kez dropout aktif olarak çalıştırılır;
+        diğer modeller (XGB, LGB, DNN) belirsizlik tahmini için gerekli
+        stokastisiteyi taşımadığından yalnızca bir kez çalıştırılır.
+
+        Parameters
+        ----------
+        n_iter    : MC-Dropout tekrar sayısı (önerilen: 10-30).
+        threshold : Sınıflandırma eşiği.
+
+        Returns
+        -------
+        preds       : (N,)   binary tahminler.
+        proba       : (N, 2) birleşik olasılık matrisi.
+        uncertainty : (N,)   epistemik belirsizlik std (0=kesin, yüksek=belirsiz).
+        """
+        if self.gnn is None:
+            # GNN yoksa normal tahmine geri dön, sıfır belirsizlik
+            preds, proba = self.predict(X_scaled, threshold=threshold)
+            uncertainty  = np.zeros(len(X_scaled), dtype=np.float32)
+            return preds, proba, uncertainty
+
+        cfg   = get_settings()
+        knn_k = getattr(cfg.gnn, "knn_k", 10)
+        data  = _build_knn_graph(X_scaled, knn_k)
+
+        model = self.gnn.to(self.device)
+        data  = data.to(self.device)
+
+        kwargs: Dict[str, Any] = {}
+        if nuc_ids is not None:
+            kwargs["nuc_ids"] = nuc_ids.to(self.device)
+        if aa_ids is not None:
+            kwargs["aa_ids"] = aa_ids.to(self.device)
+
+        # GNN MC-Dropout
+        gnn_mean, gnn_std = model.predict_with_uncertainty(
+            data.x, data.edge_index, n_iter=n_iter, **kwargs
+        )
+        gnn_probs     = gnn_mean.cpu().numpy()   # (N, 2)
+        uncertainty   = gnn_std[:, 1].cpu().numpy()  # P(Pathogenic) std
+
+        # Diğer modeller (tek pass)
+        xp = self.xgb.predict_proba(X_scaled) if self.xgb  is not None else None
+        lp = self.lgbm.predict_proba(X_scaled) if self.lgbm is not None else None
+        dp = _dnn_predict_proba(
+            self.dnn.to(self.device), X_scaled, self.device
+        ) if self.dnn is not None else None
+
+        proba = self.combine(
+            xgb_proba=xp, lgb_proba=lp, gnn_proba=gnn_probs, dnn_proba=dp
+        )
+        preds = (proba[:, 1] >= threshold).astype(int)
+
+        return preds, proba, uncertainty
+
+    def predict_with_panel_threshold(
+        self,
+        X_scaled:    np.ndarray,
+        panel_labels: Sequence[str],
+        default_threshold: float = 0.50,
+        nuc_ids:    Optional[torch.Tensor] = None,
+        aa_ids:     Optional[torch.Tensor] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Panel bazlı optimal eşiklerle tahmin.
+
+        Her örnek kendi paneline ait optimise edilmiş eşikle sınıflandırılır.
+        Eşik bulunamazsa ``default_threshold`` kullanılır.
+
+        Parameters
+        ----------
+        panel_labels : Her örnek için panel adı dizisi (len=N).
+
+        Returns
+        -------
+        preds : (N,) binary tahminler.
+        proba : (N, 2) birleşik olasılık matrisi.
+        """
+        xp, lp, gp, dp = self.predict_proba_all(
+            X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids
+        )
+        proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
+
+        preds = np.empty(len(X_scaled), dtype=int)
+        for i, panel in enumerate(panel_labels):
+            thr      = self.panel_thresholds.get(panel, default_threshold)
+            preds[i] = int(proba[i, 1] >= thr)
+
+        return preds, proba
+
+    # ------------------------------------------------------------------
+    # Ağırlık optimizasyonu (§5.3 — Nelder-Mead)
+    # ------------------------------------------------------------------
+
+    def optimise_weights(
+        self,
+        X_val:  np.ndarray,
+        loader: Any,          # API uyumluluğu için — None geçin
+        y_val:  np.ndarray,
+        nuc_ids:  Optional[torch.Tensor] = None,
+        aa_ids:   Optional[torch.Tensor] = None,
+        n_iter_nm: int = 600,
+    ) -> None:
+        """
+        Nelder-Mead ile topluluk ağırlıklarını validation kümesinde optimize et.
+
+        Hedef fonksiyon: Binary F1 (Pathogenic sınıfı, §7.3) maksimize edilir.
+        Sonuç ``self.weights`` içine in-place yazılır.
+
+        Parameters
+        ----------
+        X_val      : Ön işlenmiş doğrulama özellik matrisi.
+        loader     : Kullanılmıyor; API uyumluluğu için None geçin.
+        y_val      : Doğrulama etiketleri (0=Benign, 1=Pathogenic).
+        n_iter_nm  : Nelder-Mead maksimum iterasyon sayısı.
+        """
+        xp, lp, gp, dp = self.predict_proba_all(
+            X_val, nuc_ids=nuc_ids, aa_ids=aa_ids
+        )
+        matrices   = [xp, lp, gp, dp]
+        avail_idx  = [i for i, m in enumerate(matrices) if m is not None]
+
+        if len(avail_idx) < 2:
+            logger.info(
+                "optimise_weights: en az 2 aktif model gerekli (%d mevcut) — atlandı.",
+                len(avail_idx),
+            )
             return
 
-        active_probs = [components[i] for i in active_idx]
+        avail_m = [matrices[i] for i in avail_idx]
 
-        def _neg_f1(raw_w: np.ndarray) -> float:
-            w = np.abs(raw_w)
-            w = w / w.sum()
-            blended = sum(wi * pi for wi, pi in zip(w, active_probs))
-            preds = (blended[:, 1] >= 0.5).astype(int)
-            return -f1_score(y_val, preds, average="macro", zero_division=0)
+        def _neg_binary_f1(w_raw: np.ndarray) -> float:
+            """§7.3: Binary F1 (Pathogenic, pos_label=1) negatifi."""
+            w       = np.abs(w_raw)
+            w       = w / (w.sum() + 1e-12)
+            blended = sum(wi * mi for wi, mi in zip(w, avail_m))
+            preds   = (blended[:, 1] >= 0.5).astype(int)
+            return -f1_score(
+                y_val, preds,
+                average="binary", pos_label=1, zero_division=0,
+            )
 
-        x0 = np.array([self.weights[i] for i in active_idx])
-        result = minimize(_neg_f1, x0, method="Nelder-Mead",
-                          options={"maxiter": 500, "xatol": 1e-4})
+        x0     = np.array([self.weights[i] for i in avail_idx])
+        result = minimize(
+            _neg_binary_f1, x0, method="Nelder-Mead",
+            options={"maxiter": n_iter_nm, "xatol": 1e-5, "fatol": 1e-5},
+        )
+
         opt_w = np.abs(result.x)
-        opt_w = opt_w / opt_w.sum()
+        opt_w = opt_w / (opt_w.sum() + 1e-12)
 
-        new_weights = list(self.weights)
-        for j, idx in enumerate(active_idx):
+        new_weights = [0.0] * 4
+        for j, idx in enumerate(avail_idx):
             new_weights[idx] = float(opt_w[j])
-        w_sum = sum(new_weights)
-        self.weights = [w / w_sum for w in new_weights]
+        ws = sum(new_weights)
+        self.weights = [w / ws for w in new_weights] if ws > 0 else new_weights
+
         logger.info(
-            "optimise_weights: updated weights=%s (val F1=%.4f)",
+            "optimise_weights: ağırlıklar=%s  (val Binary F1=%.4f)",
             [round(w, 4) for w in self.weights], -result.fun,
         )
+
+    # ------------------------------------------------------------------
+    # Panel bazlı eşik optimizasyonu
+    # ------------------------------------------------------------------
+
+    def optimise_panel_thresholds(
+        self,
+        X_val:        np.ndarray,
+        y_val:        np.ndarray,
+        panel_labels: Sequence[str],
+        n_steps:      int = 200,
+    ) -> Dict[str, float]:
+        """
+        Her panel için F1-optimal sınıflandırma eşiği bul.
+
+        Şartname §3.2: 4 panel (General, Hereditary_Cancer, PAH, CFTR).
+        Her panel için eşik bağımsız olarak optimize edilir.
+
+        Parameters
+        ----------
+        X_val        : Ön işlenmiş doğrulama özellik matrisi.
+        y_val        : Doğrulama etiketleri.
+        panel_labels : Her örnek için panel adı dizisi.
+        n_steps      : Eşik tarama adım sayısı.
+
+        Returns
+        -------
+        {panel_name: optimal_threshold} sözlüğü.
+        ``self.panel_thresholds`` da güncellenir.
+        """
+        _, proba = self.predict(X_val, threshold=0.5)
+        p1       = proba[:, 1]
+        panels_arr = np.array(panel_labels)
+        thresholds = np.linspace(0.01, 0.99, n_steps)
+
+        results: Dict[str, float] = {}
+
+        # Global (tüm paneller)
+        f1_global = np.array([
+            f1_score(
+                y_val,
+                (p1 >= thr).astype(int),
+                average="binary", pos_label=1, zero_division=0,
+            )
+            for thr in thresholds
+        ])
+        best_global = float(thresholds[np.argmax(f1_global)])
+        results["__global__"] = best_global
+        logger.info(
+            "Panel __global__: optimal eşik=%.3f  F1=%.4f",
+            best_global, f1_global.max(),
+        )
+
+        # Panel bazlı
+        for panel in self.KNOWN_PANELS:
+            mask = panels_arr == panel
+            if mask.sum() < 10:
+                results[panel] = best_global
+                logger.warning(
+                    "Panel %s: yetersiz örnek (%d) — global eşik kullanıldı.",
+                    panel, mask.sum(),
+                )
+                continue
+
+            y_p  = y_val[mask]
+            p1_p = p1[mask]
+            f1_p = np.array([
+                f1_score(
+                    y_p,
+                    (p1_p >= thr).astype(int),
+                    average="binary", pos_label=1, zero_division=0,
+                )
+                for thr in thresholds
+            ])
+            best_p = float(thresholds[np.argmax(f1_p)])
+            results[panel] = best_p
+            logger.info(
+                "Panel %-22s: optimal eşik=%.3f  F1=%.4f  (n=%d)",
+                panel, best_p, f1_p.max(), mask.sum(),
+            )
+
+        self.panel_thresholds = results
+        return results
+
+    # ------------------------------------------------------------------
+    # Meta-öğrenici stacking (§5.3)
+    # ------------------------------------------------------------------
 
     def fit_meta_learner(
         self,
         X_val: np.ndarray,
         y_val: np.ndarray,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids:  Optional[torch.Tensor] = None,
     ) -> None:
-        """Fit a stacking meta-learner (LogisticRegression) on validation predictions.
+        """
+        Doğrulama kümesi tahminleri üzerine LogisticRegression meta-öğrenicisi eğit.
 
-        After fitting, ``self.combine()`` will use the meta-learner instead of
-        weighted averaging for future predictions.
+        Eğitim tamamlandıktan sonra ``combine()`` ağırlıklı ortalama yerine
+        meta-öğreniciyi kullanır.
 
         Parameters
         ----------
-        X_val : Preprocessed validation feature matrix.
-        y_val : True binary labels for the validation set.
+        X_val : Ön işlenmiş doğrulama özellik matrisi.
+        y_val : Doğrulama etiketleri (0=Benign, 1=Pathogenic).
         """
         from sklearn.linear_model import LogisticRegression
 
-        xp, lp, gp, dp = self.predict_proba_all(X_val)
+        xp, lp, gp, dp = self.predict_proba_all(
+            X_val, nuc_ids=nuc_ids, aa_ids=aa_ids
+        )
         cols = [
             p[:, 1]
             for p in [xp, lp, gp, dp]
             if p is not None
         ]
         if len(cols) < 2:
-            logger.info("fit_meta_learner: fewer than 2 active models — skipping.")
+            logger.info(
+                "fit_meta_learner: en az 2 aktif model gerekli (%d mevcut) — atlandı.",
+                len(cols),
+            )
             return
 
-        meta_X = np.column_stack(cols)
-        lr = LogisticRegression(C=1.0, solver="lbfgs", max_iter=500, random_state=42)
+        meta_X = np.column_stack(cols)   # (N, n_active_models)
+        lr     = LogisticRegression(
+            C=1.0,
+            solver="lbfgs",
+            max_iter=1000,
+            random_state=42,
+            class_weight="balanced",   # dengeli veri için gereksiz ama zararsız
+        )
         lr.fit(meta_X, y_val)
         self.meta_learner = lr
+
+        # Eğitim sonrası doğrulama Binary F1 (§7.3)
         meta_preds = lr.predict(meta_X)
-        meta_f1 = f1_score(y_val, meta_preds, average="macro", zero_division=0)
+        meta_f1    = f1_score(
+            y_val, meta_preds,
+            average="binary", pos_label=1, zero_division=0,
+        )
         logger.info(
-            "fit_meta_learner: fitted on %d samples, %d models → val F1=%.4f",
-            len(y_val), len(cols), meta_f1,
-        )
-
-    def predict(
-        self,
-        X_scaled: np.ndarray,
-        threshold: float = 0.5,
-        **kwargs: Any,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """Classic ensemble prediction."""
-        xp, lp, gp, dp = self.predict_proba_all(X_scaled, **kwargs)
-        proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
-        preds = (proba[:, 1] >= threshold).astype(int)
-        return preds, proba
-
-    # ------------------------------------------------------------------
-    # Weight optimisation — Nelder-Mead (PSR §5.3)
-    # ------------------------------------------------------------------
-
-    def optimise_weights(
-        self,
-        X_val: np.ndarray,
-        loader: Optional[Any],
-        y_val: np.ndarray,
-    ) -> None:
-        """Optimise ensemble weights on a validation set via Nelder-Mead.
-
-        Maximises Macro F1 by searching the 4-weight simplex.
-        The result overwrites ``self.weights`` in-place.
-        """
-        xp, lp, gp, dp = self.predict_proba_all(X_val)
-        matrices = [xp, lp, gp, dp]
-        avail_idx = [i for i, m in enumerate(matrices) if m is not None]
-        if len(avail_idx) < 2:
-            logger.info("optimise_weights: <2 models available — skipping.")
-            return
-
-        avail_matrices = [matrices[i] for i in avail_idx]
-
-        def _neg_f1(w_raw: np.ndarray) -> float:
-            w = np.abs(w_raw)
-            w = w / w.sum()
-            blended = sum(wi * mi for wi, mi in zip(w, avail_matrices))
-            preds = (blended[:, 1] >= 0.5).astype(int)
-            return -f1_score(y_val, preds, average="macro", zero_division=0)
-
-        x0 = np.array([self.weights[i] for i in avail_idx])
-        res = minimize(_neg_f1, x0, method="Nelder-Mead",
-                       options={"maxiter": 500, "xatol": 1e-4})
-
-        opt_w = np.abs(res.x)
-        opt_w = opt_w / opt_w.sum()
-
-        new_weights = [0.0] * 4
-        for idx, ai in enumerate(avail_idx):
-            new_weights[ai] = float(opt_w[idx])
-        # Re-normalise full vector
-        ws = sum(new_weights)
-        if ws > 0:
-            new_weights = [w / ws for w in new_weights]
-        self.weights = new_weights
-        logger.info(
-            "Nelder-Mead optimised weights: %s  (val F1=%.4f)",
-            [round(w, 4) for w in self.weights], -res.fun,
+            "fit_meta_learner: %d örnek, %d model kolonu → val Binary F1=%.4f",
+            len(y_val), meta_X.shape[1], meta_f1,
         )
 
     # ------------------------------------------------------------------
-    # Stacking meta-learner (PSR §5.3)
-    # ------------------------------------------------------------------
-
-    def fit_meta_learner(
-        self,
-        X_val: np.ndarray,
-        y_val: np.ndarray,
-    ) -> None:
-        """Fit a LogisticRegression meta-learner on base-model predictions.
-
-        The meta-learner replaces weighted-average combination with an
-        adaptive stacking layer.  Falls back gracefully if fitting fails.
-        """
-        from sklearn.linear_model import LogisticRegression
-
-        xp, lp, gp, dp = self.predict_proba_all(X_val)
-        cols = [
-            p[:, 1] for p in [xp, lp, gp, dp] if p is not None
-        ]
-        if len(cols) < 2:
-            logger.info("fit_meta_learner: <2 models available — skipping.")
-            return
-
-        meta_X = np.column_stack(cols)  # (N, n_models)
-        lr = LogisticRegression(
-            solver="lbfgs", max_iter=1000, random_state=42, C=1.0,
-        )
-        lr.fit(meta_X, y_val)
-        self.meta_learner = lr
-        logger.info(
-            "Meta-learner fitted (LogisticRegression) on %d samples, %d model cols.",
-            len(y_val), meta_X.shape[1],
-        )
-
-    # ------------------------------------------------------------------
-    # Utilities
+    # Yardımcı statik/sınıf metodları
     # ------------------------------------------------------------------
 
     @staticmethod
     def pathogenic_risk_score(ensemble_proba: np.ndarray) -> np.ndarray:
+        """
+        P(Pathogenic) × 100 olarak kalibre edilmiş risk skoru.
+
+        Returns
+        -------
+        (N,) float dizisi [0, 100] aralığında.
+        """
         return (ensemble_proba[:, 1] * 100).round(2)
+
+    def score(
+        self,
+        X_scaled:  np.ndarray,
+        y_true:    np.ndarray,
+        threshold: float = 0.50,
+    ) -> float:
+        """
+        Topluluğun Binary F1 skorunu döndür (§7.3).
+
+        Kullanım kolaylığı amacıyla: sklearn-benzeri arayüz.
+        """
+        preds, _ = self.predict(X_scaled, threshold=threshold)
+        return float(
+            f1_score(
+                y_true, preds,
+                average="binary", pos_label=1, zero_division=0,
+            )
+        )
+
+    def summary(self) -> str:
+        """İnsan okunur topluluk özeti."""
+        active = [
+            name
+            for name, model in [
+                ("XGBoost", self.xgb),
+                ("LightGBM", self.lgbm),
+                ("VariantGATv2GNN", self.gnn),
+                ("VariantDNN", self.dnn),
+            ]
+            if model is not None
+        ]
+        weights_str = " | ".join(
+            f"{n}={w:.3f}"
+            for n, w in zip(
+                ["XGB", "LGB", "GNN", "DNN"], self.weights
+            )
+        )
+        meta = "MetaLearner=AKTIF" if self.meta_learner is not None else "MetaLearner=YOK"
+        panel_thr = (
+            f"PanelEşikler={list(self.panel_thresholds.keys())}"
+            if self.panel_thresholds
+            else "PanelEşikler=YOK"
+        )
+        return (
+            f"HybridEnsemble[\n"
+            f"  Aktif modeller : {', '.join(active)}\n"
+            f"  Ağırlıklar     : {weights_str}\n"
+            f"  {meta}\n"
+            f"  {panel_thr}\n"
+            f"  Device         : {self.device}\n"
+            f"]"
+        )
+
+    def __repr__(self) -> str:
+        return self.summary()
