@@ -1,3 +1,540 @@
-﻿# Lisans
+@'
+# VARIANT-GNN TEKNOFEST 2026 Şartname Uyumlu Kısıtlı Araştırma, Yarışma ve Akademik Kullanım Lisansı
 
-> Lisans bilgisi bu dosyaya eklenecektir.
+Telif Hakkı (c) 2026 XYRA3 Takımı ve VARIANT-GNN Katkı Sağlayıcıları.
+
+Bu lisans metni, VARIANT-GNN adlı yazılım projesinin kaynak kodları, model mimarileri, yapılandırma dosyaları, eğitim ve değerlendirme betikleri, dokümantasyon dosyaları, teknik raporları, model kartları, veri kartları, açıklanabilirlik çıktıları, test dosyaları ve proje kapsamında yayımlanan tüm yardımcı materyaller için geçerlidir.
+
+Bu proje, TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Üniversite ve Üzeri Seviyesi kapsamında; missense genetik varyantların biyolojik ve hesaplamalı özelliklerinden yararlanarak, klinik durumu bilinmeyen varyantların “Patojenik” veya “Benign” olarak sınıflandırılmasına yönelik araştırma ve yarışma odaklı bir yapay zeka sistemi geliştirmek amacıyla hazırlanmıştır.
+
+Bu lisans, genel açık kaynak lisanslarından farklıdır. Proje; serbest ticari kullanım, klinik kullanım, tıbbi tanı, tedavi önerisi, hastane entegrasyonu, tıbbi cihaz iddiası veya gizlilik sözleşmesine tabi verilerin paylaşımı amacıyla yayımlanmamıştır.
+
+Bu lisans kapsamında açıkça izin verilmeyen tüm haklar proje sahipleri ve katkı sağlayıcıları tarafından saklı tutulur.
+
+---
+
+## 1. Tanımlar
+
+### 1.1. Proje
+
+“Proje”; VARIANT-GNN deposunda yer alan kaynak kodlarını, model tanımlarını, veri işleme bileşenlerini, konfigürasyon dosyalarını, API bileşenlerini, test betiklerini, raporları, teknik açıklamaları, dokümantasyonları, lisans metnini ve proje ile bağlantılı tüm yazılım varlıklarını ifade eder.
+
+### 1.2. Lisans Sahibi
+
+“Lisans Sahibi”; VARIANT-GNN projesini geliştiren XYRA3 Takımı, proje sahipleri ve projeye katkı sağlayan kişileri ifade eder.
+
+### 1.3. Kullanıcı
+
+“Kullanıcı”; projeyi indiren, kopyalayan, inceleyen, çalıştıran, değiştiren, test eden, değerlendiren veya proje üzerinde herhangi bir teknik işlem yapan gerçek veya tüzel kişiyi ifade eder.
+
+### 1.4. Yarışma
+
+“Yarışma”; TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması’nı ifade eder.
+
+### 1.5. Şartname
+
+“Şartname”; TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Şartnamesi’ni, bu şartnamede yer alan tanımları, katılım koşullarını, etik kuralları, veri kullanımı hükümlerini, değerlendirme esaslarını ve ilgili tüm yükümlülükleri ifade eder.
+
+### 1.6. Üniversite ve Üzeri Seviyesi
+
+“Üniversite ve Üzeri Seviyesi”; lisans, ön lisans, yüksek lisans, doktora, açık öğretim öğrencileri ile mezunların katılım sağlayabildiği yarışma seviyesini ifade eder.
+
+### 1.7. Yarışma Verisi
+
+“Yarışma Verisi”; TEKNOFEST, TÜSEB, T3 Vakfı, T.C. Sağlık Bakanlığı veya yarışma paydaşları tarafından yarışmacılarla paylaşılan, etiketli veya etiketsiz, anonimleştirilmiş, kısıtlı erişimli, gizlilik sözleşmesine tabi veya yarışma değerlendirme sürecinde kullanılan her türlü veri setini ifade eder.
+
+### 1.8. Hassas Veri
+
+“Hassas Veri”; sağlık verisi, genetik veri, kişisel veri, anonimleştirilmiş varyant profili, gizlenmiş kolon şeması, gizli etiket, klinik açıklama, veri kaynağı bilgisi, genomik adres, kromozom/pozisyon bilgisi, varyant kimliği, kapalı test verisi veya benzeri mahrem nitelikteki tüm bilgileri ifade eder.
+
+### 1.9. Gizlilik Sözleşmesi
+
+“Gizlilik Sözleşmesi”; yarışma kapsamında paydaş kurumlarca sağlanan anonimleştirilmiş bilgi, belge veya verilerin kullanılabilmesi için yarışmacılar tarafından imzalanması gereken Kurumsal Gizlilik Taahhütnamesi veya benzeri gizlilik yükümlülüklerini ifade eder.
+
+### 1.10. Klinik Kullanım
+
+“Klinik Kullanım”; bu projenin herhangi bir hasta, birey, laboratuvar sonucu, genetik test sonucu, tıbbi vaka veya sağlık kararı üzerinde tanı, tedavi, risk sınıflandırması, hasta yönlendirme, klinik karar desteği veya benzeri amaçlarla kullanılmasıdır.
+
+### 1.11. Ticari Kullanım
+
+“Ticari Kullanım”; bu projenin veya türevlerinin gelir elde etmeye yönelik ürün, servis, API, SaaS, danışmanlık, hastane yazılımı, laboratuvar sistemi, klinik platform, kurumsal çözüm, eğitim paketi, ücretli analiz hizmeti veya ticari model içinde kullanılmasıdır.
+
+---
+
+## 2. Lisansın Niteliği
+
+Bu lisans; sınırlı, devredilemez, münhasır olmayan, geri alınabilir ve şartname uyumuna bağlı bir kullanım hakkı tanır.
+
+Bu proje yalnızca aşağıdaki amaçlarla kullanılabilir:
+
+1. TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması hazırlığı.
+2. Akademik araştırma.
+3. Eğitim ve teknik inceleme.
+4. Jüri, danışman veya teknik değerlendirme sürecinde doğrulama.
+5. Yeniden üretilebilirlik testi.
+6. Ticari olmayan model geliştirme.
+7. Makine öğrenmesi, biyoinformatik, açıklanabilir yapay zeka ve güvenilir yapay zeka araştırması.
+8. Şartnameye uygun rapor, sunum ve teknik çıktı hazırlığı.
+
+Bu lisans, projeyi açık ticari kullanım için serbest bırakmaz.
+
+---
+
+## 3. Şartnameye Uyum Beyanı
+
+Bu proje, TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Üniversite ve Üzeri Seviyesi görev kapsamı dikkate alınarak hazırlanmıştır.
+
+Projenin hedef görevi:
+
+- missense genetik varyantların sınıflandırılması,
+- “Patojenik” ve “Benign” ikili sınıflandırması,
+- biyolojik ve hesaplamalı varyant özelliklerinden yararlanılması,
+- klinik durumu bilinmeyen varyantlar için tahmin modeli geliştirilmesi,
+- yarışma kapsamında sağlanan veri ve değerlendirme kurallarına uyumlu çıktı üretilmesidir.
+
+Bu proje, yarışma şartnamesinde belirtilen görev kapsamı dışına çıkarılarak klinik tanı, tedavi önerisi veya doğrudan sağlık hizmeti amacıyla kullanılamaz.
+
+---
+
+## 4. Veri Seti ve Etiket Uyumu
+
+Bu proje; şartnamede belirtilen veri yaklaşımına uygun şekilde aşağıdaki sınıf yapısını esas alır:
+
+### 4.1. Patojenik Sınıf
+
+Patojenik sınıf; ClinVar ve ClinGen kaynaklı, güvenilir inceleme statüsüne sahip missense varyantlardan oluşan ve “Pathogenic” ile “Likely Pathogenic” etiketlerinin tek bir Patojenik sınıf altında değerlendirilmesini esas alan yarışma yaklaşımıyla uyumludur.
+
+### 4.2. Benign Sınıf
+
+Benign sınıf; ClinVar benign varyantları ile gnomAD sağlıklı popülasyon varyantlarını ve “Benign” ile “Likely Benign” etiketlerinin tek bir Benign sınıf altında değerlendirilmesini esas alan yarışma yaklaşımıyla uyumludur.
+
+### 4.3. Ground Truth
+
+Proje kapsamında model değerlendirmesi, yarışma tarafından sağlanan veya şartnameye uygun biçimde tanımlanan doğru sınıf etiketleri üzerinden yapılmalıdır.
+
+Kullanıcı, test seti etiketlerinin yarışma sırasında gizli olabileceğini ve final değerlendirmesinin yarışma otoritesince yapılacağını kabul eder.
+
+---
+
+## 5. Panel Uyumu
+
+Bu proje, şartnamede belirtilen Üniversite ve Üzeri Seviyesi veri panellerini dikkate alacak şekilde kullanılmalıdır.
+
+Şartname kapsamında yer alan paneller:
+
+1. Genel Veri Seti.
+2. Kalıtsal / Herediter Kanser Paneli.
+3. Fenilketonüri / PAH Gen Paneli.
+4. Kistik Fibrozis / CFTR Gen Paneli.
+
+Bu proje kullanılırken panel ayrımı, panel bazlı değerlendirme, panel bazlı hata analizi ve küçük veri paneli riskleri açıkça raporlanmalıdır.
+
+---
+
+## 6. Veri Sayıları ve Raporlama İlkesi
+
+Şartnamede belirtilen veri dağılımları raporlanırken aşağıdaki yapı korunmalıdır:
+
+### 6.1. Eğitim Verisi
+
+- Genel Veri Seti: 1500 Patojenik + 1500 Benign.
+- Herediter Kanser Paneli: 200 Patojenik + 200 Benign.
+- PAH Gen Paneli: 200 Patojenik + 200 Benign.
+- CFTR Gen Paneli: 70 Patojenik + 70 Benign.
+
+### 6.2. Test Verisi
+
+- Genel Veri Seti: 1000 Patojenik + 1000 Benign.
+- Herediter Kanser Paneli: 100 Patojenik + 100 Benign.
+- PAH Gen Paneli: 100 Patojenik + 100 Benign.
+- CFTR Gen Paneli: 30 Patojenik + 30 Benign.
+
+Bu sayıların raporlanması, veri sahipliği veya veri paylaşım hakkı anlamına gelmez.
+
+Bu lisans, kullanıcıya yarışma verilerini yayımlama, yeniden dağıtma, üçüncü kişilerle paylaşma veya kamuya açık depoya yükleme hakkı vermez.
+
+---
+
+## 7. Anonimleştirme ve Genomik Adres Kısıtı
+
+Şartname kapsamında, varyantların genomik adres, kromozom ve pozisyon bilgilerinin gizlenmesi esastır.
+
+Kullanıcı aşağıdaki işlemleri yapamaz:
+
+1. Gizlenmiş genomik adresleri elde etmeye çalışmak.
+2. Kromozom ve pozisyon bilgisini tersine mühendislik ile çıkarmaya çalışmak.
+3. Varyant kimliğini kamuya açık veri tabanları üzerinden yeniden tespit etmeye çalışmak.
+4. Gizlenmiş kolon adlarını gerçek biyolojik değişkenlerle izinsiz eşleştirmeye çalışmak.
+5. Test setindeki etiketleri doğrudan veya dolaylı yöntemlerle bulmaya çalışmak.
+6. Yarışma verisini dış veri tabanlarıyla birleştirerek etiket sızıntısı oluşturmak.
+7. Model başarısını haksız biçimde artıracak veri sızıntısı, lookup veya leakage yöntemi kullanmak.
+
+Bu proje, yalnızca yarışma komitesi tarafından sağlanan veya şartnameyle uyumlu şekilde kullanılan varyant profilleri üzerinden tahmin üretmek amacıyla kullanılmalıdır.
+
+---
+
+## 8. Özellik Kategorileriyle Uyum
+
+Bu proje, şartnamede belirtilen özellik kategorileriyle uyumlu şekilde kullanılmalıdır.
+
+Bu kategoriler şunlardır:
+
+1. Sekans ve değişim bilgisi.
+2. Yerel sekans ve çevresel bağlam bilgisi.
+3. Varyant noktasının öncesindeki ve sonrasındaki 5 nükleotid bağlamı.
+4. Protein düzeyinde ilgili amino asidin öncesindeki ve sonrasındaki 5 amino asit bağlamı.
+5. Biyokimyasal ve yapısal etkiler.
+6. Evrimsel korunmuşluk.
+7. Popülasyon verileri.
+8. In-silico risk skorları.
+
+Bu özelliklerin kullanımı, veri güvenliği, anonimleştirme ve yarışma etik kurallarıyla uyumlu olmalıdır.
+
+---
+
+## 9. Değerlendirme Metriği Uyumu
+
+Üniversite ve Üzeri Seviyesi final değerlendirmesinde temel metrik, TP, FP ve FN değerleri üzerinden hesaplanan F1 skorudur.
+
+Bu nedenle proje dokümantasyonu, model kartı, README, teknik rapor ve çıktı dosyalarında:
+
+1. Final başarısı F1 skoru bağlamında açıklanmalıdır.
+2. İç validasyon sonuçları final skoru gibi sunulmamalıdır.
+3. Pilot, sentetik veya yerel test sonuçları açıkça bu şekilde etiketlenmelidir.
+4. Accuracy, ROC-AUC veya diğer metrikler yardımcı metrik olarak verilebilir; ancak final metriğin F1 olduğu açıkça belirtilmelidir.
+5. Jüri tarafından tekrar çalıştırılabilirlik ve yeniden üretilebilirlik korunmalıdır.
+
+---
+
+## 10. Jüri Tekrar Çalıştırma ve Yeniden Üretilebilirlik
+
+Kullanıcı, yarışma jürisinin finale kalan takımların kodlarını tekrar çalıştırmasını ve beyan edilen sonuçları yeniden üretmesini isteyebileceğini kabul eder.
+
+Bu nedenle proje aşağıdaki esaslara uygun kullanılmalıdır:
+
+1. Kod çalıştırılabilir olmalıdır.
+2. Komutlar açık dokümante edilmelidir.
+3. Bağımlılıklar net belirtilmelidir.
+4. Rastgelelik kontrolü yapılmalıdır.
+5. Model eğitimi, tahmin ve değerlendirme adımları ayrıştırılmalıdır.
+6. Veri dosyaları gizlilik kurallarına uygun şekilde tutulmalıdır.
+7. Gizli veri veya kişisel veri Git deposuna eklenmemelidir.
+8. Raporlanan metrikler tekrar üretilebilir olmalıdır.
+9. Eksik veri, anonim kolon, panel ayrımı ve test seti etiketsizliği açıkça belgelenmelidir.
+
+---
+
+## 11. Gizlilik Sözleşmesi ve Veri Erişimi
+
+Yarışma kapsamında paydaşlar tarafından sağlanacak verilere erişim, ilgili gizlilik sözleşmesinin imzalanmasına bağlıdır.
+
+Bu lisans:
+
+1. Yarışma verilerine otomatik erişim hakkı vermez.
+2. Gizlilik sözleşmesi kapsamındaki verileri paylaşma hakkı vermez.
+3. Kapalı veri setlerini depoya ekleme hakkı vermez.
+4. Anonimleştirilmiş olsa dahi kısıtlı yarışma verilerini üçüncü kişilerle paylaşma hakkı vermez.
+5. Gizli veri, test verisi veya etiketleri kamuya açık platformlarda yayımlama hakkı vermez.
+
+Kullanıcı, yarışma verilerini yalnızca organizasyon tarafından belirlenen kapsamda ve veri işleyen sıfatıyla kullanmakla yükümlüdür.
+
+---
+
+## 12. KVKK, GDPR ve Kişisel Veri Uyumu
+
+Şartnamede, yarışma kapsamında kullanılan genetik verilerin kamuya açık ve anonimleştirilmiş veri tabanlarından sağlandığı; kişisel tanımlayıcı bilgi içermediği; KVKK ve GDPR standartlarına uygun şekilde değerlendirildiği belirtilmektedir.
+
+Bu proje kapsamında kullanıcı:
+
+1. Kişisel veri içeren dosyaları depoya ekleyemez.
+2. Sağlık verisi veya genetik veri içeren kapalı dosyaları izinsiz paylaşamaz.
+3. Hasta bilgisi, kimlik bilgisi, iletişim bilgisi, IBAN, TCKN, doğum tarihi veya benzeri kişisel bilgileri depoya commit edemez.
+4. Log, rapor, çıktı, model açıklaması veya görsel içinde hassas veri ifşa edemez.
+5. Gerçek kişiyle ilişkilendirilebilir veri üzerinde işlem yapacaksa ilgili mevzuat, kurum izni ve etik kurul süreçlerini ayrıca yürütmek zorundadır.
+
+Bu lisans, KVKK veya GDPR kapsamındaki yasal yükümlülüklerin yerine geçmez.
+
+---
+
+## 13. Etik Kullanım
+
+Bu proje yalnızca bilimsel algoritma geliştirme, eğitim, araştırma ve yarışma değerlendirmesi amacıyla kullanılabilir.
+
+Kullanıcı aşağıdaki etik ilkelere uymakla yükümlüdür:
+
+1. Veriyi yalnızca izin verilen kapsamda kullanmak.
+2. Gizli veya kısıtlı veriyi açıklamamak.
+3. Model sonucunu klinik kesinlik gibi sunmamak.
+4. Yanıltıcı başarı iddiasında bulunmamak.
+5. Veri sızıntısı oluşturabilecek yöntemlerden kaçınmak.
+6. Haksız rekabet yaratacak dış etiket arama yöntemleri kullanmamak.
+7. Yarışma komitesi tarafından belirlenen süreç ve duyurulara uymak.
+8. Jüri, danışma kurulu ve yarışma organizasyonunun kararlarına uygun hareket etmek.
+
+---
+
+## 14. Klinik Kullanım Yasağı
+
+VARIANT-GNN araştırma ve yarışma odaklı bir yapay zeka sistemidir.
+
+Bu proje:
+
+1. Sertifikalı tıbbi cihaz değildir.
+2. Klinik karar destek sistemi olarak onaylanmamıştır.
+3. Tıbbi tanı koymaz.
+4. Tedavi önerisi üretmez.
+5. Hasta yönetimi için kullanılamaz.
+6. Genetik test sonucunun yerine geçmez.
+7. Laboratuvar raporu yerine geçmez.
+8. Hekim veya tıbbi genetik uzmanı değerlendirmesinin yerine geçmez.
+9. Hastane veya sağlık kuruluşu ortamında doğrudan operasyonel sistem olarak kullanılamaz.
+10. Regülasyon onaylı klinik ürün olarak pazarlanamaz.
+
+Model çıktıları yalnızca araştırma, eğitim, yarışma ve teknik değerlendirme bağlamında yorumlanmalıdır.
+
+Her türlü klinik yorum, yetkin tıbbi genetik uzmanları ve sağlık profesyonelleri tarafından ayrıca değerlendirilmelidir.
+
+---
+
+## 15. Ticari Kullanım Yasağı
+
+Bu proje, proje sahibinden yazılı izin alınmadıkça ticari amaçla kullanılamaz.
+
+Aşağıdaki kullanımlar yasaktır:
+
+1. Ücretli ürün veya hizmet geliştirme.
+2. SaaS, API veya abonelik tabanlı servis olarak sunma.
+3. Hastane, laboratuvar veya klinik yazılımına entegre etme.
+4. Ticari danışmanlık hizmetinde kullanma.
+5. Ücretli eğitim paketi veya kapalı kurumsal eğitim materyali olarak satma.
+6. Modeli veya kodu ticari paket olarak yeniden dağıtma.
+7. Projeyi farklı marka altında pazarlama.
+8. Tıbbi cihaz veya regülasyon başvurusu kapsamında kullanma.
+9. Klinik karar destek ürünü olarak tanıtma.
+10. Proje adını, takım adını veya görsel kimliğini ticari tanıtım amacıyla kullanma.
+
+---
+
+## 16. Türev Çalışmalar
+
+Kullanıcı, izin verilen kapsamda projeyi değiştirebilir, deneysel olarak geliştirebilir veya türev çalışmalar oluşturabilir.
+
+Ancak türev çalışmalar için aşağıdaki kurallar geçerlidir:
+
+1. Türev çalışma bu lisans koşullarına tabi kalır.
+2. Türev çalışma ticari amaçla kullanılamaz.
+3. Türev çalışma klinik ürün olarak sunulamaz.
+4. Türev çalışma gizli yarışma verisi içeremez.
+5. Türev çalışma kişisel veri veya hasta verisi içeremez.
+6. Asıl proje sahiplerine atıf kaldırılmaz.
+7. Türev çalışma yanıltıcı başarı, klinik geçerlilik veya yarışma sonucu iddiasıyla sunulamaz.
+8. Türev çalışma farklı bir lisansla bu kısıtlamaları aşacak şekilde yayımlanamaz.
+
+---
+
+## 17. Dağıtım ve Paylaşım
+
+Bu projenin tamamı veya bir bölümü yalnızca bu lisans koşulları korunarak paylaşılabilir.
+
+Kullanıcı aşağıdakileri yapamaz:
+
+1. Lisans metnini kaldırmak.
+2. Lisans metnini zayıflatmak veya kısıtları kaldırmak.
+3. Projeyi farklı bir açık kaynak lisansı altında yayımlamak.
+4. Projeyi kapalı kaynak ticari ürüne entegre etmek.
+5. Projeyi gizli yarışma verileriyle birlikte paketlemek.
+6. Projeyi klinik ürün gibi dağıtmak.
+7. Proje sahibinin izni olmadan yeniden lisanslamak.
+
+---
+
+## 18. Başarı ve Performans İddiaları
+
+Bu proje kapsamında üretilen metrikler; veri setine, eğitim koşullarına, rastgeleliğe, validasyon yöntemine, panel dağılımına ve final değerlendirme ortamına bağlıdır.
+
+Kullanıcı aşağıdaki kurallara uymalıdır:
+
+1. İç validasyon skoru final yarışma skoru gibi sunulamaz.
+2. Pilot sonuçlar nihai başarı kanıtı gibi sunulamaz.
+3. Sentetik veya örnek veri sonuçları gerçek yarışma verisi başarısı gibi gösterilemez.
+4. “Klinik olarak kanıtlandı”, “%100 doğru”, “mükemmel sonuç”, “tanı koyabilir” gibi ifadeler kullanılamaz.
+5. F1 skoru, confusion matrix ve hata analizi bağlamıyla birlikte raporlanmalıdır.
+6. Yanlış pozitif ve yanlış negatif riskleri açıkça belirtilmelidir.
+7. Final başarısının jüri değerlendirmesi ve test verisi üzerinde belirleneceği açıkça ifade edilmelidir.
+
+---
+
+## 19. Güvenlik ve Gizli Dosya Kısıtları
+
+Aşağıdaki dosyalar ve bilgiler depoya eklenmemelidir:
+
+1. Yarışma veri setleri.
+2. Kapalı test verileri.
+3. Etiket dosyaları.
+4. Hasta veya genetik veri içeren dosyalar.
+5. Kişisel veri içeren dosyalar.
+6. API anahtarları.
+7. Tokenlar.
+8. Kimlik bilgileri.
+9. Gizli konfigürasyon dosyaları.
+10. Yerel kullanıcı ayarları.
+11. Kurumsal gizlilik sözleşmesine tabi belgeler.
+12. Model ağırlıkları, eğer gizli veri veya yarışma koşulları açısından risk taşıyorsa.
+13. Genomik adres veya varyant kimliği ifşa eden çıktılar.
+14. Etiket sızıntısına yol açabilecek log veya analiz dosyaları.
+
+Kullanıcı, güvenlik açığı veya gizli veri sızıntısı riski tespit ederse bunu kamuya açık şekilde paylaşmadan proje sahibine bildirmelidir.
+
+---
+
+## 20. Üçüncü Taraf Bileşenler
+
+Bu proje, Python ekosistemindeki açık kaynak kütüphaneler, makine öğrenmesi araçları, derin öğrenme çerçeveleri, biyoinformatik yardımcıları, API kütüphaneleri ve açıklanabilir yapay zeka araçları ile birlikte kullanılabilir.
+
+Bu lisans, üçüncü taraf kütüphanelerin kendi lisanslarının yerine geçmez.
+
+Kullanıcı, projede kullanılan tüm bağımlılıkların lisans koşullarını ayrıca incelemek ve bunlara uymakla yükümlüdür.
+
+---
+
+## 21. Atıf
+
+Bu proje izin verilen kapsamda kullanılırsa aşağıdaki unsurlara açık şekilde atıf verilmelidir:
+
+1. VARIANT-GNN proje adı.
+2. XYRA3 Takımı.
+3. Proje katkı sağlayıcıları.
+4. TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması bağlamı.
+5. Kullanılan açık kaynak bileşenler ve bilimsel referanslar.
+
+Örnek atıf:
+
+“Bu çalışma, XYRA3 Takımı tarafından geliştirilen VARIANT-GNN araştırma projesinden yararlanılarak hazırlanmıştır. Proje, TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Üniversite ve Üzeri Seviyesi kapsamında missense varyant patojenite tahmini problemine yönelik geliştirilmiştir.”
+
+---
+
+## 22. Proje Sahipliği
+
+Bu lisans, kullanıcıya proje üzerinde mülkiyet hakkı vermez.
+
+Proje adı, teknik mimari, özgün dokümantasyon, model açıklamaları, rapor metinleri, görsel kimlik, takım adı ve özgün içerikler proje sahiplerine ve katkı sağlayıcılarına aittir.
+
+Kullanıcı, proje sahipliği konusunda yanıltıcı beyanda bulunamaz.
+
+---
+
+## 23. Yazılı İzin Gerektiren Durumlar
+
+Aşağıdaki kullanımlar için proje sahibinden önceden yazılı izin alınmalıdır:
+
+1. Ticari kullanım.
+2. Klinik kullanım.
+3. Hastane veya laboratuvar entegrasyonu.
+4. Kurumsal dağıtım.
+5. Kapalı kaynak ürüne entegrasyon.
+6. Ücretli eğitim veya danışmanlık hizmetinde kullanım.
+7. Yeniden lisanslama.
+8. Farklı marka altında yayımlama.
+9. Tıbbi cihaz veya regülasyon başvurusu kapsamında kullanım.
+10. Gizlilik sözleşmesine tabi verilerle bağlantılı kullanım.
+11. Model ağırlıklarının ticari veya klinik ortamda kullanılması.
+12. Projenin üçüncü taraf veri platformlarına yüklenmesi.
+
+---
+
+## 24. Garanti Reddi
+
+Bu proje “olduğu gibi” sunulmaktadır.
+
+Proje sahipleri ve katkı sağlayıcıları aşağıdaki konularda açık veya zımni hiçbir garanti vermez:
+
+1. Model doğruluğu.
+2. Klinik geçerlilik.
+3. Belirli bir amaca uygunluk.
+4. Kesintisiz çalışma.
+5. Hatasız çalışma.
+6. Veri güvenliğinin mutlak sağlanması.
+7. Yarışmada belirli bir puan, derece veya başarı elde edilmesi.
+8. Gerçek dünya sağlık verilerinde başarılı sonuç alınması.
+9. Üçüncü taraf sistemlerle uyumluluk.
+10. Regülasyon veya tıbbi cihaz uygunluğu.
+
+Kullanıcı projeyi kendi sorumluluğunda kullanır.
+
+---
+
+## 25. Sorumluluk Reddi
+
+Proje sahipleri ve katkı sağlayıcıları; bu projenin kullanımı, hatalı kullanımı, yetkisiz kullanımı, yanlış yorumlanması veya lisans koşullarına aykırı kullanımı nedeniyle doğabilecek herhangi bir doğrudan, dolaylı, arızi, özel, cezai veya sonuçsal zarardan sorumlu tutulamaz.
+
+Bu sorumluluk reddi özellikle aşağıdaki durumları kapsar:
+
+1. Model hataları.
+2. Yanlış pozitif tahminler.
+3. Yanlış negatif tahminler.
+4. Klinik yanlış yorumlama.
+5. Veri ihlali.
+6. Gizlilik ihlali.
+7. Yarışma kurallarının ihlali.
+8. Üçüncü taraf lisans ihlalleri.
+9. Akademik veya kurumsal yaptırımlar.
+10. Hukuki uyuşmazlıklar.
+11. Ticari kayıplar.
+12. Sağlıkla ilgili yanlış kararlar.
+13. Yetkisiz veri paylaşımı.
+14. Etiket sızıntısı veya veri sızıntısı.
+
+---
+
+## 26. Lisans İhlali ve Sona Erme
+
+Kullanıcı bu lisans koşullarından herhangi birini ihlal ederse kendisine verilen kullanım hakkı otomatik olarak sona erer.
+
+Lisans ihlali halinde kullanıcı:
+
+1. Projeyi kullanmayı durdurmalıdır.
+2. Yetkisiz kopyaları silmelidir.
+3. Gizli veya hassas veri içeren tüm çıktıları kaldırmalıdır.
+4. Proje sahibinin yazılı talebi halinde ihlalin giderildiğini bildirmelidir.
+5. Gerekirse ilgili platformlardan izinsiz yayımlanmış içerikleri kaldırmalıdır.
+
+Lisansın sona ermesi, proje sahiplerinin diğer hukuki haklarını ortadan kaldırmaz.
+
+---
+
+## 27. Şartname Değişiklikleri
+
+TEKNOFEST ve paydaş kurumlar, şartname ve ilgili dokümanlarda değişiklik yapma hakkını saklı tutar.
+
+Kullanıcı, yarışma sürecinde güncel şartnameyi, duyuruları, KYS bildirimlerini ve resmi yarışma iletişim kanallarını takip etmekle yükümlüdür.
+
+Şartname değişikliği halinde, bu projenin kullanımı güncel yarışma kurallarıyla uyumlu hale getirilmelidir.
+
+---
+
+## 28. Geçerli Hukuk ve Mevzuat Uyumu
+
+Kullanıcı, bu projeyi kullanırken yürürlükteki ilgili mevzuata, veri koruma düzenlemelerine, etik ilkelere, yarışma kurallarına, gizlilik sözleşmelerine ve kurumsal politikalara uymakla yükümlüdür.
+
+Sağlık verisi, genetik veri, kişisel veri veya gizli yarışma verisi içeren herhangi bir çalışma yapılacaksa ilgili kurum izinleri, etik kurul süreçleri, veri sahibi onayları ve mevzuat yükümlülükleri ayrıca yerine getirilmelidir.
+
+---
+
+## 29. Bölünebilirlik
+
+Bu lisansın herhangi bir hükmünün geçersiz, uygulanamaz veya hükümsüz sayılması, lisansın diğer hükümlerinin geçerliliğini etkilemez.
+
+Geçersiz sayılan hüküm, mümkün olan en yakın hukuki ve teknik amaç doğrultusunda yorumlanır.
+
+---
+
+## 30. Son Hüküm
+
+Bu proje, TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması bağlamında araştırma, eğitim, teknik doğrulama ve yarışma hazırlığı amacıyla yayımlanmıştır.
+
+Bu proje klinik tanı koymak, tedavi önermek, hasta yönetmek, sağlık hizmeti sunmak veya regülasyon onaylı tıbbi cihaz yerine geçmek amacıyla kullanılamaz.
+
+Projeyi kullanan herkes, bu lisansın tüm koşullarını okumuş, anlamış ve kabul etmiş sayılır.
+
+Bu lisans kapsamında açıkça verilmeyen tüm haklar saklıdır.
+'@ | Out-File -FilePath LICENSE.md -Encoding utf8
