@@ -120,3 +120,5 @@ __MACOSX/
 # Büyük scriptler (geçici)
 generate_report_pdf.py
 build_notebook.py
+
+.claude/

@@ -56,3 +56,9 @@ python main.py --mode explain --data_file data/train_variants.csv
 ```
 
 Ayrıntılı kullanım için [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) ve [`README.md`](README.md) dosyalarına bakınız.
+
+## Notlar (TEKNOFEST 2026 Şartname Uyumlu)
+
+- **Final değerlendirme metriği**: F1 skoru (TP/FP/FN üzerinden). Repo içinde `main.py` eğitim çıktısı olarak `reports/cv_report.json` üretir ve metrik alanlarını kaydeder.
+- **Etiket birleştirme**: Pathogenic + Likely Pathogenic → 1; Benign + Likely Benign → 0 (konfig: `configs/psr.yaml` → `schema.label_mapping`).
+- **Klinik kullanım uyarısı**: Çıktılar araştırma/yarışma bağlamındadır; klinik kararların tek dayanağı olamaz. Human-in-the-loop yaklaşımı belirsizlik (MC Dropout) üzerinden işaretleme yapar.

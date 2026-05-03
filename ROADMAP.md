@@ -25,8 +25,8 @@ Final aşamasına hazırlık için geliştirmeler:
 - [ ] Model registry versiyonlamasını otur
 - [ ] `submission/` paket yapısını tamamla
 - [ ] docs/clinical/ altındaki tüm klinik uyarı dokümantasyonunu tamamla
-- [ ] docs/evaluation/evaluation_protocol.md oluştur
-- [ ] docs/submission/teknofest_submission.md oluştur
+- [x] docs/evaluation/evaluation_protocol.md mevcut (güncelle ve PDR ile hizala)
+- [x] docs/submission/teknofest_submission.md mevcut (teslim paketine bağla)
 - [ ] Streamlit UI klinik uyarı metnini güçlendir
 - [ ] Teknik rapor PDF taslağını hazırla
 - [ ] LightGBM artifact roundtrip testini ekle (TD-004)

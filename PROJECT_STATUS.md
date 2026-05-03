@@ -47,6 +47,6 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026.
 
 - Gerçek yarışma verisi henüz mevcut değildir (veri dağıtımı: 5 Mayıs 2026)
 - Klinik validasyon kapsamı dışındadır
-- Anonim kolon modu test edilmemiştir
+- Anonim kolon/alias hizalaması gerçek yarışma formatında yeniden doğrulanmalıdır (`src/data/column_aligner.py`, `data/contracts/`)
 - VUS desteği bulunmamaktadır
 - CI bazı ortamlarda PyTorch Geometric kurulum sorunları yaşanabilir
