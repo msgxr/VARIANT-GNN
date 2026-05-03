@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from typing import NoReturn, Optional, List, Any
-from src.interface.dashboard.utils import plot_dark, hex_to_rgb
+from src.ui.utils import plot_dark, hex_to_rgb
 
 def render_summary_cards(df_result: pd.DataFrame) -> None:
     """Analiz özetini gösteren metrik kartlarını oluşturur."""

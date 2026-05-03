@@ -1,11 +1,20 @@
 import streamlit as st
-import py3Dmol
-from stmol import showmol
 from typing import Optional, Dict, Any
+
+try:
+    import py3Dmol
+    from stmol import showmol
+    _PY3DMOL_AVAILABLE = True
+except ImportError:
+    _PY3DMOL_AVAILABLE = False
 
 def render_protein_3d(pdb_id: str = "1A2C", height: int = 500, width: int = 800) -> None:
     """Protein yapısını 3D olarak görselleştirir ve varyant bölgesini işaretler."""
     
+    if not _PY3DMOL_AVAILABLE:
+        st.warning("py3Dmol / stmol kurulu değil. `pip install py3Dmol stmol` ile yükleyin.")
+        return
+
     st.markdown(f"### 🧬 Protein Yapı Analizi (PDB: {pdb_id})")
     
     # 3D Görselleştirme Hazırlığı

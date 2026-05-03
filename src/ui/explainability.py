@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Protocol
-from src.interface.dashboard.utils import plot_dark
+from src.ui.utils import plot_dark
 
 # Define a Protocol for the pipeline for better type checking if needed
 class PipelineProtocol(Protocol):

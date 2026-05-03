@@ -52,6 +52,8 @@ GRANTHAM_PROPS = {
     'T': (8.6,  61, 1.43),  'W': (5.4,  170, 7.63), 'Y': (6.2,  136, 5.89), 'V': (5.9,  84, 3.12)
 }
 
+GRANTHAM_PROPERTIES = GRANTHAM_PROPS  # Canonical alias
+
 def get_grantham_score(ref: str, alt: str) -> float:
     """Calculates Grantham score between two amino acids."""
     r, a = ref.upper(), alt.upper()
@@ -68,5 +70,3 @@ def get_grantham_score(ref: str, alt: str) -> float:
          beta  * (p1[1] - p2[1])**2 + 
          gamma * (p1[2] - p2[2])**2)**0.5
     return d
-
-GRANTHAM_PROPERTIES = GRANTHAM_PROPS # Alias
