@@ -883,59 +883,26 @@ def mode_explain(args, cfg):
 
 
 def mode_panel_transfer(args, cfg):
-    """TEKNOFEST 2026 §3.2 — Panel transfer (generalization) matrix.
-    Trains a model on panel A, tests on panel B, and creates an N x N matrix.
-    """
+    """TEKNOFEST 2026 §3.2 — Panel transfer (generalization) matrix."""
     ds = _get_labelled_data(args.data_file, cfg)
     if "Panel" not in ds.metadata.columns:
         logging.error("Veriseti 'Panel' kolonu içermiyor. Transfer matrisi hesaplanamaz.")
         return
 
-    panels = ds.metadata["Panel"].unique()
-    matrix = {str(p): {} for p in panels}
+    from src.evaluation.panel_transfer import CrossPanelEvaluator
+    evaluator = CrossPanelEvaluator(random_state=cfg.seed)
+    result = evaluator.evaluate(ds.features.values, ds.labels, ds.metadata["Panel"].values)
     
-    set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
+    report_path = cfg.paths.reports_dir / "panel_transfer_matrix.json"
+    plot_path = cfg.paths.reports_dir / "panel_transfer.png"
     
-    for train_panel in panels:
-        train_mask = ds.metadata["Panel"] == train_panel
-        if train_mask.sum() < 50:
-            logging.warning("Panel %s çok küçük, atlanıyor...", train_panel)
-            continue
-            
-        logging.info("--- Training on Panel: %s ---", train_panel)
-        X_tr = ds.features.values[train_mask]
-        y_tr = ds.labels[train_mask]
-        
-        nuc_seqs_tr = [ds.nuc_sequences[i] for i in range(len(ds.labels)) if train_mask.values[i]] if ds.nuc_sequences else None
-        aa_seqs_tr  = [ds.aa_sequences[i] for i in range(len(ds.labels)) if train_mask.values[i]] if ds.aa_sequences else None
-        
-        trainer = VariantTrainer()
-        result = trainer.train(X_tr, y_tr, nuc_seqs=nuc_seqs_tr, aa_seqs=aa_seqs_tr)
-        preprocessor, ensemble = result.preprocessor, result.ensemble
-        
-        # Orijinal threshold'u kullanalım mı? Trainer train sonu thresh kaydetmez ancak kalibrasyon için evaluate'da thresh kullanıldı.
-        # Basitlik için 0.5.
-        for test_panel in panels:
-            test_mask = ds.metadata["Panel"] == test_panel
-            if test_mask.sum() < 10:
-                continue
-                
-            X_te = ds.features.values[test_mask]
-            y_te = ds.labels[test_mask]
-            
-            X_te_proc = preprocessor.transform(X_te)
-            _, proba_te = ensemble.predict(X_te_proc)
-            
-            report = evaluate(y_te, proba_te, threshold=0.5)
-            matrix[str(train_panel)][str(test_panel)] = report.binary_f1
-            logging.info("  -> Test on %s: F1=%.4f", test_panel, report.binary_f1)
-            
     import json
-    out_path = cfg.paths.reports_dir / "panel_transfer_matrix.json"
-    with open(out_path, "w") as fh:
-        json.dump(matrix, fh, indent=2)
-    logging.info("Panel transfer matrix -> %s", out_path)
+    with open(report_path, "w") as fh:
+        json.dump(result.as_dict(), fh, indent=2)
+    
+    result.plot(save_path=plot_path)
+    logging.info("Panel transfer matrix -> %s", report_path)
 
 
 def mode_label_quality(args, cfg):

@@ -135,8 +135,8 @@ def load_csv(
 
     # TEKNOFEST Feature Category Validation
     try:
-        from src.scientific.feature_validator import FeatureCategoryValidator
-        FeatureCategoryValidator.validate(df)
+        from src.features.feature_validator import validate_features
+        validate_features(df)
     except ImportError:
         pass
 
