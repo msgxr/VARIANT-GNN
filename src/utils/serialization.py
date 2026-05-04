@@ -200,20 +200,44 @@ class ModelStore:
         if calibrator is not None:
             self._save_calibrator(calibrator)
         
+        # ── ensemble.pkl — required by ArtifactLoader ──────────────────
+        joblib.dump(ensemble, str(self.model_dir / "ensemble.pkl"))
+        logger.info("Ensemble -> %s", self.model_dir / "ensemble.pkl")
+
+        # ── feature_names.json — required by ArtifactLoader ────────────
+        feature_names = None
+        try:
+            if ensemble.xgb is not None:
+                feature_names = ensemble.xgb.get_booster().feature_names
+        except Exception:
+            pass
+        if feature_names is not None:
+            with open(self.model_dir / "feature_names.json", "w") as _fh:
+                json.dump(feature_names, _fh)
+            logger.info("Feature names (%d) -> feature_names.json", len(feature_names))
+
         # ── Intrinsic Metadata (Task 6) ──
         metadata = {
             "version": "1.0.0",
             "timestamp": datetime.now().isoformat(),
+            "model_version": "1.0.0",
             "sha256_checksums": {
                 "xgb": _sha256(self._xgb_path) if self._xgb_path.exists() else None,
                 "gnn": _sha256(self._gnn_path) if self._gnn_path.exists() else None,
                 "dnn": _sha256(self._dnn_path) if self._dnn_path.exists() else None,
             },
-            "training_config": ensemble.weights if hasattr(ensemble, "weights") else None
+            "training_config": ensemble.weights if hasattr(ensemble, "weights") else None,
         }
         with open(self.model_dir / "metadata.json", "w") as f:
             json.dump(metadata, f, indent=2)
-            
+
+        # ── manifest.json — reproducibility layer ───────────────────────
+        try:
+            from src.utils.artifact_manifest import save_manifest as _save_manifest
+            _save_manifest(self.model_dir, model_version="1.0.0")
+        except Exception as _mex:
+            logger.warning("Manifest save failed (non-fatal): %s", _mex)
+
         logger.info("All artefacts saved with metadata.json -> %s", self.model_dir)
 
     def _save_xgb(self, model) -> None:

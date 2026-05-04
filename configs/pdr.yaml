@@ -1,0 +1,17 @@
+competition:
+  mode: true
+  strict_leakage: false
+
+ensemble:
+  panel_aware: true
+
+triage:
+  enabled: true
+  uncertainty_threshold: 0.30
+  borderline_margin: 0.10
+  entropy_threshold: 0.65
+
+reproducibility:
+  seed: 42
+  deterministic_torch: true
+  save_manifest: true
