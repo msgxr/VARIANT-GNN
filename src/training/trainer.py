@@ -469,16 +469,16 @@ class VariantTrainer:
         use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
         seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
 
-        # Auto-disable SMOTE when multimodal sequences are present to avoid
-        # sequence-row misalignment after synthetic oversampling.
-        if use_multimodal and nuc_seqs is not None:
-            logger.warning(
-                "use_multimodal=True: auto-disabling SMOTE to preserve "
-                "sequence-row alignment."
-            )
-            cfg.preprocessing.smote_enabled = False  # type: ignore[attr-defined]
-
         preprocessor = build_preprocessor_from_config()
+        # Local override: SMOTE breaks sequence-row alignment when multimodal
+        # GNN is enabled. Override on the preprocessor instance only — never
+        # mutate the global Settings object.
+        if use_multimodal and nuc_seqs is not None and preprocessor.smote_enabled:
+            logger.warning(
+                "use_multimodal=True: disabling SMOTE on this preprocessor "
+                "to preserve sequence-row alignment (global config untouched)."
+            )
+            preprocessor.smote_enabled = False
         X_proc, y_resampled = preprocessor.fit_resample_train(X_train, y_train)
 
         # ── Inner val split for GNN/DNN early stopping (AFTER SMOTE) ──────────
@@ -601,13 +601,13 @@ class VariantTrainer:
             aa_tr   = ([aa_seqs[i]  for i in train_idx] if aa_seqs  else None)
             aa_val  = ([aa_seqs[i]  for i in val_idx]   if aa_seqs  else None)
 
-            # Auto-disable SMOTE when multimodal to preserve sequence alignment
-            _fold_cfg = cfg  # noqa: F841
-            if use_multimodal and nuc_tr is not None:
-                cfg.preprocessing.smote_enabled = False  # type: ignore[attr-defined]
-
             # --- Preprocessing fit on fold training data ONLY ---
             preprocessor = build_preprocessor_from_config()
+            # Local override: SMOTE breaks sequence-row alignment when
+            # multimodal GNN is enabled — disable on this fold's preprocessor
+            # only, never on the shared Settings object.
+            if use_multimodal and nuc_tr is not None and preprocessor.smote_enabled:
+                preprocessor.smote_enabled = False
             X_tr_proc, y_tr_res = preprocessor.fit_resample_train(X_tr, y_tr)
             X_val_proc           = preprocessor.transform(X_val)
 
@@ -849,46 +849,6 @@ class VariantTrainer:
             model.load_state_dict(best_weights)
             logger.info("GATv2 restored best checkpoint (val Macro F1=%.4f)", best_val_f1)
 
-        return model
-
-    # ------------------------------------------------------------------
-    # GNN training loop (legacy FeatureGNN path)
-    # ------------------------------------------------------------------
-
-    def _train_gnn(
-        self,
-        model:      FeatureGNN,
-        train_loader: GeoDataLoader,
-        val_loader:   Optional[GeoDataLoader],
-    ) -> FeatureGNN:
-        cfg       = self.cfg
-        optimizer = torch.optim.Adam(
-            model.parameters(), lr=cfg.gnn.lr, weight_decay=cfg.gnn.weight_decay
-        )
-        best_f1       = -1.0
-        best_weights  = copy.deepcopy(model.state_dict())
-
-        for epoch in range(1, cfg.gnn.epochs + 1):
-            loss = _gnn_epoch(model, train_loader, optimizer, self.device)
-
-            if val_loader is not None:
-                preds, _ = _gnn_eval(model, val_loader, self.device)
-                val_labels = [d.y.item() for batch in val_loader for d in batch.to_data_list()]
-                val_f1 = float(f1_score(
-                    val_labels, preds[:len(val_labels)], average="binary", pos_label=1, zero_division=0
-                ))
-                if val_f1 > best_f1:
-                    best_f1      = val_f1
-                    best_weights = copy.deepcopy(model.state_dict())
-                if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
-                    logger.debug("GNN epoch %d/%d | loss=%.4f | val_f1=%.4f",
-                                 epoch, cfg.gnn.epochs, loss, val_f1)
-            else:
-                if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
-                    logger.debug("GNN epoch %d/%d | loss=%.4f", epoch, cfg.gnn.epochs, loss)
-
-        if val_loader is not None:
-            model.load_state_dict(best_weights)
         return model
 
     # ------------------------------------------------------------------

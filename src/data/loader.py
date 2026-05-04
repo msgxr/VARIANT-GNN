@@ -265,6 +265,24 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
         allow_positional = True,
     )
 
+    # Auto-load training-time distributional signatures so the
+    # column-by-statistics fallback (Stage 3.5) can resolve anonymised
+    # jury column names — see TEKNOFEST §3.2 (genomic addresses hidden).
+    try:
+        from src.utils.serialization import ModelStore as _MS
+        _store = _MS(cfg.paths.models_dir)
+        _preproc = _store.load_preprocessor() if hasattr(_store, "load_preprocessor") else None
+        _sigs = getattr(_preproc, "feature_signatures", None) if _preproc is not None else None
+        if _sigs:
+            # Inject signatures directly (skip set_reference_distributions which expects DataFrame)
+            aligner._ref_signatures = dict(_sigs)
+            logger.info(
+                "ColumnAligner: %d distributional signatures restored from preprocessor.",
+                len(aligner._ref_signatures),
+            )
+    except Exception as _sig_exc:
+        logger.debug("Distributional signature load skipped (%s).", _sig_exc)
+
     # Use robust_apply to handle all 8 jury scenarios (OOM, single-row, etc.)
     aligned_features, report = aligner.robust_apply(dataset.features)
     

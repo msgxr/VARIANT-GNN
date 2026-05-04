@@ -27,6 +27,32 @@ from src.features.bio_scoring import get_blosum62_score, get_grantham_score
 logger = logging.getLogger(__name__)
 
 
+def _compute_signatures(ref_df: "object") -> dict:
+    """Compute per-column distributional signatures for downstream
+    column-by-distribution matching when column names are anonymised
+    (TEKNOFEST §3.2 jury data does not expose feature names)."""
+    import pandas as _pd
+    sigs: dict = {}
+    if not isinstance(ref_df, _pd.DataFrame):
+        ref_df = _pd.DataFrame(ref_df)
+    for col in ref_df.columns:
+        series = _pd.to_numeric(ref_df[col], errors="coerce")
+        if series.notna().sum() < 3:
+            continue
+        q1, q3 = series.quantile(0.25), series.quantile(0.75)
+        sigs[str(col)] = {
+            "dtype": "numeric",
+            "iqr": float(q3 - q1),
+            "mean": float(series.mean()),
+            "std": float(series.std()),
+            "min": float(series.min()),
+            "max": float(series.max()),
+            "range": float(series.max() - series.min()),
+            "non_null_frac": float(series.notna().mean()),
+        }
+    return sigs
+
+
 class ColumnAligner(BaseEstimator, TransformerMixin):
     """
     Jüri Dayanıklılık Modülü (Task 2):
@@ -198,6 +224,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self.edge_attr: Optional[torch.Tensor] = None
         self.n_output_features: int = 0
         self._is_fitted: bool = False
+        self.feature_signatures: dict = {}
 
     # ------------------------------------------------------------------
     # Pickle backward-compatibility
@@ -226,6 +253,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             "edge_attr":                None,
             "n_output_features":        0,
             "_is_fitted":               False,
+            "feature_signatures":       {},
         }
         for key, val in _defaults.items():
             state.setdefault(key, val)
@@ -281,6 +309,17 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # 0. Align and Impute
         self._aligner.fit(X)
         X_aligned = self._aligner.transform(X)
+
+        # Persist training-time feature distributional signatures so the
+        # inference-time ColumnAligner can match anonymised columns by
+        # statistical profile (TEKNOFEST §3.2 — column names hidden).
+        try:
+            import pandas as _pd
+            ref_df = _pd.DataFrame(X) if not isinstance(X, _pd.DataFrame) else X
+            self.feature_signatures = _compute_signatures(ref_df)
+        except Exception as _exc:
+            logger.debug("Signature computation skipped (%s).", _exc)
+            self.feature_signatures = {}
 
         # 1. Impute (secondary check)
         self._imputer = SimpleImputer(strategy="median")

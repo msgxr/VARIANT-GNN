@@ -192,12 +192,13 @@ def mode_eval(args, cfg):
     df_result = pipeline.predict_from_dataset(ds)
     p1    = df_result["Probability"].values
     proba = np.column_stack([1 - p1, p1])
-    report = evaluate(ds.labels, proba)
+    threshold = pipeline.store.load_threshold(default=cfg.thresholds.classification)
+    report = evaluate(ds.labels, proba, threshold=threshold)
     report.log(prefix="EVAL")
     out = cfg.paths.reports_dir / "eval_results.csv"
     cfg.paths.create_dirs()
     df_result.to_csv(out, index=False)
-    logging.info("Eval results saved -> %s", out)
+    logging.info("Eval results saved -> %s (thr=%.4f)", out, threshold)
 
 
 def mode_predict(args, cfg):
@@ -268,21 +269,28 @@ def mode_crossval(args, cfg):
 
 
 def mode_external_val(args, cfg):
-    """External validation — TEKNOFEST 2026 tam metrik paketi.
+    """External validation — TEKNOFEST 2026 jüri senaryosu.
 
-    F1, Precision, Recall, ROC-AUC, PR-AUC, MCC, Brier, ECE
-    Confusion matrix PNG + JSON raporu reports/ altına kaydedilir.
+    Eğitimde kayıt edilen F1-optimal threshold kullanılır; test verisinde
+    yeniden tune edilmez (jüri için doğru senaryo). Panel kırılımı dahil:
+    General / Hereditary_Cancer / PAH / CFTR (§3.2).
+
+    Üretilen çıktılar (reports/ altında):
+      - external_validation_report.json   — global + panel metrikleri
+      - external_val_confusion_matrix.png
+      - external_val_jury.csv             — 7-kolon jüri formatı
+      - external_val_full.csv             — tüm kolonlar
     """
-    from src.evaluation.metrics import evaluate, find_f1_optimal_threshold, save_threshold_report
-    
+    from src.evaluation.metrics import evaluate, evaluate_per_panel
+
     test_path = args.test_file or args.data_file
     if not test_path:
         logging.error("--test_file veya --data_file gerekli.")
         sys.exit(1)
-    
+
     ds = load_csv(test_path)
     if ds.labels is None:
-        logging.error("external_val icin etiketli veri gerekli.")
+        logging.error("external_val için etiketli veri gerekli.")
         sys.exit(1)
 
     pipeline = InferencePipeline()
@@ -293,62 +301,78 @@ def mode_external_val(args, cfg):
     p1     = df_result["Probability"].values
     y_prob = np.column_stack([1 - p1, p1])
 
-    # 1. Optimize threshold for F1 on this test set
-    best_thr, best_f1 = find_f1_optimal_threshold(y_true, p1, metric="f1")
-    
-    # 2. Comprehensive evaluation
-    report = evaluate(y_true, y_prob, threshold=best_thr)
+    # Eğitimde kayıt edilen F1-optimal threshold'u kullan (jüri-uygun).
+    # Test setinde yeniden tune ETMEK YASAK — bu metrik şişirilmiş olur.
+    threshold = pipeline.store.load_threshold(default=cfg.thresholds.classification)
+    logging.info("External validation: kayıtlı eşik kullanılıyor (thr=%.4f)", threshold)
+
+    # Global rapor
+    report = evaluate(y_true, y_prob, threshold=threshold)
     report.log(prefix="EXTERNAL_VAL")
 
-    # 3. Save threshold report and PLOTS
-    cfg.paths.create_dirs()
-    save_threshold_report(y_true, p1, reports_dir=str(cfg.paths.reports_dir))
+    # Panel kırılımı — §3.2 uyumlu (General, Hereditary_Cancer, PAH, CFTR)
+    panel_metrics: dict = {}
+    if "Panel" in ds.metadata.columns and len(ds.metadata) == len(y_true):
+        panels_arr = ds.metadata["Panel"].values
+        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=threshold)
+        for pname, prep in panel_reports.items():
+            prep.log(prefix=f"PANEL_{pname}")
+            panel_metrics[pname] = prep.as_dict()
+    else:
+        logging.info(
+            "External_val: 'Panel' kolonu yok — sadece global metrikler raporlanıyor."
+        )
 
-    # 4. Save Confusion Matrix Plot
+    cfg.paths.create_dirs()
+
+    # Confusion Matrix grafiği
     try:
         import matplotlib; matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         cm = report.conf_matrix
-        fig, ax = plt.subplots(figsize=(5, 4))
-        ax.imshow(cm, cmap="Blues")
-        ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
-        ax.set_xticklabels(["Benign", "Pathogenic"])
-        ax.set_yticklabels(["Benign", "Pathogenic"])
-        ax.set_xlabel("Tahmin"); ax.set_ylabel("Gerçek")
-        ax.set_title(f"Confusion Matrix | F1={report.binary_f1:.4f}")
-        for i in range(2):
-            for j in range(2):
-                ax.text(j, i, str(cm[i][j]), ha="center", va="center",
-                        fontsize=14, fontweight="bold")
-        plt.tight_layout()
-        cm_path = cfg.paths.reports_dir / "external_val_confusion_matrix.png"
-        plt.savefig(cm_path, dpi=150, bbox_inches="tight")
-        plt.close()
-        logging.info("Confusion Matrix -> %s", cm_path)
+        if cm is not None:
+            fig, ax = plt.subplots(figsize=(5, 4))
+            ax.imshow(cm, cmap="Blues")
+            ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
+            ax.set_xticklabels(["Benign", "Pathogenic"])
+            ax.set_yticklabels(["Benign", "Pathogenic"])
+            ax.set_xlabel("Tahmin"); ax.set_ylabel("Gerçek")
+            ax.set_title(f"Confusion Matrix | F1={report.binary_f1:.4f}")
+            for i in range(2):
+                for j in range(2):
+                    ax.text(j, i, str(cm[i][j]), ha="center", va="center",
+                            fontsize=14, fontweight="bold")
+            plt.tight_layout()
+            cm_path = cfg.paths.reports_dir / "external_val_confusion_matrix.png"
+            plt.savefig(cm_path, dpi=150, bbox_inches="tight")
+            plt.close()
+            logging.info("Confusion Matrix -> %s", cm_path)
     except Exception as exc:
         logging.warning("Grafik çizilemedi: %s", exc)
 
-    # 5. Export Predictions
-    paths = export_predictions(
-        df_result, 
-        cfg.paths.reports_dir, 
+    # Tahminleri export et (jüri 7-kolon + tam CSV)
+    export_predictions(
+        df_result,
+        cfg.paths.reports_dir,
         prefix="external_val",
-        submission_path=getattr(args, "output", None)
+        submission_path=getattr(args, "output", None),
     )
-    
-    # 6. JSON Summary
+
+    # JSON özeti
     report_json = {
         "mode": "external_validation",
         "test_file": str(test_path),
         "n_samples": int(len(y_true)),
-        "optimal_threshold": best_thr,
+        "threshold_used": threshold,
+        "threshold_source": "training_artifact",
         "metrics": report.as_dict(),
         "confusion_matrix": report.conf_matrix.tolist() if report.conf_matrix is not None else None,
+        "panel_metrics": panel_metrics,
     }
     out_json = cfg.paths.reports_dir / "external_validation_report.json"
     with open(out_json, "w") as fh:
         json.dump(report_json, fh, indent=2, default=str)
-    
+
     logging.info("JSON rapor -> %s", out_json)
     logging.info("External validation tamamlandı.")
 

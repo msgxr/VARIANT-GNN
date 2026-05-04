@@ -109,9 +109,10 @@ class InferencePipeline:
         threshold = self.store.load_threshold(default=cfg.thresholds.classification)
 
         if isinstance(self._ensemble.gnn, VariantGATv2GNN):
-            # MC-Dropout ile belirsizlik tahmini
+            # MC-Dropout ile belirsizlik tahmini (multimodal token'lar dahil)
             preds, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
-                X_scaled, n_iter=10, threshold=threshold
+                X_scaled, n_iter=10, threshold=threshold,
+                nuc_ids=nuc_ids, aa_ids=aa_ids,
             )
             # Güven skoru: belirsizliğin tersi (yüksek std → düşük güven)
             confidence = ((1.0 - uncertainty) * 100).round(2)
@@ -124,7 +125,8 @@ class InferencePipeline:
         else:
             # Klasik tahmin (GATv2 olmayan path)
             preds, raw_proba = self._ensemble.predict(
-                X_scaled, threshold=threshold
+                X_scaled, threshold=threshold,
+                nuc_ids=nuc_ids, aa_ids=aa_ids,
             )
             confidence = (np.max(raw_proba, axis=1) * 100).round(2)
             # Belirsizlik skoru olmadığında max-prob üzerinden bayrak
@@ -230,11 +232,20 @@ class InferencePipeline:
 
         if expected_features is not None:
             feature_df = feature_df[expected_features]
-            
+
         dummy_dataset = LoadedDataset(
             features = feature_df,
             labels = None,
             metadata = metadata,
             feature_columns = list(feature_df.columns),
+            # Multimodal GNN için sekans kolonları varsa pas et
+            nuc_sequences = (
+                df["Nuc_Context"].astype(str).tolist()
+                if "Nuc_Context" in df.columns else None
+            ),
+            aa_sequences = (
+                df["AA_Context"].astype(str).tolist()
+                if "AA_Context" in df.columns else None
+            ),
         )
         return self.predict_from_dataset(dummy_dataset)

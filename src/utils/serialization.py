@@ -310,6 +310,26 @@ class ModelStore:
             return default
 
     # ------------------------------------------------------------------
+    # Lightweight individual loaders (used by ColumnAligner setup)
+    # ------------------------------------------------------------------
+
+    def load_preprocessor(self):
+        """Load only the preprocessor (no model weights). Raises if missing."""
+        if not self._preprocessor_path.exists():
+            raise FileNotFoundError(f"Preprocessor not found: {self._preprocessor_path}")
+        return joblib.load(str(self._preprocessor_path))
+
+    def load_xgb(self):
+        """Load only the XGBoost model (booster feature names included)."""
+        if not self._xgb_path.exists():
+            raise FileNotFoundError(f"XGBoost model not found: {self._xgb_path}")
+        from src.config import get_settings as _gs
+        cfg = _gs()
+        model = xgb.XGBClassifier(**cfg.xgb.as_dict())
+        model.load_model(str(self._xgb_path))
+        return model
+
+    # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
 

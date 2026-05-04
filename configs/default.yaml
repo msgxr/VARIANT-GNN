@@ -62,7 +62,7 @@ preprocessing:
   use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
   k_best_features: 35                  # Rapor §3.3: k=35
   smote_enabled: false                 # TEKNOFEST §3.2: veri zaten dengeli (50/50 P/B), SMOTE gereksiz
-  use_bio_scoring: true              # BLOSUM62 + Grantham skorları
+  use_bio_scoring: false             # Grantham/BLOSUM zaten girdi öznitelikler arasında (AA_Grantham_Score); duplicate enrichment kapalı
 
 calibration:
   enabled: true
