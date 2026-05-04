@@ -1,25 +1,27 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# VARIANT-GNN  |  CPU Development Environment
+# VARIANT-GNN  |  GPU Environment — CUDA 11.8
 # TEKNOFEST 2026 — Genetik Varyant Patojenite Sınıflandırma
 #
 # Kullanım:
-#   conda env create -f environment.yml
-#   conda activate variant-gnn
+#   conda env create -f environment-gpu-cu118.yml
+#   conda activate variant-gnn-gpu
 #
-# Platform: Linux / macOS / Windows (CPU-only)
-# Python  : 3.11
-# PyTorch : 2.2.1 (CPU)
+# Gereksinim: NVIDIA GPU + CUDA 11.8 uyumlu sürücü (≥ 450.80.02)
+# Platform  : Linux x86_64 (önerilen) / Windows (WSL2 ile)
+# Python    : 3.11
+# PyTorch   : 2.2.1+cu118
+# cuDNN     : 8.7.x (cudatoolkit ile otomatik gelir)
 #
-# GPU ortamı için:
-#   CUDA 11.8 → environment-gpu-cu118.yml
-#   CUDA 12.1 → environment-gpu-cu121.yml
+# Sürücü sürümü kontrolü:
+#   nvidia-smi | grep "Driver Version"
 # ─────────────────────────────────────────────────────────────────────────────
 
-name: variant-gnn
+name: variant-gnn-gpu
 
 channels:
-  - pytorch          # PyTorch CPU wheels
-  - conda-forge      # bilimsel paketlerin en güncel sürümleri
+  - pytorch
+  - nvidia
+  - conda-forge
   - defaults
 
 dependencies:
@@ -27,11 +29,15 @@ dependencies:
   - python=3.11.9
   - pip>=24.0
 
+  # ── CUDA Araç Takımı ───────────────────────────────────────────────────────
+  - nvidia::cuda-toolkit=11.8.0
+  - nvidia::cudnn=8.9.7.29
+
   # ── Sistem & Sayısal Temel ─────────────────────────────────────────────────
   - numpy=1.26.4
   - scipy=1.13.0
   - pandas=2.2.2
-  - pyarrow>=15.0          # pandas I/O hızlandırma
+  - pyarrow>=15.0
 
   # ── ML ─────────────────────────────────────────────────────────────────────
   - scikit-learn=1.4.2
@@ -40,9 +46,9 @@ dependencies:
   - imbalanced-learn=0.12.3
   - optuna=3.6.1
 
-  # ── PyTorch (CPU) ──────────────────────────────────────────────────────────
-  - pytorch::pytorch=2.2.1=py3.11_cpu_0
-  - pytorch::cpuonly
+  # ── PyTorch (CUDA 11.8) ────────────────────────────────────────────────────
+  - pytorch::pytorch=2.2.1=py3.11_cuda11.8_cudnn8.7.0_0
+  - pytorch::torchvision=0.17.1=py311_cu118
 
   # ── Görselleştirme ─────────────────────────────────────────────────────────
   - matplotlib=3.8.4
@@ -54,27 +60,23 @@ dependencies:
   - pydantic=2.7.1
   - tqdm=4.66.4
   - joblib=1.4.2
-  - scipy=1.13.0
 
   # ── Geliştirme & Test ──────────────────────────────────────────────────────
   - pytest=8.2.0
   - pytest-cov=5.0.0
-  - pytest-xdist=3.5.0      # paralel test
+  - pytest-xdist=3.5.0
   - pytest-timeout=2.3.1
   - ruff=0.4.4
   - mypy=1.10.0
-  - pre-commit=3.7.1
-  - ipykernel=6.29.4        # Jupyter notebook desteği
+  - ipykernel=6.29.4
   - ipython=8.24.0
-
-  # ── Güvenlik (CI uyumlu) ───────────────────────────────────────────────────
-  - conda-forge::bandit=1.7.9
 
   # ── pip ile kurulacaklar ───────────────────────────────────────────────────
   - pip:
-    # PyTorch Geometric — CPU wheels
-    - torch-scatter==2.1.2  --find-links https://data.pyg.org/whl/torch-2.2.1+cpu.html
-    - torch-sparse==0.6.18  --find-links https://data.pyg.org/whl/torch-2.2.1+cpu.html
+    # PyTorch Geometric — CUDA 11.8 wheels
+    - torch-scatter==2.1.2  --find-links https://data.pyg.org/whl/torch-2.2.1+cu118.html
+    - torch-sparse==0.6.18  --find-links https://data.pyg.org/whl/torch-2.2.1+cu118.html
+    - torch-cluster==1.6.3  --find-links https://data.pyg.org/whl/torch-2.2.1+cu118.html
     - torch-geometric==2.5.3
 
     # Explainability
@@ -98,12 +100,9 @@ dependencies:
     - uvicorn[standard]==0.29.0
     - python-multipart==0.0.9
 
-    # Type stubs
+    # Type stubs & güvenlik
     - types-PyYAML
-    - types-requests
-
-    # Güvenlik
     - pip-audit>=2.7.0
 
-    # Proje kendisi (geliştirme modunda)
+    # Proje kendisi
     - -e .
