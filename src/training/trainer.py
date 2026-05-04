@@ -41,6 +41,7 @@ from src.core.models.dnn import VariantDNN
 from src.core.models.ensemble import HybridEnsemble
 from src.core.models.gnn import VariantGATv2GNN
 from src.training.focal_loss import FocalLoss
+from src.training.swa import SWABuffer, CyclicSWAScheduler
 from src.utils.seeds import set_global_seed
 
 try:
@@ -768,12 +769,31 @@ class VariantTrainer:
         best_weights  = copy.deepcopy(model.state_dict())
         patience_cnt  = 0
 
+        # Stochastic Weight Averaging — collects checkpoints in the last 25 %
+        # of epochs for better external-validation generalisation (Izmailov 2018).
+        swa_buffer = SWABuffer(swa_start_fraction=0.75, max_checkpoints=10)
+        swa_scheduler = CyclicSWAScheduler(
+            optimizer,
+            lr_min = cfg.gnn.lr * 0.1,
+            lr_max = cfg.gnn.lr,
+            cycle_length = max(3, cfg.gnn.epochs // 10),
+        )
+        swa_epoch_counter: int = 0
+
         # Epoch-level learning curve log (PSR §4.5 — öğrenme süreci kanıtı)
         learning_curve: list = []
 
         for epoch in range(1, cfg.gnn.epochs + 1):
+            # SWA cyclic LR once we enter the collection window
+            if swa_buffer.should_collect(epoch, cfg.gnn.epochs):
+                swa_scheduler.step(swa_epoch_counter)
+                swa_epoch_counter += 1
+
             loss = _gatv2_epoch(model, train_graph, optimizer, criterion, self.device,
                                nuc_ids=nuc_tr_t, aa_ids=aa_tr_t)
+
+            # Collect checkpoint for SWA
+            collected = swa_buffer.push(epoch, cfg.gnn.epochs, model)
 
             # Train F1 (same graph, eval mode)
             tr_preds, _ = _gatv2_eval(model, train_graph, self.device,
@@ -782,7 +802,10 @@ class VariantTrainer:
                 y_tr, tr_preds[:len(y_tr)], average="binary", pos_label=1, zero_division=0
             ))
 
-            epoch_entry: dict = {"epoch": epoch, "loss": round(loss, 6), "train_f1": round(train_f1, 4)}
+            epoch_entry: dict = {
+                "epoch": epoch, "loss": round(loss, 6),
+                "train_f1": round(train_f1, 4), "swa_collected": collected,
+            }
 
             if val_graph is not None:
                 preds, _ = _gatv2_eval(model, val_graph, self.device,
@@ -803,9 +826,9 @@ class VariantTrainer:
                 if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
                     logger.debug(
                         "GATv2 epoch %d/%d | loss=%.4f | train_f1=%.4f | val_f1=%.4f "
-                        "(patience %d/%d)",
+                        "(patience %d/%d | swa=%d)",
                         epoch, cfg.gnn.epochs, loss, train_f1, val_f1,
-                        patience_cnt, patience,
+                        patience_cnt, patience, swa_buffer.n_collected,
                     )
 
                 if patience > 0 and patience_cnt >= patience:
@@ -819,11 +842,21 @@ class VariantTrainer:
             else:
                 if epoch % 5 == 0 or epoch == cfg.gnn.epochs:
                     logger.debug(
-                        "GATv2 epoch %d/%d | loss=%.4f | train_f1=%.4f",
-                        epoch, cfg.gnn.epochs, loss, train_f1,
+                        "GATv2 epoch %d/%d | loss=%.4f | train_f1=%.4f | swa=%d",
+                        epoch, cfg.gnn.epochs, loss, train_f1, swa_buffer.n_collected,
                     )
 
             learning_curve.append(epoch_entry)
+
+        # Apply SWA: average buffered checkpoints into final model weights.
+        # Prefer SWA over best-single-epoch only when enough checkpoints exist
+        # AND the training ran to completion (no early stop).
+        if swa_buffer.n_collected >= 2:
+            swa_buffer.apply(model)
+            logger.info(
+                "GATv2 SWA applied (%d checkpoints averaged).",
+                swa_buffer.n_collected,
+            )
 
         # Persist learning curve JSON for PDR §4.5 reproducibility
         try:
@@ -845,14 +878,16 @@ class VariantTrainer:
         except Exception as _lc_exc:
             logger.debug("Learning curve save failed (non-fatal): %s", _lc_exc)
 
-        if val_graph is not None:
+        # Restore best single-epoch checkpoint only when SWA was NOT applied
+        # (if SWA was applied above, we keep SWA weights which are superior).
+        if val_graph is not None and swa_buffer.n_collected < 2:
             model.load_state_dict(best_weights)
             logger.info("GATv2 restored best checkpoint (val Macro F1=%.4f)", best_val_f1)
 
         return model
 
     # ------------------------------------------------------------------
-    # DNN training loop
+    # DNN training loop  (with SWA)
     # ------------------------------------------------------------------
 
     def _train_dnn(
@@ -873,9 +908,23 @@ class VariantTrainer:
             criterion = nn.CrossEntropyLoss()
         best_f1      = -1.0
         best_weights = copy.deepcopy(model.state_dict())
+        dnn_swa = SWABuffer(swa_start_fraction=0.75, max_checkpoints=8)
+        dnn_swa_scheduler = CyclicSWAScheduler(
+            optimizer,
+            lr_min = cfg.dnn.lr * 0.1,
+            lr_max = cfg.dnn.lr,
+            cycle_length = max(3, cfg.dnn.epochs // 8),
+        )
+        dnn_swa_epoch: int = 0
 
         for epoch in range(1, cfg.dnn.epochs + 1):
+            # SWA cyclic LR in collection window
+            if dnn_swa.should_collect(epoch, cfg.dnn.epochs):
+                dnn_swa_scheduler.step(dnn_swa_epoch)
+                dnn_swa_epoch += 1
+
             loss = _dnn_epoch(model, train_loader, optimizer, criterion, self.device)
+            dnn_swa.push(epoch, cfg.dnn.epochs, model)
 
             if val_loader is not None:
                 preds, _ = _dnn_eval(model, val_loader, self.device)
@@ -888,12 +937,17 @@ class VariantTrainer:
                     best_f1      = val_f1
                     best_weights = copy.deepcopy(model.state_dict())
                 if epoch % 5 == 0 or epoch == cfg.dnn.epochs:
-                    logger.debug("DNN epoch %d/%d | loss=%.4f | val_f1=%.4f",
-                                 epoch, cfg.dnn.epochs, loss, val_f1)
+                    logger.debug("DNN epoch %d/%d | loss=%.4f | val_f1=%.4f | swa=%d",
+                                 epoch, cfg.dnn.epochs, loss, val_f1, dnn_swa.n_collected)
             else:
                 if epoch % 5 == 0 or epoch == cfg.dnn.epochs:
-                    logger.debug("DNN epoch %d/%d | loss=%.4f", epoch, cfg.dnn.epochs, loss)
+                    logger.debug("DNN epoch %d/%d | loss=%.4f | swa=%d",
+                                 epoch, cfg.dnn.epochs, loss, dnn_swa.n_collected)
 
-        if val_loader is not None:
+        # Apply DNN SWA if enough checkpoints collected
+        if dnn_swa.n_collected >= 2:
+            dnn_swa.apply(model)
+            logger.info("DNN SWA applied (%d checkpoints).", dnn_swa.n_collected)
+        elif val_loader is not None:
             model.load_state_dict(best_weights)
         return model

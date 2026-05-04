@@ -148,10 +148,10 @@ class PreprocessingSettings:
     use_autoencoder: bool = True
     autoencoder_encoding_dim: int = 16
     autoencoder_epochs: int = 10
-    use_feature_selection: bool = False
-    k_best_features: int = 30
-    smote_enabled: bool = True
-    use_bio_scoring: bool = True
+    use_feature_selection: bool = True   # YAML default: VarianceThreshold + SelectKBest
+    k_best_features: int = 35            # YAML default: k=35
+    smote_enabled: bool = False          # YAML default: TEKNOFEST §3.2 dengeli veri
+    use_bio_scoring: bool = False        # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
 
 
 @dataclass

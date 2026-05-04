@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import pandas as pd
 
 class VariantMetadata(BaseModel):
@@ -11,7 +11,8 @@ class VariantMetadata(BaseModel):
 class PredictInput(BaseModel):
     variants: List[dict]
     
-    @validator('variants')
+    @field_validator('variants')
+    @classmethod
     def check_cols(cls, v):
         if not v:
             raise ValueError("Varyant listesi boş olamaz.")

@@ -362,11 +362,13 @@ def evaluate(
 # ---------------------------------------------------------------------------
 
 
+from typing import Dict, Optional, Tuple, Union
+
 def evaluate_per_panel(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     panels: np.ndarray,
-    threshold: float = 0.5,
+    threshold: Union[float, Dict[str, float]] = 0.5,
 ) -> Dict[str, EvaluationReport]:
     """
     Her panel için ayrı değerlendirme raporu üretir.
@@ -376,6 +378,7 @@ def evaluate_per_panel(
     y_true : Binary ground-truth labels.
     y_prob : (N, 2) probability array.
     panels : Panel labels for each sample (e.g., 'General', 'CFTR').
+    threshold : Either a global float threshold or a dict mapping panel names to thresholds.
 
     Returns
     -------
@@ -390,15 +393,17 @@ def evaluate_per_panel(
             logger.warning("Panel '%s' has too few samples (%d), skipping.", panel, mask.sum())
             continue
 
+        panel_thr = threshold.get(panel, threshold.get("General", 0.5)) if isinstance(threshold, dict) else threshold
+
         panel_report = evaluate(
             y_true[mask],
             y_prob[mask],
-            threshold=threshold,
+            threshold=panel_thr,
         )
         reports[str(panel)] = panel_report
         logger.info(
-            "Panel %s | n=%d | F1=%.4f | AUC=%s | Brier=%.4f",
-            panel, mask.sum(), panel_report.macro_f1,
+            "Panel %s | n=%d | thr=%.3f | F1=%.4f | AUC=%s | Brier=%.4f",
+            panel, mask.sum(), panel_thr, panel_report.binary_f1,
             f"{panel_report.roc_auc:.4f}" if panel_report.roc_auc else "N/A",
             panel_report.brier_score,
         )

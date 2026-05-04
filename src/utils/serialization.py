@@ -309,6 +309,25 @@ class ModelStore:
         except Exception:
             return default
 
+    @property
+    def _panel_threshold_path(self) -> Path: return self.model_dir / "panel_thresholds.json"
+
+    def save_panel_thresholds(self, thresholds: dict) -> None:
+        import json
+        with open(self._panel_threshold_path, "w") as fh:
+            json.dump({"panel_thresholds": thresholds}, fh)
+        logger.info("Panel Thresholds -> %s", self._panel_threshold_path)
+
+    def load_panel_thresholds(self) -> dict:
+        import json
+        if not self._panel_threshold_path.exists():
+            return {}
+        try:
+            with open(self._panel_threshold_path) as fh:
+                return json.load(fh).get("panel_thresholds", {})
+        except Exception:
+            return {}
+
     # ------------------------------------------------------------------
     # Lightweight individual loaders (used by ColumnAligner setup)
     # ------------------------------------------------------------------

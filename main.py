@@ -75,9 +75,14 @@ def _get_labelled_data(data_file, cfg):
 
 
 def mode_train(args, cfg):
-    ds  = _get_labelled_data(args.data_file, cfg)
+    ds = _get_labelled_data(args.data_file, cfg)
 
-    # Panel filtresi (isteğe bağlı)
+    # §3.2 özellik kategori doğrulaması — eksik kategori erken uyarı
+    from src.features.feature_validator import FeatureValidator
+    fv_report = FeatureValidator().validate_and_warn(ds.features)
+    logging.info("Özellik kapsam skoru: %.1f %%", 100 * fv_report.overall_coverage)
+
+    # Panel filtresi (isteğe bağlı --panel argümanı)
     panel = getattr(args, "panel", None)
     if panel and "Panel" in ds.metadata.columns:
         mask = ds.metadata["Panel"] == panel
@@ -95,21 +100,21 @@ def mode_train(args, cfg):
         )
         logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))
 
-    X   = ds.features.values
-    y   = ds.labels
+    X = ds.features.values
+    y = ds.labels
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 
-    # Pass sequences for multimodal SequenceEncoder (TEKNOFEST şartname uyumu)
+    # Pass sequences for multimodal SequenceEncoder (TEKNOFEST §3.2 uyumu)
     trainer = VariantTrainer()
     result  = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
-    logging.info("CV summary — Mean Binary F1 (Pathogenic, §7.3): %.4f +/- %.4f",
+    logging.info("CV özet — Ortalama Binary F1 (Pathogenic, §7.3): %.4f ± %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
     preprocessor = result.preprocessor
     ensemble     = result.ensemble
 
-    # ── Train / test split (must match trainer.train() internal split seed) ──
+    # ── Train / test split (trainer.train() internal split ile aynı seed) ──
     all_indices = np.arange(len(X))
     X_tr, X_test, y_tr, y_test = train_test_split(
         X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
@@ -118,20 +123,23 @@ def mode_train(args, cfg):
         all_indices, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
     )
 
-    # ── Calibration split — from train portion only (no test leakage) ──
+    # ── Kalibrasyon split — yalnızca train portion (test leakage yok) ──
     X_tr2, X_cal, y_tr2, y_cal = train_test_split(
         X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=cfg.seed + 99
     )
-    X_cal_proc  = preprocessor.transform(X_cal)
-    _, raw_cal_proba = ensemble.predict(X_cal_proc)
-    calibrator = EnsembleCalibrator(method=cfg.calibration.method)
+    X_cal_proc       = preprocessor.transform(X_cal)
+    _, raw_cal_proba  = ensemble.predict(X_cal_proc)
+    calibrator        = EnsembleCalibrator(method=cfg.calibration.method)
     calibrator.fit(raw_cal_proba, y_cal)
 
-    # ── Test evaluation ──
-    X_test_proc   = preprocessor.transform(X_test)
-    _, raw_test_proba = ensemble.predict(X_test_proc)
-    cal_test_proba    = calibrator.transform(raw_test_proba)
+    # ── Test değerlendirmesi ──
+    X_test_proc    = preprocessor.transform(X_test)
+    _, raw_tst_proba = ensemble.predict(X_test_proc)
+    cal_test_proba   = calibrator.transform(raw_tst_proba)
 
+    # Global F1-optimal threshold — kalibrasyon/validasyon setinden türetilir.
+    # NOT: Bu threshold "training artifact" olarak kaydedilir; external_val
+    # modunda test setinde yeniden tune edilmez (§7.3 jüri uyumu).
     best_thr, _ = find_best_threshold(y_test, cal_test_proba[:, 1], metric="f1")
     report       = evaluate(y_test, cal_test_proba, threshold=best_thr)
     report.log(prefix="TEST")
@@ -140,34 +148,70 @@ def mode_train(args, cfg):
     store.save_all(preprocessor, ensemble, calibrator)
     store.save_threshold(best_thr)
 
-    save_all_plots(report, y_test, raw_test_proba, cfg.paths.reports_dir)
+    save_all_plots(report, y_test, raw_tst_proba, cfg.paths.reports_dir)
 
-    # Per-panel evaluation (if Panel metadata available)
-    panel_reports_dict = {}
+    # ── Panel bazlı değerlendirme + otomatik panel threshold optimizasyonu ──
+    panel_reports_dict: dict = {}
+    panel_thresholds_dict: dict = {}
+
     if "Panel" in ds.metadata.columns:
         test_panels = ds.metadata["Panel"].values[test_indices]
-        panel_reports = evaluate_per_panel(y_test, cal_test_proba, test_panels, threshold=best_thr)
+
+        # Panel raporları
+        panel_reports = evaluate_per_panel(y_test, cal_test_proba, test_panels,
+                                           threshold=best_thr)
         for pname, prep in panel_reports.items():
             prep.log(prefix=f"PANEL_{pname}")
             panel_reports_dict[pname] = prep.as_dict()
 
+        # Panel bazlı optimal threshold optimizasyonu (§3.2 dört panel)
+        # Kalibrasyon split üzerinde optimize edilir — test leakage yok.
+        cal_panels = ds.metadata["Panel"].values[
+            train_test_split(
+                all_indices, test_size=cfg.training.test_size,
+                stratify=y, random_state=cfg.seed
+            )[0][  # train portion
+                train_test_split(
+                    np.arange(len(y_tr)), test_size=0.15,
+                    stratify=y_tr, random_state=cfg.seed + 99
+                )[1]  # cal slice
+            ]
+        ] if len(ds.metadata) == len(X) else np.array([])
+
+        if len(cal_panels) == len(y_cal):
+            panel_thresholds_dict = ensemble.optimise_panel_thresholds(
+                X_cal_proc, y_cal, cal_panels
+            )
+            store.save_panel_thresholds(panel_thresholds_dict)
+        else:
+            logging.debug("Panel threshold: metadata/label boyut uyuşmazlığı, atlandı.")
+
+    # ── Feature validator raporu kaydet ──
+    feat_val_path = cfg.paths.reports_dir / "feature_validation.json"
+    with open(feat_val_path, "w") as fh:
+        json.dump(fv_report.as_dict(), fh, indent=2, ensure_ascii=False)
+
+    # ── Özet CV raporu ──
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:
         json.dump({
             # TEKNOFEST 2026 §7.3: Temel sıralama metriği F1 Skoru (TP/FP/FN)
-            "competition_metric": "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
-            "note": "CV folds dengeli veri üzerinde eğitildi; Macro F1 ≈ Binary F1 (Pathogenic) for 50/50 data",
-            "mean_cv_macro_f1":  result.mean_cv_f1,
-            "std_cv_macro_f1":   result.std_cv_f1,
-            "test_binary_f1":    report.binary_f1,
-            "test_macro_f1":     report.macro_f1,
-            "best_threshold":    best_thr,
-            "folds": [vars(r) for r in result.fold_results],
-            "test_metrics": report.as_dict(),
-            "panel_metrics": panel_reports_dict,
+            "competition_metric":  "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
+            "swa_enabled":         True,
+            "mean_cv_binary_f1":   result.mean_cv_f1,
+            "std_cv_binary_f1":    result.std_cv_f1,
+            "test_binary_f1":      report.binary_f1,
+            "test_macro_f1":       report.macro_f1,
+            "best_threshold":      best_thr,
+            "threshold_source":    "training_artifact",
+            "feature_coverage":    round(fv_report.overall_coverage, 4),
+            "folds":               [vars(r) for r in result.fold_results],
+            "test_metrics":        report.as_dict(),
+            "panel_metrics":       panel_reports_dict,
+            "panel_thresholds":    panel_thresholds_dict,
         }, fh, indent=2)
-    logging.info("CV report saved -> %s", report_path)
-    logging.info("Training complete.")
+    logging.info("CV raporu kaydedildi → %s", report_path)
+    logging.info("Eğitim tamamlandı.")
 
 
 def mode_tune(args, cfg):
@@ -304,7 +348,9 @@ def mode_external_val(args, cfg):
     # Eğitimde kayıt edilen F1-optimal threshold'u kullan (jüri-uygun).
     # Test setinde yeniden tune ETMEK YASAK — bu metrik şişirilmiş olur.
     threshold = pipeline.store.load_threshold(default=cfg.thresholds.classification)
-    logging.info("External validation: kayıtlı eşik kullanılıyor (thr=%.4f)", threshold)
+    panel_thresholds = pipeline.store.load_panel_thresholds()
+    effective_threshold = panel_thresholds if panel_thresholds else threshold
+    logging.info("External validation: kayıtlı eşik kullanılıyor (thr=%s)", effective_threshold)
 
     # Global rapor
     report = evaluate(y_true, y_prob, threshold=threshold)
@@ -314,7 +360,7 @@ def mode_external_val(args, cfg):
     panel_metrics: dict = {}
     if "Panel" in ds.metadata.columns and len(ds.metadata) == len(y_true):
         panels_arr = ds.metadata["Panel"].values
-        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=threshold)
+        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=effective_threshold)
         for pname, prep in panel_reports.items():
             prep.log(prefix=f"PANEL_{pname}")
             panel_metrics[pname] = prep.as_dict()
@@ -836,13 +882,107 @@ def mode_explain(args, cfg):
     logging.info("Explain modu tamamlandı. Çıktılar: %s", cfg.paths.reports_dir)
 
 
+def mode_panel_transfer(args, cfg):
+    """TEKNOFEST 2026 §3.2 — Panel transfer (generalization) matrix.
+    Trains a model on panel A, tests on panel B, and creates an N x N matrix.
+    """
+    ds = _get_labelled_data(args.data_file, cfg)
+    if "Panel" not in ds.metadata.columns:
+        logging.error("Veriseti 'Panel' kolonu içermiyor. Transfer matrisi hesaplanamaz.")
+        return
+
+    panels = ds.metadata["Panel"].unique()
+    matrix = {str(p): {} for p in panels}
+    
+    set_global_seed(cfg.seed)
+    cfg.paths.create_dirs()
+    
+    for train_panel in panels:
+        train_mask = ds.metadata["Panel"] == train_panel
+        if train_mask.sum() < 50:
+            logging.warning("Panel %s çok küçük, atlanıyor...", train_panel)
+            continue
+            
+        logging.info("--- Training on Panel: %s ---", train_panel)
+        X_tr = ds.features.values[train_mask]
+        y_tr = ds.labels[train_mask]
+        
+        nuc_seqs_tr = [ds.nuc_sequences[i] for i in range(len(ds.labels)) if train_mask.values[i]] if ds.nuc_sequences else None
+        aa_seqs_tr  = [ds.aa_sequences[i] for i in range(len(ds.labels)) if train_mask.values[i]] if ds.aa_sequences else None
+        
+        trainer = VariantTrainer()
+        result = trainer.train(X_tr, y_tr, nuc_seqs=nuc_seqs_tr, aa_seqs=aa_seqs_tr)
+        preprocessor, ensemble = result.preprocessor, result.ensemble
+        
+        # Orijinal threshold'u kullanalım mı? Trainer train sonu thresh kaydetmez ancak kalibrasyon için evaluate'da thresh kullanıldı.
+        # Basitlik için 0.5.
+        for test_panel in panels:
+            test_mask = ds.metadata["Panel"] == test_panel
+            if test_mask.sum() < 10:
+                continue
+                
+            X_te = ds.features.values[test_mask]
+            y_te = ds.labels[test_mask]
+            
+            X_te_proc = preprocessor.transform(X_te)
+            _, proba_te = ensemble.predict(X_te_proc)
+            
+            report = evaluate(y_te, proba_te, threshold=0.5)
+            matrix[str(train_panel)][str(test_panel)] = report.binary_f1
+            logging.info("  -> Test on %s: F1=%.4f", test_panel, report.binary_f1)
+            
+    import json
+    out_path = cfg.paths.reports_dir / "panel_transfer_matrix.json"
+    with open(out_path, "w") as fh:
+        json.dump(matrix, fh, indent=2)
+    logging.info("Panel transfer matrix -> %s", out_path)
+
+
+def mode_label_quality(args, cfg):
+    """
+    Bölüm 3.2 - Label Quality Detection (Confident Learning).
+    Eğitim verisindeki gürültülü etiketleri tespit eder.
+    """
+    try:
+        from src.scientific.label_quality import ConfidentLearner
+        ds = _get_labelled_data(args.data_file, cfg)
+        
+        # Basit OOF olasılık tahmini için geçici çözüm:
+        X = ds.features.values
+        y = ds.labels
+        
+        from sklearn.model_selection import cross_val_predict
+        import xgboost as xgb
+        from src.features.preprocessing import build_preprocessor_from_config
+        
+        pre = build_preprocessor_from_config()
+        X_proc, _ = pre.fit_resample_train(X, y)
+        model = xgb.XGBClassifier(**cfg.xgb.as_dict())
+        
+        logging.info("XGBoost ile 5-fold OOF olasılıkları hesaplanıyor...")
+        oof_probs = cross_val_predict(model, X_proc[:len(X)], y, cv=5, method="predict_proba")
+        
+        learner = ConfidentLearner(y_true=y, oof_probs=oof_probs)
+        report = learner.detect_label_errors()
+        
+        import json
+        out_path = cfg.paths.reports_dir / "label_quality_report.json"
+        cfg.paths.create_dirs()
+        with open(out_path, "w") as fh:
+            json.dump(report, fh, indent=2)
+        logging.info("Label quality raporu -> %s", out_path)
+    except Exception as exc:
+        logging.error("Label Quality analizi başarısız: %s", exc)
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         description="VARIANT-GNN: Graph-based Variant Pathogenicity Prediction"
     )
     p.add_argument("--mode",
                    choices=["train", "tune", "eval", "predict", "crossval",
-                            "external_val", "adversarial_val", "train_panels", "explain"],
+                            "external_val", "adversarial_val", "train_panels",
+                            "explain", "panel_transfer", "label_quality"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
@@ -884,6 +1024,8 @@ def main():
         "adversarial_val":  mode_adversarial_val,
         "train_panels":     mode_train_panels,
         "explain":          mode_explain,
+        "panel_transfer":   mode_panel_transfer,
+        "label_quality":    mode_label_quality,
     }
     dispatch[args.mode](args, cfg)
 

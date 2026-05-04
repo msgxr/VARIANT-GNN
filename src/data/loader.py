@@ -133,6 +133,13 @@ def load_csv(
         tr_errors = [e.replace("Missing", "Eksik").replace("invalid", "geçersiz") for e in result.errors]
         raise ValueError("Veri şeması doğrulaması başarısız:\n" + "\n".join(tr_errors))
 
+    # TEKNOFEST Feature Category Validation
+    try:
+        from src.scientific.feature_validator import FeatureCategoryValidator
+        FeatureCategoryValidator.validate(df)
+    except ImportError:
+        pass
+
     # Build metadata frame (preserve original id columns + non-feature cols)
     meta_cols = [c for c in (id_columns + non_feature_columns) if c in df.columns]
     meta_cols = list(dict.fromkeys(meta_cols))  # deduplicate preserving order
