@@ -1,17 +1,24 @@
+# configs/pdr.yaml — TEKNOFEST 2026 PDR (Proje Detay Raporu) Konfigürasyonu
+#
+# Bu dosya psr.yaml üzerine PDR'a özgü override'ları tanımlar.
+# Tam eğitim parametreleri için: configs/psr.yaml
+# Kullanım: python main.py --mode train --config configs/pdr.yaml
+#           python submission/predict.py --config configs/pdr.yaml
+
 competition:
-  mode: true
-  strict_leakage: false
+  mode: true          # Yarışma modu: leakage firewall aktif, strict schema kontrolü
+  strict_leakage: false  # False: koordinat kolonları drop+uyar; True: drop+hata (jüri için False yeterli)
 
 ensemble:
-  panel_aware: true
+  panel_aware: true   # Panel bazlı ağırlık optimizasyonu (OOF üzerinden, test seti dokunulmaz)
 
 triage:
   enabled: true
-  uncertainty_threshold: 0.30
-  borderline_margin: 0.10
-  entropy_threshold: 0.65
+  uncertainty_threshold: 0.30   # MC Dropout σ > 0.30 → EXPERT_REVIEW bayrağı (§3.6)
+  borderline_margin: 0.10       # [threshold ± 0.10] → BORDERLINE bayrağı
+  entropy_threshold: 0.65       # Entropi > 0.65 → HIGH_UNCERTAINTY
 
 reproducibility:
-  seed: 42
-  deterministic_torch: true
-  save_manifest: true
+  seed: 42              # Tüm sklearn/torch/numpy işlemlerinde seed=42 (§4.1)
+  deterministic_torch: true   # cudnn.deterministic=True (§4.1 tekrarlanabilirlik)
+  save_manifest: true   # Eğitim sonrası artifact manifest + SHA256 kaydı

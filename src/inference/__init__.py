@@ -1,4 +1,3 @@
-from .pipeline import InferencePipeline
 from .external_validation_runner import ExternalValidationRunner
 from .artifact_loader import ArtifactLoader
 from .prediction_schema import (
@@ -7,6 +6,14 @@ from .prediction_schema import (
     validate_prediction_frame,
 )
 from .triage import TriageEngine, ALL_FLAGS
+
+
+def __getattr__(name: str):
+    if name == "InferencePipeline":
+        from src.api.pipeline import InferencePipeline  # lazy — döngüsel import önlenir
+        return InferencePipeline
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "InferencePipeline",

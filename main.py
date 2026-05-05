@@ -133,15 +133,17 @@ def mode_train(args, cfg):
     calibrator.fit(raw_cal_proba, y_cal)
 
     # ── Test değerlendirmesi ──
-    X_test_proc    = preprocessor.transform(X_test)
+    X_test_proc      = preprocessor.transform(X_test)
     _, raw_tst_proba = ensemble.predict(X_test_proc)
     cal_test_proba   = calibrator.transform(raw_tst_proba)
 
-    # Global F1-optimal threshold — kalibrasyon/validasyon setinden türetilir.
-    # NOT: Bu threshold "training artifact" olarak kaydedilir; external_val
-    # modunda test setinde yeniden tune edilmez (§7.3 jüri uyumu).
-    best_thr, _ = find_best_threshold(y_test, cal_test_proba[:, 1], metric="f1")
-    report       = evaluate(y_test, cal_test_proba, threshold=best_thr)
+    # Global F1-optimal threshold — YALNIZCA kalibrasyon setinde optimize edilir.
+    # Test seti threshold tuning'e dahil edilmez (§7.3 jüri uyumu, leakage önlemi).
+    # Kalibrasyon seti: eğitim havuzunun %15'i (X_cal, y_cal) — test'ten ayrı.
+    cal_cal_proba = calibrator.transform(raw_cal_proba)
+    best_thr, _ = find_best_threshold(y_cal, cal_cal_proba[:, 1], metric="f1")
+    logging.info("Threshold kalibrasyon setinden türetildi (n=%d): %.4f", len(y_cal), best_thr)
+    report        = evaluate(y_test, cal_test_proba, threshold=best_thr)
     report.log(prefix="TEST")
 
     store = ModelStore(cfg.paths.models_dir)
@@ -184,7 +186,11 @@ def mode_train(args, cfg):
             )
             store.save_panel_thresholds(panel_thresholds_dict)
         else:
-            logging.debug("Panel threshold: metadata/label boyut uyuşmazlığı, atlandı.")
+            logging.warning(
+                "Panel threshold optimizasyonu atlandı: cal_panels boyutu (%d) "
+                "y_cal boyutuyla (%d) uyuşmuyor.",
+                len(cal_panels), len(y_cal),
+            )
 
     # ── Feature validator raporu kaydet ──
     feat_val_path = cfg.paths.reports_dir / "feature_validation.json"
@@ -195,15 +201,16 @@ def mode_train(args, cfg):
     report_path = cfg.paths.reports_dir / "cv_report.json"
     with open(report_path, "w") as fh:
         json.dump({
-            # TEKNOFEST 2026 §7.3: Temel sıralama metriği F1 Skoru (TP/FP/FN)
-            "competition_metric":  "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
+            # TEKNOFEST 2026 §7.3: Temel sıralama metriği Binary F1 (TP/FP/FN, Pathogenic, pos_label=1)
+            "competition_metric":  "Binary F1 — 2*TP/(2*TP+FP+FN), Pathogenic class, pos_label=1 (TEKNOFEST §7.3)",
+            "metric_note":         "Primary: binary_f1 (Pathogenic). macro_f1 yardımcı metriktir.",
             "swa_enabled":         True,
             "mean_cv_binary_f1":   result.mean_cv_f1,
             "std_cv_binary_f1":    result.std_cv_f1,
             "test_binary_f1":      report.binary_f1,
             "test_macro_f1":       report.macro_f1,
             "best_threshold":      best_thr,
-            "threshold_source":    "training_artifact",
+            "threshold_source":    "calibration_set",
             "feature_coverage":    round(fv_report.overall_coverage, 4),
             "folds":               [vars(r) for r in result.fold_results],
             "test_metrics":        report.as_dict(),

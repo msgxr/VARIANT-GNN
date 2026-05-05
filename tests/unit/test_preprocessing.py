@@ -74,3 +74,43 @@ class TestVariantPreprocessor:
         pre.fit_resample_train(X, y)
         graph = pre.row_to_graph(X[0])
         assert graph.x.shape == (pre.n_output_features, 1)
+
+    def test_smote_not_applied_on_transform(self):
+        """§3.3 — SMOTE yalnızca eğitim fold'unda uygulanır; transform() SMOTE yapmaz."""
+        from src.features.preprocessing import VariantPreprocessor
+        rng = np.random.default_rng(42)
+        n_train, n_val = 120, 30
+        X_tr  = rng.normal(size=(n_train, 8)).astype(np.float32)
+        # Dengeli eğitim etiketi (SMOTE için en az 2 sınıf şart)
+        y_tr  = np.array([0] * 80 + [1] * 40)
+        X_val = rng.normal(size=(n_val, 8)).astype(np.float32)
+        pre = VariantPreprocessor(use_autoencoder=False, smote_enabled=True)
+        pre.fit_resample_train(X_tr, y_tr)
+        X_val_out = pre.transform(X_val)
+        # transform() sadece n_val satır döndürmeli (SMOTE uygulanmaz)
+        assert X_val_out.shape[0] == n_val, (
+            f"transform() SMOTE uyguladı: beklenen {n_val}, alınan {X_val_out.shape[0]}"
+        )
+
+    def test_transform_does_not_call_fit(self):
+        """transform() çağrısı hiçbir fitter'ı yeniden fit etmez (leakage yok)."""
+        from src.features.preprocessing import VariantPreprocessor
+        X, y = _make_xy(n=150, f=8)
+        pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False)
+        pre.fit_resample_train(X[:100], y[:100])
+        n_features_after_fit = pre.n_output_features
+        # Validation transform
+        pre.transform(X[100:])
+        # Feature count değişmemeli
+        assert pre.n_output_features == n_features_after_fit
+
+    def test_validation_output_shape_matches_train(self):
+        """Eğitim ve doğrulama çıktı boyutları aynı olmalı (§4.1 leakage-free split)."""
+        from src.features.preprocessing import VariantPreprocessor
+        X, y = _make_xy(n=200, f=10)
+        pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False)
+        X_tr, _ = pre.fit_resample_train(X[:160], y[:160])
+        X_val    = pre.transform(X[160:])
+        assert X_tr.shape[1] == X_val.shape[1], (
+            f"Train sütun sayısı ({X_tr.shape[1]}) ≠ Val sütun sayısı ({X_val.shape[1]})"
+        )

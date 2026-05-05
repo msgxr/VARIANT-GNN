@@ -6,7 +6,7 @@ Key guarantees:
   - Preprocessor (imputer, scaler, SMOTE, feature selection, AutoEncoder) is
     fit ONLY on the training split/fold — never on validation or test data.
   - Graph topology is computed from training-fold correlation.
-  - Model selection metric: Macro F1 (consistent with reporting metric).
+  - Model selection metric: Binary F1 (Pathogenic sınıfı, pos_label=1, §7.3).
   - Deterministic seeds applied at every fold.
 
 TEKNOFEST 2026 additions:
@@ -14,7 +14,7 @@ TEKNOFEST 2026 additions:
     distribution to handle Pathogenic / Benign imbalance.
   - VariantSAGEGNN training via _train_sage(): full-batch node classification
     on a coordinate-free cosine k-NN sample graph.
-  - Early stopping driven by Validation Macro F1 (not accuracy).
+  - Early stopping driven by Validation Binary F1 (Pathogenic, §7.3).
 """
 from __future__ import annotations
 
@@ -333,7 +333,7 @@ class VariantTrainer:
         4. Train XGBoost on (X_train_proc, y_resampled)
         5. Train GNN on graph-converted train_fold
         6. Train DNN on tensor train_fold
-        7. Evaluate via Macro F1 on val_fold
+        7. Evaluate via Binary F1 (Pathogenic, pos_label=1, §7.3) on val_fold
     """
 
     def __init__(
@@ -414,7 +414,7 @@ class VariantTrainer:
                 mlflow.log_metric("std_cv_f1", std_f1)
             
             logger.info(
-                "Cross-validation complete: Macro F1 = %.4f ± %.4f", mean_f1, std_f1
+                "Cross-validation complete: Binary F1 (Pathogenic §7.3) = %.4f ± %.4f", mean_f1, std_f1
             )
 
             # Final model — fit on full training set
@@ -429,8 +429,18 @@ class VariantTrainer:
             # Fit stacking meta-learner on the same inner val set
             try:
                 ensemble.fit_meta_learner(X_opt_val, y_opt_val)
+            except ValueError as exc:
+                logger.warning(
+                    "Meta-learner fitting başarısız (ValueError: %s) — "
+                    "ağırlıklı ortalama kullanılıyor. Olası neden: yetersiz örnek (%d).",
+                    exc, len(y_opt_val),
+                )
             except Exception as exc:
-                logger.warning("Meta-learner fitting failed (%s) — using weighted average.", exc)
+                logger.error(
+                    "Meta-learner fitting beklenmedik hata (%s: %s) — "
+                    "ağırlıklı ortalama kullanılıyor.",
+                    type(exc).__name__, exc,
+                )
 
             if mlflow is not None:
                 mlflow.pytorch.log_model(ensemble.gnn, "gnn_model")
@@ -608,6 +618,11 @@ class VariantTrainer:
             # multimodal GNN is enabled — disable on this fold's preprocessor
             # only, never on the shared Settings object.
             if use_multimodal and nuc_tr is not None and preprocessor.smote_enabled:
+                logger.warning(
+                    "Fold %d: use_multimodal=True → SMOTE bu fold'da devre dışı "
+                    "(sequence-row alignment koruması). Global config değiştirilmedi.",
+                    fold_idx,
+                )
                 preprocessor.smote_enabled = False
             X_tr_proc, y_tr_res = preprocessor.fit_resample_train(X_tr, y_tr)
             X_val_proc           = preprocessor.transform(X_val)
@@ -733,7 +748,7 @@ class VariantTrainer:
         Full-batch node-classification training on a cosine k-NN sample graph.
 
         Loss function:  WeightedBCELoss (class-balanced cross-entropy).
-        Early stopping: monitored on Validation Macro F1.
+        Early stopping: monitored on Validation Binary F1 (Pathogenic, pos_label=1, §7.3).
 
         Parameters
         ----------
@@ -833,7 +848,7 @@ class VariantTrainer:
 
                 if patience > 0 and patience_cnt >= patience:
                     logger.info(
-                        "Early stopping at epoch %d (best val Macro F1=%.4f)",
+                        "Early stopping at epoch %d (best val Binary F1=%.4f)",
                         epoch, best_val_f1,
                     )
                     epoch_entry["early_stop"] = True
@@ -882,7 +897,7 @@ class VariantTrainer:
         # (if SWA was applied above, we keep SWA weights which are superior).
         if val_graph is not None and swa_buffer.n_collected < 2:
             model.load_state_dict(best_weights)
-            logger.info("GATv2 restored best checkpoint (val Macro F1=%.4f)", best_val_f1)
+            logger.info("GATv2 restored best checkpoint (val Binary F1=%.4f)", best_val_f1)
 
         return model
 

@@ -225,7 +225,7 @@ class ExternalValidationRunner:
             [label_map.get(str(v).strip().lower(), int(float(v))) for v in labels], dtype=int
         )
 
-        f1 = f1_score(y, pred_binary, zero_division=0)
+        f1 = f1_score(y, pred_binary, average="binary", pos_label=1, zero_division=0)
         try:
             auc = roc_auc_score(y, prob)
         except ValueError:

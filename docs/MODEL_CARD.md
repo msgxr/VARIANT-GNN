@@ -137,10 +137,12 @@ Dört modelden gelen olasılık çıktılarının yapılandırılabilir doğrusa
 
 | Model | Varsayılan Ağırlık | Açıklama |
 |---|---|---|
-| XGBoost | 0.35 | Tablo verilerinde güçlü performans |
+| XGBoost | 0.30 | Tablo verilerinde güçlü performans |
 | LightGBM | 0.30 | Hız ve tamamlayıcı karar sınırları |
 | VariantGATv2GNN | 0.25 | Varyantlar arası ilişkileri yakalama |
-| DNN | 0.10 | Tamamlayıcı doğrusal olmayan öğrenme |
+| DNN | 0.15 | Tamamlayıcı doğrusal olmayan öğrenme |
+
+> **Kaynak:** Bu ağırlıklar `configs/psr.yaml` (ensemble.weights: [0.30, 0.30, 0.25, 0.15]) ile uyumludur.
 
 - Ağırlıklar `scipy.optimize.minimize` (Nelder-Mead) ile doğrulama seti üzerinde optimize edilebilir
 - Meta-öğrenici (Lojistik Regresyon) ile stacking desteklenmektedir

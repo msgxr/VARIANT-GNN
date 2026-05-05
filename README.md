@@ -112,7 +112,7 @@ graph TD
     A --> B1["🔧 Medyan İmputation\nEksik Değer Doldurma"]:::onisleme
     B1 --> B2["📏 RobustScaler\nIQR Bazlı Normalizasyon"]:::onisleme
     B2 --> B3["🎯 SelectKBest k=35\nANOVA Özellik Seçimi"]:::onisleme
-    B3 --> B4["🗜️ AutoEncoder 43→16\nLatent Temsil"]:::onisleme
+    B3 --> B4["🗜️ AutoEncoder ≤43→16\nLatent Temsil"]:::onisleme
     B4 --> B5["⚖️ SMOTE %30\nSınıf Dengesi"]:::onisleme
     B5 --> B6["🕸️ Cosine k-NN Graf\nk=10, eşik=0.3"]:::onisleme
 
@@ -546,7 +546,7 @@ graph LR
     S1["1️⃣ Medyan\nİmputation\nEksik: %8-12"]:::step
     S2["2️⃣ RobustScaler\nIQR Normalizasyon"]:::step
     S3["3️⃣ SelectKBest\nANOVA k=35"]:::step
-    S4["4️⃣ AutoEncoder\n43 → 16 boyut"]:::step
+    S4["4️⃣ AutoEncoder\n≤43 → 16 boyut"]:::step
     S5["5️⃣ SMOTE\n%30 artırım\nSadece eğitim"]:::step
     S6["6️⃣ Cosine k-NN\nGraf k=10"]:::step
 
@@ -682,69 +682,73 @@ python main.py --mode adversarial_val \
 
 ---
 
-### Panel Bazlı Performans (PSR Tablo 3)
+### Panel Bazlı Performans — Mevcut Sonuçlar
 
-| Panel | Binary F1 ↑ | ROC-AUC ↑ | MCC ↑ | Brier Score ↓ | ECE ↓ |
+> ⚠️ **Önemli Not:** Aşağıdaki sonuçlar, gerçek yarışma verisi alınmadan önce geliştirme sürecinde kullanılan **gerçekçi sentetik pilot veri** üzerinde elde edilmiştir. Gerçek TEKNOFEST 2026 yarışma verisiyle doğrulanmış final performans kanıtı henüz mevcut değildir. Rakamlar yarışma sonucu olarak sunulamaz; yalnızca pipeline geliştirme referansı olarak değerlendirilmelidir.
+
+| Panel | Binary F1 ↑ | ROC-AUC ↑ | MCC ↑ | Precision | Recall |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| 🌐 Genel Veri Seti | 0.945 ± 0.003 | 0.976 | 0.892 | 0.048 | < 0.025 |
-| 🧬 Herediter Kanser | 0.938 ± 0.005 | 0.971 | 0.880 | 0.051 | < 0.025 |
-| 🔬 PAH | 0.941 ± 0.004 | 0.974 | 0.885 | 0.049 | < 0.025 |
-| 💊 CFTR | 0.925 ± 0.012 | 0.962 | 0.852 | 0.065 | < 0.030 |
+| 🌐 Genel Veri Seti | 0.571 | 0.500 | 0.0 | 0.400 | 1.000 |
+| 🧬 Herediter Kanser | 0.600 | 0.500 | 0.0 | 0.429 | 1.000 |
+| 🔬 PAH | 0.818 | 0.500 | 0.0 | 0.692 | 1.000 |
+| 💊 CFTR | 0.750 | 0.500 | 0.0 | 0.600 | 1.000 |
 
-> **Not:** Tüm metrikler isotonik kalibrasyon sonrası bağımsız test setinde (%20) raporlanmıştır. Karar eşiği: **0.40** (Duyarlılık Öncelikli).
+> **Kaynak:** `reports/cv_report.json` — Sentetik pilot veri, 5-Fold Stratified CV, karar eşiği 0.01. Ana metrik: Binary F1 (§7.3). Tüm panellerde ROC-AUC = 0.50 ve MCC = 0.0 değerleri, modelin eşik 0.01 ile tüm örnekleri Patojenik sınıflandırdığını göstermektedir. Bu durum sentetik verinin sınırlı ayırt edici gücünden kaynaklanmaktadır ve gerçek yarışma verisiyle eğitim sonrasında güncellenecektir.
 
 ---
 
 ### Hata Analizi
 
 ```
-Test seti: 2.400 örnek
-Toplam yanlış sınıflama: 142 (%5.9 hata oranı)
+Veri türü:  Sentetik pilot veri (gerçek yarışma verisi değil)
+CV folds:   5-Fold Stratified CV (configs/psr.yaml: cv_folds=5)
+Ortalama CV Binary F1:  0.633 ± 0.046  (Fold 1-5: 0.636 / 0.550 / 0.682 / 0.629 / 0.667)
+Test Binary F1:         0.710
+Test ROC-AUC:           0.500
 
-Hata dağılımı:
-  Hatalı örneklerde MC Dropout belirsizlik ortalaması: 0.40
-  Doğru örneklerde MC Dropout belirsizlik ortalaması:  0.12
-                                                        ↑
-  Bu fark, belirsizlik skorunun hata tespitinde
-  güçlü bir sinyal olduğunu kanıtlar.
+Gözlem:
+  Karar eşiği 0.01 ile model tüm örnekleri Patojenik sınıflandırıyor.
+  Recall = 1.0, Precision = 0.55 → Patojenik yanlılığı var.
+  Bu, sentetik verinin modelin sınıf ayrımını öğrenmesi için
+  yeterli ayırt edici sinyal içermediğini göstermektedir.
 
-Hata yoğunlaşma noktaları:
-  • Evrimsel korunmuşluk YÜKSEK ama popülasyon frekansı da YÜKSEK
-    → "Tolerasyonlu" varyant çelişkisi
-  • In-silico skorlar çelişiyor: CADD yüksek, REVEL düşük
-    → Konsensüs yok → model tereddütü
+Koruma mekanizması (pipeline seviyesinde):
+  MC Dropout belirsizliği > 0.30 → "⚠️ Uzman Değerlendirmesi Gerekli" bayrağı
+  (Gerçek veri üzerindeki etkinliği doğrulanmamıştır.)
 
-Koruma mekanizması:
-  Belirsizlik > 0.30 → "⚠️ Uzman Değerlendirmesi Gerekli" bayrağı
+Gerçek yarışma verisiyle eğitim sonrası bu bölüm güncellenecektir.
 ```
 
 ---
 
-### CV Çalışma Raporu (cv_report.json özeti)
+### CV Çalışma Raporu (reports/cv_report.json — gerçek değerler)
 
 ```json
 {
-  "competition_metric": "binary_f1 (TP/FP/FN, Pathogenic class, TEKNOFEST §7.3)",
-  "mean_cv_binary_f1":  0.9997,
-  "std_cv_binary_f1":   0.0006,
-  "best_threshold":     0.01,
+  "competition_metric": "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
+  "veri_notu": "Sentetik pilot veri — gerçek yarışma verisi değil",
+  "mean_cv_macro_f1": 0.6327,
+  "std_cv_macro_f1":  0.0457,
+  "best_threshold":   0.01,
   "test_metrics": {
-    "binary_f1":   1.00,
-    "macro_f1":    1.00,
-    "roc_auc":     1.00,
-    "brier_score": 2.49e-08,
-    "ece":         6.81e-06
+    "binary_f1":   0.7097,
+    "macro_f1":    0.3548,
+    "precision":   0.5500,
+    "recall":      1.0000,
+    "roc_auc":     0.5000,
+    "brier_score": 0.2476,
+    "mcc":         0.0
   },
   "panel_metrics": {
-    "General":           {"binary_f1": 1.00, "roc_auc": 1.00},
-    "Hereditary_Cancer": {"binary_f1": 1.00, "roc_auc": 1.00},
-    "PAH":               {"binary_f1": 1.00, "roc_auc": 1.00},
-    "CFTR":              {"binary_f1": 1.00, "roc_auc": 1.00}
+    "General":           {"binary_f1": 0.5714, "roc_auc": 0.5},
+    "Hereditary_Cancer": {"binary_f1": 0.6000, "roc_auc": 0.5},
+    "PAH":               {"binary_f1": 0.8182, "roc_auc": 0.5},
+    "CFTR":              {"binary_f1": 0.7500, "roc_auc": 0.5}
   }
 }
 ```
 
-> **Not:** Bu sonuçlar pilot veri seti üzerinde elde edilmiştir. Gerçek yarışma verisinde panel bazlı PSR değerleri (F1 ≈ 0.93–0.94) beklenmektedir.
+> **Not:** Bu değerler `reports/cv_report.json` dosyasından alınmıştır. Gerçek TEKNOFEST 2026 yarışma verisi üzerinde eğitim ve değerlendirme henüz tamamlanmamıştır. Gerçek veri üzerindeki performans kanıtı bulunamadı.
 
 ---
 
@@ -1282,21 +1286,30 @@ python scripts/stress_test.py
 
 ---
 
-## 🔒 Hukuki Uyarılar
+## 🔒 Hukuki Uyarılar ve Etik Beyan
 
 ```
+⚠️  KLİNİK KULLANIM YASAĞI
+    Bu sistem klinik tanı, tedavi veya bağımsız tıbbi karar destek
+    amacıyla kullanılamaz. Model çıktıları yalnızca araştırma, eğitim
+    ve yarışma değerlendirmesi kapsamında yorumlanmalıdır.
+    Uzman klinisyen denetimi zorunludur.
+
 ⚠️  TEKNOFEST 2026 Gizlilik Sözleşmesi (NDA)
-    T.C. Sağlık Bakanlığı / TÜSEB tarafından sağlanan veriler,
-    imzalı Kurumsal Gizlilik Taahhütnamesi olmadan kullanılamaz.
+    Yarışma kapsamında sağlanan veriler, imzalı Kurumsal Gizlilik
+    Taahhütnamesi olmadan üçüncü taraflarla paylaşılamaz.
 
-⚠️  Klinik Kullanım Yasağı
-    Bu sistem yalnızca araştırma ve yarışma amaçlıdır.
-    Herhangi bir klinik tanı, tedavi kararı veya tıbbi karar
-    destek amacıyla kullanılması yasaktır.
+⚠️  VERİ GÜVENLİĞİ VE KVKK / GDPR
+    Kullanılan veriler kamuya açık ve anonimleştirilmiş biyoinformatik
+    anotasyon skorlarından oluşmaktadır. Bireysel kimliğe ulaşmayı
+    sağlayan hiçbir bilgi içermez. Genomik adres bilgileri
+    (kromozom/pozisyon) şartname gereği gizlenmiştir.
 
-⚠️  Veri Güvenliği
-    Kullanılan tüm veriler KVKK ve GDPR'a uygun şekilde
-    anonimleştirilmiştir. Genomik adres bilgileri içermez.
+⚠️  ARAŞTIRMA PROTOTİPİ
+    Bu sistem TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması için
+    geliştirilmiş bir araştırma ve yarışma prototipidir.
+    Bağımsız klinik validasyon yapılmamıştır; üretim ortamına
+    dağıtım planlanmamaktadır.
 ```
 
 ---

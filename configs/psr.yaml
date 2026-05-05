@@ -55,11 +55,12 @@ ensemble:
   weights: [0.30, 0.30, 0.25, 0.15]
   optimize_weights: true       # Nelder-Mead ile doğrulama seti optimizasyonu
 
-# PSR §3.3: "AutoEncoder 43→16, SelectKBest k=35"
+# PSR §3.3: "AutoEncoder ≤43→16, SelectKBest k=35"
+# Gerçek input_dim, eksik değer filtreleme sonrasında belirlenir (≤43).
 preprocessing:
   corr_threshold: 0.25
   use_autoencoder: true
-  autoencoder_encoding_dim: 16  # PSR §3.3: "AutoEncoder 43→16"
+  autoencoder_encoding_dim: 16  # PSR §3.3: latent boyut=16; input_dim loader tarafından belirlenir
   autoencoder_epochs: 10
   use_feature_selection: true   # PSR §3.3: aktif
   k_best_features: 35           # PSR §3.3: "SelectKBest (ANOVA, k=35)"

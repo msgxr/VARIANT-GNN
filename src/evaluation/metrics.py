@@ -201,9 +201,9 @@ def find_panel_thresholds(
             results[label] = 0.5
             continue
 
-        thr, score = find_best_threshold(y_true[mask], y_prob[mask], metric="macro_f1")
+        thr, score = find_best_threshold(y_true[mask], y_prob[mask], metric="f1")
         results[label] = thr
-        logger.info("Panel %-20s → eşik=%.3f  Macro-F1=%.4f", label, thr, score)
+        logger.info("Panel %-20s → eşik=%.3f  Binary-F1=%.4f", label, thr, score)
 
     if output_path is not None:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -239,7 +239,7 @@ def save_threshold_report(
     fig_dir.mkdir(parents=True, exist_ok=True)
 
     # Global optimal threshold
-    global_thr, global_f1 = find_best_threshold(y_true, y_prob, metric="macro_f1")
+    global_thr, global_f1 = find_best_threshold(y_true, y_prob, metric="f1")
 
     # P-R eğrisi
     prec_arr, rec_arr, thr_arr = precision_recall_curve(y_true, y_prob)

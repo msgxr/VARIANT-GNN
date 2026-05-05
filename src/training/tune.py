@@ -62,7 +62,7 @@ def _objective(
         model = xgb.XGBClassifier(**params)
         model.fit(X_tr_p, y_tr_r)
         preds = model.predict(X_val_p)
-        f1s.append(f1_score(y_val, preds, average="macro", zero_division=0))
+        f1s.append(f1_score(y_val, preds, average="binary", pos_label=1, zero_division=0))
 
     return float(np.mean(f1s))
 

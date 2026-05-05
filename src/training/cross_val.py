@@ -51,7 +51,7 @@ def leakage_free_cross_validate(
     }
 
     logger.info(
-        "Cross-validation complete: Macro F1 = %.4f ± %.4f (%d folds)",
+        "Cross-validation complete: Binary F1 (Pathogenic §7.3) = %.4f ± %.4f (%d folds)",
         summary["mean_f1"], summary["std_f1"], len(f1_scores),
     )
     return summary
