@@ -256,7 +256,9 @@ graph LR
 
 ---
 
-### Klinik Karar Ağacı
+### Araştırma Amaçlı Tahmin Mantığı
+
+> ⚠️ Bu diyagram yalnızca modelin iç karar mantığını göstermektedir. Klinik tanı veya tedavi kararı için kullanılamaz.
 
 ```mermaid
 graph TD
@@ -270,15 +272,15 @@ graph TD
     PRED --> T1{"Risk Skoru ≥ 40?"}:::gri
 
     T1 -- "✅ Evet" --> T2{"Belirsizlik ≤ 0.15?"}:::gri
-    T1 -- "❌ Hayır" --> BEN["🟢 BENİGN\nDüşük Risk"]:::yesil
+    T1 -- "❌ Hayır" --> BEN["🟢 BENİGN\nDüşük Risk (Araştırma)"]:::yesil
 
     T2 -- "✅ Evet" --> T3{"Risk Skoru ≥ 75?"}:::gri
-    T2 -- "❌ Hayır" --> EXP["🟡 UZMAN GEREKLİ\nBelirsizlik Yüksek"]:::sari
+    T2 -- "❌ Hayır" --> EXP["🟡 Uzman İncelemesi Önerilir\nBelirsizlik Yüksek"]:::sari
 
-    T3 -- "✅ Evet" --> CRIT["🔴 KRİTİK PATOJENİK\nAcil Doğrulama"]:::kirmizi
-    T3 -- "❌ Hayır" --> HIGH["🟠 PATOJENİK\nFonksiyonel Test Önerilir"]:::sari
+    T3 -- "✅ Evet" --> CRIT["🔴 PATOJENİK (Araştırma)\nUzman Doğrulaması Gerekli"]:::kirmizi
+    T3 -- "❌ Hayır" --> HIGH["🟠 PATOJENİK (Araştırma)\nEk İnceleme Önerilir"]:::sari
 
-    BEN --> REPORT["📄 Türkçe\nKlinik Rapor"]:::gri
+    BEN --> REPORT["📄 Araştırma\nRaporu"]:::gri
     EXP --> REPORT
     CRIT --> REPORT
     HIGH --> REPORT
@@ -1090,7 +1092,9 @@ python main.py --mode train \
 
 ---
 
-## 🏥 Hastane Entegrasyonu & MLOps
+## 🔬 Araştırma Demo Arayüzü & MLOps
+
+> ⚠️ **TEKNOFEST 2026 Şartname Uyarısı:** Bu sistem klinik tanı, tedavi veya tıbbi karar destek amacıyla kullanılamaz. Aşağıdaki arayüz ve API yalnızca **yarışma demonstrasyonu, araştırma ve eğitim amacıyla** sunulmaktadır. Klinik ortama entegrasyon için bağımsız validasyon ve regülasyon uygunluğu zorunludur.
 
 ### Tek Komutla Jüri Demosu
 
@@ -1103,9 +1107,9 @@ chmod +x run_demo.sh && ./run_demo.sh
 
 ---
 
-### FastAPI REST Endpoint (HBYS Entegrasyonu)
+### FastAPI REST Endpoint (Araştırma / Demo)
 
-Hastane Bilgi Yönetim Sistemi'nden direkt çağrılabilir:
+Bu endpoint yalnızca araştırma ve yarışma değerlendirmesi için kullanılmaktadır:
 
 ```bash
 # Tek varyant — JSON
@@ -1122,21 +1126,22 @@ curl -X POST http://localhost:8000/predict \
 open http://localhost:8000/docs
 ```
 
-**Human-in-the-Loop Yanıtı:**
+**Araştırma Amaçlı Çıktı Örneği:**
 ```json
 {
   "status": "success",
   "latency_ms": 12.4,
+  "disclaimer": "Bu çıktı yalnızca araştırma/yarışma amaçlıdır; klinik karar için kullanılamaz.",
   "results": [
     {
       "Variant_ID": "BRCA1-001",
       "Prediction": "Pathogenic",
       "Calibrated_Risk": 87.3,
-      "Clinical_Flag": "⚠️ Uzman Değerlendirmesi Gerekli"
+      "Research_Flag": "⚠️ Uzman Değerlendirmesi Önerilir"
     }
   ],
   "summary": {
-    "human_in_the_loop": "1/1 varyant uzman değerlendirmesine yönlendirildi (MC-Dropout > 0.30)"
+    "human_in_the_loop": "1/1 varyant uzman incelemesine yönlendirildi (MC-Dropout > 0.30)"
   }
 }
 ```
@@ -1152,16 +1157,16 @@ docker-compose up variant-gnn-api   # Sadece REST API
 
 ```mermaid
 graph LR
-    HIS["🏥 HBYS / EHR"] -->|POST /predict| API
-    DOC["👨‍⚕️ Doktor"] -->|CSV Yükle| UI
-    subgraph Docker["🐳 Docker Compose"]
+    RES["🔬 Araştırmacı"] -->|POST /predict| API
+    USR["👤 Demo Kullanıcısı"] -->|CSV Yükle| UI
+    subgraph Docker["🐳 Docker Compose (Araştırma/Demo)"]
         UI["Streamlit Dashboard\nport 8501"]
         API["FastAPI REST API\nport 8000"]
     end
     API --> ENGINE["⚙️ VARIANT-GNN Engine"]
     UI  --> ENGINE
-    ENGINE --> PDF["📄 Türkçe PDF Rapor"]
-    ENGINE --> FLAG["⚠️ Human-in-the-Loop\nBayrak Sistemi"]
+    ENGINE --> PDF["📄 Araştırma Raporu"]
+    ENGINE --> FLAG["⚠️ Uzman Bayrağı\n(Belirsizlik > 0.30)"]
 ```
 
 ---
@@ -1268,7 +1273,8 @@ python scripts/stress_test.py
 |:---|:---|
 | `configs/default.yaml` | Geliştirme, hızlı test, prototip |
 | `configs/psr.yaml` | PSR parametreleri ile uyumlu eğitim (jüri tekrarı için) |
-| `configs/final.yaml` | Optimize threshold (0.01) ile final demo |
+| `configs/pdr.yaml` | PDR aşaması — psr.yaml üzerine PDR override'ları + gerçek yarışma verisi |
+| `configs/final.yaml` | Optimize threshold ile final demo |
 
 ---
 

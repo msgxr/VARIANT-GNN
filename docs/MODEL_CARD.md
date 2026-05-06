@@ -49,7 +49,7 @@ CSV Girdi → Şema Doğrulama → Ön İşleme Pipeline
          │               │           │               │           │
    ┌─────┴─────┐   ┌─────┴─────┐  ┌─┴──────────┐ ┌─┴─────────┐
    │  XGBoost  │   │  LightGBM │  │VariantGATv2│ │    DNN    │
-   │  (%35)    │   │   (%30)   │  │  GNN (%25) │ │   (%10)   │
+   │  (%30)    │   │   (%30)   │  │  GNN (%25) │ │   (%15)   │
    └─────┬─────┘   └─────┬─────┘  └─────┬──────┘ └─────┬─────┘
          │               │               │               │
          └───────────────┴───────────────┴───────────────┘
@@ -62,7 +62,7 @@ CSV Girdi → Şema Doğrulama → Ön İşleme Pipeline
                       Kalibre Edilmiş Risk Skoru (0–100)
 ```
 
-Ağırlıklar `configs/default.yaml` üzerinden yapılandırılabilir ve `scipy.optimize.minimize` (Nelder-Mead) ile doğrulama seti üzerinde otomatik optimize edilebilir.
+Ağırlıklar `configs/psr.yaml` (yarışma) / `configs/pdr.yaml` (PDR) üzerinden yapılandırılabilir ve `scipy.optimize.minimize` (Nelder-Mead) ile doğrulama seti üzerinde otomatik optimize edilebilir.
 
 ### XGBoost Bileşeni
 
