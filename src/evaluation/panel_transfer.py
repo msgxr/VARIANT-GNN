@@ -63,7 +63,8 @@ class PanelTransferResult:
 
     def summary(self) -> str:
         lines = ["=== Çapraz Panel Genelleştirme Matrisi ==="]
-        header = f"{'Eğitim \\ Test':22s}" + "".join(f"{p:22s}" for p in self.panels)
+        col_label = "Eğitim \\ Test"
+        header = f"{col_label:22s}" + "".join(f"{p:22s}" for p in self.panels)
         lines.append(header)
         lines.append("-" * len(header))
         for i, train_panel in enumerate(self.panels):
