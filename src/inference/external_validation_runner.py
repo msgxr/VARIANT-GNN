@@ -21,11 +21,10 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from src.data.competition_sanitizer import CompetitionSanitizer
 from src.data.column_aligner import ColumnAligner
+from src.data.competition_sanitizer import CompetitionSanitizer
 from src.inference.artifact_loader import ArtifactLoader
 from src.inference.prediction_schema import (
-    PREDICTION_COLUMNS,
     build_prediction_frame,
     validate_prediction_frame,
 )

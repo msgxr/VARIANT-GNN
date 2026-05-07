@@ -16,17 +16,17 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional, Any, List, Union, Tuple
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from torch_geometric.loader import DataLoader as GeoDataLoader
 
-from src.scientific.calibration.calibrator import EnsembleCalibrator
-from src.config import get_settings, Settings
+from src.config import Settings, get_settings
+from src.core.models.ensemble import HybridEnsemble
 from src.data.loader import LoadedDataset, load_predict_csv
 from src.features.preprocessing import VariantPreprocessor
-from src.core.models.ensemble import HybridEnsemble
+from src.scientific.calibration.calibrator import EnsembleCalibrator
 from src.utils.serialization import ModelStore
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,7 @@ class InferencePipeline:
             and dataset.nuc_sequences is not None
         ):
             import torch
+
             from src.features.multimodal_encoder import tokenize_amino_acids, tokenize_nucleotides
             
             device = next(self._ensemble.gnn.parameters()).device

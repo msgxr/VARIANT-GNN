@@ -1,6 +1,7 @@
+from typing import Dict
+
 import pandas as pd
-import numpy as np
-from typing import Dict, Any, List
+
 
 class BenchmarkReporter:
     """Akademik standartlarda karşılaştırmalı performans raporları sunar."""

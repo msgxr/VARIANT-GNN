@@ -4,6 +4,7 @@ Biological substitution matrices (BLOSUM62, PAM250) and Grantham scores.
 Used for quantifying the biochemical severity of amino acid substitutions.
 """
 from __future__ import annotations
+
 from typing import Dict, Tuple
 
 # BLOSUM62 Substitution Matrix

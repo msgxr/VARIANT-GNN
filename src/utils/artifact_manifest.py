@@ -14,16 +14,14 @@ The manifest records:
 """
 from __future__ import annotations
 
-import hashlib
 import importlib
 import json
 import logging
 import platform
 import subprocess
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from src.utils.fingerprinting import file_fingerprint
 

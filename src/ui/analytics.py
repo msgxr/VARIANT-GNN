@@ -1,9 +1,13 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
+from typing import List
+
 import matplotlib.patches as mpatches
-from typing import NoReturn, Optional, List, Any
-from src.ui.utils import plot_dark, hex_to_rgb
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import streamlit as st
+
+from src.ui.utils import hex_to_rgb, plot_dark
+
 
 def render_summary_cards(df_result: pd.DataFrame) -> None:
     """Analiz özetini gösteren metrik kartlarını oluşturur."""

@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def render_header() -> None:
     """Uygulama başlığını ve hero banner bölümünü oluşturur."""
     st.markdown("""

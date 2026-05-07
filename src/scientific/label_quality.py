@@ -29,8 +29,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
+from sklearn.model_selection import StratifiedKFold
 
 logger = logging.getLogger(__name__)
 

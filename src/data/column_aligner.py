@@ -454,7 +454,6 @@ class ColumnAligner:
         """apply() sarmalayıcısı — tek chunk için."""
         # Yalnızca sayısal kolonlarla eşleştir (Senaryo 4: gürültülü kolonlar drop)
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        text_like    = [c for c in df.columns if c not in numeric_cols]
 
         # Sayısal sütunları önce dene; sonra tümünü
         source = df[numeric_cols] if numeric_cols else df

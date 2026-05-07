@@ -37,8 +37,8 @@ def _build_legacy_sage_gnn(
     """
     import torch.nn as _nn
     import torch.nn.functional as _F
-    from torch_geometric.nn import SAGEConv as _SAGEConv
     from torch_geometric.nn import BatchNorm as _PyGBN
+    from torch_geometric.nn import SAGEConv as _SAGEConv
 
     class _SBlock(_nn.Module):
         def __init__(self, in_c, out_c, drop=0.3):
@@ -385,10 +385,10 @@ class ModelStore:
         (preprocessor, ensemble, calibrator)  where calibrator may be None.
         """
         from src.config import get_settings
-        from src.features.preprocessing import VariantPreprocessor
         from src.core.models.dnn import VariantDNN
         from src.core.models.ensemble import HybridEnsemble
         from src.core.models.gnn import FeatureGNN
+        from src.features.preprocessing import VariantPreprocessor
 
         cfg    = get_settings()
         device = torch.device(

@@ -1,10 +1,13 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple, Protocol
+from typing import Any, Dict, List, Optional, Protocol, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import streamlit as st
+
 from src.ui.utils import plot_dark
+
 
 # Define a Protocol for the pipeline for better type checking if needed
 class PipelineProtocol(Protocol):

@@ -1,5 +1,5 @@
+
 import streamlit as st
-from typing import Optional, Dict, Any
 
 try:
     import py3Dmol
@@ -34,11 +34,12 @@ def render_protein_3d(pdb_id: str = "1A2C", height: int = 500, width: int = 800)
     # Streamlit üzerinde göster
     showmol(xyzview, height=height, width=width)
     
-    st.info(f"ℹ️ Yukarıdaki modelde kırmızı ile işaretlenen bölge, varyantın protein ikincil yapısı üzerindeki olası etkisini göstermektedir.")
+    st.info("ℹ️ Yukarıdaki modelde kırmızı ile işaretlenen bölge, varyantın protein ikincil yapısı üzerindeki olası etkisini göstermektedir.")
 
 import json
-import urllib.request
 import urllib.parse
+import urllib.request
+
 
 def get_pdb_for_gene(gene_symbol: str) -> str:
     """

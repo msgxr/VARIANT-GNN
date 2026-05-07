@@ -1,7 +1,9 @@
+import os
+from typing import Any, Dict, List
+
 import pandas as pd
 import vcfpy
-from typing import List, Dict, Any, Optional
-import os
+
 
 class VCFParser:
     """Endüstri standardı .vcf dosyalarını modele uygun veri setine dönüştüren sınıftır."""

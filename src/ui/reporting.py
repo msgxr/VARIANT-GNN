@@ -1,9 +1,11 @@
 import io
-from pathlib import Path
 from datetime import datetime
-from fpdf import FPDF
+from pathlib import Path
+from typing import Any, List, Tuple
+
 import pandas as pd
-from typing import Any, List, Tuple, Dict, Union, Optional
+from fpdf import FPDF
+
 
 class _PDF(FPDF):
     def header(self) -> None:

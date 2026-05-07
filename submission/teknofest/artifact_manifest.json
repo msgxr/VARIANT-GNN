@@ -11,37 +11,37 @@
     "model_files": [
       {
         "name": "xgb_model.json",
-        "path": "models/current/xgb_model.json",
+        "path": "models/xgb_model.json",
         "type": "XGBoost model",
         "sha256": "PLACEHOLDER"
       },
       {
         "name": "lgbm_model.txt",
-        "path": "models/current/lgbm_model.txt",
+        "path": "models/lgbm_model.txt",
         "type": "LightGBM model",
         "sha256": "PLACEHOLDER"
       },
       {
         "name": "gnn_model.pth",
-        "path": "models/current/gnn_model.pth",
+        "path": "models/gnn_model.pth",
         "type": "VariantGATv2GNN weights",
         "sha256": "PLACEHOLDER"
       },
       {
         "name": "dnn_model.pth",
-        "path": "models/current/dnn_model.pth",
+        "path": "models/dnn_model.pth",
         "type": "DNN weights",
         "sha256": "PLACEHOLDER"
       },
       {
         "name": "preprocessor.pkl",
-        "path": "models/current/preprocessor.pkl",
+        "path": "models/preprocessor.pkl",
         "type": "Preprocessing pipeline",
         "sha256": "PLACEHOLDER"
       },
       {
         "name": "calibrator.pkl",
-        "path": "models/current/calibrator.pkl",
+        "path": "models/calibrator.pkl",
         "type": "Isotonic calibrator",
         "sha256": "PLACEHOLDER"
       }
@@ -49,7 +49,7 @@
     "config_files": [
       {
         "name": "ensemble_config.json",
-        "path": "models/current/ensemble_config.json",
+        "path": "models/ensemble_config.json",
         "description": "Ensemble weights and configuration"
       }
     ],

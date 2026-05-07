@@ -8,7 +8,6 @@ held-out validation set.  The blind/test set is NEVER touched here.
 from __future__ import annotations
 
 import logging
-from typing import Sequence
 
 import numpy as np
 from scipy.optimize import minimize

@@ -36,12 +36,12 @@ from torch.utils.data import TensorDataset
 from torch_geometric.loader import DataLoader as GeoDataLoader
 
 from src.config import get_settings
-from src.features.preprocessing import VariantPreprocessor, build_preprocessor_from_config
 from src.core.models.dnn import VariantDNN
 from src.core.models.ensemble import HybridEnsemble
 from src.core.models.gnn import VariantGATv2GNN
+from src.features.preprocessing import VariantPreprocessor, build_preprocessor_from_config
 from src.training.focal_loss import FocalLoss
-from src.training.swa import SWABuffer, CyclicSWAScheduler
+from src.training.swa import CyclicSWAScheduler, SWABuffer
 from src.utils.seeds import set_global_seed
 
 try:

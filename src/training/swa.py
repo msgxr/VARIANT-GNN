@@ -28,9 +28,8 @@ Implementation:
 """
 from __future__ import annotations
 
-import copy
 import logging
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List
 
 import numpy as np
 import torch

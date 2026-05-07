@@ -19,11 +19,10 @@ Kullanım:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 import numpy as np
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Kriter tanımları
@@ -217,7 +216,6 @@ def _eval_PM2(x: np.ndarray, shap: np.ndarray) -> ACMGCriterion:
 def _eval_PM4(x: np.ndarray, shap: np.ndarray) -> ACMGCriterion:
     """PM4 — Moderate Pathogenic: Protein uzunluğu değişimi (AA büyük fark)"""
     aa_size  = _get(x, "AA_Size_Diff")
-    aa_mw    = _get(x, "AA_Mol_Weight_Diff")
     aa_grant = _get(x, "AA_Grantham_Score")
     met      = (abs(aa_size) > 0.6) and (aa_grant > 100)
     sc       = _shap_sum(shap, ["AA_Size_Diff","AA_Mol_Weight_Diff","AA_Grantham_Score"])

@@ -27,7 +27,6 @@ import io
 import logging
 import time
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -39,7 +38,7 @@ logger = logging.getLogger(__name__)
 try:
     from fastapi import FastAPI, File, HTTPException, UploadFile, status
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import JSONResponse
+    from fastapi.responses import JSONResponse  # noqa: F401  (availability check)
     from pydantic import BaseModel, Field
     _FASTAPI_AVAILABLE = True
 except ImportError:

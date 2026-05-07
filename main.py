@@ -949,6 +949,33 @@ def mode_label_quality(args, cfg):
         logging.error("Label Quality analizi başarısız: %s", exc)
 
 
+def mode_ablation(args, cfg):
+    """TEKNOFEST 2026 §4 — Ablation analizi (model + preprocessing katkısı)."""
+    from src.evaluation.ablation import run_ablation
+
+    ds = _get_labelled_data(args.data_file, cfg)
+    set_global_seed(cfg.seed)
+    cfg.paths.create_dirs()
+
+    output_path = (
+        Path(args.output) if args.output
+        else cfg.paths.reports_dir / "ablation_report.json"
+    )
+
+    report = run_ablation(
+        X        = ds.features.values,
+        y        = ds.labels,
+        nuc_seqs = ds.nuc_sequences,
+        aa_seqs  = ds.aa_sequences,
+        output   = output_path,
+    )
+
+    logging.info(
+        "Ablation tamamlandı. Baseline F1=%.4f, %d ablation analiz edildi.",
+        report.baseline.binary_f1, len(report.ablations),
+    )
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         description="VARIANT-GNN: Graph-based Variant Pathogenicity Prediction"
@@ -956,7 +983,8 @@ def build_parser():
     p.add_argument("--mode",
                    choices=["train", "tune", "eval", "predict", "crossval",
                             "external_val", "adversarial_val", "train_panels",
-                            "explain", "panel_transfer", "label_quality"],
+                            "explain", "panel_transfer", "label_quality",
+                            "ablation"],
                    default="train")
     p.add_argument("--data_file", type=str, default=None)
     p.add_argument("--test_file", type=str, default=None)
@@ -1000,6 +1028,7 @@ def main():
         "explain":          mode_explain,
         "panel_transfer":   mode_panel_transfer,
         "label_quality":    mode_label_quality,
+        "ablation":         mode_ablation,
     }
     dispatch[args.mode](args, cfg)
 

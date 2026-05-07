@@ -1,6 +1,6 @@
+from .abstention_analysis import compute_abstention_stats
 from .metrics import EvaluationReport, evaluate, expected_calibration_error, find_best_threshold
 from .plots import plot_confusion_matrix, plot_pr_curve, plot_roc_curve, save_all_plots
-from .abstention_analysis import compute_abstention_stats
 
 __all__ = [
     "evaluate",

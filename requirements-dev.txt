@@ -1,26 +1,27 @@
 # Geliştirme bağımlılıkları (lint, typecheck, test, güvenlik)
 # Kullanım: pip install -r requirements-dev.txt
+# Versiyon sabit set + dev üst-paketleri
 
 -r requirements.txt
 
-# Test
-pytest>=8.0.0
-pytest-cov>=4.0.0
-pytest-xdist>=3.0.0
+# ── Test ──
+pytest==8.4.2
+pytest-cov>=4.0.0,<6.0
+pytest-xdist>=3.5.0,<4.0
 
-# Lint & Format
-ruff>=0.3.0
+# ── Lint & Format ──
+ruff==0.15.12
 
-# Type Check
-mypy>=1.8.0
-types-PyYAML
-types-requests
+# ── Type Check ──
+mypy==1.19.1
+types-PyYAML>=6.0,<7.0
+types-requests>=2.31.0,<3.0
 
-# Güvenlik
-bandit[toml]>=1.7.0
+# ── Güvenlik ──
+bandit[toml]>=1.7.0,<2.0
 
-# Pre-commit
-pre-commit>=3.0.0
+# ── Pre-commit ──
+pre-commit>=3.0.0,<5.0
 
-# Profiling (opsiyonel)
-memory-profiler>=0.61.0
+# ── Profiling (opsiyonel) ──
+memory-profiler>=0.61.0,<1.0

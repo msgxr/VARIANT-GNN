@@ -25,8 +25,8 @@ tespiti, başarısız tahminlerin post-hoc hata ayıklamasını önler.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Dict, FrozenSet, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, FrozenSet, List, Optional, Set
 
 import numpy as np
 import pandas as pd

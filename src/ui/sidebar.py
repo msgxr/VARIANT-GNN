@@ -1,6 +1,8 @@
-import streamlit as st
+from typing import Any, Dict, Optional, Tuple
+
 import pandas as pd
-from typing import Dict, Any, Optional, Tuple
+import streamlit as st
+
 
 def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
     """Kenar çubuğu ayarlarını ve dosya yükleme işlemlerini yönetir."""
@@ -41,6 +43,7 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
                     df = VCFParser.to_model_input(df_vcf)
                 elif file_ext == "json":
                     import json
+
                     from src.data.fhir_parser import FHIRParser
                     data = json.load(uploaded_file)
                     parser = FHIRParser(data)

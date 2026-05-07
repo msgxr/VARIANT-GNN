@@ -1,5 +1,6 @@
+
 import matplotlib.pyplot as plt
-from typing import Any
+
 
 def plot_dark(fig: plt.Figure, ax: plt.Axes) -> None:
     """Matplotlib grafiklerini koyu temaya (UI ile uyumlu) dönüştürür."""

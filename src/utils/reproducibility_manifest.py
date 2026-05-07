@@ -34,11 +34,10 @@ import logging
 import os
 import platform
 import subprocess
-import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +299,8 @@ class ManifestBuilder:
     def with_settings(self, settings_obj: Any) -> "ManifestBuilder":
         """Capture the full Settings dataclass as a nested dict."""
         try:
-            from dataclasses import is_dataclass, asdict as _asdict
+            from dataclasses import asdict as _asdict
+            from dataclasses import is_dataclass
             if is_dataclass(settings_obj):
                 self.manifest.settings_dump = _asdict(settings_obj)
             else:

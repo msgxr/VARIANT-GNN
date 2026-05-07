@@ -41,7 +41,7 @@ Kullanım:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Tuple
 
 import numpy as np

@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -206,7 +206,6 @@ class OODDetector:
         names = (feature_names or [f"feat_{i}" for i in range(F)])[:F]
 
         new_mean = np.nanmean(X[:, :F], axis=0)
-        new_std  = np.nanstd(X[:, :F],  axis=0)
 
         # Normalize mean shift
         mean_shift = np.abs(new_mean - self._mean[:F]) / (self._std[:F] + 1e-8)

@@ -1,9 +1,11 @@
-import streamlit as st
 import json
-import urllib.request
-import urllib.parse
 import urllib.error
-from typing import Dict, Any, Optional, List, Union, Tuple
+import urllib.parse
+import urllib.request
+from typing import Any, Dict, List, Optional, Tuple
+
+import streamlit as st
+
 
 def clinvar_lookup(query: str) -> Optional[Dict[str, Any]]:
     """NCBI ClinVar'da verilen terimi arar, ilk kaydın özetini döndürür."""

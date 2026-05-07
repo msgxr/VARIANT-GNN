@@ -13,7 +13,6 @@ Clinical_Flag is produced as a separate, audit-friendly column.
 from __future__ import annotations
 
 import logging
-from typing import Sequence
 
 import numpy as np
 

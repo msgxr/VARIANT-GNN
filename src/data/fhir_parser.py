@@ -1,6 +1,8 @@
 import json
+from typing import Any, Dict, List
+
 import pandas as pd
-from typing import List, Dict, Any, Optional
+
 
 class FHIRParser:
     """T.C. Sağlık Bakanlığı ve uluslararası HL7/FHIR standartlarına sahip JSON verileri sisteme dahil eder."""

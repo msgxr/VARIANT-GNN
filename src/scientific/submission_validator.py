@@ -37,7 +37,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -484,7 +483,7 @@ class SubmissionValidator:
             message=(
                 f"Satır sayısı: {n}  "
                 f"(Şartname §3.2 toplam test: {expected} [tolere={lo}-{hi}])"
-                + ("" if in_range else f"  ⚠ Beklenen aralık dışında!")
+                + ("" if in_range else "  ⚠ Beklenen aralık dışında!")
             ),
             severity="INFO" if in_range else "WARNING",
         ))
@@ -574,7 +573,7 @@ class SubmissionValidator:
         width  = 70
         status = "GEÇTİ ✅" if report.passed else "BAŞARISIZ ❌"
         print("\n" + "=" * width)
-        print(f"  TEKNOFEST 2026 — Submission Doğrulama Raporu")
+        print("  TEKNOFEST 2026 — Submission Doğrulama Raporu")
         print(f"  Dosya : {report.path}")
         print(f"  Durum : {status}")
         print(f"  Satır : {report.n_rows} "

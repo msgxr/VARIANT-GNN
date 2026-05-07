@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def inject_styles(theme: str = "dark") -> None:
     """Tüm Premium CSS kodlarını Streamlit uygulamasına enjekte eder."""
     

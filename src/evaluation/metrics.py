@@ -228,11 +228,13 @@ def save_threshold_report(
       reports/figures/precision_recall_curve.png
     """
     import json
+
     import matplotlib
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    from sklearn.metrics import precision_recall_curve, average_precision_score
     from pathlib import Path
+
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import average_precision_score, precision_recall_curve
 
     rep_dir = Path(reports_dir)
     fig_dir = rep_dir / "figures"
@@ -362,7 +364,8 @@ def evaluate(
 # ---------------------------------------------------------------------------
 
 
-from typing import Dict, Optional, Tuple, Union
+from typing import Union
+
 
 def evaluate_per_panel(
     y_true: np.ndarray,

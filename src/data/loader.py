@@ -19,9 +19,9 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from src.data.schemas.variant_schema import validate_dataset
+from data_contracts.validators import PredictInput, validate_dataframe
 from src.config import get_settings
-from data_contracts.validators import validate_dataframe, PredictInput, SubmissionOutput
+from src.data.schemas.variant_schema import validate_dataset
 
 logger = logging.getLogger(__name__)
 

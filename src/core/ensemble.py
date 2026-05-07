@@ -24,11 +24,10 @@ Panel bazlı eşik: Her panel (General / Hereditary_Cancer / PAH / CFTR) için
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import xgboost as xgb
 from scipy.optimize import minimize

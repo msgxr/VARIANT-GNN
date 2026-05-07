@@ -1,64 +1,250 @@
 # Model Kartı — VARIANT-GNN
 
-> **Ayrıntılı model kartı:** [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)
+> **TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması** — Üniversite ve Üzeri kategorisi
+> referans alınmıştır. Şartname §3.2 (varyant sınıflandırma), §7.3 (F1 metriği),
+> §10 (etik kurallar), §12 (sorumluluk beyanı) ile uyumludur.
 
-## Özet
+---
+
+## ⚠️ KLİNİK KULLANIM YASAĞI (Şartname §10)
+
+> "Yarışma kapsamında geliştirilen modeller ve elde edilen çıktılar, herhangi
+> bir klinik tanı, tedavi veya tıbbi karar destek amacıyla kullanılamaz.
+> Bu çıktılar yalnızca araştırma ve eğitim amaçlıdır."
+
+**VARIANT-GNN bir araştırma prototipidir; KLİNİK BİR ARAÇ DEĞİLDİR.**
+
+| ÖZETLE | DURUM |
+|--------|-------|
+| ❌ Klinik tanı koyamaz | Tıbbi cihaz değildir (CE/FDA yok) |
+| ❌ Tedavi kararı üretemez | Sadece araştırma çıktısıdır |
+| ❌ Doktor görüşü yerine geçemez | Human-in-the-loop zorunludur |
+| ❌ Adli/yasal delil değildir | Mahkeme/sigorta süreçlerinde kullanılamaz |
+| ❌ Klinik validasyon yapılmadı | Bağımsız onay gerektirir |
+| ✅ Yarışma değerlendirmesi için sunulmuştur | TEKNOFEST §7.2-7.3 |
+| ✅ Eğitim/araştırma amaçlı kullanılabilir | UNESCO ilkesiyle uyumlu (§10) |
+
+---
+
+## 📋 Özet
 
 | Alan | Değer |
-|---|---|
-| **Proje** | VARIANT-GNN |
-| **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + DNN — Dört Modlu Hibrit Topluluk |
-| **Görev** | Missense genetik varyantların Patojenik / Benign sınıflandırması |
-| **Yarışma** | TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri |
-| **Durum** | Araştırma ve yarışma prototipi |
+|------|-------|
+| **Proje Adı** | VARIANT-GNN |
+| **Takım** | XYRA3 (909249) — Başvuru ID: 4865399 |
+| **Yarışma** | TEKNOFEST 2026 Sağlıkta Yapay Zeka — Üniversite ve Üzeri |
+| **Görev** | Missense genetik varyantların Patojenik / Benign ikili sınıflandırması (§3.2) |
+| **Birincil Metrik** | Binary F1 = 2·TP / (2·TP + FP + FN) — Patojenik sınıfı (§7.3) |
+| **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
+| **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
+| **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |
+| **Veri Durumu** | ⚠️ **Gerçek yarışma verisi henüz paylaşılmadı (5 Mayıs 2026 için planlandı)** |
 
-## Model Bileşenleri ve Ağırlıklar
+---
 
-| Model | Ağırlık | Açıklama |
-|---|---|---|
-| XGBoost | %30 | Gradyan güçlendirilmiş karar ağaçları |
-| LightGBM | %30 | Yaprak bazlı gradyan güçlendirme |
-| VariantGATv2GNN | %25 | GATv2 dikkat mekanizmalı grafik sinir ağı |
-| DNN | %15 | İleri beslemeli sinir ağı |
+## 🧬 Veri Kullanımı
 
-Ağırlıklar `configs/default.yaml` üzerinden yapılandırılabilir ve otomatik optimize edilebilir.
+### Eğitim Veri Setleri (§3.2)
 
-## Destekleyici Katmanlar
+| Panel | Patojenik | Benign | Toplam |
+|-------|-----------|--------|--------|
+| General | 1500 | 1500 | 3000 |
+| Hereditary Cancer | 200 | 200 | 400 |
+| Phenylketonüri (PAH) | 200 | 200 | 400 |
+| Kistik Fibrozis (CFTR) | 70 | 70 | 140 |
 
-- **Kalibrasyon:** İzotonik Regresyon
-- **Belirsizlik:** MC Dropout (30 ileri geçiş)
-- **Açıklanabilirlik:** SHAP, LIME, GNNExplainer, Türkçe klinik rapor
-- **Değerlendirme:** Panel bazlı metrikler, external validation, adversarial validation
+### Test Veri Setleri (§3.2)
 
-## KLİNİK KULLANIM UYARISI
+| Panel | Patojenik | Benign | Toplam |
+|-------|-----------|--------|--------|
+| General | 1000 | 1000 | 2000 |
+| Hereditary Cancer | 100 | 100 | 200 |
+| PAH | 100 | 100 | 200 |
+| CFTR | 30 | 30 | 60 |
 
-> Bu sistem TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması için geliştirilmiş bir **araştırma ve yarışma prototipidir.**
->
-> - Klinik tanı koyamaz.
-> - Tedavi kararı üretemez.
-> - Klinik kullanıma hazır değildir.
-> - Uzman değerlendirmesinin yerine geçmez.
-> - Bağımsız klinik validasyon gerektirir.
-> - Klinik kararın tek dayanağı olarak kullanılmamalıdır.
-> - İnsan uzman denetimi zorunludur.
+> **Mevcut sistem**, gerçek yarışma verisi paylaşılana kadar yalnızca
+> **sentetik** ve **literatürden türetilmiş** test verileri ile test edilmiştir.
+> Tüm performans rakamları, gerçek veri ile yeniden eğitildiğinde değişir.
 
-## Hızlı Başlangıç
+### Veri Kaynakları (Şartname §10)
+
+- **ClinVar / ClinGen** (Patojenik) — 3-4 yıldız Expert Panel etiketleri
+- **gnomAD** (Benign) — popülasyon allel frekansları
+- Tümü kamuya açık, anonimleştirilmiş, KVKK + GDPR uyumlu
+- Genomik adres bilgileri (Chr/Pos) **gizlidir** (§3.2)
+
+### Öznitelik Kategorileri (§3.2)
+
+1. **Sekans ve Değişim Bilgisi** — Ref/Alt nükleotid, kodon, AA değişimi
+2. **Yerel Bağlam** — 5 nükleotid + 5 amino asit komşuluğu
+3. **Biyokimyasal/Yapısal Etkiler** — hidrofobiklik, polarite, MW farkı
+4. **Evrimsel Korunmuşluk** — GERP, PhyloP, phastCons, SiPhy
+5. **Popülasyon Verileri** — gnomAD allel frekansları (5 alt-popülasyon)
+6. **In Silico Risk Skorları** — SIFT, PolyPhen2, CADD, REVEL, MutPred2 vb.
+
+---
+
+## 🏗️ Mimari
+
+### Topluluk Bileşenleri
+
+| Model | Ağırlık | Mimari | Özellik |
+|-------|---------|--------|---------|
+| **XGBoost** | %30 | Gradient Boosting Trees | Tabular güç, hızlı |
+| **LightGBM** | %30 | Leaf-wise GBT | Düşük bellek, hızlı |
+| **VariantGATv2GNN** | %25 | GATv2 + LayerNorm + skip | Komşuluk graph |
+| **VariantDNN** | %15 | 3-katmanlı MLP + Dropout | Doğrusal-olmayan |
+
+> Ağırlıklar `configs/default.yaml` üzerinden yapılandırılabilir; eğitim
+> sırasında **Nelder-Mead** ile validation set üzerinde otomatik optimize
+> edilir. Ek olarak **LogisticRegression meta-learner** stacking
+> (`fit_meta_learner`) etkindir.
+
+### Cutting-Edge Teknikler (§7.2 generalization için)
+
+- **Stochastic Weight Averaging (SWA)** — Izmailov 2018, ICLR
+- **Sharpness-Aware Minimization (SAM)** — Foret 2021, ICLR
+- **Snapshot Ensemble** — Huang 2017, ICLR
+- **Tabular Mixup** — Zhang 2018, ICLR
+- **Domain Adversarial Training (DANN)** — Ganin 2015, ICML
+- **Conformal Prediction** — Vovk 2005, Angelopoulos 2021
+- **Confident Learning** — Northcutt 2021, JAIR
+
+### Destek Katmanları
+
+| Bileşen | Modül | Amaç |
+|---------|-------|------|
+| Kalibrasyon | `EnsembleCalibrator` (Isotonic) | Brier + ECE optimize |
+| Belirsizlik (Bayesian) | MC Dropout (30 pass) | Epistemic uncertainty |
+| Belirsizlik (frequentist) | Conformal Prediction | Provable coverage |
+| Açıklanabilirlik | SHAP + LIME + GNNExplainer | Per-tahmin katkılar |
+| Klinik Yorumlama | ACMG/AMP 2015 Mapper | Standart genetik kriter |
+| OOD Detection | Mahalanobis-based | Dağılım dışı tespit |
+| Label Quality | Confident Learning | Gürültülü etiket tespit |
+| Reproducibility | Manifest + SHA256 | §7.5 jüri re-run |
+
+---
+
+## 📊 Değerlendirme Katmanları
+
+| Katman | Komut | Çıktı |
+|--------|-------|-------|
+| 5-fold CV | `--mode crossval` | `reports/cv_report.json` |
+| Hold-out Test | `--mode train` (içinde) | `reports/cv_report.json` |
+| Panel Kırılımı | `evaluate_per_panel()` | `cv_report.json` `panel_metrics` |
+| External Validation (§7.2) | `--mode external_val` | `reports/external_validation_report.json` |
+| Cross-Panel Generalization | `--mode panel_transfer` | `reports/panel_transfer_matrix.json` |
+| Adversarial Validation | `--mode adversarial_val` | `reports/adversarial_validation_report.json` |
+| Ablation Analysis | `--mode ablation` | `reports/ablation_report.json` |
+| Label Quality | `--mode label_quality` | `reports/label_quality_report.json` |
+| Açıklanabilirlik | `--mode explain` | `reports/shap_*.png` + `explain_instances.json` |
+
+---
+
+## 🎯 Performans Beklentileri
+
+> ⚠️ Aşağıdaki rakamlar **sentetik veriye** dayanır; gerçek yarışma verisiyle
+> yeniden eğitildiğinde değişir.
+
+| Metrik | Sentetik Veri (PSR aşaması) | Beklenti (gerçek veri) |
+|--------|------------------------------|------------------------|
+| Binary F1 (Pathogenic) | ~0.93 | 0.85+ hedef |
+| Macro F1 | ~0.93 | 0.85+ hedef |
+| ROC-AUC | ~0.97 | 0.92+ hedef |
+| ECE (kalibrasyon) | <0.05 | <0.10 hedef |
+| CFTR paneli F1 (n=140) | ~0.85 | 0.75+ hedef |
+
+---
+
+## 🔁 Reproducibility (§7.5)
+
+> "Yarışma jürisi, finale kalan takımların kodlarını tekrar çalıştırmasını
+> ve beyan ettikleri sonuçları bulmalarını isteme yetkisine sahiptir."
+
+VARIANT-GNN bu yetkiyi tam olarak destekler:
+
+1. **Sabit RNG seed** — `seed=42` (`src/utils/reproducibility.py`)
+2. **Deterministik PyTorch** — `cudnn.deterministic=True`
+3. **Sabit paket versiyonları** — `requirements*.txt` `==` formatında
+4. **İmzalı manifest** — `models/reproducibility_manifest.json`
+   - Veri SHA256 + label dağılımı
+   - Tüm paket versiyonları
+   - Git commit + branch + dirty flag
+   - Tüm artefakt SHA256 hash'leri
+   - Self-hash (tamper detection)
+5. **Doğrulama API'si** — `verify_manifest_chain()`
+
+---
+
+## 🚀 Hızlı Başlangıç
 
 ```bash
-# Eğitim
-python main.py --mode train
+# 1. Sanal ortam + bağımlılıklar
+python3.10 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 
-# Tahmin
-python main.py --mode predict --test_file data/test_variants_blind.csv
+# 2. Test (247/247 yeşil olmalı)
+pytest tests/ -q
 
-# Açıklanabilirlik
-python main.py --mode explain --data_file data/train_variants.csv
+# 3. Eğitim (gerçek yarışma verisi paylaşıldıktan sonra)
+python main.py --mode train --config configs/pdr.yaml
+
+# 4. Jüri inference
+python submission/predict.py \
+    --input data/test_variants_blind.csv \
+    --model_dir models \
+    --output submission/predictions.csv \
+    --config configs/pdr.yaml
+
+# 5. Streamlit demo
+streamlit run app.py
 ```
 
-Ayrıntılı kullanım için [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) ve [`README.md`](README.md) dosyalarına bakınız.
+Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
+[`docs/submission_guide.md`](docs/submission_guide.md),
+[`docs/evaluation/evaluation_protocol.md`](docs/evaluation/evaluation_protocol.md)
 
-## Notlar (TEKNOFEST 2026 Şartname Uyumlu)
+---
 
-- **Final değerlendirme metriği**: F1 skoru (TP/FP/FN üzerinden). Repo içinde `main.py` eğitim çıktısı olarak `reports/cv_report.json` üretir ve metrik alanlarını kaydeder.
-- **Etiket birleştirme**: Pathogenic + Likely Pathogenic → 1; Benign + Likely Benign → 0 (konfig: `configs/psr.yaml` → `schema.label_mapping`).
-- **Klinik kullanım uyarısı**: Çıktılar araştırma/yarışma bağlamındadır; klinik kararların tek dayanağı olamaz. Human-in-the-loop yaklaşımı belirsizlik (MC Dropout) üzerinden işaretleme yapar.
+## 📜 Şartname Uyumluluğu Tablosu
+
+| § | Madde | VARIANT-GNN Uygulaması |
+|---|-------|------------------------|
+| §3.2 | 4 panel sınıflandırma | `src/data/loader.py` Panel one-hot |
+| §3.2 | 6 öznitelik kategorisi | `src/features/feature_validator.py` |
+| §3.2 | Anonim kolon adları | `src/inference/anonymous_inference.py` |
+| §3.2 | Genomik adres gizliliği | Hiçbir yerde Chr/Pos kullanılmaz |
+| §7.3 | F1 = 2TP/(2TP+FP+FN) | `evaluate.binary_f1` |
+| §7.2 | External validation | `external_validation_runner.py` |
+| §7.5 | Jüri kod re-run | `reproducibility_manifest.py` |
+| §10  | Etik beyan | `docs/ethical_statement.md` |
+| §12  | Sorumluluk beyanı | Bu dosya + `docs/ethical_statement.md` |
+
+---
+
+## 📚 Referanslar
+
+- Richards et al. (2015). *ACMG/AMP standards for variant interpretation.*
+- Izmailov et al. (2018). *Stochastic Weight Averaging.* UAI.
+- Foret et al. (2021). *Sharpness-Aware Minimization.* ICLR.
+- Huang et al. (2017). *Snapshot Ensembles.* ICLR.
+- Zhang et al. (2018). *mixup: Beyond Empirical Risk Minimization.* ICLR.
+- Ganin & Lempitsky (2015). *Domain-Adversarial Training.* ICML.
+- Vovk et al. (2005). *Algorithmic Learning in a Random World.*
+- Angelopoulos & Bates (2021). *Conformal Prediction.* arXiv:2107.07511
+- Northcutt et al. (2021). *Confident Learning.* JAIR.
+
+---
+
+## 📝 Lisans ve İletişim
+
+- **Lisans:** TEKNOFEST 2026 Yarışma Lisansı (`LICENSE` dosyası)
+- **Repository:** https://github.com/msgxr/VARIANT-GNN
+- **Takım:** XYRA3 — Başvuru ID 4865399
+- **İletişim:** TEKNOFEST KYS (`www.t3kys.com`) → Sağlıkta Yapay Zeka Yarışması
+- **Organizasyonel sorular:** `iletisim@teknofest.org` (§11)
+
+---
+
+> **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
+> değişiklikleriyle birlikte güncellenir. Son güncelleme: PDR aşaması — 7 Mayıs 2026.
