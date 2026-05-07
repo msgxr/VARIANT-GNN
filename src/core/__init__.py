@@ -7,7 +7,7 @@ __all__ = ["VariantGATv2GNN", "VariantDNN", "HybridEnsemble"]
 
 def __getattr__(name: str):
 	if name == "VariantDNN":
-		return import_module("src.core.dnn").VariantDNN
+		return import_module("src.models.dnn_model").VariantDNN
 	if name == "VariantGATv2GNN":
 		return import_module("src.core.gnn").VariantGATv2GNN
 	if name == "HybridEnsemble":

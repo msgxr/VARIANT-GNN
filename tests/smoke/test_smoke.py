@@ -21,7 +21,7 @@ REQUIRED_MODULES = [
     "src.features.preprocessing",
     "src.graph.builder",
     "src.models.gnn",
-    "src.models.dnn",
+    "src.models.dnn_model",
     "src.models.ensemble",
     "src.training.trainer",
     "src.calibration.calibrator",
@@ -77,7 +77,7 @@ class TestSmokeModels:
         assert model is not None
 
     def test_dnn_instantiates(self):
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
         model = VariantDNN(input_dim=20, hidden_dim=32, num_classes=2)
         assert model is not None
 

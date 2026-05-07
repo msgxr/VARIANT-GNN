@@ -385,10 +385,10 @@ class ModelStore:
         (preprocessor, ensemble, calibrator)  where calibrator may be None.
         """
         from src.config import get_settings
-        from src.core.models.dnn import VariantDNN
         from src.core.models.ensemble import HybridEnsemble
         from src.core.models.gnn import FeatureGNN
         from src.features.preprocessing import VariantPreprocessor
+        from src.models.dnn_model import VariantDNN
 
         cfg    = get_settings()
         device = torch.device(

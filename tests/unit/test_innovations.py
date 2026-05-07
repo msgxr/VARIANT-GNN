@@ -366,3 +366,75 @@ class TestAnonymousInference:
         assert feat.shape == (3, 3)
         assert "Variant_ID" in meta.columns
         assert "Panel" in meta.columns
+
+
+# ---------------------------------------------------------------------------
+# 8. TD-006 Multimodal Fail-Safe
+# ---------------------------------------------------------------------------
+
+
+class TestMultimodalFailSafe:
+    """Regression tests for the TD-006 fix: pipeline must not crash when
+    multimodal sequences are missing, malformed, or wrong-typed."""
+
+    def test_build_safe_tensors_with_none(self):
+        """nuc/aa = None → returns valid zero-padded tensors of correct shape."""
+        import torch
+        from src.api.pipeline import _build_safe_sequence_tensors
+        from src.models.dnn_model import VariantDNN  # cheap module on CPU
+
+        # Use a simple module for device extraction
+        dummy = VariantDNN(input_dim=10, hidden_dim=16)
+        nuc_ids, aa_ids = _build_safe_sequence_tensors(
+            gnn_model=dummy, n_samples=4,
+            nuc_sequences=None, aa_sequences=None,
+        )
+        assert nuc_ids.shape == (4, 11)
+        assert aa_ids.shape == (4, 11)
+        assert nuc_ids.dtype == torch.long
+        assert aa_ids.dtype == torch.long
+        assert (nuc_ids == 0).all()
+        assert (aa_ids == 0).all()
+
+    def test_build_safe_tensors_with_nan_strings(self):
+        """nuc list with NaN/None entries → tokenized cleanly."""
+        from src.api.pipeline import _build_safe_sequence_tensors
+        from src.models.dnn_model import VariantDNN
+
+        dummy = VariantDNN(input_dim=10, hidden_dim=16)
+        nuc_ids, aa_ids = _build_safe_sequence_tensors(
+            gnn_model=dummy, n_samples=3,
+            nuc_sequences=[None, "ACGT", float("nan")],
+            aa_sequences=["ALK", None, ""],
+        )
+        assert nuc_ids.shape == (3, 11)
+        assert aa_ids.shape == (3, 11)
+
+    def test_build_safe_tensors_with_wrong_type(self):
+        """Non-string sequence values are str()-cast safely."""
+        from src.api.pipeline import _build_safe_sequence_tensors
+        from src.models.dnn_model import VariantDNN
+
+        dummy = VariantDNN(input_dim=10, hidden_dim=16)
+        nuc_ids, aa_ids = _build_safe_sequence_tensors(
+            gnn_model=dummy, n_samples=2,
+            nuc_sequences=[42, 3.14],
+            aa_sequences=[0, 1],
+        )
+        assert nuc_ids.shape == (2, 11)
+        assert aa_ids.shape == (2, 11)
+
+    def test_build_safe_tensors_length_mismatch(self):
+        """Length mismatch is logged + padded — no crash."""
+        from src.api.pipeline import _build_safe_sequence_tensors
+        from src.models.dnn_model import VariantDNN
+
+        dummy = VariantDNN(input_dim=10, hidden_dim=16)
+        # n_samples=5 but only 2 sequences
+        nuc_ids, aa_ids = _build_safe_sequence_tensors(
+            gnn_model=dummy, n_samples=5,
+            nuc_sequences=["ACGT", "TTAG"],
+            aa_sequences=["ALK", "VRP"],
+        )
+        assert nuc_ids.shape == (5, 11)
+        assert aa_ids.shape == (5, 11)

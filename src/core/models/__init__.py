@@ -13,7 +13,7 @@ __all__ = [
 
 def __getattr__(name: str):
     if name == "VariantDNN":
-        return import_module("src.core.models.dnn").VariantDNN
+        return import_module("src.models.dnn_model").VariantDNN
     if name == "HybridEnsemble":
         return import_module("src.core.models.ensemble").HybridEnsemble
     if name in {"VariantGATv2GNN", "VariantSAGEGNN", "FeatureGNN"}:

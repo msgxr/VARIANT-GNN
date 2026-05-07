@@ -41,6 +41,92 @@ def _build_gnn_loader(
     return GeoDataLoader(graphs, batch_size=batch_size, shuffle=False)
 
 
+def _build_safe_sequence_tensors(
+    gnn_model,
+    n_samples: int,
+    nuc_sequences,
+    aa_sequences,
+):
+    """
+    TD-006 fail-safe: multimodal GNN için sekans tensörlerini güvenle üret.
+
+    Aşağıdaki senaryolarda çökmeden devam eder:
+
+      1. ``nuc_sequences`` veya ``aa_sequences`` ``None``       → padding tensor üret
+      2. Liste boş veya satır sayısı eşleşmiyor                  → eksik satırları padla
+      3. Tokenization sırasında hata oluşuyor                    → padding tensor + uyarı
+      4. Sekanslar hatalı tip / NaN / boş string içeriyor         → ``str()`` cast + unknown=5/21
+      5. GNN multimodal aktif ama veri yok                       → uyarı logla, padding gönder
+
+    Returns
+    -------
+    (nuc_ids, aa_ids) : torch.Tensor | None  ikisi de None ise multimodal devre dışı
+    """
+    import torch
+
+    from src.features.multimodal_encoder import (
+        AA_SEQ_LEN,
+        NUC_SEQ_LEN,
+        tokenize_amino_acids,
+        tokenize_nucleotides,
+    )
+
+    device = next(gnn_model.parameters()).device
+
+    # Tüm sekanslar yok ya da uzunluk eşleşmiyor → zero padding
+    nuc_seqs_safe: list[str] = []
+    aa_seqs_safe:  list[str] = []
+
+    if nuc_sequences is None or len(nuc_sequences) != n_samples:
+        if nuc_sequences is None:
+            logger.warning(
+                "TD-006 fail-safe: Nuc_Context yok — multimodal model padding "
+                "tokenları kullanacak."
+            )
+        else:
+            logger.warning(
+                "TD-006 fail-safe: Nuc_Context uzunluğu (%d) feature satır "
+                "sayısından (%d) farklı — eksik satırlar padlenecek.",
+                len(nuc_sequences), n_samples,
+            )
+        nuc_seqs_safe = [""] * n_samples
+    else:
+        nuc_seqs_safe = [str(s) if s is not None else "" for s in nuc_sequences]
+
+    if aa_sequences is None or len(aa_sequences) != n_samples:
+        if aa_sequences is None:
+            logger.warning(
+                "TD-006 fail-safe: AA_Context yok — multimodal model padding "
+                "tokenları kullanacak."
+            )
+        aa_seqs_safe = [""] * n_samples
+    else:
+        aa_seqs_safe = [str(s) if s is not None else "" for s in aa_sequences]
+
+    # Tokenize defansif olarak — hata olursa zero tensor üret
+    try:
+        nuc_arr = tokenize_nucleotides(nuc_seqs_safe)
+        nuc_ids = torch.tensor(nuc_arr, dtype=torch.long).to(device)
+    except Exception as exc:
+        logger.warning(
+            "TD-006 fail-safe: Nuc tokenization başarısız (%s) — "
+            "zero-padding tensor kullanılacak.", exc,
+        )
+        nuc_ids = torch.zeros(n_samples, NUC_SEQ_LEN, dtype=torch.long, device=device)
+
+    try:
+        aa_arr = tokenize_amino_acids(aa_seqs_safe)
+        aa_ids = torch.tensor(aa_arr, dtype=torch.long).to(device)
+    except Exception as exc:
+        logger.warning(
+            "TD-006 fail-safe: AA tokenization başarısız (%s) — "
+            "zero-padding tensor kullanılacak.", exc,
+        )
+        aa_ids = torch.zeros(n_samples, AA_SEQ_LEN, dtype=torch.long, device=device)
+
+    return nuc_ids, aa_ids
+
+
 class InferencePipeline:
     """
     Loads serialised models and runs prediction on new variant data.
@@ -83,27 +169,23 @@ class InferencePipeline:
         X_np = dataset.features.values
         X_scaled = self._preprocessor.transform(X_np)
 
-        # ── Build sequence tensors for multimodal GNN (if applicable) ──
+        # ── Build sequence tensors for multimodal GNN (TD-006 fail-safe) ──
         from src.core.models.gnn import VariantGATv2GNN
         nuc_ids = None
         aa_ids = None
-        if (
+
+        is_multimodal = (
             isinstance(self._ensemble.gnn, VariantGATv2GNN)
             and getattr(self._ensemble.gnn, "use_multimodal", False)
-            and dataset.nuc_sequences is not None
-        ):
-            import torch
+        )
 
-            from src.features.multimodal_encoder import tokenize_amino_acids, tokenize_nucleotides
-            
-            device = next(self._ensemble.gnn.parameters()).device
-            nuc_ids = torch.tensor(
-                tokenize_nucleotides(dataset.nuc_sequences), dtype=torch.long
-            ).to(device)
-            if dataset.aa_sequences is not None:
-                aa_ids = torch.tensor(
-                    tokenize_amino_acids(dataset.aa_sequences), dtype=torch.long
-                ).to(device)
+        if is_multimodal:
+            nuc_ids, aa_ids = _build_safe_sequence_tensors(
+                gnn_model     = self._ensemble.gnn,
+                n_samples     = X_scaled.shape[0],
+                nuc_sequences = dataset.nuc_sequences,
+                aa_sequences  = dataset.aa_sequences,
+            )
         
         # Load F1-optimal threshold saved during training (TEKNOFEST §7.3)
         # Falls back to config value (0.50) when no saved threshold exists.

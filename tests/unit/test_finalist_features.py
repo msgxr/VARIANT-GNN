@@ -21,7 +21,7 @@ class TestMCDropoutEstimator:
     def test_estimate_dnn_shapes(self):
         """MC Dropout DNN çıktı boyutlarını doğrular."""
         from src.api.uncertainty import MCDropoutEstimator
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
 
         model = VariantDNN(input_dim=20, hidden_dim=32, num_classes=2, dropout=0.5)
         estimator = MCDropoutEstimator(model, n_forward=10)

@@ -34,8 +34,8 @@ from scipy.optimize import minimize
 from sklearn.metrics import f1_score
 
 from src.config import get_settings
-from src.core.models.dnn import VariantDNN
 from src.core.models.gnn import VariantGATv2GNN
+from src.models.dnn_model import VariantDNN
 
 logger = logging.getLogger(__name__)
 

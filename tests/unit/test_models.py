@@ -73,14 +73,14 @@ class TestVariantGATv2GNN:
 
 class TestVariantDNN:
     def test_forward_shape(self):
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
         model = VariantDNN(input_dim=20, hidden_dim=64, num_classes=2)
         x = torch.randn(8, 20)
         out = model(x)
         assert out.shape == (8, 2)
 
     def test_different_input_dims(self):
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
         for dim in [10, 50, 100]:
             model = VariantDNN(input_dim=dim, hidden_dim=32, num_classes=2)
             x = torch.randn(4, dim)
@@ -88,7 +88,7 @@ class TestVariantDNN:
             assert out.shape == (4, 2), f"Failed for input_dim={dim}"
 
     def test_gradient_flows(self):
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
         model = VariantDNN(input_dim=16, hidden_dim=32, num_classes=2)
         x    = torch.randn(6, 16)
         out  = model(x)
@@ -99,7 +99,7 @@ class TestVariantDNN:
                 assert param.grad is not None, f"No gradient for {name}"
 
     def test_batch_norm_requires_batch_size_gt_1(self):
-        from src.core.models.dnn import VariantDNN
+        from src.models.dnn_model import VariantDNN
         model = VariantDNN(input_dim=8, hidden_dim=16, num_classes=2)
         model.eval()          # eval mode: BN uses running stats → single sample OK
         x = torch.randn(1, 8)

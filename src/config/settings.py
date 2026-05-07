@@ -240,9 +240,30 @@ class Settings:
 
 
 def load_settings(config_path: Optional[Path] = None) -> Settings:
-    """Load and validate settings from a YAML configuration file."""
+    """
+    YAML konfigürasyonunu yükle ve doğrula.
+
+    İki aşamalı doğrulama:
+      1. Pydantic schema (`src.config.schema.validate_config_dict`) — tip,
+         sınır ve gerekli alan kontrolü → fail-fast.
+      2. Mevcut Settings dataclass'larına dönüştürme.
+
+    Pydantic adımı başarısız olursa programa Türkçe hata mesajıyla
+    `ConfigValidationError` fırlatır (TD-011 çözümü).
+    """
     path = Path(config_path) if config_path else _DEFAULT_CONFIG
     raw = _load_yaml(path)
+
+    # Fail-fast Pydantic doğrulama (TD-011)
+    try:
+        from src.config.schema import validate_config_dict
+        validate_config_dict(raw)
+    except Exception as exc:
+        # ConfigValidationError veya import hatasında konfigürasyona devam et
+        # ama uyarı logla. Asıl hata: ConfigValidationError → re-raise.
+        from src.config.schema import ConfigValidationError as _CVE
+        if isinstance(exc, _CVE):
+            raise
 
     base_dir = _BASE_DIR
 

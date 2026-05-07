@@ -1,5 +1,9 @@
-# VARIANT-GNN — TEKNOFEST 2026 ana bağımlılıkları
-# Versiyonlar reproducibility için sabitlenmiştir (§7.5 jüri kod re-run uyumu)
+# VARIANT-GNN — TEKNOFEST 2026 üretim bağımlılıkları (yarışma çıkarımı için minimal set)
+# Versiyonlar reproducibility için sabitlenmiştir (§7.5 jüri kod re-run uyumu).
+#
+# Bu dosya YALNIZCA üretim/jüri-inference için gereken paketleri içerir.
+# Geliştirme araçları (mlflow, fastapi, locust, dev paketleri) için:
+#     pip install -r requirements-dev.txt
 
 # ── Core data + ML ──
 pandas==2.3.3
@@ -28,36 +32,15 @@ tqdm==4.67.3
 # ── Hyperparameter Optimization ──
 optuna==4.7.0
 
-# ── Test & QA ──
+# ── Test & QA (smoke test paketi için minimal pytest) ──
 pytest==8.4.2
-pytest-cov>=4.0.0,<6.0
-pytest-xdist>=3.5.0,<4.0
 
 # ── Streamlit UI ──
 streamlit==1.50.0
 
-# ── Validation ──
+# ── Validation (Pydantic v2 — config schema, data contracts) ──
 pydantic==2.12.5
 pyyaml==6.0.3
 
 # ── Reporting ──
 fpdf2==2.8.4
-
-# ── Bioinformatics (opsiyonel, ortam-bazlı) ──
-vcfpy>=0.13.0,<0.14
-fhirpy>=2.0.0,<3.0
-stmol>=0.0.9,<0.1
-py3Dmol>=2.0.0,<3.0
-
-# ── Experiment Tracking (opsiyonel) ──
-mlflow>=2.10.0,<3.0
-
-# ── CI / Quality ──
-mypy==1.19.1
-ruff==0.15.12
-
-# ── API & Load Testing (opsiyonel) ──
-fastapi>=0.110.0,<1.0
-uvicorn[standard]>=0.27.0,<1.0
-python-multipart>=0.0.9,<1.0
-locust>=2.24.0,<3.0
