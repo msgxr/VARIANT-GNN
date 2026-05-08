@@ -1,5 +1,0 @@
-outs:
-- md5: b0d187493d6383503bb3d6c2f5e0d376
-  size: 64073137
-  hash: md5
-  path: pretrain_100k.csv
