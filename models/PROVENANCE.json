@@ -1,0 +1,14 @@
+{
+  "status": "SYNTHETIC_TRAINED",
+  "warning": "Model ağırlıkları sentetik/pilot veriyle eğitilmiştir. Gerçek TEKNOFEST verisiyle yeniden eğitim şarttır.",
+  "data_source": "synthetic_development_scaffold",
+  "real_data_received": false,
+  "generated_at": "2026-05-08T13:05:05.911193",
+  "train_config": "configs/dev_quick.yaml",
+  "train_samples": 3940,
+  "cv_folds": 2,
+  "note": "F1=1.00 sentetik veri üzerinde beklenen overfitting; gerçek veride geçersiz.",
+  "retrain_command": "python main.py --mode train --data_file data/train_variants.csv",
+  "predict_command": "python main.py --mode predict --test_file data/<test_blind.csv> --output submission/predictions.csv",
+  "validation_command": "python main.py --mode external_val --test_file data/<test_labelled.csv>"
+}

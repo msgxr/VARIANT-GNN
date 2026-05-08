@@ -153,7 +153,27 @@ class InferencePipeline:
         self._preprocessor, self._ensemble, self._calibrator = self.store.load_all() # type: ignore
         self._loaded = True
         logger.info("InferencePipeline loaded from %s", self.store.model_dir)
+        self._check_provenance()
         return self
+
+    def _check_provenance(self) -> None:
+        """PROVENANCE.json varsa oku; sentetik veriyle eğitilmişse uyar."""
+        import json as _json
+        prov_path = self.store.model_dir / "PROVENANCE.json"
+        if not prov_path.exists():
+            return
+        try:
+            with open(prov_path, encoding="utf-8") as _fh:
+                prov = _json.load(_fh)
+        except Exception:
+            return
+        if prov.get("real_data_received") is False:
+            logger.warning("=" * 70)
+            logger.warning("UYARI: Mevcut model ağırlıkları sentetik/pilot veriyle")
+            logger.warning("eğitilmiştir. Tahminler gerçek klinik data üzerinde")
+            logger.warning("geçersizdir. Gerçek veri geldiğinde yeniden eğitin:")
+            logger.warning("  %s", prov.get("retrain_command", "python main.py --mode train"))
+            logger.warning("=" * 70)
 
     # ------------------------------------------------------------------
 

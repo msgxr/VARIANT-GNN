@@ -28,12 +28,15 @@ ENV/
 app.log
 logs/
 
-# Model ağırlıkları (büyük binary — LFS veya ayrı storage kullan)
+# Model ağırlıkları (büyük binary — eğitim sonrası üretilir, repoya eklenmez)
 models/*.pth
 models/*.pkl
 models/*.json
 models/*.txt
 models/autoencoder.pth
+# İstisna: eğitim durumu belgesi ve dizin açıklaması git'te kalır
+!models/PROVENANCE.json
+!models/README.md
 
 # Word geçici dosyaları
 ~$*.docx

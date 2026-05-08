@@ -1,0 +1,80 @@
+seed: 42
+device: cpu
+
+paths:
+  data_dir: data
+  models_dir: models
+  reports_dir: reports
+
+gnn:
+  hidden_dim: 64
+  epochs: 5
+  lr: 0.001
+  weight_decay: 1.0e-4
+  use_gat: true
+  knn_k: 5
+  knn_threshold: 0.3
+  early_stopping_patience: 5
+  use_multimodal: false
+  seq_enc_dim: 32
+
+dnn:
+  hidden_dim: 64
+  epochs: 5
+  lr: 0.001
+  weight_decay: 1.0e-4
+
+xgb:
+  objective: binary:logistic
+  eval_metric: logloss
+  max_depth: 4
+  learning_rate: 0.1
+  subsample: 0.8
+  colsample_bytree: 0.8
+  n_estimators: 50
+  n_jobs: -1
+  min_child_weight: 3
+  reg_alpha: 0.05
+  reg_lambda: 1.0
+
+lgbm:
+  num_leaves: 31
+  max_depth: -1
+  learning_rate: 0.1
+  n_estimators: 50
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  min_child_samples: 10
+  n_jobs: -1
+  verbose: -1
+
+ensemble:
+  weights: [0.35, 0.30, 0.20, 0.15]
+  optimize_weights: false
+
+preprocessing:
+  corr_threshold: 0.25
+  use_autoencoder: false
+  autoencoder_encoding_dim: 16
+  autoencoder_epochs: 5
+  use_feature_selection: true
+  k_best_features: 35
+  smote_enabled: false
+  use_bio_scoring: false
+
+calibration:
+  enabled: true
+  method: isotonic
+
+training:
+  test_size: 0.2
+  cv_folds: 2
+  batch_size: 64
+  loss_function: weighted_bce
+  focal_gamma: 2.0
+
+thresholds:
+  classification: 0.50
+  high_risk: 0.7
