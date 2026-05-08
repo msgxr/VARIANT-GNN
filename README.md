@@ -684,73 +684,19 @@ python main.py --mode adversarial_val \
 
 ---
 
-### Panel Bazlı Performans — Mevcut Sonuçlar
+### Panel Bazlı Performans
 
-> ⚠️ **Önemli Not:** Aşağıdaki sonuçlar, gerçek yarışma verisi alınmadan önce geliştirme sürecinde kullanılan **gerçekçi sentetik pilot veri** üzerinde elde edilmiştir. Gerçek TEKNOFEST 2026 yarışma verisiyle doğrulanmış final performans kanıtı henüz mevcut değildir. Rakamlar yarışma sonucu olarak sunulamaz; yalnızca pipeline geliştirme referansı olarak değerlendirilmelidir.
+> ⚠️ Gerçek TEKNOFEST 2026 yarışma verisi henüz alınmamıştır. Aşağıdaki tablo gerçek veri eğitimi tamamlandıktan sonra doldurulacaktır.
+> Birincil metrik: **Binary F1 = 2·TP / (2·TP + FP + FN)**, Patojenik sınıfı (§7.3).
 
-| Panel | Binary F1 ↑ | ROC-AUC ↑ | MCC ↑ | Precision | Recall |
+| Panel | Binary F1 §7.3 ↑ | Precision ↑ | Recall ↑ | ROC-AUC ↑ | MCC ↑ |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| 🌐 Genel Veri Seti | 0.571 | 0.500 | 0.0 | 0.400 | 1.000 |
-| 🧬 Herediter Kanser | 0.600 | 0.500 | 0.0 | 0.429 | 1.000 |
-| 🔬 PAH | 0.818 | 0.500 | 0.0 | 0.692 | 1.000 |
-| 💊 CFTR | 0.750 | 0.500 | 0.0 | 0.600 | 1.000 |
+| 🌐 Genel Veri Seti | — | — | — | — | — |
+| 🧬 Herediter Kanser | — | — | — | — | — |
+| 🔬 PAH | — | — | — | — | — |
+| 💊 CFTR | — | — | — | — | — |
 
-> **Kaynak:** `reports/cv_report.json` — Sentetik pilot veri, 5-Fold Stratified CV, karar eşiği 0.01. Ana metrik: Binary F1 (§7.3). Tüm panellerde ROC-AUC = 0.50 ve MCC = 0.0 değerleri, modelin eşik 0.01 ile tüm örnekleri Patojenik sınıflandırdığını göstermektedir. Bu durum sentetik verinin sınırlı ayırt edici gücünden kaynaklanmaktadır ve gerçek yarışma verisiyle eğitim sonrasında güncellenecektir.
-
----
-
-### Hata Analizi
-
-```
-Veri türü:  Sentetik pilot veri (gerçek yarışma verisi değil)
-CV folds:   5-Fold Stratified CV (configs/psr.yaml: cv_folds=5)
-Ortalama CV Binary F1:  0.633 ± 0.046  (Fold 1-5: 0.636 / 0.550 / 0.682 / 0.629 / 0.667)
-Test Binary F1:         0.710
-Test ROC-AUC:           0.500
-
-Gözlem:
-  Karar eşiği 0.01 ile model tüm örnekleri Patojenik sınıflandırıyor.
-  Recall = 1.0, Precision = 0.55 → Patojenik yanlılığı var.
-  Bu, sentetik verinin modelin sınıf ayrımını öğrenmesi için
-  yeterli ayırt edici sinyal içermediğini göstermektedir.
-
-Koruma mekanizması (pipeline seviyesinde):
-  MC Dropout belirsizliği > 0.30 → "⚠️ Uzman Değerlendirmesi Gerekli" bayrağı
-  (Gerçek veri üzerindeki etkinliği doğrulanmamıştır.)
-
-Gerçek yarışma verisiyle eğitim sonrası bu bölüm güncellenecektir.
-```
-
----
-
-### CV Çalışma Raporu (reports/cv_report.json — gerçek değerler)
-
-```json
-{
-  "competition_metric": "F1 Score (TP/FP/FN, TEKNOFEST §7.3)",
-  "veri_notu": "Sentetik pilot veri — gerçek yarışma verisi değil",
-  "mean_cv_macro_f1": 0.6327,
-  "std_cv_macro_f1":  0.0457,
-  "best_threshold":   0.01,
-  "test_metrics": {
-    "binary_f1":   0.7097,
-    "macro_f1":    0.3548,
-    "precision":   0.5500,
-    "recall":      1.0000,
-    "roc_auc":     0.5000,
-    "brier_score": 0.2476,
-    "mcc":         0.0
-  },
-  "panel_metrics": {
-    "General":           {"binary_f1": 0.5714, "roc_auc": 0.5},
-    "Hereditary_Cancer": {"binary_f1": 0.6000, "roc_auc": 0.5},
-    "PAH":               {"binary_f1": 0.8182, "roc_auc": 0.5},
-    "CFTR":              {"binary_f1": 0.7500, "roc_auc": 0.5}
-  }
-}
-```
-
-> **Not:** Bu değerler `reports/cv_report.json` dosyasından alınmıştır. Gerçek TEKNOFEST 2026 yarışma verisi üzerinde eğitim ve değerlendirme henüz tamamlanmamıştır. Gerçek veri üzerindeki performans kanıtı bulunamadı.
+Gerçek veri geldiğinde: `python main.py --mode train --data_file data/train_variants.csv`
 
 ---
 

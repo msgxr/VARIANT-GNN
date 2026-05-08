@@ -13,7 +13,7 @@
 | Gerçek veri üzerinde cv_report.json üretildi | ❌ Kanıt bulunamadı |
 | train_log.txt gerçek veri eğitimini gösteriyor | ❌ Kanıt bulunamadı |
 
-> Mevcut `cv_report.json` ve `train_log.txt` sentetik pilot veri üzerindeki çalışmaları yansıtmaktadır.
+> Mevcut `cv_report.json` ve `train_log.txt` geliştirme iskeleti verisi üzerindeki çalışmaları yansıtmaktadır; gerçek TEKNOFEST verisi alındığında güncellenecektir.
 
 ---
 

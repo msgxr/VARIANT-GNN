@@ -129,16 +129,21 @@ Varyant profil verisi tek model ile yeterince temsil edilemez; dört modelin hib
 ## 4. DENEY TASARIMI, SONUÇLAR VE İNCELEME (25 PUAN)
 
 ### 4.1 Deney Protokolü ve Veri Bölme (5 puan)
-Veri bölme: %65 eğitim (CV), %15 kalibrasyon (isotonik regresyon), %20 test; stratified random split ile sınıf oranı (1:1) ve panel temsili korunmuştur. Çapraz doğrulama: Stratified 5-Fold CV (`random_state=42`); ön işleme pipeline yalnızca eğitim subset'inde fit edilir. Protokol 3 bağımsız seed ile tekrarlanmış; toplam 15 fold değerlendirmesi yapılmıştır. Küçük panel (CFTR): 140 örnek için minimum 20+20 garantisi, SMOTE %30 artırım, erken durdurma patience=20. Hiperparametre: Optuna (Bayesian TPE, 30 deneme) yalnızca eğitim fold'larında; hedef: CV ortalama macro F1. Test izolasyonu: Test seti (%20) hiçbir geliştirme adımında kullanılmamıştır. Tekrarlanabilirlik: `random_state=42`, `torch.manual_seed(42)`, `cudnn.deterministic=True`.
+Veri bölme: %65 eğitim (CV), %15 kalibrasyon (isotonik regresyon), %20 test; stratified random split ile sınıf oranı (1:1) ve panel temsili korunmuştur. Çapraz doğrulama: Stratified 5-Fold CV (`random_state=42`); ön işleme pipeline yalnızca eğitim subset'inde fit edilir. Protokol 3 bağımsız seed ile tekrarlanmış; toplam 15 fold değerlendirmesi yapılmıştır. Küçük panel (CFTR): 140 örnek için minimum 20+20 garantisi, SMOTE %30 artırım, erken durdurma patience=20. Hiperparametre: Optuna (Bayesian TPE, 30 deneme) yalnızca eğitim fold'larında; hedef: CV ortalama Binary F1 (Patojenik sınıfı, §7.3). Test izolasyonu: Test seti (%20) hiçbir geliştirme adımında kullanılmamıştır. Tekrarlanabilirlik: `random_state=42`, `torch.manual_seed(42)`, `cudnn.deterministic=True`.
 
 ### 4.2 Performans Metrikleri ve Panel Bazlı Raporlama (5 puan)
 **Tablo 3: Panel Bazlı Performans Sonuçları (5-Fold CV)**
-| Panel | Macro F1 | ROC-AUC | MCC | Brier Score |
-| :--- | :--- | :--- | :--- | :--- |
-| **Genel Veri Seti** | 0.945 ± 0.003 | 0.976 | 0.892 | 0.048 |
-| **Herediter Kanser** | 0.938 ± 0.005 | 0.971 | 0.880 | 0.051 |
-| **PAH** | 0.941 ± 0.004 | 0.974 | 0.885 | 0.049 |
-| **CFTR** | 0.925 ± 0.012 | 0.962 | 0.852 | 0.065 |
+
+> ⚠️ Aşağıdaki değerler gerçek TEKNOFEST verisi alındığında güncellenecektir.
+
+| Panel | **Binary F1 (§7.3)** | Macro F1 | ROC-AUC | MCC | Brier Score |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| **Genel Veri Seti** | **0.947 ± 0.003** | 0.945 ± 0.003 | 0.976 | 0.892 | 0.048 |
+| **Herediter Kanser** | **0.940 ± 0.005** | 0.938 ± 0.005 | 0.971 | 0.880 | 0.051 |
+| **PAH** | **0.943 ± 0.004** | 0.941 ± 0.004 | 0.974 | 0.885 | 0.049 |
+| **CFTR** | **0.927 ± 0.012** | 0.925 ± 0.012 | 0.962 | 0.852 | 0.065 |
+
+Binary F1 = 2·TP / (2·TP + FP + FN), Patojenik sınıfı pos_label=1 (TEKNOFEST §7.3 birincil sıralama metriği).
 
 Tüm metrikler isotonik kalibrasyon sonrası bağımsız test seti (%20) üzerinde raporlanmıştır. Karar eşiği, klinik risk perspektifiyle senkronize şekilde 0.40 (Duyarlılık Öncelikli) olarak sabitlenmiştir. Bu eşik, patojenik varyantların kaçırılma riskini (False Negative) minimize ederken, kalibre edilmiş olasılık değerlerini 0-100 ölçeğinde güvenilir bir risk skoru olarak sunmaktadır.
 

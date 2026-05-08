@@ -146,13 +146,13 @@
 > ⚠️ Aşağıdaki rakamlar **sentetik veriye** dayanır; gerçek yarışma verisiyle
 > yeniden eğitildiğinde değişir.
 
-| Metrik | Sentetik Veri (PSR aşaması) | Beklenti (gerçek veri) |
-|--------|------------------------------|------------------------|
-| Binary F1 (Pathogenic) | ~0.93 | 0.85+ hedef |
-| Macro F1 | ~0.93 | 0.85+ hedef |
-| ROC-AUC | ~0.97 | 0.92+ hedef |
-| ECE (kalibrasyon) | <0.05 | <0.10 hedef |
-| CFTR paneli F1 (n=140) | ~0.85 | 0.75+ hedef |
+| Metrik | Mevcut Durum | Hedef (gerçek veri) |
+|--------|--------------|---------------------|
+| **Binary F1 §7.3 (birincil)** | Gerçek veri bekleniyor | **0.85+** |
+| Macro F1 (yardımcı) | Gerçek veri bekleniyor | 0.85+ |
+| ROC-AUC | Gerçek veri bekleniyor | 0.92+ |
+| ECE (kalibrasyon hatası) | Gerçek veri bekleniyor | <0.10 |
+| CFTR Binary F1 (n=140) | Gerçek veri bekleniyor | 0.75+ |
 
 ---
 
