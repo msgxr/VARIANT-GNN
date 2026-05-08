@@ -1,102 +1,102 @@
-# VARIANT-GNN ERROR CHECKER — Hata Yakalama ve Düzeltme Skill'i
+# VARIANT-GNN ERROR CHECKER — Error Detection and Correction Skill
 
-## Skill Amacı
+## Skill Purpose
 
-Bu skill, VARIANT-GNN projesindeki her türlü hatayı şartnameye göre sistematik olarak tespit etmek, önceliklendirmek ve doğrudan uygulanabilir düzeltmeler üretmek için kullanılır.
+This skill is used to systematically detect, prioritize, and produce directly actionable corrections for all types of errors in the VARIANT-GNN project, evaluated against the competition specification.
 
-Bu skill aktifken Claude yalnızca hata söylemez. Hatanın ne olduğunu, neden hata olduğunu, şartnamenin hangi maddesini ihlal ettiğini ve nasıl düzeltileceğini somut olarak yazar.
-
----
-
-## Mutlak Referans Çerçevesi
-
-Bu skill yalnızca aşağıdaki çerçevede çalışır:
-
-- Yarışma: TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması
-- Seviye: Üniversite ve Üzeri Seviyesi
-- Proje: VARIANT-GNN
-- Görev: Patojenik / Benign binary classification
-- Temel metrik: F1 Skoru (TP, FP, FN üzerinden)
-- Final puanı: Görev performansı %90, sunum %10
-- Jüri yetkisi: Kodu tekrar çalıştırma ve beyan edilen sonuçları doğrulama
+When this skill is active, Claude does not merely state errors. It writes concretely: what the error is, why it is an error, which clause of the specification it violates, and how to fix it.
 
 ---
 
-## Hata Öncelik Seviyeleri
+## Absolute Reference Framework
 
-Her hata aşağıdaki seviyelerden biriyle etiketlenmelidir. Claude hata başlığının yanına seviyeyi her zaman yazar.
+This skill operates exclusively within the following framework:
 
-### SEVİYE 1 — KRİTİK
-Yarışmada diskalifiye veya büyük puan kaybı riski. Derhal düzeltilmeli.
-
-- Test etiketinin eğitimde kullanılması
-- Veri sızıntısı (preprocessing/scaler/imputer/encoder tüm veri üzerinde fit)
-- Kodun hiç çalışmaması
-- F1 skorunun yanlış hesaplanması veya hiç raporlanmaması
-- Klinik tanı/tedavi iddiası
-- EKG, kardiyoloji, lise seviyesi içeriği
-- Genomik adresle dış kaynaktan etiket bulma
-- Binary classification kurulmamış olması
-
-### SEVİYE 2 — YÜKSEK
-Ciddi puan kaybına yol açabilecek hatalar. 24 saat içinde düzeltilmeli.
-
-- Baseline model karşılaştırmasının olmaması
-- GNN gerekçesinin eksik olması
-- Confusion matrix, precision, recall eksikliği
-- Random seed sabitlenmemesi
-- SMOTE / oversampling split öncesi uygulanması
-- Train/validation/test maskelerinde çakışma
-- Tahmin dosyasının üretilememesi
-- Model checkpoint kaydının olmaması
-
-### SEVİYE 3 — ORTA
-Kalite düşüren, jüri izlenimini olumsuz etkileyen hatalar. Teslim öncesi düzeltilmeli.
-
-- Overfitting analizi eksikliği
-- Cross-validation veya validation stratejisinin yetersiz açıklanması
-- Threshold tuning yapılmaması
-- Panel bazlı değerlendirmenin eksik olması
-- Sınıf dengesizliğinin yorumlanmaması
-- Kod dokümantasyonunun yetersiz olması
-- README'de çalıştırma komutlarının eksik olması
-
-### SEVİYE 4 — DÜŞÜK
-Puan kaybettirmeyen ama kaliteyi artıracak öneriler.
-
-- Ek görselleştirme eksikliği
-- Kod stilinin düzenlenmesi
-- Log mesajlarının iyileştirilmesi
+- Competition: TEKNOFEST 2026 Health AI Competition
+- Level: University and Above
+- Project: VARIANT-GNN
+- Task: Pathogenic / Benign binary classification
+- Primary metric: F1 Score (based on TP, FP, FN)
+- Final score: Task performance 90%, presentation 10%
+- Jury authority: Re-running code and verifying declared results
 
 ---
 
-## Veri Sızıntısı Alarm Kuralları
+## Error Priority Levels
 
-Aşağıdaki kalıplar kodda görüldüğünde Claude KRİTİK olarak işaretler ve düzeltme verir.
+Every error must be labeled with one of the following levels. Claude always writes the level next to the error title.
+
+### LEVEL 1 — CRITICAL
+Risk of disqualification or major score loss in the competition. Must be fixed immediately.
+
+- Using test labels during training
+- Data leakage (preprocessing/scaler/imputer/encoder fitted on entire dataset)
+- Code not running at all
+- F1 score calculated incorrectly or not reported at all
+- Clinical diagnosis/treatment claim
+- ECG, cardiology, high-school-level content
+- Finding labels from external sources using genomic addresses
+- Binary classification not set up
+
+### LEVEL 2 — HIGH
+Errors that can cause serious score loss. Must be fixed within 24 hours.
+
+- No baseline model comparison
+- GNN justification missing
+- Missing confusion matrix, precision, recall
+- Random seed not fixed
+- SMOTE / oversampling applied before split
+- Overlap in train/validation/test masks
+- Prediction file cannot be produced
+- No model checkpoint saved
+
+### LEVEL 3 — MODERATE
+Errors that reduce quality and negatively affect jury impression. Must be fixed before submission.
+
+- Missing overfitting analysis
+- Cross-validation or validation strategy insufficiently explained
+- Threshold tuning not performed
+- Panel-based evaluation incomplete
+- Class imbalance not interpreted
+- Insufficient code documentation
+- Missing run commands in README
+
+### LEVEL 4 — LOW
+Suggestions that do not cause score loss but will improve quality.
+
+- Missing additional visualizations
+- Code style cleanup
+- Improving log messages
+
+---
+
+## Data Leakage Alarm Rules
+
+When the following patterns appear in code, Claude marks them as CRITICAL and provides a fix.
 
 ### Preprocessing Leakage
 ```
-HATALI:  scaler.fit(X)              # X = tüm veri
-HATALI:  scaler.fit_transform(X)    # X = tüm veri
-DOĞRU:   scaler.fit(X_train)
+WRONG:   scaler.fit(X)              # X = entire dataset
+WRONG:   scaler.fit_transform(X)    # X = entire dataset
+CORRECT: scaler.fit(X_train)
          scaler.transform(X_val)
          scaler.transform(X_test)
 
-HATALI:  imputer.fit(X)             # X = tüm veri
-DOĞRU:   imputer.fit(X_train)
+WRONG:   imputer.fit(X)             # X = entire dataset
+CORRECT: imputer.fit(X_train)
          imputer.transform(X_val)
          imputer.transform(X_test)
 
-HATALI:  encoder.fit(X)             # X = tüm veri
-DOĞRU:   encoder.fit(X_train)
+WRONG:   encoder.fit(X)             # X = entire dataset
+CORRECT: encoder.fit(X_train)
          encoder.transform(X_val)
          encoder.transform(X_test)
 ```
 
 ### Feature Selection Leakage
 ```
-HATALI:  selector = SelectKBest().fit(X, y)        # X, y = tüm veri
-DOĞRU:   selector = SelectKBest().fit(X_train, y_train)
+WRONG:   selector = SelectKBest().fit(X, y)        # X, y = entire dataset
+CORRECT: selector = SelectKBest().fit(X_train, y_train)
          X_train_sel = selector.transform(X_train)
          X_val_sel   = selector.transform(X_val)
          X_test_sel  = selector.transform(X_test)
@@ -104,234 +104,234 @@ DOĞRU:   selector = SelectKBest().fit(X_train, y_train)
 
 ### SMOTE / Oversampling Leakage
 ```
-HATALI:  X_res, y_res = SMOTE().fit_resample(X, y)  # split öncesi
+WRONG:   X_res, y_res = SMOTE().fit_resample(X, y)  # before split
          X_train, X_test, y_train, y_test = train_test_split(X_res, y_res)
 
-DOĞRU:   X_train, X_test, y_train, y_test = train_test_split(X, y)
+CORRECT: X_train, X_test, y_train, y_test = train_test_split(X, y)
          X_train_res, y_train_res = SMOTE().fit_resample(X_train, y_train)
 ```
 
-### Test Etiketi Leakage
+### Test Label Leakage
 ```
-HATALI:  model.fit(X_train, y_train, eval_set=[(X_test, y_test)])
-HATALI:  if f1_score(y_test, pred) > best: model = current_model  # model seçiminde
-DOĞRU:   model seçimi yalnızca validation seti üzerinden yapılır
+WRONG:   model.fit(X_train, y_train, eval_set=[(X_test, y_test)])
+WRONG:   if f1_score(y_test, pred) > best: model = current_model  # in model selection
+CORRECT: model selection is performed only on the validation set
 ```
 
-### Genomik Adres Leakage (Şartname Bölüm 3.2)
+### Genomic Address Leakage (Specification Section 3.2)
 ```
-HATALI:  ClinVar API'si üzerinden chr + pos ile etiket sorgusu
-HATALI:  gnomAD'dan varyant etiketi çekme
-HATALI:  Dış veri tabanından hazır sınıf etiketi alma
-DOĞRU:   Yalnızca yarışma komitesi tarafından sağlanan varyant profilleri kullanılır
+WRONG:   Label query via ClinVar API using chr + pos
+WRONG:   Pulling variant labels from gnomAD
+WRONG:   Fetching ready-made class labels from external databases
+CORRECT: Only variant profiles provided by the competition committee are used
 ```
 
 ### GNN Mask Leakage
 ```
-HATALI:  data.train_mask = torch.ones(N, dtype=torch.bool)  # tüm node train
-HATALI:  loss = criterion(out, data.y)                      # tüm node loss
-DOĞRU:   loss = criterion(out[data.train_mask], data.y[data.train_mask])
+WRONG:   data.train_mask = torch.ones(N, dtype=torch.bool)  # all nodes as train
+WRONG:   loss = criterion(out, data.y)                      # loss over all nodes
+CORRECT: loss = criterion(out[data.train_mask], data.y[data.train_mask])
          val_pred  = out[data.val_mask]
          test_pred = out[data.test_mask]
 ```
 
 ---
 
-## Şartname İhlali Tarama Kuralları
+## Specification Violation Scanning Rules
 
-### İhlal 1: Kapsam Dışı İçerik
-Şartname Bölüm 2 ve 3.1'e göre aşağıdakiler yalnızca LİSE seviyesi kapsamındadır:
+### Violation 1: Out-of-Scope Content
+Per Specification Sections 2 and 3.1, the following belong only to the HIGH SCHOOL level:
 
-- EKG / 12 derivasyonlu EKG
-- Kardiyoloji / ritim bozukluğu / iletim bozukluğu
-- ECG Arrhythmia Dataset / PhysioNet sinyalleri
-- Macro F1-score (lise metriği)
-- EKG alt grup sınıflandırması
+- ECG / 12-lead ECG
+- Cardiology / arrhythmia / conduction disorder
+- ECG Arrhythmia Dataset / PhysioNet signals
+- Macro F1-score (high school metric)
+- ECG subgroup classification
 
-Bu içerikler kod, rapor veya sunumda görülürse Claude KRİTİK olarak işaretler ve çıkarır.
+If this content appears in code, reports, or presentations, Claude marks it as CRITICAL and removes it.
 
-### İhlal 2: Yanlış Metrik
-Şartname Bölüm 7.3: Temel metrik F1 Skoru (TP, FP, FN üzerinden).
+### Violation 2: Wrong Metric
+Specification Section 7.3: The primary metric is F1 Score (based on TP, FP, FN).
 
 ```
-HATALI:  Sadece accuracy raporlamak
-HATALI:  AUC-ROC'u tek metrik olarak sunmak
-HATALI:  F1'i hiç hesaplamamak
-DOĞRU:   F1 = 2*TP / (2*TP + FP + FN)
+WRONG:   Reporting only accuracy
+WRONG:   Presenting AUC-ROC as the sole metric
+WRONG:   Not computing F1 at all
+CORRECT: F1 = 2*TP / (2*TP + FP + FN)
          Precision = TP / (TP + FP)
          Recall = TP / (TP + FN)
          Confusion matrix
 ```
 
-### İhlal 3: Klinik İddia
-Şartname Bölüm 10: Model çıktıları klinik tanı, tedavi veya tıbbi karar destek amacıyla kullanılamaz.
+### Violation 3: Clinical Claim
+Specification Section 10: Model outputs cannot be used for clinical diagnosis, treatment, or medical decision support.
 
-Yasak ifadeler:
-- "Kesin teşhis koyar"
-- "Yüzde yüz doğru sonuç verir"
-- "Doktor yerine karar verir"
-- "Klinikte doğrudan kullanılabilir"
-- "Tedavi önerir"
-- "Hastalığı tespit eder"
+Prohibited phrases:
+- "Makes a definitive diagnosis"
+- "Gives 100% accurate results"
+- "Makes decisions instead of a doctor"
+- "Can be used directly in the clinic"
+- "Recommends treatment"
+- "Detects disease"
 
-Doğru ifadeler:
-- "Tahmin modeli"
-- "Araştırma, eğitim ve yarışma değerlendirmesi amacıyla"
-- "Model çıktıları tıbbi karar yerine geçmez"
-- "Klinik kullanım için ek doğrulama gerekir"
+Correct phrases:
+- "Prediction model"
+- "For research, education, and competition evaluation purposes"
+- "Model outputs do not replace medical decisions"
+- "Additional validation is required for clinical use"
 
-### İhlal 4: Sınıf Birleştirme Hatası
-Şartname Bölüm 3.2:
-
-```
-DOĞRU:   Patojenik ← Pathogenic + Likely Pathogenic
-         Benign    ← Benign + Likely Benign
-
-HATALI:  4 sınıflı model (Pathogenic / Likely_Path / Likely_Benign / Benign)
-HATALI:  Likely Pathogenic'i ayrı sınıf olarak tutmak
-HATALI:  VUS (Variant of Uncertain Significance) dahil etmek
-```
-
-### İhlal 5: Genomik Adres Kullanımı
-Şartname Bölüm 3.2: Varyantların genomik adres (kromozom ve pozisyon) bilgileri gizlenmiştir.
+### Violation 4: Class Merging Error
+Specification Section 3.2:
 
 ```
-HATALI:  Chromosom, position, genomic_address kolonunu model özniteliği olarak kullanmak
-HATALI:  Bu bilgiyle ClinVar'dan etiket aramak
-DOĞRU:   Yalnızca şartnamenin belirlediği öznitelik grupları kullanılır
+CORRECT: Pathogenic ← Pathogenic + Likely Pathogenic
+         Benign     ← Benign + Likely Benign
+
+WRONG:   4-class model (Pathogenic / Likely_Path / Likely_Benign / Benign)
+WRONG:   Keeping Likely Pathogenic as a separate class
+WRONG:   Including VUS (Variant of Uncertain Significance)
+```
+
+### Violation 5: Genomic Address Usage
+Specification Section 3.2: Genomic address (chromosome and position) information of variants is hidden.
+
+```
+WRONG:   Using chromosome, position, genomic_address columns as model features
+WRONG:   Searching for labels in ClinVar using this information
+CORRECT: Only the feature groups specified by the specification are used
 ```
 
 ---
 
-## Kod Hata Tarama Prosedürü
+## Code Error Scanning Procedure
 
-Kullanıcı kod verdiğinde Claude şu sırayla inceler:
+When the user provides code, Claude inspects in the following order:
 
-### Adım 1: Syntax ve Import
-- Import hataları var mı?
-- Tanımsız değişken var mı?
-- Kapatılmamış parantez/bracket var mı?
-- Indent hatası var mı?
+### Step 1: Syntax and Imports
+- Are there import errors?
+- Are there undefined variables?
+- Are there unclosed parentheses/brackets?
+- Are there indentation errors?
 
-### Adım 2: Veri Okuma ve Label
-- Dosya yolları doğru mu? Hard-coded mı?
-- Label encoding tutarlı mı? (Patojenik=1 / Benign=0 veya tersi, tek yerde tanımlı)
-- NaN handling doğru mu?
-- Sınıf birleştirme (Likely sınıflar) yapılmış mı?
+### Step 2: Data Reading and Labels
+- Are file paths correct? Are they hard-coded?
+- Is label encoding consistent? (Pathogenic=1 / Benign=0 or vice versa, defined in one place)
+- Is NaN handling correct?
+- Is class merging (Likely classes) applied?
 
-### Adım 3: Preprocessing Pipeline
-- scaler, imputer, encoder sadece train üzerinde fit ediliyor mu?
-- SMOTE split sonrası sadece train üzerinde mi?
-- Feature selection sadece train üzerinde mi?
-- AutoEncoder tüm veri üzerinde mi eğitiliyor?
+### Step 3: Preprocessing Pipeline
+- Are scaler, imputer, encoder fitted only on train data?
+- Is SMOTE applied only on train data after the split?
+- Is feature selection applied only on train data?
+- Is AutoEncoder trained on the entire dataset?
 
-### Adım 4: Train/Validation/Test Ayrımı
-- Ayrım yapılmış mı?
-- Validation, test'ten ayrı mı?
-- Aynı varyant birden fazla splitte var mı?
-- random_state / seed sabitlenmiş mi?
+### Step 4: Train/Validation/Test Split
+- Has a split been made?
+- Is validation separate from test?
+- Does the same variant appear in multiple splits?
+- Is random_state / seed fixed?
 
-### Adım 5: Model Mimarisi
-- Binary classification doğru kurulmuş mu?
-- Çıkış boyutu: 1 (sigmoid) veya 2 (softmax)?
-- Loss function: BCEWithLogitsLoss / BCELoss / CrossEntropyLoss doğru mu?
-- Sigmoid + BCELoss çakışması var mı?
-- Sigmoid + CrossEntropyLoss çakışması var mı?
+### Step 5: Model Architecture
+- Is binary classification set up correctly?
+- Output size: 1 (sigmoid) or 2 (softmax)?
+- Loss function: BCEWithLogitsLoss / BCELoss / CrossEntropyLoss — is it correct?
+- Is there a Sigmoid + BCELoss conflict?
+- Is there a Sigmoid + CrossEntropyLoss conflict?
 
-### Adım 6: Metrik Hesaplama
-- f1_score hesaplanıyor mu?
-- average='binary' mi kullanılıyor? (binary classification için)
-- precision_score ve recall_score var mı?
-- confusion_matrix üretiliyor mu?
-- Accuracy tek metrik gibi sunuluyor mu?
+### Step 6: Metric Calculation
+- Is f1_score computed?
+- Is average='binary' used? (for binary classification)
+- Are precision_score and recall_score present?
+- Is confusion_matrix produced?
+- Is accuracy presented as the sole metric?
 
-### Adım 7: GNN Spesifik
-- data.x shape: [num_nodes, num_features] doğru mu?
-- data.edge_index shape: [2, num_edges] doğru mu?
-- data.y shape: [num_nodes] doğru mu?
-- train_mask, val_mask, test_mask üst üste binmiyor mu?
-- Loss sadece train_mask üzerinden mi hesaplanıyor?
-- Graf tüm veri (train+test) üzerinden mi kurulmuş?
+### Step 7: GNN Specific
+- Is data.x shape: [num_nodes, num_features] correct?
+- Is data.edge_index shape: [2, num_edges] correct?
+- Is data.y shape: [num_nodes] correct?
+- Do train_mask, val_mask, test_mask overlap?
+- Is loss computed only over train_mask?
+- Is the graph built over the entire dataset (train+test)?
 
-### Adım 8: Reproducibility
-- torch.manual_seed(seed) var mı?
-- np.random.seed(seed) var mı?
-- random.seed(seed) var mı?
-- torch.backends.cudnn.deterministic = True var mı?
-- Model checkpoint kaydediliyor mu?
-- Tahmin dosyası (submission.csv / predictions.csv) üretilebiliyor mu?
-
----
-
-## Rapor Hata Tarama Prosedürü
-
-Kullanıcı rapor verdiğinde Claude şu başlıkları kontrol eder:
-
-### Proje Sunuş Raporu (PSR) Kontrolü
-Şartname Bölüm 4 (Üniversite ve Üzeri):
-
-- Genel problemin tanımlanması var mı?
-- Literatür taraması var mı?
-- Önerilen çözüm yönteminin detayları var mı?
-- Veri yaklaşımı açıklanmış mı?
-- Şartname kapsamına açık bağlantı kurulmuş mu?
-- Ön sonuçlar varsa gerekçeli mi, yoksa "planlanan yöntem" dili kullanılmış mı?
-- Kapsam dışı içerik (EKG, lise) var mı?
-
-### Proje Detay Raporu (PDR) Kontrolü
-Şartname Bölüm 4 (Üniversite ve Üzeri):
-
-- Geliştirilen modelin mimarisi detaylı anlatılmış mı?
-- Eğitim süreçleri açıklanmış mı?
-- İç test (validasyon) sonuçları sunulmuş mu?
-- F1 skoru tablo halinde verilmiş mi?
-- Confusion matrix var mı?
-- Baseline karşılaştırması var mı?
-- GNN gerekçesi bilimsel mi?
-- Panel bazlı değerlendirme (Genel + Kanser + PAH + CFTR) var mı?
-- Veri ön işleme adımları açıklanmış mı?
-- Veri sızıntısı önlemleri belirtilmiş mi?
-- Etik beyan ve KVKK/GDPR bölümü var mı?
-- Klinik kullanım dışı beyan var mı?
-- Kod çalıştırılabilirliği açıklanmış mı?
+### Step 8: Reproducibility
+- Is torch.manual_seed(seed) present?
+- Is np.random.seed(seed) present?
+- Is random.seed(seed) present?
+- Is torch.backends.cudnn.deterministic = True present?
+- Is the model checkpoint saved?
+- Can the prediction file (submission.csv / predictions.csv) be produced?
 
 ---
 
-## GNN Hata Denetimi
+## Report Error Scanning Procedure
 
-GNN kodu veya açıklaması verildiğinde Claude şu soruları yanıtlar:
+When the user provides a report, Claude checks the following headings:
 
-**Graf Yapısı:**
-- Düğümler neyi temsil ediyor? (Her varyant bir node olmalı)
-- Kenarlar neye göre kuruluyor? (kNN feature similarity, biyolojik benzerlik vb.)
-- Kenar kurma işlemi train ve test node'larını birleştiriyor mu? (Leakage riski)
-- Kenar ağırlıkları NaN veya negatif mi?
+### Project Presentation Report (PSR) Check
+Specification Section 4 (University and Above):
 
-**GNN Gerekçesi:**
-"Varyantlar arasındaki biyolojik, yapısal ve hesaplamalı benzerlik ilişkileri graf yapısıyla temsil edilebildiği için GNN mimarisi, bağımsız tabular örnekler üzerinden öğrenen modellere kıyasla ilişkisel örüntüleri öğrenme potansiyeline sahiptir."
+- Is the general problem defined?
+- Is there a literature review?
+- Are the details of the proposed solution method present?
+- Is the data approach explained?
+- Is there an explicit connection to the specification scope?
+- If preliminary results exist, are they justified? Or is "planned method" language used?
+- Is there out-of-scope content (ECG, high school)?
 
-Bu gerekçe raporda yoksa YÜKSEK hata olarak işaretlenir.
+### Project Detail Report (PDR) Check
+Specification Section 4 (University and Above):
 
-**Baseline Zorunluluğu (Şartname ruhuna göre):**
-GNN olmadan Baseline performansı bilinmiyorsa GNN'nin katkısı savunulamaz.
+- Is the developed model architecture described in detail?
+- Are the training processes explained?
+- Are internal test (validation) results presented?
+- Is the F1 score given in a table?
+- Is there a confusion matrix?
+- Is there a baseline comparison?
+- Is the GNN justification scientific?
+- Is there panel-based evaluation (General + Cancer + PAH + CFTR)?
+- Are the data preprocessing steps explained?
+- Are data leakage prevention measures stated?
+- Is there an ethics statement and KVKK/GDPR section?
+- Is there a clinical use disclaimer?
+- Is code runnability explained?
 
-Önerilebilecek baseline modeller:
+---
+
+## GNN Error Audit
+
+When GNN code or description is provided, Claude answers the following questions:
+
+**Graph Structure:**
+- What do nodes represent? (Each variant should be one node)
+- How are edges constructed? (kNN feature similarity, biological similarity, etc.)
+- Does the edge construction connect train and test nodes? (Leakage risk)
+- Are edge weights NaN or negative?
+
+**GNN Justification:**
+"Because biological, structural, and computational similarity relationships between variants can be represented as a graph structure, the GNN architecture has the potential to learn relational patterns compared to models that learn from independent tabular samples."
+
+If this justification is missing from the report, it is flagged as a HIGH error.
+
+**Baseline Requirement (per the spirit of the specification):**
+If baseline performance without GNN is unknown, the contribution of GNN cannot be defended.
+
+Recommended baseline models:
 - Logistic Regression
 - Random Forest
 - XGBoost
 - LightGBM
 - MLP / Tabular DNN
 
-Baseline olmadan GNN kullanmak KRİTİK değil ama YÜKSEK hatadır.
+Using GNN without a baseline is not CRITICAL but is a HIGH error.
 
 ---
 
-## F1 Skoru Denetimi
+## F1 Score Audit
 
-Şartname Bölüm 7.3: Temel metrik F1 Skoru.
+Specification Section 7.3: The primary metric is F1 Score.
 
 ```python
-# DOĞRU F1 Hesaplama (Binary Classification)
+# CORRECT F1 Calculation (Binary Classification)
 from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix
 
 f1  = f1_score(y_true, y_pred, average='binary')
@@ -339,181 +339,181 @@ pre = precision_score(y_true, y_pred, average='binary')
 rec = recall_score(y_true, y_pred, average='binary')
 cm  = confusion_matrix(y_true, y_pred)
 
-# Manuel doğrulama:
+# Manual verification:
 # F1 = 2*TP / (2*TP + FP + FN)
 ```
 
-Claude şu kontrolleri yapar:
-- average='binary' mi kullanılıyor?
-- Threshold 0.5 sabit mi? Validation üzerinde optimize edilmiş mi?
-- Sınıf dengesizliği varsa etki yorumlanmış mı?
-- Panel bazlı F1 ayrı hesaplanmış mı?
-- Accuracy tek metrik gibi sunuluyor mu?
+Claude performs the following checks:
+- Is average='binary' used?
+- Is threshold fixed at 0.5? Has it been optimized on validation?
+- If class imbalance exists, is its effect interpreted?
+- Is panel-based F1 computed separately?
+- Is accuracy presented as the sole metric?
 
 ---
 
-## Etik ve KVKK/GDPR Kontrolü
+## Ethics and KVKK/GDPR Check
 
-Şartname Bölüm 10:
+Specification Section 10:
 
-Kontrol edilecekler:
-- "Yalnızca araştırma, eğitim ve yarışma değerlendirmesi amacıyla" ifadesi var mı?
-- "Klinik tanı, tedavi veya tıbbi karar destek amacıyla kullanılamaz" var mı?
-- KVKK / GDPR bölümü eklenmiş mi?
-- Genomik adres kaldırılmasının re-identification riskini azalttığı belirtilmiş mi?
-- Veri sorumlusunun TEKNOFEST organizasyonu olduğu açıklanmış mı?
+Items to check:
+- Is the phrase "for research, education, and competition evaluation purposes only" present?
+- Is "cannot be used for clinical diagnosis, treatment, or medical decision support" present?
+- Is a KVKK / GDPR section added?
+- Is it stated that removing genomic addresses reduces re-identification risk?
+- Is it explained that the TEKNOFEST organization is the data controller?
 
-Doğru etik beyan:
-"Bu proje kapsamında geliştirilen model yalnızca araştırma, eğitim ve yarışma değerlendirmesi amacıyla tasarlanmıştır. Model çıktıları klinik tanı, tedavi veya tıbbi karar verme süreçlerinde doğrudan kullanılamaz. Klinik kullanım için bağımsız validasyon, regülasyon uygunluğu ve uzman hekim değerlendirmesi gereklidir. Yarışmada kullanılan veriler kamuya açık ve anonimleştirilmiş olup KVKK ve GDPR standartlarına uygundur."
+Correct ethics statement:
+"The model developed within the scope of this project is designed solely for research, education, and competition evaluation purposes. Model outputs cannot be used directly in clinical diagnosis, treatment, or medical decision-making processes. Independent validation, regulatory compliance, and expert physician assessment are required for clinical use. The data used in the competition is publicly available and anonymized, in compliance with KVKK and GDPR standards."
 
 ---
 
-## Hata Çıktı Formatı
+## Error Output Format
 
-Hata tespiti istendiğinde Claude şu formatı kullanır:
+When error detection is requested, Claude uses the following format:
 
 ```
-## Hata Tarama Sonucu
+## Error Scan Result
 
-### Özet
-[Toplam X hata: Y kritik, Z yüksek, W orta]
-
----
-
-### SEVİYE 1 — KRİTİK HATALAR
-
-#### [HATA BAŞLIĞI]
-- Konum: [dosya/satır/fonksiyon]
-- Şartname maddesi: [ilgili bölüm]
-- Açıklama: [ne yanlış ve neden kritik]
-- Mevcut:
-  [hatalı kod veya ifade]
-- Düzeltilmiş:
-  [doğru kod veya ifade]
+### Summary
+[Total X errors: Y critical, Z high, W moderate]
 
 ---
 
-### SEVİYE 2 — YÜKSEK HATALAR
-[Aynı format]
+### LEVEL 1 — CRITICAL ERRORS
 
-### SEVİYE 3 — ORTA HATALAR
-[Aynı format]
+#### [ERROR TITLE]
+- Location: [file/line/function]
+- Specification clause: [relevant section]
+- Description: [what is wrong and why it is critical]
+- Current:
+  [faulty code or statement]
+- Corrected:
+  [correct code or statement]
 
 ---
 
-### Teslim Öncesi Kontrol Listesi
-[ ] Tüm kritik hatalar düzeltildi
-[ ] F1 skoru doğru hesaplanıyor
-[ ] Veri sızıntısı yok
-[ ] Kod hatasız çalışıyor
-[ ] Tahmin dosyası üretilebiliyor
-[ ] Etik beyan eklendi
-[ ] Klinik kullanım dışı beyan var
-[ ] Baseline karşılaştırması var
-[ ] Seed sabitlendi
-[ ] Model checkpoint kaydediliyor
+### LEVEL 2 — HIGH ERRORS
+[Same format]
+
+### LEVEL 3 — MODERATE ERRORS
+[Same format]
+
+---
+
+### Pre-Submission Checklist
+[ ] All critical errors fixed
+[ ] F1 score computed correctly
+[ ] No data leakage
+[ ] Code runs without errors
+[ ] Prediction file can be produced
+[ ] Ethics statement added
+[ ] Clinical use disclaimer present
+[ ] Baseline comparison present
+[ ] Seed fixed
+[ ] Model checkpoint saved
 ```
 
 ---
 
-## Hızlı Komut Tablosu
+## Quick Command Table
 
-Kullanıcı aşağıdaki komutlardan birini kullandığında Claude ilgili taramayı başlatır:
+When the user uses one of the commands below, Claude initiates the corresponding scan:
 
-| Kullanıcı Komutu | Yapılacak İşlem |
+| User Command | Action |
 |---|---|
-| "hataları bul" | Tüm kategorilerde tam tarama |
-| "kodu kontrol et" | Adım 1-8 kod taraması |
-| "leakage kontrol" | Veri sızıntısı alarm kuralları |
-| "şartnameye uygun mu" | Şartname ihlali taraması |
-| "raporu düzelt" | PSR / PDR kontrol prosedürü |
-| "GNN kontrol" | GNN spesifik denetim |
-| "F1 kontrol" | F1 ve metrik denetimi |
-| "etik kontrol" | KVKK/GDPR ve klinik risk denetimi |
-| "teslim öncesi kontrol" | Master checklist |
+| "find errors" | Full scan across all categories |
+| "check code" | Steps 1–8 code scan |
+| "leakage check" | Data leakage alarm rules |
+| "spec compliant?" | Specification violation scan |
+| "fix report" | PSR / PDR check procedure |
+| "GNN check" | GNN-specific audit |
+| "F1 check" | F1 and metric audit |
+| "ethics check" | KVKK/GDPR and clinical risk audit |
+| "pre-submission check" | Master checklist |
 
 ---
 
-## Teslim Öncesi Master Checklist
+## Pre-Submission Master Checklist
 
-### A. Kod
-- [ ] Tüm dosyalar hatasız çalışıyor
-- [ ] Dosya yolları taşınabilir (hard-coded değil)
-- [ ] Random seed sabitlenmiş
-- [ ] Model checkpoint kaydediliyor ve yüklenebiliyor
-- [ ] Tahmin dosyası üretilip kaydediliyor
-- [ ] requirements.txt güncel
-- [ ] README'deki komutlar çalışıyor
+### A. Code
+- [ ] All files run without errors
+- [ ] File paths are portable (not hard-coded)
+- [ ] Random seed fixed
+- [ ] Model checkpoint saved and loadable
+- [ ] Prediction file produced and saved
+- [ ] requirements.txt up to date
+- [ ] Commands in README work
 
-### B. Veri
-- [ ] Pathogenic + Likely Pathogenic → Patojenik
+### B. Data
+- [ ] Pathogenic + Likely Pathogenic → Pathogenic
 - [ ] Benign + Likely Benign → Benign
-- [ ] Train/val/test ayrımı doğru
-- [ ] Preprocessing sadece train'de fit
-- [ ] SMOTE sadece train'de
-- [ ] Feature selection sadece train'de
-- [ ] Genomik adresle etiket bulma riski yok
-- [ ] Gene/protein-level leakage kontrol edildi
+- [ ] Train/val/test split correct
+- [ ] Preprocessing fitted only on train
+- [ ] SMOTE applied only on train
+- [ ] Feature selection applied only on train
+- [ ] No risk of finding labels via genomic address
+- [ ] Gene/protein-level leakage checked
 
-### C. Model ve Metrik
-- [ ] Binary classification doğru kurulmuş
-- [ ] Loss function uygun
-- [ ] F1, Precision, Recall raporlanıyor
-- [ ] Confusion matrix üretiliyor
-- [ ] Baseline modeller mevcut
-- [ ] Overfitting analizi yapılmış
+### C. Model and Metrics
+- [ ] Binary classification set up correctly
+- [ ] Loss function appropriate
+- [ ] F1, Precision, Recall reported
+- [ ] Confusion matrix produced
+- [ ] Baseline models present
+- [ ] Overfitting analysis performed
 
-### D. Rapor
-- [ ] PSR şartname kapsamına uygun
-- [ ] PDR tüm gerekli bölümleri içeriyor
-- [ ] Kapsam dışı içerik yok (EKG vb.)
-- [ ] Etik beyan eklendi
-- [ ] KVKK/GDPR bölümü var
-- [ ] Klinik kullanım dışı beyan var
-- [ ] Panel bazlı değerlendirme var
+### D. Report
+- [ ] PSR compliant with specification scope
+- [ ] PDR contains all required sections
+- [ ] No out-of-scope content (ECG, etc.)
+- [ ] Ethics statement added
+- [ ] KVKK/GDPR section present
+- [ ] Clinical use disclaimer present
+- [ ] Panel-based evaluation present
 
 ### E. GNN
-- [ ] Graf yapısı gerekçelendirilmiş
-- [ ] Train/val/test mask doğru ve çakışmıyor
-- [ ] Test etiketleri eğitimde kullanılmıyor
-- [ ] GNN vs Baseline karşılaştırması var
+- [ ] Graph structure justified
+- [ ] Train/val/test masks correct and non-overlapping
+- [ ] Test labels not used in training
+- [ ] GNN vs Baseline comparison present
 
-### F. Final Sunumu
-- [ ] Problem → Yöntem → Sonuç yapısı
-- [ ] F1 sonuçları gösterilmiş
-- [ ] Baseline karşılaştırması var
-- [ ] Etik uygunluk belirtilmiş
-- [ ] Şartname bağlantısı açık
-
----
-
-## Düzeltme Kuralı
-
-Claude sadece hata söylemez. Her hata için doğrudan uygulanabilir düzeltme verir.
-
-Yanlış: "Bu bölüm eksik."
-Doğru: "Bu bölüm eksik. Aşağıdaki metin eklenebilir: ..."
+### F. Final Presentation
+- [ ] Problem → Method → Result structure
+- [ ] F1 results shown
+- [ ] Baseline comparison present
+- [ ] Ethical compliance stated
+- [ ] Specification connection explicit
 
 ---
 
-## Yasaklar
+## Correction Rule
 
-Bu skill aktifken Claude:
+Claude does not merely state errors. It provides a directly actionable correction for every error.
 
-- Var olmayan hatayı hata gibi göstermez
-- Gerçek kritik hatayı yumuşatmaz
-- "Muhtemelen sorun yok" gibi belirsiz ifade kullanmaz
-- Hata söyleyip düzeltme vermeden bırakmaz
-- EKG, kardiyoloji, lise içeriği eklemez veya önermez
-- Test edilmemiş kodu "kesinlikle çalışır" diye sunmaz
-- Emin olmadığı şeyi kesin söylemez
+Wrong: "This section is missing."
+Correct: "This section is missing. The following text can be added: ..."
 
 ---
 
-## Son İç Kontrol Sorusu
+## Prohibitions
 
-Claude her hata raporu vermeden önce kendi içinde şu soruyu sorar:
+When this skill is active, Claude:
 
-"Bu hata tespiti ve düzeltme, VARIANT-GNN projesini TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Üniversite ve Üzeri Seviyesi final değerlendirmesinde daha az puan kaybettirecek hale getiriyor mu?"
+- Does not present non-existent errors as real
+- Does not soften genuinely critical errors
+- Does not use vague phrases like "probably no issue"
+- Does not state an error without providing a correction
+- Does not add or suggest ECG, cardiology, or high-school content
+- Does not present untested code as "definitely works"
+- Does not state anything as certain when uncertain
 
-Cevap hayırsa çıktı yeniden düzenlenir.
+---
+
+## Final Internal Control Question
+
+Before producing any error report, Claude asks itself internally:
+
+"Does this error detection and correction make the VARIANT-GNN project lose fewer points in the TEKNOFEST 2026 Health AI Competition University and Above Level final evaluation?"
+
+If the answer is no, the output is revised.
