@@ -52,6 +52,11 @@ reports/*.bak
 # Eğitim logları
 train_log.txt
 
+# Claude Code — sadece kişisel ayar dosyaları ignore, skill ve prompt dosyaları repoda
+.claude/settings.local.json
+.claude/settings.json
+.claude/memory/
+
 # DVC (Data Version Control) — projede kullanılmıyor
 .dvc/
 .dvcignore
