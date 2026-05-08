@@ -259,21 +259,49 @@ def mode_predict(args, cfg):
       python main.py --mode predict --config configs/final.yaml \
                      --test_file data/test_blind.csv \
                      --output submission/predictions.csv
+
+      # Test-Time Augmentation ile (varyans azaltma):
+      python main.py --mode predict --test_file data/test_blind.csv --tta --tta_k 10
     """
     if not args.test_file:
         logging.error("--test_file gerekli (predict modu).")
         sys.exit(1)
 
+    use_tta = getattr(args, "tta", False)
+    tta_k   = getattr(args, "tta_k", 10)
+
     logging.info("=" * 60)
     logging.info("  VARIANT-GNN — JÜRİ TAHMİN MODU")
     logging.info("  Giriş : %s", args.test_file)
+    if use_tta:
+        logging.info("  TTA   : AÇIK (k=%d augmentation)", tta_k)
     logging.info("=" * 60)
 
     pipeline = InferencePipeline()
     pipeline.load()
 
     try:
-        df_result = pipeline.predict_from_csv(args.test_file)
+        if use_tta:
+            from src.inference.tta import tta_predict_dataframe
+            from src.data.loader import load_predict_csv
+            ds = load_predict_csv(args.test_file)
+            df_result = pipeline.predict_from_dataset(ds)
+            df_result = tta_predict_dataframe(
+                pipeline._ensemble,
+                pipeline._preprocessor,
+                df_result.join(
+                    __import__("pandas").DataFrame(
+                        ds.features.values,
+                        columns=ds.feature_columns,
+                    )
+                ),
+                feature_columns=ds.feature_columns,
+                n_augmentations=tta_k,
+                seed=cfg.seed,
+            )
+            logging.info("TTA tamamlandı — TTA_Uncertainty sütunu eklendi.")
+        else:
+            df_result = pipeline.predict_from_csv(args.test_file)
     except Exception as exc:
         logging.error("Tahmin hatası: %s", exc)
         sys.exit(1)
@@ -995,6 +1023,10 @@ def build_parser():
                    help="Panel filtresi: General, Hereditary_Cancer, PAH, CFTR")
     p.add_argument("--output", type=str, default=None,
                    help="Submission CSV çıktı yolu (predict modu için)")
+    p.add_argument("--tta", action="store_true", default=False,
+                   help="Test-Time Augmentation aktif et (predict modu için)")
+    p.add_argument("--tta_k", type=int, default=10,
+                   help="TTA augmentation sayısı (varsayılan: 10)")
     return p
 
 
