@@ -57,7 +57,7 @@ class GNNSettings:
     use_gat: bool = True
     knn_k: int = 10                   # PSR §3.3: cosine k-NN k=10
     early_stopping_patience: int = 20 # PSR §4.5
-    use_multimodal: bool = True       # fuse SequenceEncoder (Nuc_Context/AA_Context)
+    use_multimodal: bool = False      # Nuc_Context/AA_Context varsa True; yoksa crash önlenir
     seq_enc_dim: int = 32             # SequenceEncoder output_dim (cnn_channels*2)
     model_type: str = "gatv2"         # used for MLflow run naming in trainer.py
 
@@ -105,6 +105,7 @@ class XGBSettings:
 @dataclass
 class LGBMSettings:
     """LightGBM classifier settings (4th ensemble member)."""
+    objective: str = "binary"
     num_leaves: int = 63
     max_depth: int = -1
     learning_rate: float = 0.05
@@ -120,6 +121,7 @@ class LGBMSettings:
 
     def as_dict(self) -> Dict[str, Any]:
         return {
+            "objective": self.objective,
             "num_leaves": self.num_leaves,
             "max_depth": self.max_depth,
             "learning_rate": self.learning_rate,

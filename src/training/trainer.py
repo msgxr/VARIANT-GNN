@@ -655,8 +655,8 @@ class VariantTrainer:
                 )
                 lgbm_preds = lgbm_model_fold.predict(X_val_proc)
                 lgbm_f1    = float(f1_score(y_val, lgbm_preds, average="binary", pos_label=1, zero_division=0))
-            except Exception:
-                pass
+            except Exception as lgbm_exc:
+                logger.warning("Fold %d: LightGBM başarısız (%s) — ensemble'dan çıkarıldı.", fold_idx, lgbm_exc)
 
             # --- GNN (VariantGATv2GNN) ---
             knn_k    = getattr(cfg.gnn, "knn_k", 5)

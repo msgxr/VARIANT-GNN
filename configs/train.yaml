@@ -22,7 +22,7 @@ preprocessing:
 gnn:
   epochs: 50                         # PSR uyumlu (early stopping koruyucu)
   early_stopping_patience: 20        # PSR §4.5
-  use_multimodal: true
+  use_multimodal: false
 
 dnn:
   epochs: 20

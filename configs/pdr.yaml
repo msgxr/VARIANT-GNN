@@ -24,7 +24,7 @@ gnn:
   use_gat: true
   knn_k: 10
   early_stopping_patience: 20
-  use_multimodal: true
+  use_multimodal: false
   seq_enc_dim: 32
 
 dnn:
@@ -47,6 +47,7 @@ xgb:
   reg_lambda: 1.0
 
 lgbm:
+  objective: binary
   num_leaves: 63
   max_depth: -1
   learning_rate: 0.05

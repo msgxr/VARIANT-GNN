@@ -15,7 +15,7 @@ gnn:
   knn_k: 10                          # Rapor §3.3: cosine k-NN k=10
   knn_threshold: 0.3                  # Rapor §3.3: cosine similarity eşiği
   early_stopping_patience: 20         # Rapor §3.5/§4.5: patience 15-50 arası
-  use_multimodal: true    # Nuc_Context/AA_Context → SequenceEncoder → GNN (TEKNOFEST şartname uyumu)
+  use_multimodal: false   # Nuc_Context/AA_Context kolonları varsa true yap; yoksa crash önlenir
   seq_enc_dim: 32          # SequenceEncoder output dim (cnn_channels*2)
 
 dnn:
@@ -38,6 +38,7 @@ xgb:
   reg_lambda: 1.0
 
 lgbm:
+  objective: binary
   num_leaves: 63
   max_depth: -1
   learning_rate: 0.05

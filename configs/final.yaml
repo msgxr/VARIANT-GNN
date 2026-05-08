@@ -14,7 +14,7 @@ gnn:
   use_gat: true              # VariantGATv2GNN kullanılıyor
   knn_k: 10                  # PSR §3.3: "Cosine k-NN Graf: en yakın 10 komşu"
   early_stopping_patience: 20  # PSR §4.5
-  use_multimodal: true       # Nuc_Context/AA_Context → SequenceEncoder → GNN
+  use_multimodal: false      # Nuc_Context/AA_Context varsa true yap; yoksa crash önlenir
   seq_enc_dim: 32            # SequenceEncoder output dim (cnn_channels*2)
 
 dnn:
@@ -37,6 +37,7 @@ xgb:
   reg_lambda: 1.0
 
 lgbm:
+  objective: binary
   num_leaves: 63
   max_depth: -1
   learning_rate: 0.05
