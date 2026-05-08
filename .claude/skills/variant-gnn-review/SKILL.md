@@ -3,154 +3,154 @@ name: teknofest-2026-health-ai-compliance
 description: Use when reviewing, improving, documenting, testing, refactoring, or preparing the VARIANT-GNN repository for full compliance with the TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması şartnamesi, especially the Üniversite ve Üzeri genetic variant pathogenicity prediction task.
 ---
 
-# TEKNOFEST 2026 Sağlıkta Yapay Zeka Şartname Uyum Skill'i
+# TEKNOFEST 2026 Health AI Competition — Specification Compliance Skill
 
-Bu skill aktif olduğunda VARIANT-GNN reposunu, TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması şartnamesine göre katı, teknik, akademik ve dosya temelli şekilde denetle.
+When this skill is active, audit the VARIANT-GNN repository strictly, technically, academically, and file-by-file against the TEKNOFEST 2026 Health AI Competition specification.
 
-Amaç, projenin şartnameye mümkün olan en yüksek düzeyde uyumlu hale getirilmesidir. Genel tavsiye verme. Önce ilgili dosyaları oku, sonra kanıta dayalı değerlendirme yap. Görmediğin şeyi varmış gibi kabul etme. Eksik bilgi varsa açıkça “kanıt bulunamadı” de.
+The goal is to bring the project into the highest possible level of compliance with the specification. Do not give general advice. Read the relevant files first, then make evidence-based assessments. Do not assume something exists if you have not seen it. If information is missing, explicitly state "no evidence found."
 
-## 1. Resmi Yarışma Bağlamı
+## 1. Official Competition Context
 
-Projeyi aşağıdaki resmi bağlama göre değerlendir:
+Evaluate the project against the following official context:
 
-- Yarışma: TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması
-- Kategori: Üniversite ve Üzeri Seviyesi
-- Alan: Genetik
-- Görev: Klinik durumu bilinmeyen varyantların “Patojenik” veya “Benign” olarak sınıflandırılması
-- Varyant tipi: Missense varyantlar
-- Referans sınıflandırma: ACMG rehberleri ve kriterleri
-- Ground truth: Kaynak veri tabanlarındaki ACMG uyumlu mevcut etiketler
-- Temel başarı metriği: F1 skoru
-- Final puan etkisi: Fiziki final/görev performansı %90, final sunumu %10
-- Kod beklentisi: Çalışabilir, yeniden üretilebilir ve açık şekilde dokümante edilmiş olmalıdır
-- Jüri yetkisi: Finale kalan takımlardan kodlarını tekrar çalıştırmaları ve beyan edilen sonuçları üretmeleri istenebilir
+- Competition: TEKNOFEST 2026 Health AI Competition
+- Category: University and Above
+- Domain: Genetics
+- Task: Classifying variants of unknown clinical significance as "Pathogenic" or "Benign"
+- Variant type: Missense variants
+- Reference classification: ACMG guidelines and criteria
+- Ground truth: ACMG-compliant existing labels in source databases
+- Primary success metric: F1 score
+- Final score breakdown: Physical final / task performance 90%, final presentation 10%
+- Code expectation: Must be runnable, reproducible, and clearly documented
+- Jury authority: Finalist teams may be asked to re-run their code and reproduce declared results
 
-Bu bağlam dışına çıkma. Proje, doğrudan tıbbi tanı aracı gibi sunulmamalıdır.
+Do not go beyond this context. The project must not be presented as a direct clinical diagnostic tool.
 
-## 2. Şartnameye Göre Veri Seti Gereksinimleri
+## 2. Dataset Requirements per Specification
 
-Aşağıdaki veri seti yapısına göre projeyi denetle:
+Audit the project against the following dataset structure:
 
-### Eğitim Setleri
+### Training Sets
 
-1. Genel Veri Seti:
-   - 1500 Patojenik varyant
-   - 1500 Benign varyant
+1. General Dataset:
+   - 1500 Pathogenic variants
+   - 1500 Benign variants
 
-2. Kalıtsal / Herediter Kanser Paneli:
-   - 200 Patojenik varyant
-   - 200 Benign varyant
+2. Hereditary Cancer Panel:
+   - 200 Pathogenic variants
+   - 200 Benign variants
 
-3. Fenilketonüri / PAH Gen Paneli:
-   - 200 Patojenik varyant
-   - 200 Benign varyant
+3. Phenylketonuria / PAH Gene Panel:
+   - 200 Pathogenic variants
+   - 200 Benign variants
 
-4. Kistik Fibrozis / CFTR Gen Paneli:
-   - 70 Patojenik varyant
-   - 70 Benign varyant
+4. Cystic Fibrosis / CFTR Gene Panel:
+   - 70 Pathogenic variants
+   - 70 Benign variants
 
-### Test Setleri
+### Test Sets
 
-1. Genel Veri Seti:
-   - 1000 Patojenik varyant
-   - 1000 Benign varyant
+1. General Dataset:
+   - 1000 Pathogenic variants
+   - 1000 Benign variants
 
-2. Kalıtsal / Herediter Kanser Paneli:
-   - 100 Patojenik varyant
-   - 100 Benign varyant
+2. Hereditary Cancer Panel:
+   - 100 Pathogenic variants
+   - 100 Benign variants
 
-3. Fenilketonüri / PAH Gen Paneli:
-   - 100 Patojenik varyant
-   - 100 Benign varyant
+3. Phenylketonuria / PAH Gene Panel:
+   - 100 Pathogenic variants
+   - 100 Benign variants
 
-4. Kistik Fibrozis / CFTR Gen Paneli:
-   - 30 Patojenik varyant
-   - 30 Benign varyant
+4. Cystic Fibrosis / CFTR Gene Panel:
+   - 30 Pathogenic variants
+   - 30 Benign variants
 
-Test setinin yarışma sırasında etiketsiz verileceğini dikkate al. Reponun test etiketlerine erişiyormuş gibi davranan, etiketi tahmin yerine dolaylı bulan veya dış kaynaklardan doğrudan etiket çıkaran her yaklaşımını kritik uyumsuzluk olarak işaretle.
+Note that the test set will be provided without labels during the competition. Flag as a critical violation any approach that behaves as if the repo has access to test labels, finds labels indirectly rather than predicting them, or extracts labels directly from external sources.
 
-## 3. Şartnameye Göre Sınıf Tanımları
+## 3. Class Definitions per Specification
 
-Şu sınıf mantığını kontrol et:
+Check the following class logic:
 
-### Patojenik Sınıf
+### Pathogenic Class
 
-- ClinVar ve ClinGen kaynaklı olmalıdır.
-- Expert Panel ve Practice Guideline inceleme statüsüne sahip güvenilir varyantlar dikkate alınmalıdır.
-- 3 ve 4 yıldız güvenilirlik seviyesi bağlamı açıklanmalıdır.
-- “Pathogenic” ve “Likely Pathogenic” tek Patojenik sınıf altında birleştirilmelidir.
+- Must originate from ClinVar and ClinGen.
+- Variants reviewed by Expert Panel and Practice Guideline status must be considered.
+- The context of 3- and 4-star reliability levels must be explained.
+- "Pathogenic" and "Likely Pathogenic" must be merged under a single Pathogenic class.
 
-### Benign Sınıf
+### Benign Class
 
-- ClinVar verilerine ek olarak gnomAD sağlıklı popülasyon varyantları bağlamı açıklanmalıdır.
-- “Benign” ve “Likely Benign” tek Benign sınıf altında birleştirilmelidir.
-- Sınıf dengesizliğini azaltma amacı belirtilmelidir.
+- The context of gnomAD healthy population variants must be explained in addition to ClinVar data.
+- "Benign" and "Likely Benign" must be merged under a single Benign class.
+- The purpose of reducing class imbalance must be stated.
 
-Eğer README, DATA_CARD, MODEL_CARD veya raporlarda bu sınıf tanımları eksikse kritik dokümantasyon eksiği olarak yaz.
+If these class definitions are missing from the README, DATA_CARD, MODEL_CARD, or reports, record it as a critical documentation gap.
 
-## 4. Genomik Adres ve Veri Sızıntısı Kontrolü
+## 4. Genomic Address and Data Leakage Control
 
-Şartnameye göre genomik adres, kromozom ve pozisyon bilgileri; yarışmacıların dış veri kaynaklarından etiketi doğrudan bulmasını engellemek için gizlenmiştir.
+Per the specification, genomic address, chromosome, and position information is hidden to prevent competitors from directly finding labels from external data sources.
 
-Bu nedenle şu kontrolleri yap:
+Therefore, perform the following checks:
 
-- Kod genomik adres, kromozom veya pozisyon bilgisini kullanıyor mu?
-- Harici veri tabanlarından etiket çekiliyor mu?
-- ClinVar/ClinGen/gnomAD üzerinden doğrudan sınıf etiketi bulunabilecek bir pipeline var mı?
-- Veri zenginleştirme işlemi etiketi sızdırıyor olabilir mi?
-- Train/test ayrımı yapılmadan preprocessing, scaler, imputer, feature selection veya SMOTE uygulanıyor mu?
-- SelectKBest, scaler, imputer, AutoEncoder veya graph construction tüm veri üzerinde fit ediliyor mu?
-- Panel bilgisi model için dolaylı etiket sinyali oluşturuyor mu?
-- Aynı veya çok benzer varyantlar train ve validation/test bölümlerine düşüyor mu?
+- Does the code use genomic address, chromosome, or position information?
+- Are labels being pulled from external databases?
+- Is there a pipeline that can directly find class labels via ClinVar/ClinGen/gnomAD?
+- Could a data enrichment process leak labels?
+- Is preprocessing, scaling, imputation, feature selection, or SMOTE applied without a train/test split?
+- Are SelectKBest, scaler, imputer, AutoEncoder, or graph construction fitted on the entire dataset?
+- Does panel information create an indirect label signal for the model?
+- Do the same or very similar variants appear in both train and validation/test splits?
 
-Veri sızıntısı şüphesi varsa bunu “Kritik Sorun” olarak değerlendir.
+If data leakage is suspected, treat it as a "Critical Issue."
 
-## 5. Şartnameye Göre Özellik Grupları
+## 5. Feature Groups per Specification
 
-Repo, veri açıklaması ve model mimarisi aşağıdaki özellik gruplarını açıklamalıdır:
+The repo, data description, and model architecture must explain the following feature groups:
 
-1. Sekans ve değişim bilgisi
-   - Referans nükleotid
-   - Alternatif nükleotid
-   - Kodon değişimi
-   - Amino asit dönüşümü
+1. Sequence and change information
+   - Reference nucleotide
+   - Alternative nucleotide
+   - Codon change
+   - Amino acid substitution
 
-2. Yerel sekans ve çevresel bağlam
-   - Varyant öncesi ve sonrası 5 nükleotid
-   - İlgili amino asit öncesi ve sonrası 5 amino asit
+2. Local sequence and environmental context
+   - 5 nucleotides before and after the variant
+   - 5 amino acids before and after the relevant amino acid
 
-3. Biyokimyasal ve yapısal etkiler
-   - Hidrofobiklik
-   - Polarite
-   - Moleküler ağırlık değişimi
-   - Proteinin 3B yapısına olası etki
+3. Biochemical and structural effects
+   - Hydrophobicity
+   - Polarity
+   - Molecular weight change
+   - Possible effect on protein 3D structure
 
-4. Evrimsel korunmuşluk
-   - Filogenetik çeşitlilik
-   - İnsan popülasyonları arası korunmuşluk
-   - Korunmuşluk skorları
+4. Evolutionary conservation
+   - Phylogenetic diversity
+   - Conservation across human populations
+   - Conservation scores
 
-5. Popülasyon verileri
-   - Minör allel frekansı
-   - Popülasyon görülme sıklıkları
+5. Population data
+   - Minor allele frequency
+   - Population occurrence frequencies
 
-6. In silico risk skorları
-   - Farklı algoritmalar tarafından hesaplanmış risk skorları
+6. In silico risk scores
+   - Risk scores computed by different algorithms
 
-Her özellik grubu için şunları denetle:
+For each feature group, audit the following:
 
-- Veri kartında açıklanmış mı?
-- Model kartında kullanım amacı belirtilmiş mi?
-- README’de anlaşılır anlatılmış mı?
-- Kodda preprocessing karşılığı var mı?
-- Eksik değer stratejisi var mı?
-- Kategorik/sayısal dönüşüm net mi?
-- Yarışma test senaryosunda üretilebilir mi?
-- Etiket sızıntısı riski taşıyor mu?
+- Is it explained in the Data Card?
+- Is its intended use stated in the Model Card?
+- Is it clearly described in the README?
+- Does it have a preprocessing counterpart in the code?
+- Is there a missing value strategy?
+- Is the categorical/numerical conversion clear?
+- Can it be produced in the competition test scenario?
+- Does it carry a risk of label leakage?
 
-## 6. İncelenecek Dosya ve Klasörler
+## 6. Files and Folders to Inspect
 
-Önce şu dosya ve klasörleri incele:
+First inspect the following files and folders:
 
 - README.md
 - DATA_CARD.md
@@ -191,99 +191,99 @@ Her özellik grubu için şunları denetle:
 - .github/
 - ci_pipeline_new.yml
 
-Dosya yoksa “eksik” de. Dosya varsa içeriğine göre değerlendir. Sadece dosya adı var diye yeterli kabul etme.
+If a file is missing, state "missing." If a file exists, evaluate it based on its content. Do not consider a file sufficient simply because its name exists.
 
-## 7. README Uyum Kontrolü
+## 7. README Compliance Check
 
-README şu bölümleri açık ve profesyonel şekilde içermelidir:
+The README must clearly and professionally include the following sections:
 
-1. Proje başlığı
-2. TEKNOFEST 2026 yarışma bağlamı
-3. Üniversite ve üzeri genetik varyant görevi
-4. Patojenik / Benign sınıflandırma tanımı
-5. Missense varyant odağı
-6. Veri seti yapısı
-7. Eğitim ve test seti ayrımı
-8. Genomik adres gizleme kuralı
-9. Kullanılan özellik grupları
-10. Model mimarisi
-11. Kurulum
-12. Eğitim komutu
-13. Validasyon komutu
-14. Inference/tahmin komutu
-15. Docker ile çalıştırma
-16. Testleri çalıştırma
-17. F1 skoru hesaplama
-18. Panel bazlı değerlendirme
-19. Reproducibility açıklaması
-20. Sınırlılıklar
-21. Klinik kullanım uyarısı
-22. Etik ve gizlilik beyanı
-23. Lisans
-24. Atıf bilgisi
-25. Takım/proje bilgisi
+1. Project title
+2. TEKNOFEST 2026 competition context
+3. University-level genetic variant task
+4. Pathogenic / Benign classification definition
+5. Missense variant focus
+6. Dataset structure
+7. Train and test set separation
+8. Genomic address masking rule
+9. Feature groups used
+10. Model architecture
+11. Installation
+12. Training command
+13. Validation command
+14. Inference / prediction command
+15. Running with Docker
+16. Running tests
+17. F1 score calculation
+18. Panel-based evaluation
+19. Reproducibility explanation
+20. Limitations
+21. Clinical use disclaimer
+22. Ethics and privacy statement
+23. License
+24. Citation information
+25. Team / project information
 
-Eksik bölümleri tek tek yaz ve her biri için doğrudan eklenebilir düzeltme önerisi ver.
+List missing sections individually and provide a directly insertable correction for each.
 
-## 8. MODEL_CARD Uyum Kontrolü
+## 8. MODEL_CARD Compliance Check
 
-MODEL_CARD aşağıdaki bilgileri içermelidir:
+The MODEL_CARD must include the following:
 
-- Modelin amacı
-- Kullanım kapsamı
-- Kullanılmaması gereken durumlar
-- Girdi formatı
-- Çıktı formatı
-- Patojenik / Benign sınıf yorumu
-- Model mimarisi
-- Eğitim verisi özeti
-- Validasyon yöntemi
+- Model purpose
+- Scope of use
+- Situations where it must not be used
+- Input format
+- Output format
+- Pathogenic / Benign class interpretation
+- Model architecture
+- Training data summary
+- Validation method
 - F1, precision, recall, confusion matrix
-- Panel bazlı performans
-- Kalibrasyon açıklaması
-- Belirsizlik tahmini açıklaması
-- Açıklanabilirlik yöntemi
-- Veri sızıntısı önlemleri
-- Klinik sınırlılıklar
-- İnsan uzman denetimi gerekliliği
-- Etik ve gizlilik notu
-- Bilinen hatalar
-- Sürüm bilgisi
+- Panel-based performance
+- Calibration explanation
+- Uncertainty estimation explanation
+- Explainability method
+- Data leakage prevention measures
+- Clinical limitations
+- Requirement for human expert oversight
+- Ethics and privacy note
+- Known issues
+- Version information
 
-Eksikse puan kır.
+Deduct points if missing.
 
-## 9. DATA_CARD Uyum Kontrolü
+## 9. DATA_CARD Compliance Check
 
-DATA_CARD aşağıdaki bilgileri içermelidir:
+The DATA_CARD must include the following:
 
-- Veri kaynakları
-- ClinVar açıklaması
-- ClinGen açıklaması
-- gnomAD açıklaması
-- ACMG referans bilgisi
-- Patojenik sınıf tanımı
-- Benign sınıf tanımı
-- Likely sınıfların nasıl birleştirildiği
-- Eğitim seti sayıları
-- Test seti sayıları
-- Panel dağılımları
-- Genomik adreslerin neden gizlendiği
-- Özellik kolonlarının açıklaması
-- Kolon isimlerinin yarışmada verilmeyeceği bilgisi
-- Eksik değerler
-- Sınıf dengesi
-- Bias riskleri
-- Veri sızıntısı riskleri
-- KVKK/GDPR uyumu
-- İkincil veri kullanımı
-- Araştırma ve eğitim amacı
-- Klinik kullanım dışı sınır
+- Data sources
+- ClinVar description
+- ClinGen description
+- gnomAD description
+- ACMG reference information
+- Pathogenic class definition
+- Benign class definition
+- How "Likely" classes are merged
+- Training set counts
+- Test set counts
+- Panel distributions
+- Why genomic addresses are hidden
+- Explanation of feature columns
+- Information that column names will not be provided during the competition
+- Missing values
+- Class balance
+- Bias risks
+- Data leakage risks
+- KVKK/GDPR compliance
+- Secondary data use
+- Research and education purpose
+- Clinical use boundary
 
-Eksikse açıkça belirt.
+State explicitly if missing.
 
-## 10. Model ve Deney Tasarımı Kontrolü
+## 10. Model and Experiment Design Check
 
-Aşağıdaki bileşenleri dosya temelli incele:
+Inspect the following components file-by-file:
 
 - GNN
 - GATv2
@@ -302,71 +302,71 @@ Aşağıdaki bileşenleri dosya temelli incele:
 - SHAP
 - GNNExplainer
 
-Her bileşen için şunu yaz:
+For each component, state:
 
-- Kodda var mı?
-- README’de anlatılmış mı?
-- MODEL_CARD’da açıklanmış mı?
-- Deneysel sonucu var mı?
-- Şartname görevine gerçek katkısı var mı?
-- Gereksiz karmaşıklık oluşturuyor mu?
-- Veri sızıntısı riski var mı?
+- Does it exist in the code?
+- Is it explained in the README?
+- Is it described in the MODEL_CARD?
+- Is there an experimental result?
+- Does it have a real contribution to the specification task?
+- Does it create unnecessary complexity?
+- Does it carry a data leakage risk?
 
-## 11. F1 Skoru ve Değerlendirme Kontrolü
+## 11. F1 Score and Evaluation Check
 
-Şartnameye göre finalde temel metrik F1 skorudur.
+Per the specification, F1 score is the primary metric in the final.
 
-Kontrol et:
+Check:
 
-- F1 doğru hesaplanıyor mu?
-- Binary classification için TP, FP, FN mantığı doğru mu?
-- Accuracy gereğinden fazla öne çıkarılıyor mu?
-- Precision ve recall ayrı veriliyor mu?
-- Confusion matrix var mı?
-- Genel veri seti ve üç panel ayrı değerlendiriliyor mu?
-- Validation sonucu final başarısı gibi sunuluyor mu?
-- Test etiketi bilinmeyen final senaryosu dikkate alınmış mı?
-- Threshold seçimi açıklanmış mı?
-- Calibration sonrası F1 değişimi gösterilmiş mi?
+- Is F1 computed correctly?
+- Is the TP, FP, FN logic correct for binary classification?
+- Is accuracy over-emphasized?
+- Are precision and recall reported separately?
+- Is there a confusion matrix?
+- Are the general dataset and the three panels evaluated separately?
+- Is the validation result presented as if it were the final result?
+- Is the final scenario with unknown test labels accounted for?
+- Is the threshold selection explained?
+- Is the change in F1 after calibration shown?
 
-F1 odaklı olmayan değerlendirme yapısını uyumsuzluk olarak işaretle.
+Flag any evaluation structure that is not F1-focused as a violation.
 
-## 12. Tekrarlanabilirlik Kontrolü
+## 12. Reproducibility Check
 
-Bir jüri üyesi projeyi sıfırdan çalıştırmak istediğinde şu adımlar net olmalıdır:
+When a jury member wants to run the project from scratch, the following steps must be clear:
 
 1. Repository clone
-2. Ortam kurulumu
-3. Veri yerleşimi
-4. Config seçimi
-5. Eğitim
-6. Validasyon
-7. Tahmin üretimi
-8. F1 hesaplama
-9. Test dosyası oluşturma
-10. Docker ile çalıştırma
-11. API/arayüz başlatma
-12. Log ve çıktıların doğrulanması
+2. Environment setup
+3. Data placement
+4. Config selection
+5. Training
+6. Validation
+7. Prediction generation
+8. F1 calculation
+9. Test file creation
+10. Running with Docker
+11. Starting the API / interface
+12. Verifying logs and outputs
 
-Şunları kontrol et:
+Check the following:
 
-- Python sürümü açık mı?
-- Bağımlılıklar çakışıyor mu?
-- Conda ve pip yolu net mi?
-- GPU/CPU ayrımı açık mı?
-- Seed sabit mi?
-- Config merkezi mi?
-- Veri yolları hard-coded mı?
-- Windows/Linux uyumu var mı?
-- Örnek veri veya synthetic demo var mı?
-- Model ağırlıkları açıklanmış mı?
-- Kod tek komutla smoke test verebiliyor mu?
+- Is the Python version clearly stated?
+- Are dependencies conflicting?
+- Is the conda and pip path clear?
+- Is the GPU/CPU distinction explained?
+- Is the seed fixed?
+- Is the config centralized?
+- Are data paths hard-coded?
+- Is there Windows/Linux compatibility?
+- Is there sample data or a synthetic demo?
+- Are model weights explained?
+- Can the code produce a smoke test result with a single command?
 
-Eksikse teslim riski olarak yaz.
+If missing, record as a submission risk.
 
-## 13. Test ve CI Kontrolü
+## 13. Test and CI Check
 
-Şu testlerin varlığını kontrol et:
+Check for the existence of the following tests:
 
 - Unit test
 - Preprocessing test
@@ -379,10 +379,10 @@ Eksikse teslim riski olarak yaz.
 - API test
 - Docker build test
 - Config loading test
-- Panel bazlı değerlendirme testi
+- Panel-based evaluation test
 - Random seed determinism test
 
-Eksik testler için önerilen dosya adlarını yaz:
+For missing tests, write the recommended file names:
 
 - tests/test_data_schema.py
 - tests/test_preprocessing_no_leakage.py
@@ -393,188 +393,188 @@ Eksik testler için önerilen dosya adlarını yaz:
 - tests/test_docker_smoke.py
 - tests/test_config_loading.py
 
-## 14. Klinik Güvenlik, Etik ve KVKK/GDPR Kontrolü
+## 14. Clinical Safety, Ethics, and KVKK/GDPR Check
 
-Şartnameye göre yarışmada kullanılan veriler kamuya açık, anonimleştirilmiş ve ikincil veri kullanımı kapsamındadır. Yarışma çıktıları klinik tanı, tedavi veya tıbbi karar destek amacıyla kullanılamaz.
+Per the specification, data used in the competition is publicly available, anonymized, and falls under secondary data use. Competition outputs cannot be used for clinical diagnosis, treatment, or medical decision support.
 
-Bu nedenle kontrol et:
+Therefore, check:
 
-- Repo açıkça “tanı aracı değildir” diyor mu?
-- “Yalnızca araştırma ve eğitim amaçlıdır” ifadesi var mı?
-- İnsan uzman denetimi zorunluluğu belirtilmiş mi?
-- KVKK/GDPR uyumu kanıtlı ve abartısız mı?
-- PII içermediği doğru bağlamda açıklanmış mı?
-- Genomik adreslerin kaldırılması re-identification riskini azaltma amacıyla açıklanmış mı?
-- Klinik kullanım için regülasyon ve harici validasyon gerektiği belirtilmiş mi?
-- Hasta veya hekime doğrudan karar öneren riskli ifadeler var mı?
+- Does the repo explicitly state "this is not a diagnostic tool"?
+- Is there a statement that it is "for research and education purposes only"?
+- Is the requirement for human expert oversight stated?
+- Is KVKK/GDPR compliance proven and not overstated?
+- Is the absence of PII explained in the correct context?
+- Is the removal of genomic addresses explained as reducing re-identification risk?
+- Is it stated that independent validation and regulatory compliance are required for clinical use?
+- Are there any risky statements that directly recommend a decision to a patient or physician?
 
-Riskli ifadeleri güvenli ifadelerle değiştir.
+Replace risky statements with safe alternatives.
 
-Örnek güvenli ifade:
+Example safe statement:
 
-“Bu sistem klinik tanı, tedavi veya bağımsız tıbbi karar verme amacıyla kullanılamaz. Model çıktıları yalnızca araştırma, eğitim ve yarışma değerlendirmesi kapsamında yorumlanmalıdır. Klinik kullanım için bağımsız validasyon, regülasyon uygunluğu ve uzman hekim değerlendirmesi gereklidir.”
+"This system cannot be used for clinical diagnosis, treatment, or independent medical decision-making. Model outputs must be interpreted solely within the scope of research, education, and competition evaluation. Independent validation, regulatory compliance, and expert physician assessment are required for any clinical use."
 
-## 15. Rapor Uyum Kontrolü
+## 15. Report Compliance Check
 
-PSR ve PDR için şu şartname beklentilerini kontrol et:
+Check the following specification expectations for PSR and PDR:
 
-### Proje Sunuş Raporu
+### Project Presentation Report
 
-- Genel problem tanımı
-- Literatür taraması
-- Önerilen çözüm yöntemi
-- Veri yaklaşımı
-- Ön model/plan
-- Şartname görevine açık bağlantı
+- General problem definition
+- Literature review
+- Proposed solution method
+- Data approach
+- Preliminary model / plan
+- Clear connection to the specification task
 
-### Proje Detay Raporu
+### Project Detail Report
 
-- Geliştirilen model mimarisi
-- Eğitim süreçleri
-- İç test / validasyon sonuçları
-- Değerlendirme metodolojisi
-- Kodun çalıştırılabilirliği
-- Kullanılan veri setleri
-- Sonuç dosyaları
-- F1 odaklı başarı analizi
+- Developed model architecture
+- Training processes
+- Internal test / validation results
+- Evaluation methodology
+- Code runnability
+- Datasets used
+- Result files
+- F1-focused success analysis
 
-Eksikse hangi rapor bölümünün nasıl yazılması gerektiğini öner.
+If missing, propose how the report section should be written.
 
-## 16. Puanlama Rubriği
+## 16. Scoring Rubric
 
-Projeyi 100 üzerinden değerlendir:
+Evaluate the project out of 100:
 
-| Kategori | Maksimum Puan |
+| Category | Maximum Score |
 |---|---:|
-| Şartnameye Uygunluk | 20 |
-| Bilimsel Geçerlilik | 20 |
-| F1 ve Değerlendirme Metodolojisi | 15 |
-| Veri Sızıntısı Önlemleri | 15 |
-| Tekrarlanabilirlik | 10 |
-| Kod Kalitesi | 10 |
-| Dokümantasyon | 5 |
-| Klinik Güvenlik ve Etik | 5 |
+| Specification Compliance | 20 |
+| Scientific Validity | 20 |
+| F1 and Evaluation Methodology | 15 |
+| Data Leakage Prevention | 15 |
+| Reproducibility | 10 |
+| Code Quality | 10 |
+| Documentation | 5 |
+| Clinical Safety and Ethics | 5 |
 
-Puanı şişirme. Kanıt yoksa puan kır. “Dosyada kanıt bulunamadı” ifadesini kullan.
+Do not inflate scores. If there is no evidence, deduct points. Use the phrase "no evidence found in file."
 
-## 17. Nihai Çıktı Formatı
+## 17. Final Output Format
 
-Cevabı mutlaka şu formatta ver:
+Always provide the answer in the following format:
 
-## Yönetici Özeti
+## Executive Summary
 
-5-8 cümleyle projenin şartnameye uyum durumunu açıkla.
+Explain the project's specification compliance status in 5–8 sentences.
 
-## Şartname Uyum Matrisi
+## Specification Compliance Matrix
 
-| Şartname Gereksinimi | Repo Durumu | Kanıt Dosyası | Risk | Düzeltme |
+| Specification Requirement | Repo Status | Evidence File | Risk | Correction |
 |---|---|---|---|---|
 
-## Kritik Uyumsuzluklar
+## Critical Violations
 
-Her madde için:
+For each item:
 
-- Sorun
-- Etkilenen dosya
-- Şartname bağlantısı
-- Risk seviyesi
-- Net düzeltme
+- Issue
+- Affected file
+- Specification reference
+- Risk level
+- Clear correction
 
-## Orta Seviye Uyumsuzluklar
+## Moderate Violations
 
-Her madde için aynı formatı kullan.
+Use the same format for each item.
 
-## Güçlü Yönler
+## Strengths
 
-Sadece dosyada kanıtı olan güçlü yönleri yaz.
+Only list strengths that have evidence in the files.
 
-## Veri Seti ve Etiket Uyumu
+## Dataset and Label Compliance
 
-Eğitim/test setleri, sınıf tanımları, panel yapısı ve ground truth mantığını değerlendir.
+Evaluate training/test sets, class definitions, panel structure, and ground truth logic.
 
-## Veri Sızıntısı Analizi
+## Data Leakage Analysis
 
-Genomik adres, dış veri kaynağı, preprocessing, feature selection, SMOTE, graph construction ve validation risklerini incele.
+Inspect genomic address, external data source, preprocessing, feature selection, SMOTE, graph construction, and validation risks.
 
-## F1 Skoru ve Final Değerlendirmesi Uyumu
+## F1 Score and Final Evaluation Compliance
 
-F1 hesaplama, TP/FP/FN mantığı, panel bazlı sonuçlar ve final senaryosu uyumunu değerlendir.
+Evaluate F1 computation, TP/FP/FN logic, panel-based results, and the final scenario alignment.
 
-## README Düzeltme Planı
+## README Correction Plan
 
-Eksik README bölümlerini yaz ve doğrudan eklenebilir metin öner.
+List missing README sections and propose directly insertable text.
 
-## MODEL_CARD Düzeltme Planı
+## MODEL_CARD Correction Plan
 
-Eksikleri ve düzeltmeleri yaz.
+List gaps and corrections.
 
-## DATA_CARD Düzeltme Planı
+## DATA_CARD Correction Plan
 
-Eksikleri ve düzeltmeleri yaz.
+List gaps and corrections.
 
-## Kod ve Pipeline İncelemesi
+## Code and Pipeline Review
 
-Dosya bazlı teknik öneriler ver.
+Provide file-based technical recommendations.
 
-## Test ve CI İncelemesi
+## Test and CI Review
 
-Eksik testleri ve önerilen test dosyalarını yaz.
+List missing tests and recommended test files.
 
-## Klinik Güvenlik ve Etik İnceleme
+## Clinical Safety and Ethics Review
 
-Riskli ifadeleri ve güvenli alternatiflerini yaz.
+List risky statements and their safe alternatives.
 
-## Tekrarlanabilirlik İncelemesi
+## Reproducibility Review
 
-Jürinin projeyi sıfırdan çalıştırırken nerede takılacağını açıkla.
+Explain where a jury member would get stuck when running the project from scratch.
 
-## Teslim Hazırlığı
+## Submission Readiness
 
-Projeyi şu kategorilerden biriyle sınıflandır:
+Classify the project as one of the following:
 
-- Hazır
-- Kısmen hazır
-- Riskli
-- Hazır değil
+- Ready
+- Partially ready
+- At risk
+- Not ready
 
-Gerekçesini yaz.
+Provide justification.
 
-## Önceliklendirilmiş Aksiyon Planı
+## Prioritized Action Plan
 
-### İlk 24 Saatte Düzeltilmeli
+### Must Be Fixed Within 24 Hours
 
-### Teslim Öncesi Kesin Düzeltilmeli
+### Must Be Fixed Before Submission
 
-### Kalite Artırıcı İyileştirmeler
+### Quality Improvements
 
-## Nihai Puan
+## Final Score
 
-| Kategori | Puan | Maksimum | Gerekçe |
+| Category | Score | Maximum | Justification |
 |---|---:|---:|---|
 
-Toplam puanı ver.
+Provide the total score.
 
-## Son Karar
+## Final Decision
 
-Şu soruları net cevapla:
+Answer the following questions clearly:
 
-1. Repo mevcut haliyle teslim edilmeli mi?
-2. Şartnameye göre en büyük 5 eksik nedir?
-3. En büyük bilimsel risk nedir?
-4. En büyük mühendislik riski nedir?
-5. En büyük dokümantasyon riski nedir?
-6. 100 puana yaklaşmak için ilk yapılacak 10 iş nedir?
+1. Should the repo be submitted in its current state?
+2. What are the 5 biggest gaps according to the specification?
+3. What is the biggest scientific risk?
+4. What is the biggest engineering risk?
+5. What is the biggest documentation risk?
+6. What are the first 10 tasks to approach a score of 100?
 
-## 18. Yazım Kuralları
+## 18. Writing Rules
 
-- Türkçe yaz.
-- Resmi ve akademik dil kullan.
-- Mühendislik disipliniyle değerlendir.
-- Genel tavsiye verme.
-- Dosya temelli konuş.
-- Kanıt yoksa “kanıt bulunamadı” de.
-- Şartnameye açık bağlantı kur.
-- Abartılı övgü kullanma.
-- Belirsiz ifadeler kullanma.
-- Kritik hataları yumuşatma.
-- Her soruna uygulanabilir çözüm yaz.
+- Write in English.
+- Use formal and academic language.
+- Evaluate with engineering discipline.
+- Do not give general advice.
+- Speak based on files.
+- If there is no evidence, state "no evidence found."
+- Make explicit connections to the specification.
+- Do not use exaggerated praise.
+- Do not use vague statements.
+- Do not soften critical errors.
+- Write an actionable solution for every problem.
