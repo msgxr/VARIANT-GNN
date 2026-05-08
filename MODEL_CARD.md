@@ -246,5 +246,28 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 
 ---
 
+---
+
+## ⚠️ Bilinen Sınırlamalar
+
+| Sınırlılık | Açıklama |
+|---|---|
+| **Gerçek veri eğitimi yok** | Mevcut ağırlıklar geliştirme iskeleti verisiyle üretilmiştir; gerçek TEKNOFEST verisi alındığında sıfırdan eğitilmelidir |
+| **CFTR panel az örnekli** | 140 eğitim örneği; panel-genelleme riski yüksek, dikkatli yorumlanmalı |
+| **VUS desteği yok** | "Variant of Uncertain Significance" sınıflandırması kapsam dışıdır |
+| **Bağımsız klinik validasyon yok** | Harici klinik kohort üzerinde doğrulanmamıştır |
+| **Genomik koordinat bağımsız** | Chr/Pos gizlendiğinden uzak konumdaki varyantlar model tarafından ayrıştırılamaz |
+
+---
+
+## 🏷️ Sürüm
+
+| Alan | Değer |
+|---|---|
+| **Sürüm** | `v1.0.0-dev` |
+| **Durum** | Geliştirme — gerçek veri eğitimi bekleniyor |
+| **Son güncelleme** | PDR aşaması — Mayıs 2026 |
+| **Bir sonraki kilometre taşı** | Gerçek TEKNOFEST verisiyle `v1.0.0-final` |
+
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
 > değişiklikleriyle birlikte güncellenir. Son güncelleme: PDR aşaması — 7 Mayıs 2026.

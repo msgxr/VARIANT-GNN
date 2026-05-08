@@ -11,7 +11,7 @@ REQUIRED_COLUMNS = [
     'AA_hydrophobicity_diff', 'AA_size_diff', 'Protein_impact_score',
     'Secondary_structure_disruption', 'Variant_type', 'In_critical_protein_domain',
     'Splice_site_distance', 'Is_exonic', 'Exon_conservation_ratio',
-    'ClinVar_review_status', 'ClinVar_submitter_count', 'OMIM_disease_gene',
+    'OMIM_disease_gene',
     'MetaSVM_score', 'MetaLR_score', 'MCAP_score'
 ]
 

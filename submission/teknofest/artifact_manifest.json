@@ -5,15 +5,16 @@
   "team": "XYRA3",
   "team_id": "909249",
   "application_id": "4865399",
-  "generated_at": "PLACEHOLDER — gerçek tarih üretim sırasında doldurulacak",
-  "status": "PLACEHOLDER — gerçek yarışma verisi henüz mevcut değil (5 Mayıs 2026)",
+  "generated_at": "2026-05-08T13:57:29.521929",
+  "status": "DEV — gerçek veri eğitimi bekleniyor; model ağırlıkları geliştirme iskeleti üzerinde eğitilmiştir",
   "artifacts": {
     "model_files": [
       {
         "name": "xgb_model.json",
         "path": "models/xgb_model.json",
         "type": "XGBoost model",
-        "sha256": "PLACEHOLDER"
+        "sha256": "704a045c0d3d7d0b17a976eaae986b6c53a0fb2945b25772c77e60e36e504083",
+        "size_bytes": 46072
       },
       {
         "name": "lgbm_model.txt",
@@ -25,19 +26,22 @@
         "name": "gnn_model.pth",
         "path": "models/gnn_model.pth",
         "type": "VariantGATv2GNN weights",
-        "sha256": "PLACEHOLDER"
+        "sha256": "2133e9b8669efa36bdbac6a4740e8a88258877774aa5fb50ebe894e6d9173fb6",
+        "size_bytes": 131153
       },
       {
         "name": "dnn_model.pth",
         "path": "models/dnn_model.pth",
         "type": "DNN weights",
-        "sha256": "PLACEHOLDER"
+        "sha256": "7cdedf864f9ae3348cec4d62e814589c2dd7953e110e7db5f5d2c424fc27c356",
+        "size_bytes": 23268
       },
       {
         "name": "preprocessor.pkl",
         "path": "models/preprocessor.pkl",
         "type": "Preprocessing pipeline",
-        "sha256": "PLACEHOLDER"
+        "sha256": "89f386491c8f61cc354364e3a7037d0c20afd28c736a1914761af9bf852d01e7",
+        "size_bytes": 26965
       },
       {
         "name": "calibrator.pkl",
@@ -60,7 +64,14 @@
         "description": "Final jury predictions in required format",
         "sha256": "PLACEHOLDER"
       }
-    ]
+    ],
+    "predictions": {
+      "name": "jury_predictions.csv",
+      "path": "submission\\teknofest\\jury_predictions.csv",
+      "sha256": "8da0859124cfe0134ecd8295b042579e3f76ebed4efec571647883063a0b7a27",
+      "size_bytes": 103089,
+      "rows": 2460
+    }
   },
   "notes": "Bu manifest dosyası gerçek yarışma verisiyle eğitim tamamlandıktan sonra scripts/artifacts/create_manifest.py ile yeniden üretilecektir."
 }

@@ -25,7 +25,7 @@
 [![PyG](https://img.shields.io/badge/PyG-2.5.0-ff6b35?style=flat-square&logo=graphql)](.)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-189ab4?style=flat-square)](.)
 [![LightGBM](https://img.shields.io/badge/LightGBM-4.3.0-2d9a27?style=flat-square)](.)
-[![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square&logo=python)](.)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python)](.)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32-FF4B4B?style=flat-square&logo=streamlit)](.)
 
 </div>

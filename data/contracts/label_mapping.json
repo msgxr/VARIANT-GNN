@@ -2,5 +2,13 @@
   "0": "Benign",
   "1": "Pathogenic",
   "Benign": 0,
-  "Pathogenic": 1
+  "Pathogenic": 1,
+  "Likely Pathogenic": 1,
+  "likely pathogenic": 1,
+  "Likely Benign": 0,
+  "likely benign": 0,
+  "Pathogenic/Likely pathogenic": 1,
+  "Benign/Likely benign": 0,
+  "Pathogenic/Likely Pathogenic": 1,
+  "Benign/Likely Benign": 0
 }

@@ -45,25 +45,6 @@
 - `src/data/competition_sanitizer.py` — Hem eğitim hem inference modunda otomatik temizleme yapar.
 - CI `schema-drift` job'u bu blocklist'lerin bütünlüğünü her push'ta doğrular.
 
-## pretrain_100k.csv.dvc — Ön Eğitim Veri Seti
-
-`data/pretrain_100k.csv.dvc` dosyası DVC ile takip edilen, yaklaşık 100.000 satırlık bir veri setini işaret etmektedir.
-
-| Alan | Durum |
-|---|---|
-| **Kaynak türü** | Belirsiz — kanıt bulunamadı |
-| **Şartname kapsamında kullanım** | Doğrulanmamış |
-| **Etiket içeriyor mu?** | Bilinmiyor |
-| **Genomik adres içeriyor mu?** | Bilinmiyor |
-| **Yarışma verisi mi?** | Kanıt bulunamadı |
-| **Harici public veri mi?** | Kanıt bulunamadı |
-
-> ⚠️ Bu veri seti PDR aşamasında kullanılacaksa:
-> - Kaynağı (ClinVar dump, gnomAD, diğer) açıkça belgelenmeli.
-> - Şartname kapsamında harici veri kullanımına izin verilip verilmediği doğrulanmalı.
-> - Test seti etiketlerini veya genomik adres bilgilerini içermediği kanıtlanmalı.
-> - Kullanılmayacaksa bu durum açıkça belirtilmeli.
-
 ## Veri Politikası
 
 - Gerçek yarışma verisi TEKNOFEST NDA kapsamında olduğundan bu repo içeriğinde paylaşılamaz.

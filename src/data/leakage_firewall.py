@@ -57,6 +57,12 @@ LABEL_COLUMNS: FrozenSet[str] = frozenset(
         "true_class",
         "y",
         "diagnosis",
+        # ClinVar metadata — doğrudan etiket sinyali taşır (§3.2 leakage riski)
+        "clinvar_review_status",
+        "clinvar_submitter_count",
+        "clinvar_classification",
+        "clinvar_significance",
+        "clinical_significance",
     }
 )
 
