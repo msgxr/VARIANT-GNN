@@ -63,6 +63,7 @@ preprocessing:
   k_best_features: 35
   smote_enabled: false
   use_bio_scoring: false
+  use_acmg_proxy: true
 
 calibration:
   enabled: true

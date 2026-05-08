@@ -197,6 +197,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         k_best_features: int = 30,
         smote_enabled: bool = True,
         use_bio_scoring: bool = True,
+        use_acmg_proxy: bool = True,
         device: str = "auto",
         random_state: int = 42,
     ) -> None:
@@ -208,11 +209,13 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self.k_best_features: int = k_best_features
         self.smote_enabled: bool = smote_enabled
         self.use_bio_scoring: bool = use_bio_scoring
+        self.use_acmg_proxy: bool = use_acmg_proxy
         self.device: str = device
         self.random_state: int = random_state
 
         # Fitted components
         self._bio_transformer: Optional[BiologicalEnrichmentTransformer] = None
+        self._acmg_feature_names: list = []   # eğitim zamanı kolon adları
         self._imputer: Optional[SimpleImputer] = None
         self._scaler: Optional[RobustScaler] = None
         self._var_selector: Optional[VarianceThreshold] = None
@@ -254,6 +257,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             "n_output_features":        0,
             "_is_fitted":               False,
             "feature_signatures":       {},
+            "use_acmg_proxy":           False,
+            "_acmg_feature_names":      [],
         }
         for key, val in _defaults.items():
             state.setdefault(key, val)
@@ -309,6 +314,22 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # 0. Align and Impute
         self._aligner.fit(X)
         X_aligned = self._aligner.transform(X)
+
+        # 0a. ACMG Proxy Feature Engineering (rule-based, no leakage)
+        if self.use_acmg_proxy:
+            try:
+                import pandas as _pd
+                from src.features.acmg_proxy_features import ACMGProxyFeatures
+                _names = list(self._aligner.feature_names_in_)
+                _df = _pd.DataFrame(X_aligned, columns=_names)
+                _proxy = ACMGProxyFeatures()
+                _df_out = _proxy.transform(_df)
+                _new_cols = ACMGProxyFeatures.FEATURE_NAMES
+                self._acmg_feature_names = _names + _new_cols
+                X_aligned = _df_out[self._acmg_feature_names].values.astype(float)
+                logger.info("ACMGProxyFeatures: +%d özellik eklendi.", len(_new_cols))
+            except Exception as _exc:
+                logger.warning("ACMGProxyFeatures atlandı (%s).", _exc)
 
         # Persist training-time feature distributional signatures so the
         # inference-time ColumnAligner can match anonymised columns by
@@ -377,6 +398,19 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         else:
             import numpy as _np
             X_aligned = _np.array(X, dtype=float)
+
+        # ACMG Proxy (transform aşaması — fitted değil, rule-based)
+        if getattr(self, 'use_acmg_proxy', False) and getattr(self, '_acmg_feature_names', []):
+            try:
+                import pandas as _pd
+                from src.features.acmg_proxy_features import ACMGProxyFeatures
+                _base_names = self._acmg_feature_names[:-len(ACMGProxyFeatures.FEATURE_NAMES)]
+                _df = _pd.DataFrame(X_aligned, columns=_base_names)
+                _proxy = ACMGProxyFeatures()
+                _df_out = _proxy.transform(_df)
+                X_aligned = _df_out[self._acmg_feature_names].values.astype(float)
+            except Exception as _exc:
+                logger.warning("ACMGProxyFeatures transform atlandı (%s).", _exc)
 
         X_imputed = self._imputer.transform(X_aligned)
         X_scaled = self._scaler.transform(X_imputed)
@@ -486,6 +520,7 @@ def build_preprocessor_from_config() -> VariantPreprocessor:
         k_best_features = p.k_best_features,
         smote_enabled = p.smote_enabled,
         use_bio_scoring = p.use_bio_scoring,
+        use_acmg_proxy = getattr(p, 'use_acmg_proxy', True),
         device = cfg.device,
         random_state = cfg.seed,
     )

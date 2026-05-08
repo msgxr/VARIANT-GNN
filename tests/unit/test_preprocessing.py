@@ -53,6 +53,7 @@ class TestVariantPreprocessor:
         pre  = VariantPreprocessor(
             use_autoencoder=True, autoencoder_encoding_dim=4,
             autoencoder_epochs=2, smote_enabled=False,
+            use_acmg_proxy=False,   # ACMG proxy kapalı: sadece autoencoder etkisi test ediliyor
         )
         X_out, _ = pre.fit_resample_train(X, y)
         # appended: original + encoded
@@ -70,7 +71,8 @@ class TestVariantPreprocessor:
 
         from src.features.preprocessing import VariantPreprocessor
         X, y = _make_xy(n=50, f=6)
-        pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False)
+        pre  = VariantPreprocessor(use_autoencoder=False, smote_enabled=False,
+                                   use_acmg_proxy=False)  # ACMG proxy kapalı: graph shape testi
         pre.fit_resample_train(X, y)
         graph = pre.row_to_graph(X[0])
         assert graph.x.shape == (pre.n_output_features, 1)
