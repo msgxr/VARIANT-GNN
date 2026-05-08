@@ -52,6 +52,10 @@ reports/*.bak
 # Eğitim logları
 train_log.txt
 
+# DVC (Data Version Control) — projede kullanılmıyor
+.dvc/
+.dvcignore
+
 # Geçici dosyalar
 /tmp/
 temp/
