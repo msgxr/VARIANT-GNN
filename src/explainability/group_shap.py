@@ -246,43 +246,204 @@ def group_shap_report(
     return result
 
 
+def instance_shap_table(
+    shap_values_instance: np.ndarray,
+    feature_names: List[str],
+    base_value: float = 0.0,
+) -> List[Dict]:
+    """Tek varyant için grup bazlı SHAP katkı tablosu üretir (PDR §4.4 kanıtı).
+
+    Returns
+    -------
+    List of dicts, her biri bir biyolojik grubu temsil eder:
+        {
+            "rank": int,
+            "group_label_tr": str,
+            "mean_abs_shap": float,
+            "contribution_pct": float,
+            "direction": "Patojenik" | "Benign" | "Nötr",
+        }
+    Ayrıca tüm grup SHAP'larının toplamı + base_value = tahmin log-odds'u ile
+    tutarlıdır.
+    """
+    vals = shap_values_instance.flatten()
+
+    group_abs:  Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
+    group_sum:  Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
+
+    for i, fname in enumerate(feature_names):
+        if i >= len(vals):
+            break
+        g = assign_feature_group(fname)
+        group_abs[g]  = group_abs.get(g, 0.0)  + abs(float(vals[i]))
+        group_sum[g]  = group_sum.get(g, 0.0)  + float(vals[i])
+
+    total_abs = sum(group_abs.values()) or 1.0
+
+    rows = []
+    for g in sorted(group_abs, key=lambda k: group_abs[k], reverse=True):
+        s = group_sum[g]
+        direction = "Patojenik" if s > 0.01 else ("Benign" if s < -0.01 else "Nötr")
+        rows.append({
+            "group_key":        g,
+            "group_label_tr":   BIOLOGICAL_GROUPS[g]["label_tr"],
+            "mean_abs_shap":    round(group_abs[g], 4),
+            "contribution_pct": round(group_abs[g] / total_abs * 100, 1),
+            "signed_shap":      round(s, 4),
+            "direction":        direction,
+        })
+
+    for rank, row in enumerate(rows, 1):
+        row["rank"] = rank
+
+    return rows
+
+
+def lime_shap_concordance(
+    shap_values: np.ndarray,
+    feature_names: List[str],
+    lime_explainer,
+    predict_fn,
+    X_test: np.ndarray,
+    n_samples: int = 150,
+    random_state: int = 42,
+) -> Dict:
+    """SHAP ve LIME özellik önem sıralamalarının Spearman ρ uyumunu ölçer.
+
+    Her iki yöntem de özellik grubuna göre toplandıktan sonra sıralanır;
+    Spearman korelasyonu 6-grup sırası üzerinden hesaplanır.
+
+    Parameters
+    ----------
+    shap_values     : (N, F) global TreeSHAP değerleri.
+    feature_names   : F uzunluklu özellik adları.
+    lime_explainer  : LIMEExplainer instance (explain_instance metodu olmalı).
+    predict_fn      : Model tahmin fonksiyonu (N, F) → (N,) prob.
+    X_test          : Test seti (N, F).
+    n_samples       : Rastgele seçilecek örnek sayısı (max test set boyutu).
+    random_state    : Tekrarlanabilirlik.
+
+    Returns
+    -------
+    Dict:
+        {
+            "spearman_rho": float,   # Spearman ρ (0-1 arası yüksek = tutarlı)
+            "p_value": float,
+            "n_instances": int,
+            "shap_group_ranking": List[str],  # grup adları SHAP sırasına göre
+            "lime_group_ranking": List[str],  # grup adları LIME sırasına göre
+            "interpretation": str,
+        }
+    """
+    try:
+        from scipy.stats import spearmanr
+    except ImportError:
+        logger.warning("scipy not available — LIME/SHAP concordance skipped.")
+        return {"spearman_rho": float("nan"), "p_value": float("nan"), "n_instances": 0}
+
+    rng = np.random.default_rng(random_state)
+    n   = min(n_samples, len(X_test))
+    idx = rng.choice(len(X_test), size=n, replace=False)
+
+    shap_global = compute_group_contributions(shap_values, feature_names)
+    shap_order  = [g for g, _ in sorted(shap_global.items(), key=lambda x: x[1], reverse=True)]
+
+    lime_accum: Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
+    valid = 0
+
+    for i in idx:
+        try:
+            exp = lime_explainer.explain_instance(X_test[i], predict_fn=predict_fn)
+            if exp is None:
+                continue
+            lime_map = dict(exp.as_list())
+            for fname, lime_val in lime_map.items():
+                clean = fname.split(" ")[0].split("<")[0].split(">")[0].strip()
+                g = assign_feature_group(clean)
+                lime_accum[g] = lime_accum.get(g, 0.0) + abs(lime_val)
+            valid += 1
+        except Exception:
+            continue
+
+    if valid == 0:
+        return {"spearman_rho": float("nan"), "p_value": float("nan"), "n_instances": 0}
+
+    lime_order = [g for g, _ in sorted(lime_accum.items(), key=lambda x: x[1], reverse=True)]
+
+    shap_ranks = {g: r for r, g in enumerate(shap_order)}
+    lime_ranks = {g: r for r, g in enumerate(lime_order)}
+    groups     = list(BIOLOGICAL_GROUPS.keys())
+
+    shap_vec = [shap_ranks.get(g, len(groups)) for g in groups]
+    lime_vec = [lime_ranks.get(g, len(groups)) for g in groups]
+
+    rho, pval = spearmanr(shap_vec, lime_vec)
+
+    if rho >= 0.85:
+        interp = "Yüksek uyum — XAI yöntemi bağımsız tutarlı sıralama."
+    elif rho >= 0.65:
+        interp = "Orta uyum — genel sıralama benzer, küçük panel farklılıkları mevcut."
+    else:
+        interp = "Düşük uyum — yöntem seçimi sıralamayı etkiliyor."
+
+    return {
+        "spearman_rho":        round(float(rho),  4),
+        "p_value":             round(float(pval), 6),
+        "n_instances":         valid,
+        "shap_group_ranking":  shap_order,
+        "lime_group_ranking":  lime_order,
+        "interpretation":      interp,
+    }
+
+
 def instance_explanation_tr(
     shap_values_instance: np.ndarray,
     feature_names: List[str],
     prediction: str,
     probability: float,
+    uncertainty: float = 0.0,
     variant_id: Optional[str] = None,
     top_n: int = 3,
 ) -> str:
-    """Tek varyant için Türkçe klinik açıklama metni üretir (PSR §4.4).
+    """Tek varyant için sayısal katkı yüzdeleri içeren Türkçe klinik açıklama.
 
-    Format:
-        "Bu varyant, yüksek in-silico risk skorları, düşük popülasyon
-         frekansı ve güçlü evrimsel korunmuşluk nedeniyle patojenik
-         olarak sınıflandırılmıştır. Model güven: Yüksek (belirsizlik: 0.12)."
+    Örnek çıktı:
+        "rs123456 varyantı; yüksek in-silico risk skorları (katkı: +%39),
+         güçlü evrimsel korunmuşluk (+%28) ve düşük popülasyon frekansı
+         (+%31) kombinasyonu nedeniyle patojenik olarak sınıflandırılmıştır.
+         Model güveni: Yüksek (olasılık: 0.94, belirsizlik σ: 0.08).
+         Uzman onayı önerilir."
     """
-    group_contribs = compute_group_contributions(
-        shap_values_instance.reshape(1, -1), feature_names
-    )
-    top_groups = sorted(group_contribs.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    rows = instance_shap_table(shap_values_instance.flatten(), feature_names)
+    top_rows = [r for r in rows if r["direction"] != "Nötr"][:top_n]
+    if not top_rows:
+        top_rows = rows[:top_n]
 
     group_phrases = {
-        "in_silico_risk":           "yüksek in-silico risk skorları",
-        "evolutionary_conservation":"güçlü evrimsel korunmuşluk",
-        "population_data":          "düşük popülasyon frekansı",
-        "biochemical_structural":   "olumsuz biyokimyasal/yapısal etkiler",
-        "sequence_context":         "kritik sekans bağlamı değişimi",
-        "local_sequence":           "yerel sekans özellikleri",
+        "in_silico_risk":            "yüksek in-silico risk skorları",
+        "evolutionary_conservation": "güçlü evrimsel korunmuşluk",
+        "population_data":           "düşük popülasyon frekansı",
+        "biochemical_structural":    "olumsuz biyokimyasal/yapısal etkiler",
+        "sequence_context":          "kritik sekans bağlamı değişimi",
+        "local_sequence":            "yerel sekans özellikleri",
     }
 
-    reasons = [group_phrases.get(g, g) for g, _ in top_groups]
+    def _phrase(row: Dict) -> str:
+        base   = group_phrases.get(row["group_key"], row["group_label_tr"])
+        sign   = "+" if row["direction"] == "Patojenik" else "-"
+        return f"{base} (katkı: {sign}%{row['contribution_pct']:.0f})"
+
+    reasons    = [_phrase(r) for r in top_rows]
     reason_str = ", ".join(reasons[:-1]) + (f" ve {reasons[-1]}" if len(reasons) > 1 else reasons[0])
 
-    pred_tr = "patojenik" if prediction.lower() == "pathogenic" else "benign"
+    pred_tr    = "patojenik" if prediction.lower() in ("pathogenic", "patojenik") else "benign"
     conf_label = "Yüksek" if probability > 0.80 else ("Orta" if probability > 0.60 else "Düşük")
-    vid = f"{variant_id} varyantı" if variant_id else "Bu varyant"
+    unc_str    = f", belirsizlik σ: {uncertainty:.2f}" if uncertainty > 0 else ""
+    vid        = f"{variant_id} varyantı" if variant_id else "Bu varyant"
+    expert_str = " Uzman onayı önerilir." if uncertainty > 0.30 else ""
 
     return (
-        f"{vid}, {reason_str} nedeniyle {pred_tr} olarak sınıflandırılmıştır. "
-        f"Model güveni: {conf_label} (olasılık: {probability:.2f})."
+        f"{vid}; {reason_str} kombinasyonu nedeniyle {pred_tr} olarak "
+        f"sınıflandırılmıştır. Model güveni: {conf_label} "
+        f"(olasılık: {probability:.2f}{unc_str}).{expert_str}"
     )

@@ -87,6 +87,74 @@ class SHAPExplainer:
             return []
 
     # ------------------------------------------------------------------
+    def explain_instance_table(
+        self,
+        x_instance: np.ndarray,
+        feature_names: Optional[List[str]] = None,
+        base_value_override: Optional[float] = None,
+    ) -> Optional[dict]:
+        """PDR §4.4 için yapılandırılmış örnek-bazlı SHAP tablosu üretir.
+
+        Returns
+        -------
+        Dict:
+            {
+                "base_value":      float,   # eğitim seti prior
+                "shap_sum":        float,   # sum(SHAP) ≈ logit(pred) - base
+                "features": [
+                    {
+                        "name": str, "shap_value": float,
+                        "abs_shap": float, "direction": str
+                    }, ...
+                ],
+                "top_positive":  List[dict],   # patojenik yönde top-5
+                "top_negative":  List[dict],   # benign yönde top-5
+            }
+        """
+        if self._explainer is None:
+            return None
+        try:
+            sv = self._explainer.shap_values(x_instance.reshape(1, -1))
+            if isinstance(sv, list):
+                sv = sv[1]
+            sv = np.array(sv).flatten()
+
+            try:
+                bv = (base_value_override
+                      if base_value_override is not None
+                      else float(self._explainer.expected_value
+                                 if not isinstance(self._explainer.expected_value, (list, np.ndarray))
+                                 else self._explainer.expected_value[1]))
+            except Exception:
+                bv = 0.0
+
+            names = (feature_names or self._names(len(sv)))
+
+            features = [
+                {
+                    "name":      n,
+                    "shap_value": round(float(v), 5),
+                    "abs_shap":   round(abs(float(v)), 5),
+                    "direction":  "Patojenik" if v > 0.001 else ("Benign" if v < -0.001 else "Nötr"),
+                }
+                for n, v in zip(names, sv)
+            ]
+            features_sorted = sorted(features, key=lambda d: d["abs_shap"], reverse=True)
+            top_pos = [f for f in features_sorted if f["direction"] == "Patojenik"][:5]
+            top_neg = [f for f in features_sorted if f["direction"] == "Benign"][:5]
+
+            return {
+                "base_value":   round(bv, 5),
+                "shap_sum":     round(float(sv.sum()), 5),
+                "features":     features_sorted,
+                "top_positive": top_pos,
+                "top_negative": top_neg,
+            }
+        except Exception as exc:
+            logger.warning("explain_instance_table failed: %s", exc)
+            return None
+
+    # ------------------------------------------------------------------
     def plot_summary(self, X: np.ndarray, output_path: str = "reports/shap_summary.png") -> None:
         if self._explainer is None:
             logger.warning("SHAP explainer not available; skipping summary plot.")

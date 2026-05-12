@@ -117,11 +117,50 @@ class AblationReport:
             ],
         }
 
+    def pdr_table(self) -> str:
+        """PDR §4.5 için Markdown ablation tablosu üretir.
+
+        Format:
+            | Konfigürasyon | Binary F1 | Δ F1 | Notlar |
+            |--------------|-----------|------|--------|
+            | Tam Ensemble | 0.945     | —    | ...    |
+            ...
+        """
+        header = (
+            "| Konfigürasyon | Binary F1 | Delta F1 | Notlar |\n"
+            "|--------------|-----------|----------|--------|\n"
+        )
+        baseline_row = (
+            f"| **Tam Ensemble (baseline)** | **{self.baseline.binary_f1:.3f}** | -- | "
+            f"{self.baseline.description} |\n"
+        )
+
+        rows = []
+        for r in sorted(self.ablations, key=lambda x: x.delta_f1):
+            sign  = "-" if r.delta_f1 < 0 else "+"
+            delta = f"{sign}{abs(r.delta_f1):.3f}"
+            notlar = "Kritik" if r.delta_f1 < -0.02 else ("Orta" if r.delta_f1 < 0 else "minimal")
+            rows.append(
+                f"| {r.description} | {r.binary_f1:.3f} | {delta} | {notlar} |"
+            )
+
+        return header + baseline_row + "\n".join(rows)
+
     def to_json(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(self.as_dict(), fh, indent=2, ensure_ascii=False)
         logger.info("Ablation raporu → %s", path)
+
+    def to_markdown(self, path: Path) -> None:
+        """PDR tablosu olarak Markdown dosyasına yazar."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("## Ablation Analizi — PDR §4.5\n\n")
+            fh.write(self.pdr_table())
+            fh.write(f"\n\n*N={self.n_samples}, test_size={self.test_size}, "
+                     f"seed={self.seed}, metric=Binary F1 (Patojenik, §7.3)*\n")
+        logger.info("Ablation Markdown tablosu → %s", path)
 
 
 # ---------------------------------------------------------------------------

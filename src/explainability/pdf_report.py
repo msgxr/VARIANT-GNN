@@ -9,14 +9,22 @@ Gereksinim: fpdf2  (pip install fpdf2)
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional, Tuple
 
 try:
     from fpdf import FPDF
     FPDF_AVAILABLE = True
 except ImportError:
     FPDF_AVAILABLE = False
+
+
+def _is_nan(v: float) -> bool:
+    try:
+        return math.isnan(v)
+    except (TypeError, ValueError):
+        return True
 
 
 def _safe_text(text: str) -> str:
@@ -116,9 +124,13 @@ def generate_pdf_report(
     prediction: str,
     probability: float,
     clinical_insight: dict,
-    top_features: list[tuple[str, float]],
+    top_features: List[Tuple[str, float]],
     clinvar_info: Optional[dict] = None,
     shap_waterfall_path: Optional[str] = None,
+    group_shap_rows: Optional[list] = None,
+    lime_concordance: Optional[dict] = None,
+    gnn_neighborhood: Optional[dict] = None,
+    uncertainty: float = 0.0,
 ) -> bytes:
     """
     Türkçe PDF klinik raporu byte dizisi olarak döner.
@@ -162,9 +174,71 @@ def generate_pdf_report(
     pdf.section_title("4. Klinik Oneri")
     pdf.body_text(clinical_insight.get("recommendation", "Öneri üretilemedi."))
 
-    # ── 5. En Önemli Özellikler (Top Features) ────────────────
+    # ── 5a. Biyolojik Grup SHAP Katkı Tablosu (PDR §4.4) ─────
+    if group_shap_rows:
+        pdf.section_title("5a. SHAP Grup Katki Tablosu (Biyolojik Kategoriler)")
+        pdf.set_font("Helvetica", "B", 8)
+        col_w = [8, 60, 30, 25, 35, 32]
+        headers = ["#", "Ozellik Grubu", "mean|SHAP|", "Katki %", "Imzali SHAP", "Yon"]
+        for w, h in zip(col_w, headers):
+            pdf.cell(w, 6, h, border=1, fill=True)
+        pdf.ln()
+        pdf.set_font("Helvetica", "", 8)
+        for row in group_shap_rows:
+            vals = [
+                str(row.get("rank", "")),
+                _safe_text(row.get("group_label_tr", "")[:30]),
+                f"{row.get('mean_abs_shap', 0):.4f}",
+                f"%{row.get('contribution_pct', 0):.1f}",
+                f"{row.get('signed_shap', 0):+.4f}",
+                _safe_text(row.get("direction", "")),
+            ]
+            for w, v in zip(col_w, vals):
+                pdf.cell(w, 5.5, v, border=1)
+            pdf.ln()
+        if lime_concordance and not _is_nan(lime_concordance.get("spearman_rho", float("nan"))):
+            rho   = lime_concordance["spearman_rho"]
+            pval  = lime_concordance.get("p_value", 0)
+            n_ins = lime_concordance.get("n_instances", 0)
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.multi_cell(
+                0, 5,
+                f"LIME-SHAP tutarlilik: Spearman rho={rho:.3f} (p={pval:.4f}, "
+                f"n={n_ins} ornek). "
+                + _safe_text(lime_concordance.get("interpretation", "")),
+            )
+        pdf.ln(2)
+
+    # ── 5b. GNN Komşuluk Analizi (PDR §4.4) ──────────────────
+    if gnn_neighborhood:
+        pdf.section_title("5b. GNN Komsuluk Analizi (GNNExplainer)")
+        pat = gnn_neighborhood.get("pathogenic", {})
+        ben = gnn_neighborhood.get("benign", {})
+        unc = gnn_neighborhood.get("uncertain", {})
+        pdf.set_font("Helvetica", "", 8)
+        rows_gnn = [
+            ("Patojenik varyantlar",
+             f"Ort. komsular: {pat.get('avg_neighbors',0):.1f}+/-{pat.get('std_neighbors',0):.1f}, "
+             f"Ayni sinif orani: %{pat.get('same_class_ratio',0)*100:.0f}, "
+             f"Kenar agirligi: {pat.get('avg_edge_weight',0):.3f}"),
+            ("Benign varyantlar",
+             f"Ort. komsular: {ben.get('avg_neighbors',0):.1f}+/-{ben.get('std_neighbors',0):.1f}, "
+             f"Ayni sinif orani: %{ben.get('same_class_ratio',0)*100:.0f}, "
+             f"Kenar agirligi: {ben.get('avg_edge_weight',0):.3f}"),
+            ("Belirsiz varyantlar",
+             f"n={unc.get('n_variants',0)}, karisik oran: %{unc.get('mixed_ratio',0)*100:.0f}, "
+             f"Kenar agirligi: {unc.get('avg_edge_weight',0):.3f}"),
+        ]
+        for lbl, txt in rows_gnn:
+            pdf.set_font("Helvetica", "B", 8)
+            pdf.cell(55, 5.5, _safe_text(lbl) + ":", border=0)
+            pdf.set_font("Helvetica", "", 8)
+            pdf.multi_cell(0, 5.5, _safe_text(txt))
+        pdf.ln(2)
+
+    # ── 5c. En Önemli Özellikler (Top Features) ───────────────
     if top_features:
-        pdf.section_title("5. En Etkili Genomik Ozellikler (SHAP)")
+        pdf.section_title("5c. En Etkili Genomik Ozellikler (SHAP)")
         pdf.set_font("Helvetica", "B", 9)
         pdf.cell(80, 6, "Ozellik Adi", border=1, fill=True)
         pdf.cell(40, 6, "SHAP Degeri", border=1, fill=True)
