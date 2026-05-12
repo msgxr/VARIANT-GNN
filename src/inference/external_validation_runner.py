@@ -69,6 +69,20 @@ class ExternalValidationRunner:
             reports_dir=self.reports_dir,
         )
         self._triage = TriageEngine()
+
+        # OOD detector — opsiyonel; eksikse uyarı verilir, çıkarım durmaz
+        self._ood_detector = None
+        _ood_path = self.model_dir / "ood_detector.pkl"
+        if _ood_path.exists():
+            try:
+                from src.scientific.ood_detector import OODDetector
+                self._ood_detector = OODDetector.load(_ood_path)
+                logger.info("OOD detector yüklendi → %s", _ood_path)
+            except Exception as _ood_exc:
+                logger.warning("OOD detector yüklenemedi (%s); OOD analizi atlandı.", _ood_exc)
+        else:
+            logger.info("ood_detector.pkl bulunamadı — OOD analizi devre dışı.")
+
         logger.info(
             "ExternalValidationRunner ready — model_dir=%s  threshold=%.3f",
             self.model_dir,
@@ -181,6 +195,24 @@ class ExternalValidationRunner:
         else:
             calibrated_risk = pathogenic_prob
 
+        # ── OOD tespiti ────────────────────────────────────────────────────
+        ood_scores = np.zeros(len(X_scaled), dtype=float)
+        ood_flags  = np.zeros(len(X_scaled), dtype=bool)
+        if self._ood_detector is not None:
+            try:
+                ood_report  = self._ood_detector.detect(X_scaled)
+                ood_scores  = ood_report.get("ood_scores",  ood_scores)
+                ood_flags   = ood_report.get("ood_flags",   ood_flags)
+                n_ood = int(ood_flags.sum())
+                if n_ood > 0:
+                    logger.warning(
+                        "OOD uyarı: %d/%d varyant eğitim dağılımı dışında "
+                        "(ood_score > eşik). Bu varyantlarda tahmin güvenilirliği düşük.",
+                        n_ood, len(X_scaled),
+                    )
+            except Exception as _ood_exc:
+                logger.warning("OOD detect başarısız (%s); atlandı.", _ood_exc)
+
         # ── Triage flags ───────────────────────────────────────────────────
         clinical_flags = self._triage.assign_flags(
             pathogenic_prob=pathogenic_prob,
@@ -200,6 +232,10 @@ class ExternalValidationRunner:
             model_version=self._model_version,
         )
         validate_prediction_frame(predictions_df)
+
+        # OOD skor sütununu ekle (jüri CSV şemasını bozmamak için ek kolon)
+        predictions_df["OOD_Score"] = np.round(ood_scores, 4)
+        predictions_df["OOD_Flag"]  = ood_flags
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         predictions_df.to_csv(output_path, index=False)

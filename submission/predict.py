@@ -106,6 +106,21 @@ def main() -> None:
         predictions["Prediction"].value_counts().to_dict(),
     )
 
+    # ── Otomatik submission formatı doğrulama ─────────────────────────
+    try:
+        from src.scientific.submission_validator import SubmissionValidator
+        validator = SubmissionValidator()
+        report = validator.validate(submission_path=args.output)
+        validator.print_report(report, verbose=True)
+        if not report.passed:
+            logger.error(
+                "Submission validation FAILED — jüriye göndermeden önce düzeltin!"
+            )
+            sys.exit(1)
+        logger.info("Submission doğrulama PASSED — jüri formatı uyumlu.")
+    except Exception as val_exc:
+        logger.warning("Submission validator çalışamadı (%s); manuel kontrol edin.", val_exc)
+
 
 if __name__ == "__main__":
     main()
