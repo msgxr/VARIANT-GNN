@@ -96,20 +96,20 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
         # If not, and shapes match, assume order. 
         # If shapes don't match, try fuzzy matching or drop noise.
         
-        out_df = pd.DataFrame(index=X.index)
-        
-        for col in self.target_columns:
-            if col in X.columns:
-                out_df[col] = X[col]
-            else:
-                # 5: Type casting fallback (if numeric expected but string came)
-                # Here we just put NaN if missing, imputer will handle it.
-                out_df[col] = np.nan
-        
-        # 3: Handle nulls (10% or more)
-        numeric_cols = out_df.select_dtypes(include=[np.number, "object"]).columns
-        for c in numeric_cols:
-            out_df[c] = pd.to_numeric(out_df[c], errors='coerce')
+        # Build entire frame in one shot — avoids pandas' fragmented-frame
+        # PerformanceWarning when iterating over hundreds of columns.
+        n = len(X)
+        nan_template = np.full(n, np.nan)
+        col_data = {
+            col: (X[col].values if col in X.columns else nan_template.copy())
+            for col in self.target_columns
+        }
+        out_df = pd.DataFrame(col_data, index=X.index)
+
+        # 3: Coerce any object columns to numeric in one vectorised pass.
+        obj_cols = out_df.select_dtypes(include=["object"]).columns
+        if len(obj_cols):
+            out_df[obj_cols] = out_df[obj_cols].apply(pd.to_numeric, errors="coerce")
         
         # Impute
         if len(out_df.columns) > 0:

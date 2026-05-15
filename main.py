@@ -25,7 +25,20 @@ import argparse
 import json
 import logging
 import sys
+import warnings
 from pathlib import Path
+
+# Kütüphane-içi uyarıları sustur (bizim kodumuzdan değil):
+#   - urllib3 + LibreSSL: macOS sistem Python uyumsuzluğu, sürüm fark etmiyor.
+#   - sklearn 1.6 BaseEstimator._validate_data deprecation: imbalanced-learn/SMOTE içinden.
+warnings.filterwarnings(
+    "ignore", message=".*OpenSSL.*", category=Warning, module="urllib3.*"
+)
+warnings.filterwarnings(
+    "ignore",
+    message=".*BaseEstimator._validate_data.*",
+    category=FutureWarning,
+)
 
 import numpy as np
 from sklearn.model_selection import train_test_split

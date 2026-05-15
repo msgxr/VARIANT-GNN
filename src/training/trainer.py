@@ -95,6 +95,15 @@ class WeightedBCELoss(nn.Module):
         return F.cross_entropy(logits, targets, weight=self.weight)
 
 
+def _to_lgbm_frame(X):
+    """Wrap numpy → DataFrame with stable column names so LightGBM fit/predict
+    stay consistent and sklearn does not raise the 'feature names' UserWarning."""
+    if isinstance(X, np.ndarray):
+        import pandas as pd
+        return pd.DataFrame(X, columns=[f"f{i}" for i in range(X.shape[1])])
+    return X
+
+
 def _compute_class_weights(y: np.ndarray) -> torch.Tensor:
     """Return balanced class weight tensor from label array."""
     counts  = np.bincount(y, minlength=2).astype(float)
@@ -531,8 +540,8 @@ class VariantTrainer:
             import lightgbm as lgb
             lgbm_model = lgb.LGBMClassifier(**cfg.lgbm.as_dict())
             lgbm_model.fit(
-                X_inner_tr, y_inner_tr,
-                eval_set=[(X_inner_val, y_inner_val)],
+                _to_lgbm_frame(X_inner_tr), y_inner_tr,
+                eval_set=[(_to_lgbm_frame(X_inner_val), y_inner_val)],
                 callbacks=[lgb.early_stopping(20, verbose=False),
                            lgb.log_evaluation(-1)],
             )
@@ -648,12 +657,12 @@ class VariantTrainer:
                 import lightgbm as lgb
                 lgbm_model_fold = lgb.LGBMClassifier(**cfg.lgbm.as_dict())
                 lgbm_model_fold.fit(
-                    X_tr_proc, y_tr_res,
-                    eval_set=[(X_val_proc, y_val)],
+                    _to_lgbm_frame(X_tr_proc), y_tr_res,
+                    eval_set=[(_to_lgbm_frame(X_val_proc), y_val)],
                     callbacks=[lgb.early_stopping(20, verbose=False),
                                lgb.log_evaluation(-1)],
                 )
-                lgbm_preds = lgbm_model_fold.predict(X_val_proc)
+                lgbm_preds = lgbm_model_fold.predict(_to_lgbm_frame(X_val_proc))
                 lgbm_f1    = float(f1_score(y_val, lgbm_preds, average="binary", pos_label=1, zero_division=0))
             except Exception as lgbm_exc:
                 logger.warning("Fold %d: LightGBM başarısız (%s) — ensemble'dan çıkarıldı.", fold_idx, lgbm_exc)
@@ -703,7 +712,7 @@ class VariantTrainer:
             gnn_probs = np.array(gnn_probs_fold)
             dnn_probs = np.array(_dnn_eval(dnn_model, dnn_val_loader, self.device)[1])
             if lgbm_model_fold is not None and len(w) >= 4:
-                lgbm_probs = lgbm_model_fold.predict_proba(X_val_proc)
+                lgbm_probs = lgbm_model_fold.predict_proba(_to_lgbm_frame(X_val_proc))
                 # 4-model weighted combine: [XGB, LGB, GNN, DNN]
                 w_sum = sum(w[:4])
                 ens_probs = (w[0]/w_sum * xgb_probs + w[1]/w_sum * lgbm_probs

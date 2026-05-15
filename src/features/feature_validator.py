@@ -144,11 +144,16 @@ class FeatureValidationReport:
         return "\n".join(lines)
 
     def log(self) -> None:
+        # If the dataset is anonymised (TEKNOFEST §3.2 — kolon adları gizli),
+        # category-mismatch lines are expected behaviour: downgrade WARNING→INFO.
+        is_anonymous_dataset = (
+            self.n_numeric > 0 and self.anonymous_count >= self.n_numeric / 2
+        )
         for line in self.summary().splitlines():
-            if "UYARI" in line or "EKSİK" in line:
-                logger.warning(line)
-            else:
-                logger.info(line)
+            severity = logger.warning if ("UYARI" in line or "EKSİK" in line) else logger.info
+            if is_anonymous_dataset:
+                severity = logger.info
+            severity(line)
 
     def as_dict(self) -> dict:
         return {
@@ -219,9 +224,11 @@ class FeatureValidator:
         cols     = list(df.columns)
         numeric  = df.select_dtypes(include=[np.number]).columns.tolist()
 
-        # Anonim kolon tespiti (sayısal isimler veya kısa kodlar)
+        # Anonim kolon tespiti — kısa harf prefix + sayı formatı.
+        # Şartname §3.2: yarışmada öznitelik isimleri verilmiyor; gerçek veride
+        # AL_1..AL_351, EK_1..EK_9, CAT_1..CAT_6, AA_1..AA_8 gibi adlar geliyor.
         import re as _re
-        _anon_pat = _re.compile(r"^(col_?\d+|v\d+|f\d+|feature_?\d+|x\d+)$", _re.IGNORECASE)
+        _anon_pat = _re.compile(r"^[A-Za-z]{1,6}_?\d+$")
         anon_cols = [c for c in cols if _anon_pat.match(c)]
 
         # Sütunları canonical isimlere eşleştir
@@ -283,11 +290,19 @@ class FeatureValidator:
         report = self.validate(df)
         report.log()
         if not report.is_spec_compliant():
-            logger.warning(
-                "FeatureValidator: VERİ SETİ §3.2 MİNİMUM GEREKSİNİMLERİNİ "
-                "KARŞILAMIYOR.  Eksik kategoriler: %s",
-                report.kritik_missing,
+            is_anonymous_dataset = (
+                report.n_numeric > 0
+                and report.anonymous_count >= report.n_numeric / 2
             )
+            msg = (
+                "FeatureValidator: yarışma verisi anonim — §3.2 kategori eşleştirmesi atlandı (beklenen). "
+                "Eksik kategoriler: %s"
+                if is_anonymous_dataset
+                else
+                "FeatureValidator: VERİ SETİ §3.2 MİNİMUM GEREKSİNİMLERİNİ "
+                "KARŞILAMIYOR.  Eksik kategoriler: %s"
+            )
+            (logger.info if is_anonymous_dataset else logger.warning)(msg, report.kritik_missing)
         return report
 
 
