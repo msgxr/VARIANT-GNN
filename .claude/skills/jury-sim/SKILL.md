@@ -1,6 +1,6 @@
 ---
 name: jury-sim
-description: Use when preparing for the TEKNOFEST 2026 final jury defense. Simulates jury questioning for VARIANT-GNN, focusing on PSR weak points (§4.4 Explainability 3.33/5, §4.5 Technical Evolution 3.33/5, §5.1 Algorithm Justification 4/5), VariantSAGEGNN architecture, anonymous columns, panel generalization, and reproducibility.
+description: Use when preparing for the TEKNOFEST 2026 final jury defense. Simulates jury questioning for VARIANT-GNN, focusing on PSR weak points (§4.4 Explainability 3.33/5, §4.5 Technical Evolution 3.33/5, §5.1 Algorithm Justification 4/5), VariantGATv2GNN architecture, anonymous columns, panel generalization, and reproducibility.
 ---
 
 # Jury Simulation — VARIANT-GNN Final Defense
@@ -20,7 +20,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 |---|---|---|
 | §4.4 Explainability | 3.33/5 | "How does SHAP work on a GNN?", "Individual example?" |
 | §4.5 Technical Evolution | 3.33/5 | "Experiment log?", "Ablation study?" |
-| §5.1 Algorithm Justification | 4/5 | "Why VariantSAGEGNN, not GAT?", "What does GNN add over XGBoost?" |
+| §5.1 Algorithm Justification | 4/5 | "Why VariantGATv2GNN, not GAT?", "What does GNN add over XGBoost?" |
 | §5.4 Compute Resources | 4.33/5 | "Can you run this right now?" |
 
 ## Question Bank — 30 Critical Questions
@@ -34,7 +34,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 6. How did you handle the 47 duplicate records you removed?
 
 ### Group 2: Model Architecture (Questions 7–13)
-7. Why VariantSAGEGNN specifically? Not GAT, not GCN?
+7. Why VariantGATv2GNN specifically? Not GAT, not GCN?
 8. How is your graph constructed? What do nodes and edges represent?
 9. Your ensemble weights are XGBoost 0.30 / LightGBM 0.30 / GNN 0.25 / DNN 0.15. Why these exact values? Are they optimal for all four panels?
 10. XGBoost alone gives F1=0.84 for CFTR, ensemble gives 0.92. Is this 8% meaningful statistically?
@@ -71,7 +71,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 
 1. **Q24 (Run command)** — If reproducibility isn't ready, competition credibility collapses
 2. **Q14 (SHAP + GNN)** — If you can't explain this technically, explainability section is invalid
-3. **Q7 (Why VariantSAGEGNN)** — No ablation = no defense
+3. **Q7 (Why VariantGATv2GNN)** — No ablation = no defense
 4. **Q19 (0.40 threshold)** — Must be justified with PR curve data
 5. **Q28 (Clinical Rapor)** — Any clinical claim = ethics violation
 

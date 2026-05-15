@@ -1,3 +1,8 @@
+---
+Dosya: 02_project.md
+Klasör: context/
+---
+
 # VARIANT-GNN — Proje Bağlamı
 
 ## Takım Yapısı — XYRA3
@@ -10,65 +15,69 @@
 | Burak Küçükcengiz | Takım Üyesi | Yazılım Geliştirici, MLOps ve Uygulama Altyapısı |
 | Pınar Karadayı Ataş | Danışman | Akademik ve Yöntemsel Rehberlik |
 
-## İşlevsel Sorumluluk Alanları (PSR'de Tanımlanan)
-
-- **Biyoinformatik Uzmanlığı (Şahin Kara):** Veri/etiket kalitesi, ACMG uyumluluğu, ClinVar doğrulama, tutarsız profil tespiti
-- **ML / İstatistik Uzmanlığı (Şeyma Nur Çebi):** Model geliştirme, ensemble, hiperparametre, açıklanabilirlik, kalibrasyon
-- **Yazılım / MLOps (Burak Küçükcengiz):** CI/CD, Docker, arayüz, API, ColumnAligner, yeniden çalıştırılabilirlik
-- **Sistem Kurgusu, Raporlama ve Yarışma Uyumu (Muhammed Sina Gün):** Doğrulama protokolü, panel bazlı değerlendirme, PDR, jüri anlatısı
-
 ## Problem
 
-Missense varyantlar, tek amino asit değişikliğine yol açan nokta mutasyonlardır. Klinik önemi belirsiz varyantlar (VUS) için hesaplamalı tahmin gereklidir. Yarışma bağlamında model; anonim öznitelik vektörleri üzerinden Patojenik / Benign ikili sınıflandırması yapmalıdır.
+Missense varyantlar için Patojenik/Benign ikili sınıflandırması. Model yalnızca yarışma komitesinden gelen anonim öznitelik vektörleri üzerinden öğrenir.
 
-## Hedef
+---
 
-Her veri paneli için (Genel, Herediter Kanser, PAH, CFTR) F1 Skoru'nu maksimize eden, veri sızıntısından arınmış, yeniden üretilebilir ve açıklanabilir bir sınıflandırma sistemi geliştirmek.
+## Gerçek Teknik Mimari — Kod Doğrulandı (src/core/gnn.py)
 
-## Mevcut Teknik Yaklaşım (PSR'den doğrulanmış)
+### Ensemble
 
-**Hibrit Ensemble:**
-- XGBoost (%30) + LightGBM (%30) + VariantSAGEGNN (%25) + DNN (%15)
-- Stacking meta-öğrenici: Lojistik regresyon
+| Model | Ağırlık | Not |
+|---|---|---|
+| XGBoost | %30 | SHAP, eksik değerlere dayanıklı |
+| LightGBM | %30 | Hız, regularizasyon |
+| VariantGATv2GNN | %25 | GATv2Conv dinamik dikkat |
+| DNN | %15 | BatchNorm + Dropout, 3 katman |
+| Stacking Meta-Learner | — | Lojistik regresyon |
 
-**VariantSAGEGNN (GNN ismi):**
-- SAGEConv 3 katman, hidden_dim=128, Dropout=0.3
-- Cosine k-NN grafı (k=10, eşik=0.3)
-- İndüktif yapı — yeni varyantlara genelleme sağlar
-- NOT: GATv2 değil, VariantSAGEGNN'dir
+### GNN — VariantGATv2GNN (GATv2Conv)
 
-**Veri bölme:** %65 eğitim (CV), %15 kalibrasyon, %20 test
-**CV:** Stratified 5-Fold, random_state=42
-**Hiperparametre:** Optuna Bayesian TPE, 30 deneme, hedef: CV macro F1
-**Kalibrasyon:** İsotonik regresyon (%15 kalibrasyon seti)
-**Karar eşiği:** 0.40 (duyarlılık öncelikli)
-**Açıklanabilirlik:** SHAP (grup bazlı), GNNExplainer, LIME
+- GATv2Conv: 4 kafa, dinamik dikkat (statik GAT problemi çözülmüş)
+- 3 blok: LayerNorm + LeakyReLU + Dropout(0.3) + Skip connection
+- hidden_dim=128 | MC Dropout: 30 forward pass
+- Graf: Cosine k-NN (k=10, eşik=0.3)
 
-**GNN gerekçesi (PSR §5.1'de deneysel olarak desteklenmiş):**
-Sadece XGBoost CFTR F1: 0.84±0.09; ensemble ile: 0.92. Grafik komşuluk sinyali eklenince stabil performans sağlandı.
+**PSR-Kod Uyuşmazlığı:** PSR "VariantSAGEGNN/GraphSAGE" yazdı — kod GATv2Conv kullanıyor.
+PDR'de: VariantGATv2GNN yazılmalı + PSR ile fark not edilmeli.
 
-**PSR pilot sonuçları (yarışma verisi değil, referans amaçlı):**
+### Veri Pipeline (sızıntı-güvenli, tümü train fold'a fit)
 
-| Panel | Macro F1 | ROC-AUC | MCC | Brier |
-|---|---|---|---|---|
-| Genel | 0.945±0.003 | 0.976 | 0.892 | 0.048 |
-| Herediter | 0.938±0.005 | 0.971 | 0.880 | 0.051 |
-| PAH | 0.941±0.004 | 0.974 | 0.885 | 0.049 |
-| CFTR | 0.925±0.012 | 0.962 | 0.852 | 0.065 |
+1. Medyan Imputation → 2. RobustScaler → 3. SelectKBest(k=35)
+4. AutoEncoder(43→16) → 5. SMOTE(yalnız train) → 6. Cosine k-NN Graf
 
-## PDR'de Kurulması Gereken Anlatı
+Veri bölme: 65/15/20 — Stratified 5-Fold CV — random_state=42
+Karar eşiği: **0.4357** (calibration_set optimize, duyarlılık öncelikli)
 
-1. Problem neden önemlidir? → Araştırma bağlamında varyant patojenitesi tahmini.
-2. Mevcut yaklaşımların sınırlılığı? → Literatür referansları.
-3. VARIANT-GNN buna nasıl cevap veriyor? → GNN + ensemble mimarisi ve gerekçesi.
-4. Panel bazlı performans? → Her panel için ayrı F1 tablosu.
-5. Hatalar nerede? → FP/FN analizi, biyolojik yorum.
-6. Sınırlılıklar? → Anonim kolonlar, veri hacmi, etik sınır.
+---
 
-## Güçlendirilmesi Gereken Teknik Sorular
+## Gerçek Yarışma Sonuçları (reports/cv_report.json — 2026-05-15)
 
-1. GNN graph oluşturma stratejisi nedir? Gerekçesi?
-2. Anonim kolonlar resmî öznitelik kategorileriyle nasıl eşleşiyor?
-3. CFTR panelinde 70/70 örnekle overfitting nasıl yönetiliyor?
-4. Karar eşiği panel bazlı mı, global mı?
-5. Açıklanabilirlik PDR'de görselleştirilebildi mi?
+**Genel:**
+- CV Binary F1: 0.8347 ± 0.0114 | Test Binary F1: **0.8706**
+- Test Macro F1: 0.6885 | MCC: 0.4063 | PR-AUC: 0.8843 | ROC-AUC: 0.7797
+
+**Panel (test seti):**
+
+| Panel Kodu | PDR Adı | Binary F1 | MCC | PR-AUC | ROC-AUC |
+|---|---|---|---|---|---|
+| General | MASTER | 0.8675 | 0.4199 | 0.8778 | 0.7795 |
+| Hereditary_Cancer | KANSER | 0.8515 | 0.5112 | 0.9095 | 0.8812 |
+| PAH | PAH | 0.9051 | 0.1466 ⚠️ | 0.9395 | 0.6704 |
+| CFTR | CFTR | 0.8750 | 0.2435 ⚠️ | 0.8394 | 0.6083 |
+
+**⚠️ MCC Riski:** PAH(0.15) ve CFTR(0.24) MCC düşük — Benign sınıfında model başarısız.
+Binary F1 yüksek ama MCC düşük = yüksek recall, düşük precision. PDR'de açıklanmalı.
+
+**PSR vs Gerçek Karşılaştırması:**
+PSR'de pilotta MCC=0.892 iddia edildi. Gerçekte 0.40. Bu büyük fark jüri sorusu olacak.
+Açıklama: Pilot veri (ClinVar Expert Panel) daha temiz — yarışma verisi daha zorlu.
+
+## PDR Güçlendirme Planı (PSR zayıf noktaları)
+
+| §4.4 Açıklanabilirlik (3.33/5) | Bireysel SHAP + GNNExplainer subgraph + panel bazlı tablo |
+| §4.5 Teknik Evrim (3.33/5) | Deney günlüğü tablosu + ablation: XGBoost-only vs ensemble |
+| §5.1 Mimari Gerekçe (4/5) | 5 model × 4 panel karşılaştırma tablosu |
+| MCC tutarsızlığı | Pilot vs gerçek farkı açıkla: veri zorluğu, eşik seçimi |

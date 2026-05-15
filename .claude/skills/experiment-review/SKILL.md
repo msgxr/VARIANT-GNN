@@ -62,7 +62,7 @@ If ablation data available:
 |---|---|---|---|---|
 | XGBoost only | ? | ? | ? | 0.84 (PSR) |
 | LightGBM only | ? | ? | ? | ? |
-| VariantSAGEGNN only | ? | ? | ? | ? |
+| VariantGATv2GNN only | ? | ? | ? | ? |
 | DNN only | ? | ? | ? | ? |
 | Full Ensemble | 0.945 | 0.938 | 0.941 | 0.925 (PSR) |
 
