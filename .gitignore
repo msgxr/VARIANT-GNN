@@ -91,6 +91,8 @@ data/raw/
 data/train_variants.csv
 data/test_variants.csv
 data/test_variants_blind.csv
+data/jury_*.csv
+submission/predictions.csv
 
 # submission/ büyük çıktılar
 submission/teknofest/*.zip
