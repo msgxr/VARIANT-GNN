@@ -52,10 +52,11 @@ reports/*.bak
 # Eğitim logları
 train_log.txt
 
-# Claude Code — sadece kişisel ayar dosyaları ignore, skill ve prompt dosyaları repoda
+# Claude Code — kişisel ayarlar ve geçici klasörler ignore; skills + context repoda
 .claude/settings.local.json
 .claude/settings.json
 .claude/memory/
+.claude/rehber/
 
 # DVC (Data Version Control) — projede kullanılmıyor
 .dvc/
@@ -134,5 +135,3 @@ __MACOSX/
 # Büyük scriptler (geçici)
 generate_report_pdf.py
 build_notebook.py
-
-.claude/

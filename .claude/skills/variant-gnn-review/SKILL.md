@@ -286,7 +286,7 @@ State explicitly if missing.
 Inspect the following components file-by-file:
 
 - GNN
-- GATv2
+- VariantSAGEGNN (SAGEConv)
 - XGBoost
 - LightGBM
 - DNN
@@ -432,11 +432,11 @@ Check the following specification expectations for PSR and PDR:
 - Developed model architecture
 - Training processes
 - Internal test / validation results
-- Evaluation methodology
+- Evaluation methodology: F1 + MCC + PR-AUC mandatory per PDR template
 - Code runnability
 - Datasets used
 - Result files
-- F1-focused success analysis
+- F1-focused success analysis (PDR mandatory metrics: F1 + MCC + PR-AUC + Confusion Matrix)
 
 If missing, propose how the report section should be written.
 
