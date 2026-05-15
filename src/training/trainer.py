@@ -12,8 +12,8 @@ Key guarantees:
 TEKNOFEST 2026 additions:
   - WeightedBCELoss: dynamically computes class weights from training
     distribution to handle Pathogenic / Benign imbalance.
-  - VariantSAGEGNN training via _train_sage(): full-batch node classification
-    on a coordinate-free cosine k-NN sample graph.
+  - VariantGATv2GNN training via _train_gatv2(): full-batch node classification
+    on a coordinate-free cosine k-NN sample graph (GATv2Conv, 4 heads).
   - Early stopping driven by Validation Binary F1 (Pathogenic, §7.3).
 """
 from __future__ import annotations

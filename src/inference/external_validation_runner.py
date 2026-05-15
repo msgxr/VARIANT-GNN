@@ -138,6 +138,10 @@ class ExternalValidationRunner:
         -------
         predictions DataFrame in canonical schema.
         """
+        # Block ClinVar API for the duration of inference (TEKNOFEST §3.2)
+        from src.explainability.clinvar_api import set_inference_mode
+        set_inference_mode(True)
+
         input_path = Path(input_path)
         output_path = Path(output_path)
 
