@@ -85,12 +85,12 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Büyük veri dosyaları (gerçek yarışma verisi repoya eklenmemeli)
+# Büyük veri dosyaları (gerçek yarışma verisi repoya eklenmemeli — TEKNOFEST NDA)
 data/pretrain_100k.csv
-# Eğer aşağıdaki dosyalar gerçek yarışma verisi ise buraya ekle:
-# data/train_variants.csv
-# data/test_variants.csv
-# data/test_variants_blind.csv
+data/raw/
+data/train_variants.csv
+data/test_variants.csv
+data/test_variants_blind.csv
 
 # submission/ büyük çıktılar
 submission/teknofest/*.zip

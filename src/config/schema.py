@@ -133,6 +133,7 @@ class PreprocessingSchema(_SectionBase):
     k_best_features:          int   = Field(35, ge=1, le=10_000)
     smote_enabled:            bool  = False
     use_bio_scoring:          bool  = False
+    use_acmg_proxy:           bool  = False
 
 
 class CalibrationSchema(_SectionBase):

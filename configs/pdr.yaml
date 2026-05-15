@@ -74,7 +74,8 @@ preprocessing:
   use_feature_selection: true
   k_best_features: 35
   smote_enabled: true
-  use_bio_scoring: true
+  use_bio_scoring: false      # §3.2: yarışma verisinde kolon adları anonim (AL_1..AL_351); Grantham/BLOSUM eşlemesi imkânsız
+  use_acmg_proxy: false       # §3.2: anonim kolonlarda CADD/REVEL/SIFT yakalanamaz → 7 ACMG özelliği sabit 0 olur, gürültü ekler
 
 calibration:
   enabled: true

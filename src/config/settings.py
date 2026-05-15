@@ -154,6 +154,7 @@ class PreprocessingSettings:
     k_best_features: int = 35            # YAML default: k=35
     smote_enabled: bool = False          # YAML default: TEKNOFEST §3.2 dengeli veri
     use_bio_scoring: bool = False        # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
+    use_acmg_proxy: bool = False         # §3.2: yarışma kolon adları anonim → CADD/REVEL gibi adlar yok
 
 
 @dataclass
@@ -345,7 +346,8 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         use_feature_selection   = raw_pre.get("use_feature_selection", False),
         k_best_features         = raw_pre.get("k_best_features", 30),
         smote_enabled           = raw_pre.get("smote_enabled", True),
-        use_bio_scoring         = raw_pre.get("use_bio_scoring", True),
+        use_bio_scoring         = raw_pre.get("use_bio_scoring", False),
+        use_acmg_proxy          = raw_pre.get("use_acmg_proxy", False),
     )
 
     raw_cal = raw.get("calibration", {})

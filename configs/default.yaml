@@ -63,8 +63,8 @@ preprocessing:
   use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
   k_best_features: 35                  # Rapor §3.3: k=35
   smote_enabled: false                 # TEKNOFEST §3.2: veri zaten dengeli (50/50 P/B), SMOTE gereksiz
-  use_bio_scoring: false             # Grantham/BLOSUM zaten girdi öznitelikler arasında (AA_Grantham_Score); duplicate enrichment kapalı
-  use_acmg_proxy: true               # ACMG PP3/BP4/PM1/BA1/PS3/PP2 proxy özellikleri (Richards 2015) — +7 biyolojik özellik
+  use_bio_scoring: false             # §3.2: yarışma kolon adları anonim → Grantham/BLOSUM eşlenemez (sentetik veride opsiyonel)
+  use_acmg_proxy: false              # §3.2: yarışma kolon adları anonim → CADD/REVEL/SIFT yakalanamaz, proxy sabit 0 olur
 
 calibration:
   enabled: true
