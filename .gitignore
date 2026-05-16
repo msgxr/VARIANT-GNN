@@ -94,6 +94,7 @@ __pycache__/
 data/pretrain_100k.csv
 data/raw/
 data/train_variants.csv
+data/train_variants_aug.csv
 data/test_variants.csv
 data/test_variants_blind.csv
 data/jury_*.csv
