@@ -48,6 +48,9 @@ reports/*.html
 reports/*.pdf
 reports/*.json
 reports/*.bak
+# İstisna: PDR için referans olan eğitim raporları repoda kalsın
+!reports/cv_report.json
+!reports/cross_panel_eval.json
 
 # Eğitim logları
 train_log.txt
@@ -56,6 +59,7 @@ train_log.txt
 .claude/settings.local.json
 .claude/settings.json
 .claude/memory/
+.claude/scheduled_tasks.lock
 .claude/rehber/
 
 # DVC (Data Version Control) — projede kullanılmıyor
