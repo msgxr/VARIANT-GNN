@@ -34,6 +34,9 @@ models/*.pkl
 models/*.json
 models/*.txt
 models/autoencoder.pth
+# Yedek model klasörleri (NDA — gerçek veri türevi, lokal kalsın)
+models_backup_*/
+models_archive_*/
 # İstisna: eğitim durumu belgesi ve dizin açıklaması git'te kalır
 !models/PROVENANCE.json
 !models/README.md
@@ -51,6 +54,7 @@ reports/*.bak
 # İstisna: PDR için referans olan eğitim raporları repoda kalsın
 !reports/cv_report.json
 !reports/cross_panel_eval.json
+!reports/seed_stability.json
 
 # Eğitim logları
 train_log.txt
