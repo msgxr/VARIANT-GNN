@@ -234,6 +234,8 @@ class AblationRunner:
           - use_autoencoder: bool
           - use_feature_selection : bool
         """
+        from src.config.settings import reset_settings, load_settings
+
         cfg = get_settings()
         # Settings'i kirletmemek için derin kopya yap
         local_cfg = copy.deepcopy(cfg)
@@ -245,35 +247,25 @@ class AblationRunner:
         if "use_feature_selection" in ablation_overrides:
             local_cfg.preprocessing.use_feature_selection = ablation_overrides["use_feature_selection"]
 
-        # Preprocessor + ensemble eğitimi
-        preprocessor = build_preprocessor_from_config()
-        # Override
-        if "smote_enabled" in ablation_overrides:
-            preprocessor.smote_enabled = ablation_overrides["smote_enabled"]
-        if "use_autoencoder" in ablation_overrides:
-            preprocessor.use_autoencoder = ablation_overrides["use_autoencoder"]
-        if "use_feature_selection" in ablation_overrides:
-            preprocessor.use_feature_selection = ablation_overrides["use_feature_selection"]
-
-        # Trainer ile tam ensemble eğit
-        trainer = VariantTrainer()
-        # _fit_single inner-val splitini yapar; trainer.train zaten test split
-        # yapıyor; biz kendi splitimizi kullanıyoruz, bu yüzden _fit_single
-        # API'sini kullanıyoruz.
-        # Trainer'ın _fit_single'ı ön-set preprocessor değil, kendi ürettiği
-        # preprocessor'ı kullanır. Bu yüzden _fit_single'ı override ediyoruz:
-        # Settings içine local_cfg.preprocessing'i geçici uyguluyoruz.
-
-        # Geçici Settings monkeypatch
+        # Geçici Settings override — reset_settings() ile atomik geri alma
         from src.config import settings as _settings_mod
         _orig = _settings_mod._settings
         _settings_mod._settings = local_cfg
         try:
+            # Preprocessor: local_cfg override'lı build
+            preprocessor = build_preprocessor_from_config()
+            # Direkt preprocessor attribute'larını da override et (çift güvence)
+            for key in ("smote_enabled", "use_autoencoder", "use_feature_selection"):
+                if key in ablation_overrides and hasattr(preprocessor, key):
+                    setattr(preprocessor, key, ablation_overrides[key])
+
+            trainer = VariantTrainer()
             preprocessor_local, ensemble, X_inner_val, y_inner_val = trainer._fit_single(
                 self._X_tr, self._y_tr,
                 nuc_seqs=self._nuc_tr, aa_seqs=self._aa_tr,
             )
         finally:
+            # Her durumda orijinal settings'i geri yükle
             _settings_mod._settings = _orig
 
         # Drop models post-fit if requested (zero out by setting to None)

@@ -80,6 +80,8 @@ class TTAPredictor:
         preprocessor,
         X: np.ndarray,
         feature_stds: Optional[np.ndarray] = None,
+        nuc_seqs: Optional[list] = None,
+        aa_seqs: Optional[list] = None,
     ) -> TTAResult:
         """
         TTA ile çıkarım yapar.
@@ -90,6 +92,8 @@ class TTAPredictor:
         preprocessor : VariantPreprocessor — transform(X) → X_scaled
         X            : Ham özellik matrisi [N, F]
         feature_stds : Her özelliğin standart sapması (None → varyansdan hesaplanır)
+        nuc_seqs     : Opsiyonel Nuc_Context dizileri (multimodal GNN için)
+        aa_seqs      : Opsiyonel AA_Context dizileri (multimodal GNN için)
 
         Returns
         -------
@@ -116,13 +120,21 @@ class TTAPredictor:
 
             try:
                 X_scaled = preprocessor.transform(X_aug)
-                _, proba = ensemble.predict(X_scaled)
+                # Multimodal GNN desteği: sequences varsa ensemble'a ilet
+                if nuc_seqs is not None or aa_seqs is not None:
+                    _, proba = ensemble.predict(
+                        X_scaled,
+                        nuc_seqs=nuc_seqs,
+                        aa_seqs=aa_seqs,
+                    )
+                else:
+                    _, proba = ensemble.predict(X_scaled)
                 proba = np.asarray(proba)
                 if proba.ndim == 1:
                     proba = np.column_stack([1 - proba, proba])
                 all_probas.append(proba)
             except Exception as exc:
-                logger.warning("TTA aug %d başarısız (atlandı): %s", aug_idx, exc)
+                logger.warning("TTA aug %d basarisiz (atlandi): %s", aug_idx, exc)
                 continue
 
         if not all_probas:
@@ -178,6 +190,8 @@ def tta_predict_dataframe(
     noise_scale: float = 0.03,
     threshold: float = 0.5,
     seed: int = 42,
+    nuc_seqs: Optional[list] = None,
+    aa_seqs: Optional[list] = None,
 ) -> pd.DataFrame:
     """
     DataFrame → DataFrame: TTA ile zenginleştirilmiş tahmin çıktısı.
@@ -187,11 +201,14 @@ def tta_predict_dataframe(
       TTA_Uncertainty     — TTA std-bazlı belirsizlik [0,1]
       TTA_Prediction      — Patojenik / Benign
       TTA_Flag            — HIGH_UNCERTAINTY eğer > 0.30
+
+    nuc_seqs / aa_seqs : Multimodal GNN için opsiyonel sekans listeleri.
     """
     X = df[feature_columns].values
     tta = TTAPredictor(n_augmentations=n_augmentations, noise_scale=noise_scale,
                        threshold=threshold, seed=seed)
-    result = tta.predict(ensemble, preprocessor, X)
+    result = tta.predict(ensemble, preprocessor, X,
+                         nuc_seqs=nuc_seqs, aa_seqs=aa_seqs)
 
     out = df.copy()
     out["TTA_Probability"]  = result.proba_mean[:, 1]

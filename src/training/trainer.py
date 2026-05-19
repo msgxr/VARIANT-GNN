@@ -893,8 +893,13 @@ class VariantTrainer:
                 lc_file = lc_dir / "gnn_learning_curve.json"
                 existing: list = []
                 if lc_file.exists():
-                    with open(lc_file) as _f:
-                        existing = _json.load(_f)
+                    try:
+                        with open(lc_file) as _f:
+                            loaded = _json.load(_f)
+                        # Eski format dict ise listeye dönüştür
+                        existing = loaded if isinstance(loaded, list) else [loaded]
+                    except Exception:
+                        existing = []
                 existing.append({"run_epochs": learning_curve})
                 with open(lc_file, "w") as _f:
                     _json.dump(existing, _f, indent=2)

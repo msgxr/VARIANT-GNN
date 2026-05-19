@@ -181,17 +181,22 @@ def mode_train(args, cfg):
 
         # Panel bazlı optimal threshold optimizasyonu (§3.2 dört panel)
         # Kalibrasyon split üzerinde optimize edilir — test leakage yok.
-        cal_panels = ds.metadata["Panel"].values[
-            train_test_split(
-                all_indices, test_size=cfg.training.test_size,
-                stratify=y, random_state=cfg.seed
-            )[0][  # train portion
-                train_test_split(
-                    np.arange(len(y_tr)), test_size=0.15,
-                    stratify=y_tr, random_state=cfg.seed + 99
-                )[1]  # cal slice
-            ]
-        ] if len(ds.metadata) == len(X) else np.array([])
+        cal_panels = np.array([])
+        if len(ds.metadata) == len(X):
+            try:
+                # Train indisleri → kalibrasyon indisleri (train içinde)
+                _train_idx, _ = train_test_split(
+                    all_indices, test_size=cfg.training.test_size,
+                    stratify=y, random_state=cfg.seed
+                )
+                _, _cal_pos = train_test_split(
+                    np.arange(len(_train_idx)), test_size=0.15,
+                    stratify=y[_train_idx], random_state=cfg.seed + 99
+                )
+                _cal_orig_idx = _train_idx[_cal_pos]
+                cal_panels = ds.metadata["Panel"].values[_cal_orig_idx]
+            except Exception as _pe:
+                logging.warning("Panel indeksleme hatasi — threshold optimizasyonu atlanacak: %s", _pe)
 
         if len(cal_panels) == len(y_cal):
             panel_thresholds_dict = ensemble.optimise_panel_thresholds(
@@ -225,6 +230,13 @@ def mode_train(args, cfg):
             "best_threshold":      best_thr,
             "threshold_source":    "calibration_set",
             "feature_coverage":    round(fv_report.overall_coverage, 4),
+            "feature_coverage_note": (
+                "Yarışma verisi anonim kolonlar kullanıyor (AL_x, EK_x vb.) — "
+                "0.0 beklenen davranış; §3.2 uyumu ColumnAligner tarafından sağlanıyor."
+                if fv_report.anonymous_count >= max(fv_report.n_numeric // 2, 1)
+                else "Named feature columns detected."
+            ),
+            "anonymous_columns":   fv_report.anonymous_count,
             "folds":               [vars(r) for r in result.fold_results],
             "test_metrics":        report.as_dict(),
             "panel_metrics":       panel_reports_dict,
@@ -311,6 +323,8 @@ def mode_predict(args, cfg):
                 feature_columns=ds.feature_columns,
                 n_augmentations=tta_k,
                 seed=cfg.seed,
+                nuc_seqs=ds.nuc_sequences if hasattr(ds, "nuc_sequences") else None,
+                aa_seqs=ds.aa_sequences  if hasattr(ds, "aa_sequences")  else None,
             )
             logging.info("TTA tamamlandı — TTA_Uncertainty sütunu eklendi.")
         else:

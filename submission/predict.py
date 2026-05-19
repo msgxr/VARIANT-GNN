@@ -84,7 +84,15 @@ def main() -> None:
     reports_dir = args.output.parent / "reports"
 
     # ── Run external validation ────────────────────────────────────────
-    from src.inference.external_validation_runner import ExternalValidationRunner
+    try:
+        from src.inference.external_validation_runner import ExternalValidationRunner
+    except ImportError as _ie:
+        logger.error(
+            "ExternalValidationRunner yuklenemedi: %s\n"
+            "Kontrol et: src/inference/external_validation_runner.py ve bagimliliklari.",
+            _ie,
+        )
+        sys.exit(1)
 
     runner = ExternalValidationRunner(
         model_dir=args.model_dir,
