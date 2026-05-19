@@ -192,10 +192,21 @@ class ExternalValidationRunner:
             pathogenic_prob = raw_proba[:, 1] if raw_proba.ndim == 2 else raw_proba
             uncertainty = np.zeros(len(preds_bin), dtype=float)
 
+        # ── NaN uncertainty koruması ──────────────────────────────────────
+        if np.isnan(uncertainty).any():
+            logger.warning("NaN uncertainty degerleri tespit edildi; 0.0 ile dolduruluyor.")
+            uncertainty = np.nan_to_num(uncertainty, nan=0.0)
+
         # ── Calibration ────────────────────────────────────────────────────
         if self._calibrator is not None:
-            cal_proba = self._calibrator.transform(raw_proba)
-            calibrated_risk = cal_proba[:, 1] if cal_proba.ndim == 2 else cal_proba
+            try:
+                cal_proba = self._calibrator.transform(raw_proba)
+                calibrated_risk = cal_proba[:, 1] if cal_proba.ndim == 2 else cal_proba
+            except Exception as _cal_exc:
+                logger.warning(
+                    "Kalibrasyon basarisiz (%s); ham olasilik kullaniliyor.", _cal_exc
+                )
+                calibrated_risk = pathogenic_prob
         else:
             calibrated_risk = pathogenic_prob
 

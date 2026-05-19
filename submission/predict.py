@@ -57,9 +57,17 @@ def _parse_args() -> argparse.Namespace:
 
 def _load_config(config_path: Path) -> dict:
     if not config_path.exists():
-        raise FileNotFoundError(f"Config not found: {config_path}")
-    with open(config_path, encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        raise FileNotFoundError(f"Config bulunamadi: {config_path}")
+    try:
+        with open(config_path, encoding="utf-8") as fh:
+            config = yaml.safe_load(fh)
+        if config is None:
+            raise ValueError(f"Config dosyasi bos: {config_path}")
+        if not isinstance(config, dict):
+            raise ValueError(f"Config gecersiz format (dict bekleniyor): {type(config)}")
+        return config
+    except yaml.YAMLError as e:
+        raise ValueError(f"Gecersiz YAML sozdizimi ({config_path}): {e}") from e
 
 
 def main() -> None:

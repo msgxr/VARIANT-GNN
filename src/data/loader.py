@@ -253,8 +253,12 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
                     "ColumnAligner: no explicit feature names — keeping %d numeric columns as-is",
                     preprocessor._imputer.n_features_in_,
                 )
-    except Exception:
-        pass  # models not on disk yet — keep dataset as-is
+    except Exception as _model_load_exc:
+        logger.warning(
+            "Model arifaktlari yuklenemedi (ColumnAligner devre disi): %s. "
+            "Inference sirasinda ozellik hizalama yapilmayacak.",
+            _model_load_exc,
+        )
 
     if expected_features is None:
         logger.info(

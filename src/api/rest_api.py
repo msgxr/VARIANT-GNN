@@ -249,6 +249,13 @@ def predict_sample():
 
 # ── Core prediction logic ─────────────────────────────────────────────────────
 def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
+    # Bos DataFrame kontrolu
+    if df_raw.empty:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Girdi bos — hic satir yok. Gecerli bir CSV veya JSON girin.",
+        )
+
     try:
         pipeline = _get_pipeline()
     except Exception:

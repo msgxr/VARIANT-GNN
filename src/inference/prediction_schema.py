@@ -109,3 +109,14 @@ def validate_prediction_frame(df: pd.DataFrame) -> None:
             raise ValueError(f"Column '{col}' must be numeric.")
         if (df[col] < 0).any() or (df[col] > 1).any():
             raise ValueError(f"Column '{col}' values must be in [0, 1].")
+        if df[col].isna().any():
+            raise ValueError(f"Column '{col}' contains NaN values.")
+
+    # Clinical_Flag NULL kontrolü
+    if df["Clinical_Flag"].isna().any():
+        raise ValueError("Column 'Clinical_Flag' contains null values.")
+
+    # Variant_ID bos veya None kontrolü
+    if "Variant_ID" in df.columns:
+        if df["Variant_ID"].isna().any() or (df["Variant_ID"].astype(str) == "").any():
+            raise ValueError("Column 'Variant_ID' contains null or empty values.")

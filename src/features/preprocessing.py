@@ -343,6 +343,15 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             self.feature_signatures = {}
 
         # 1. Impute (secondary check)
+        # Tumu NaN olan kolon kontrolu — imputer NaN medyan uretir
+        all_nan_cols = np.where(np.all(np.isnan(X_aligned), axis=0))[0]
+        if len(all_nan_cols) > 0:
+            logger.warning(
+                "Tumu NaN olan %d kolon tespit edildi (indeksler: %s). "
+                "Bu kolonlar 0 ile doldurulacak.",
+                len(all_nan_cols), all_nan_cols[:5].tolist(),
+            )
+            X_aligned[:, all_nan_cols] = 0.0
         self._imputer = SimpleImputer(strategy="median")
         X_imputed = self._imputer.fit_transform(X_aligned)
 

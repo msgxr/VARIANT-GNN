@@ -32,6 +32,27 @@ from src.utils.serialization import ModelStore
 logger = logging.getLogger(__name__)
 
 
+def _compute_clinical_flag(score: np.ndarray, is_mc_dropout: bool = True) -> np.ndarray:
+    """
+    Klinik karar bayragi hesapla.
+
+    MC-Dropout modunda: score = uncertainty (dusuk = iyi)
+    Klasik modunda:     score = confidence fraction (yuksek = iyi)
+    """
+    if is_mc_dropout:
+        return np.where(
+            score > 0.30,
+            "⚠️ Uzman Degerlendirmesi Gerekli",
+            np.where(score <= 0.15, "✅ Yuksek Guven", "\U0001f536 Orta Guven"),
+        )
+    else:
+        return np.where(
+            score < 0.70,
+            "⚠️ Uzman Degerlendirmesi Gerekli",
+            np.where(score >= 0.90, "✅ Yuksek Guven", "\U0001f536 Orta Guven"),
+        )
+
+
 def _build_gnn_loader(
     preprocessor: VariantPreprocessor,
     X_scaled: np.ndarray,
@@ -217,14 +238,12 @@ class InferencePipeline:
                 X_scaled, n_iter=10, threshold=threshold,
                 nuc_ids=nuc_ids, aa_ids=aa_ids,
             )
-            # Güven skoru: belirsizliğin tersi (yüksek std → düşük güven)
+            # NaN uncertainty koruması
+            if np.isnan(uncertainty).any():
+                logger.warning("NaN uncertainty degerleri tespit edildi; 0.0 ile dolduruluyor.")
+                uncertainty = np.nan_to_num(uncertainty, nan=0.0)
             confidence = ((1.0 - uncertainty) * 100).round(2)
-            # Klinik karar bayrağı — belirsizlik eşiklerine göre (Rapor §3.5)
-            clinical_flag = np.where(
-                uncertainty > 0.30,
-                "⚠️ Uzman Değerlendirmesi Gerekli",
-                np.where(uncertainty <= 0.15, "✅ Yüksek Güven", "🔶 Orta Güven"),
-            )
+            clinical_flag = _compute_clinical_flag(uncertainty, is_mc_dropout=True)
         else:
             # Klasik tahmin (GATv2 olmayan path)
             preds, raw_proba = self._ensemble.predict(
@@ -232,13 +251,8 @@ class InferencePipeline:
                 nuc_ids=nuc_ids, aa_ids=aa_ids,
             )
             confidence = (np.max(raw_proba, axis=1) * 100).round(2)
-            # Belirsizlik skoru olmadığında max-prob üzerinden bayrak
             conf_frac = np.max(raw_proba, axis=1)
-            clinical_flag = np.where(
-                conf_frac < 0.70,
-                "⚠️ Uzman Değerlendirmesi Gerekli",
-                np.where(conf_frac >= 0.90, "✅ Yüksek Güven", "🔶 Orta Güven"),
-            )
+            clinical_flag = _compute_clinical_flag(conf_frac, is_mc_dropout=False)
 
         # Kalibrasyon
         if self._calibrator is not None:
@@ -257,7 +271,7 @@ class InferencePipeline:
         result["High_Risk"]     = cal_proba[:, 1] >= cfg.thresholds.high_risk
         result["Clinical_Flag"] = clinical_flag
 
-        # ── OOD Tespiti (opsiyonel, hata varsa sessizce atlanır) ─────────────
+        # ── OOD Tespiti (opsiyonel) ───────────────────────────────────────────
         try:
             from src.scientific.ood_detector import OODDetector
             _ood_det = OODDetector(z_threshold=3.5, ood_frac_thresh=0.25)
@@ -265,8 +279,13 @@ class InferencePipeline:
             _ood_out = _ood_det.detect(X_scaled)
             result["OOD_Score"] = _ood_out["ood_scores"].round(3)
             result["OOD_Flag"]  = _ood_out["ood_flags"]
-        except Exception:
-            pass   # OOD modülü opsiyonel — mevcut pipeline etkilenmez
+        except Exception as _ood_exc:
+            logger.warning(
+                "OOD tespiti basarisiz (OOD_Score/OOD_Flag kolonlari olmayacak): %s",
+                _ood_exc,
+            )
+            result["OOD_Score"] = np.nan
+            result["OOD_Flag"]  = False
 
         return result
 

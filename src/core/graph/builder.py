@@ -349,6 +349,14 @@ class SampleKNNGraphBuilder:
 
         # ── Yol 2: Saf PyTorch (torch-cluster yoksa) ────────────────────
         # Tam kosinüs benzerlik matrisi: (N, N)
+        _LARGE_N = 10_000
+        if x.shape[0] > _LARGE_N:
+            _mem_gb = x.shape[0] ** 2 * 4 / (1024 ** 3)
+            logger.warning(
+                "Buyuk veri seti (%d ornek): k-NN graf O(N^2) matris hesapliyor "
+                "(tahmini ~%.1f GB bellek). Bellek hatasi olusabilir.",
+                x.shape[0], _mem_gb,
+            )
         x_norm  = F.normalize(x, p=2, dim=1)
         sim_mat = x_norm @ x_norm.t()           # (N, N)
         # Self-loop'ları dışla: köşegen −∞

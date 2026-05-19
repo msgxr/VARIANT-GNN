@@ -600,6 +600,24 @@ class VariantTrainer:
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
     ) -> List[FoldResult]:
+        # --- Girdi doğrulama ---
+        if len(X) == 0:
+            raise ValueError("CV icin en az 1 ornek gerekli; 0 satir geldi.")
+        if len(X) < 2:
+            raise ValueError(f"CV icin en az 2 ornek gerekli; {len(X)} satir geldi.")
+        unique_classes = np.unique(y)
+        if len(unique_classes) < 2:
+            raise ValueError(
+                f"Egitim icin en az 2 sinif gerekli; yalnizca {unique_classes} bulundu. "
+                "Veri setinin sinif dagilimini kontrol edin."
+            )
+        min_samples_needed = cfg.training.cv_folds * 2
+        if len(X) < min_samples_needed:
+            logger.warning(
+                "Veri cok kucuk (%d ornek) %d-fold CV icin (min %d onerilir). "
+                "Hata olusabilir.",
+                len(X), cfg.training.cv_folds, min_samples_needed,
+            )
         cfg   = self.cfg
         skf   = StratifiedKFold(
             n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed

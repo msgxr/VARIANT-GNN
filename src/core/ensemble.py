@@ -309,6 +309,12 @@ class HybridEnsemble:
         preds : (N,) binary tahmin dizisi (0=Benign, 1=Pathogenic).
         proba : (N, 2) olasılık matrisi [P(Benign), P(Pathogenic)].
         """
+        # Threshold sinir koruması
+        if not (0.0 <= threshold <= 1.0):
+            logger.warning(
+                "Gecersiz threshold=%.4f; [0.0, 1.0] araligina clip ediliyor.", threshold
+            )
+            threshold = float(np.clip(threshold, 0.0, 1.0))
         xp, lp, gp, dp = self.predict_proba_all(X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids)
         proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
         preds = (proba[:, 1] >= threshold).astype(int)

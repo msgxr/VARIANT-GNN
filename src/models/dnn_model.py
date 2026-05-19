@@ -59,7 +59,13 @@ class VariantDNN(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Standart forward geçişi — (N, input_dim) → (N, num_classes) logits."""
+        """Standart forward gecisi — (N, input_dim) → (N, num_classes) logits."""
+        # BatchNorm1d tek ornekte eval modunda NaN uretebilir — egitim modunda gec
+        if x.shape[0] == 1 and not self.training:
+            self.train()
+            out = self.net(x)
+            self.eval()
+            return out
         return self.net(x)
 
 

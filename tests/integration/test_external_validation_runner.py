@@ -37,9 +37,12 @@ class _FakePreprocessor:
 class _FakeEnsemble:
     def predict_with_uncertainty(self, X, n_iter=10, threshold=0.5, **kwargs):
         n = X.shape[0]
-        preds = np.zeros(n, dtype=int)
-        proba = np.column_stack([np.full(n, 0.7), np.full(n, 0.3)])
-        uncertainty = np.full(n, 0.1)
+        rng = np.random.default_rng(42)
+        # Gercekci dagılım — hardcoded sabit degerlerden kacin
+        raw = rng.uniform(0.1, 0.9, n)
+        preds = (raw >= threshold).astype(int)
+        proba = np.column_stack([1 - raw, raw])
+        uncertainty = rng.uniform(0.05, 0.35, n)
         return preds, proba, uncertainty
 
 
