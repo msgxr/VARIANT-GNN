@@ -73,9 +73,13 @@ if _FASTAPI_AVAILABLE:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST"],          # Sadece gerekli metodlar
+        allow_headers=["Content-Type", "Accept", "Authorization"],  # Sadece gerekli headerlar
+        allow_credentials=False,
     )
+
+# Dosya yükleme limiti: 10 MB
+_MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 # ── Pipeline (lazy-loaded) ────────────────────────────────────────────────────
 _pipeline = None
@@ -167,8 +171,10 @@ def info():
                 ),
             },
         }
-    except Exception as exc:
-        return {"model": "VARIANT-GNN", "version": "2.0.0", "config_error": str(exc)}
+    except Exception:
+        # İç hata detayları dışarıya sızdırılmaz
+        logger.exception("/info endpoint config hatası")
+        return {"model": "VARIANT-GNN", "version": "2.0.0", "status": "config_unavailable"}
 
 
 # ── CSV Upload Predict ────────────────────────────────────────────────────────
@@ -181,7 +187,7 @@ async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosy
         curl -X POST http://localhost:8000/predict \\
              -F "file=@data/test_variants.csv"
     """
-    if not file.filename.endswith(".csv"):
+    if not (file.filename or "").lower().endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Sadece CSV dosyaları kabul edilir.",
@@ -189,12 +195,20 @@ async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosy
 
     t0 = time.perf_counter()
     try:
-        contents = await file.read()
-        df_raw   = pd.read_csv(io.BytesIO(contents))
-    except Exception as exc:
+        contents = await file.read(_MAX_UPLOAD_BYTES + 1)
+        if len(contents) > _MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Dosya boyutu limiti aşıldı (max {_MAX_UPLOAD_BYTES // (1024*1024)} MB).",
+            )
+        df_raw = pd.read_csv(io.BytesIO(contents))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("CSV parse hatasi")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"CSV okunamadı: {exc}",
+            detail="CSV dosyası okunamadı. Geçerli bir CSV formatı kullanın.",
         )
 
     return _run_prediction(df_raw, t0)
@@ -237,18 +251,20 @@ def predict_sample():
 def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
     try:
         pipeline = _get_pipeline()
-    except Exception as exc:
+    except Exception:
+        logger.exception("Pipeline yukleme hatasi")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Model yüklenemedi: {exc}. Önce `python main.py --mode train` çalıştırın.",
+            detail="Model servisi kullanılamıyor. Sistem yöneticisiyle iletişime geçin.",
         )
 
     try:
         df_result = pipeline.predict_from_dataframe(df_raw)
-    except Exception as exc:
+    except Exception:
+        logger.exception("Tahmin hatasi")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Tahmin hatası: {exc}",
+            detail="Tahmin sırasında hata oluştu. Veri formatını kontrol edin.",
         )
 
     latency_ms = (time.perf_counter() - t0) * 1000
