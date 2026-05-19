@@ -222,7 +222,20 @@ class ConformalPredictor:
         scores = self._compute_scores(cal_proba, cal_labels)
         self._n_calib = len(scores)
 
+        # Minimum kalibrasyon boyutu kontrolü — istatistiksel stabilite için gerekli
+        _MIN_CALIB = 30
+        if self._n_calib < _MIN_CALIB:
+            logger.warning(
+                "ConformalPredictor: kalibrasyon seti cok kucuk (n=%d < %d). "
+                "Coverage garantisi (%0.0f%%) istatistiksel olarak guvenilir olmayabilir. "
+                "En az %d ornek onerilir.",
+                self._n_calib, _MIN_CALIB,
+                (1 - self.alpha) * 100, _MIN_CALIB,
+            )
+
         # Conformal quantile: ⌈(n+1)(1-α)⌉ / n (finite-sample correction)
+        if self._n_calib == 0:
+            raise ValueError("Kalibrasyon seti bos — conformal tahmin yapilamaz.")
         q_level = np.ceil((self._n_calib + 1) * (1 - self.alpha)) / self._n_calib
         q_level = min(q_level, 1.0)
         self._q_hat = float(np.quantile(scores, q_level, method="higher"))

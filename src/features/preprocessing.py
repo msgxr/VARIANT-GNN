@@ -370,8 +370,17 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         # 5. AutoEncoder
         if self.use_autoencoder:
+            _input_dim = X_scaled.shape[1]
+            _enc_dim   = self.autoencoder_encoding_dim
+            if _enc_dim >= _input_dim:
+                logger.warning(
+                    "AutoEncoder: encoding_dim (%d) >= input_dim (%d) — "
+                    "sikistirma anlamsiz. encoding_dim = input_dim // 4 = %d olarak ayarlaniyor.",
+                    _enc_dim, _input_dim, max(1, _input_dim // 4),
+                )
+                _enc_dim = max(1, _input_dim // 4)
             self._autoenc = AutoEncoderTransformer(
-                encoding_dim=self.autoencoder_encoding_dim,
+                encoding_dim=_enc_dim,
                 epochs=self.autoencoder_epochs,
                 device=self.device,
                 random_state=self.random_state,

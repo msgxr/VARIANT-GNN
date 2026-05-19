@@ -114,6 +114,13 @@ class HybridEnsemble:
         if len(raw_w) != 4:
             raw_w = [0.30, 0.30, 0.25, 0.15]
         w_sum = sum(raw_w)
+        if w_sum <= 0:
+            logger.warning(
+                "Ensemble weights toplami <= 0 (%s) — varsayilan agirliklar kullaniliyor.",
+                raw_w,
+            )
+            raw_w = [0.30, 0.30, 0.25, 0.15]
+            w_sum = 1.0
         self.weights: List[float] = [w / w_sum for w in raw_w]
 
         # Stacking meta-öğrenicisi (fit_meta_learner() ile doldurulur)
@@ -255,10 +262,25 @@ class HybridEnsemble:
         available = [(p, w) for p, w in pairs if p is not None]
         if not available:
             raise ValueError(
-                "HybridEnsemble.combine(): Hiçbir baz modelden tahmin alınamadı."
+                "HybridEnsemble.combine(): Hicbir baz modelden tahmin alinamadi. "
+                "En az bir model (XGB/LGB/GNN/DNN) yuklenmis olmali."
             )
 
         total_w = sum(w for _, w in available)
+        if total_w <= 0:
+            raise ValueError("Mevcut modellerin agirlik toplami <= 0.")
+
+        # Model eksikse agirliklar yeniden normalize edilir — bunu logla
+        if len(available) < 4:
+            active_names = [
+                name for (p, _), name in zip(pairs, ["XGB", "LGB", "GNN", "DNN"])
+                if p is not None
+            ]
+            logger.debug(
+                "Ensemble: %d/4 model aktif (%s), agirliklar yeniden normalize edildi.",
+                len(available), active_names,
+            )
+
         return sum((w / total_w) * p for p, w in available)
 
     # ------------------------------------------------------------------
