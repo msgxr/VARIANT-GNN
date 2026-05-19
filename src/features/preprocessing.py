@@ -390,7 +390,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
     def _transform_internal(self, X: np.ndarray) -> np.ndarray:
         if self._imputer is None or self._scaler is None:
-             raise RuntimeError("Preprocessor components not intialized.")
+             raise RuntimeError("Preprocessor components not initialized.")
 
         # _aligner fit edilmişse kullan; değilse (eski pickle) ham X geç
         if hasattr(self, '_aligner') and self._aligner._is_fitted:

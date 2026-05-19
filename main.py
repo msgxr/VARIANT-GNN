@@ -99,16 +99,17 @@ def mode_train(args, cfg):
     panel = getattr(args, "panel", None)
     if panel and "Panel" in ds.metadata.columns:
         mask = ds.metadata["Panel"] == panel
-        valid_idx = mask[mask].index.tolist()
+        # Pozisyon indeksleri kullan (label değil) — list indexing için zorunlu
+        valid_positions = list(np.where(mask.values)[0])
         from src.data.loader import LoadedDataset
         ds = LoadedDataset(
             features        = ds.features[mask].reset_index(drop=True),
             labels          = ds.labels[mask.values],
             metadata        = ds.metadata[mask].reset_index(drop=True),
             feature_columns = ds.feature_columns,
-            nuc_sequences   = ([ds.nuc_sequences[i] for i in valid_idx]
+            nuc_sequences   = ([ds.nuc_sequences[i] for i in valid_positions]
                                if ds.nuc_sequences else None),
-            aa_sequences    = ([ds.aa_sequences[i] for i in valid_idx]
+            aa_sequences    = ([ds.aa_sequences[i] for i in valid_positions]
                                if ds.aa_sequences else None),
         )
         logging.info("Panel filtresi: %s (%d varyant)", panel, len(ds.labels))

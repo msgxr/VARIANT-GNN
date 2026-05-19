@@ -84,7 +84,7 @@ class XGBSchema(_SectionBase):
     objective:        str   = "binary:logistic"
     eval_metric:      str   = "logloss"
     max_depth:        int   = Field(6,   ge=1, le=64)
-    learning_rate:    float = Field(0.05, gt=0, le=1.0)
+    learning_rate:    float = Field(0.05, ge=0, le=1.0)
     subsample:        float = Field(0.8, gt=0, le=1.0)
     colsample_bytree: float = Field(0.8, gt=0, le=1.0)
     n_estimators:     int   = Field(200, ge=1, le=10_000)
@@ -97,7 +97,7 @@ class XGBSchema(_SectionBase):
 class LGBMSchema(_SectionBase):
     num_leaves:        int   = Field(63,  ge=2)
     max_depth:         int   = Field(-1)             # -1 = sınırsız
-    learning_rate:     float = Field(0.05, gt=0, le=1.0)
+    learning_rate:     float = Field(0.05, ge=0, le=1.0)
     n_estimators:      int   = Field(300, ge=1, le=10_000)
     subsample:         float = Field(0.8, gt=0, le=1.0)
     colsample_bytree:  float = Field(0.8, gt=0, le=1.0)

@@ -718,9 +718,15 @@ class VariantTrainer:
                 ens_probs = (w[0]/w_sum * xgb_probs + w[1]/w_sum * lgbm_probs
                              + w[2]/w_sum * gnn_probs + w[3]/w_sum * dnn_probs)
             else:
-                w3 = w[:3] if len(w) == 3 else [w[0]+w[1], w[2], w[3]]
-                t  = sum(w3)
-                w3 = [x/t for x in w3]
+                # LightGBM fold'da başarısız — 3 model: XGB + GNN + DNN
+                if len(w) >= 4:
+                    w3 = [w[0] + w[1], w[2], w[3]]  # XGB+LGB birleşik, GNN, DNN
+                elif len(w) == 3:
+                    w3 = list(w[:3])
+                else:
+                    w3 = [1.0, 0.0, 0.0]  # yedek: sadece XGB
+                t  = sum(w3) or 1.0  # sıfır bölme koruması
+                w3 = [x / t for x in w3]
                 ens_probs = w3[0] * xgb_probs + w3[1] * gnn_probs + w3[2] * dnn_probs
             ens_preds = np.argmax(ens_probs, axis=1)
             # TEKNOFEST §7.3: temel metrik binary F1 (Pathogenic sınıfı, pos_label=1)
