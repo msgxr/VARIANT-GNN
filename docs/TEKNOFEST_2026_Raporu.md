@@ -117,7 +117,7 @@ Küçük panel analizi: CFTR panelinde (70+70 eğitim) 5-fold CV bir fold'da ~28
 ### 3.6 Seçilen Algoritmalar ve Gerekçe (5 puan)
 Varyant profil verisi tek model ile yeterince temsil edilemez; dört modelin hibrit ensemble yaklaşımı benimsenmiştir:
 - **XGBoost + LightGBM (%60):** Tablo verisinde doğrusal olmayan etkileşimler, eksik değerlere dayanıklılık, SHAP yorumlanabilirlik.
-- **VariantSAGEGNN (%25):** Cosine k-NN grafi (k=10) ile varyantlar arası benzerlik ilişkilerini modeller; indüktif yapı yeni varyantlara genelleme sağlar.
+- **VariantGATv2GNN (%25):** GATv2Conv attention mekanizması ile cosine k-NN grafi (k=10) üzerinde varyantlar arası benzerlik ilişkilerini modeller; indüktif yapı yeni varyantlara genelleme sağlar.
 - **DNN (%15):** Karmaşık özellik etkileşimlerini BatchNorm+Dropout ile regularize 3 katmanda öğrenir.
 - **Stacking Meta-Öğrenici:** Lojistik regresyon ile adaptif birleştirme (CFTR F1'de sabit ağırlıklara göre +%1.8).
 - **Regularizasyon:** L2, Dropout (0.3), erken durdurma (patience: 15-50) tüm modellerde uygulanır.
@@ -177,7 +177,7 @@ Sütun isimleri gizli olduğundan açıklanabilirlik, özellik grupları bazınd
 - **Overfitting (İlk Denemeler):** Regularizasyon eksikliğinde eğitim F1=0.98, doğrulama F1=0.78. Müdahale: Dropout(0.3), erken durdurma (patience=15), L2(0.001). Etki: Doğrulama F1 -> 0.94+.
 - **CFTR Küçük Panel:** 140 eğitim örneğiyle GNN kararsız performans (F1 varyans: ±0.12). Müdahale: SMOTE + LightGBM ensemble ağırlığı %30 -> %35. Etki: CFTR F1 stabilizasyonu (±0.04).
 - **Kalibrasyon Eksikliği:** Ham ensemble olasılıkları gerçek frekanslardan sapıyordu (ECE > 0.08, Brier>0.12). Müdahale: İsotonik Regresyon. Etki: ECE < 0.025, Brier < 0.072.
-- **Mimari İyileştirmesi:** Sadece XGBoost kullanımından, ilişkisiel veriyi yakalayan VariantSAGEGNN ve karmaşık örüntüleri öğrenen DNN entegrasyonuna geçilerek meta-öğrenici (Stacking) ile nihai performans optimize edilmiştir.
+- **Mimari İyileştirmesi:** Sadece XGBoost kullanımından, ilişkisiel veriyi yakalayan VariantGATv2GNN ve karmaşık örüntüleri öğrenen DNN entegrasyonuna geçilerek meta-öğrenici (Stacking) ile nihai performans optimize edilmiştir.
 
 **Şekil 4: GNN Öğrenme Eğrisi**
 (Görsel: rapor_grafikleri/Sekil_4_Learning_Curve.png)
@@ -187,17 +187,17 @@ Sütun isimleri gizli olduğundan açıklanabilirlik, özellik grupları bazınd
 ## 5. YAKLAŞIMIN GEREKÇESİ, KAYNAK KULLANIMI VE ÖZGÜNLÜK (25 PUAN)
 
 ### 5.1 Neden Bu Algoritma / Mimari? (5 puan)
-Varyant profil verisi üç güçlük içerir: (i) 43 heterojen özellik, (ii) varyantlar arası ilişkisel yapı, (iii) küçük panellerde kısıtlı örneklem. Tek model bu güçlükleri eş zamanlı ele alamaz. **XGBoost / LightGBM:** Tablo verisinde güçlü etkileşim, eksik değerlere dayanıklılık, SHAP yorumlanabilirlik. **VariantSAGEGNN:** Grafik komşuluk sinyali, indüktif yapı ile yeni varyantlara genelleme. **DNN:** Derin özellik etkileşimlerini BatchNorm+Dropout ile regularize öğrenme. **Stacking Meta-Learner:** Adaptif birleştirme (CFTR'da +%1.8 F1). Ensemble çeşitliliği, isotonik kalibrasyon, SMOTE ve transfer learning ile panel bazlı stabil performans sağlanmıştır.
+Varyant profil verisi üç güçlük içerir: (i) 43 heterojen özellik, (ii) varyantlar arası ilişkisel yapı, (iii) küçük panellerde kısıtlı örneklem. Tek model bu güçlükleri eş zamanlı ele alamaz. **XGBoost / LightGBM:** Tablo verisinde güçlü etkileşim, eksik değerlere dayanıklılık, SHAP yorumlanabilirlik. **VariantGATv2GNN:** Grafik komşuluk sinyali, indüktif yapı ile yeni varyantlara genelleme. **DNN:** Derin özellik etkileşimlerini BatchNorm+Dropout ile regularize öğrenme. **Stacking Meta-Learner:** Adaptif birleştirme (CFTR'da +%1.8 F1). Ensemble çeşitliliği, isotonik kalibrasyon, SMOTE ve transfer learning ile panel bazlı stabil performans sağlanmıştır.
 
 ### 5.2 Alternatifler Neden Elendi? (5 puan)
 - **Sadece XGBoost:** Grafik komşuluk sinyalini yakalayamaz; CFTR'da F1: 0.84±0.09 (ensemble: 0.92).
-- **Transdüktif GCN:** Yeni varyantlar için grafı yeniden eğitmek gerekir; yarışma formatına uyumsuzdur. İndüktif GraphSAGE tercih edildi.
+- **Transdüktif GCN:** Yeni varyantlar için grafı yeniden eğitmek gerekir; yarışma formatına uyumsuzdur. İndüktif GATv2Conv (VariantGATv2GNN) tercih edildi.
 - **Protein Dil Modeli (ESM-2):** Aşırı hesaplama maliyeti (GPU 16GB+ VRAM), pilot deneyde +%2.1 F1 artışı sağlasa da pratik çalıştırılabilirlik ve TEKNOFEST kısıtları nedeniyle elendi.
 
 ### 5.3 Parametre Seçimi ve Model Ayarları (5 puan)
 Hiperparametre optimizasyonu Optuna (Bayesian TPE, 30 deneme) ile doğrulama macro F1 üzerinden yürütülmüştür. 
 - **XGBoost / LightGBM:** `max_depth: 6`, `learning_rate: 0.05`, `n_estimators: 200`, `min_child_weight: 3`, `subsample: 0.8`, `colsample_bytree: 0.8`.
-- **GNN (VariantSAGEGNN):** `hidden_dim: 128`, `SAGEConv: 3 katman`, `Dropout: 0.3`, `lr: 1e-3` (Adam).
+- **GNN (VariantGATv2GNN):** `hidden_dim: 128`, `GATv2Conv: 3 blok`, `heads: 4`, `Dropout: 0.3`, `lr: 1e-3` (Adam). PSR'de SAGEConv olarak belirtilmişti; gerçek implementasyon GATv2Conv'dur — statik attention sorununu çözen üstün mimari.
 - **Loss:** `WeightedBCELoss` (CFTR için `class_weight = [1.2, 0.8]`).
 - **Ensemble Ağırlıkları (Doğrulama seti optimize):** XGBoost: 0.30 / LightGBM: 0.30 / GNN: 0.25 / DNN: 0.15.
 - **Kalibrasyon:** İsotonik regresyon (5-fold CV); karar eşiği: 0.40 (duyarlılık öncelikli).

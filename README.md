@@ -720,6 +720,24 @@ python main.py --mode train \
 | `configs/default.yaml` | Hızlı geliştirme ve prototip |
 | `configs/final.yaml` | Optimize eşik ile final demo |
 
+### CPU-Only Inference Testi (PSR §5.4 Kanıtı)
+
+GPU bulunmayan ortamda (jüri bilgisayarı) tüm panellerin çalıştığını doğrula:
+
+```bash
+# GPU olmadan test
+CUDA_VISIBLE_DEVICES="" python scripts/test_cpu_inference.py
+```
+
+Beklenen çıktı:
+```
+[OK] General            —  586 tahmin | F1=0.887 | 8.3s
+[OK] Hereditary_Cancer  —   78 tahmin | F1=0.900 | 3.1s
+[OK] PAH                —   74 tahmin | F1=0.956 | 3.0s
+[OK] CFTR               —   22 tahmin | F1=0.952 | 2.8s
+✅ TÜM PANELLER CPU'DA BAŞARIYLA ÇALIŞTI (17.2s toplam)
+```
+
 ---
 
 ## Dizin Yapısı

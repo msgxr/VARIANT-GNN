@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hereditary Cancer Panel — Varyant Girdi Şeması",
+  "description": "TEKNOFEST 2026 Hereditary Cancer Panel (200 Patojenik + 200 Benign eğitim)",
+  "allOf": [
+    {"$ref": "general_panel_schema.json"},
+    {
+      "properties": {
+        "Panel": {"type": "string", "const": "Hereditary_Cancer"}
+      },
+      "x-panel-info": {
+        "name": "Hereditary_Cancer",
+        "train_pathogenic": 200,
+        "train_benign": 200,
+        "test_pathogenic": 50,
+        "test_benign": 50,
+        "class_ratio": "1:1",
+        "disease_context": "Kalıtsal kanser sendromları (BRCA1/2, Lynch sendromu, Li-Fraumeni vb.)",
+        "threshold": 0.2809
+      }
+    }
+  ]
+}

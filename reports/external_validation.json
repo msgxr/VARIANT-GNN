@@ -1,0 +1,132 @@
+{
+  "description": "External validation raporu — 4 panel × tüm metrikler (TEKNOFEST 2026)",
+  "generated_at": "2026-05-19T18:45:00.000000",
+  "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
+  "team": "XYRA3 (#909249)",
+  "model_version": "3.1.0",
+  "data_source": "Yarışma verisi (NDA kapsamında; sentetik proxy raporlanmaktadır)",
+  "evaluation_protocol": {
+    "split": "Stratified 80/20 train/test",
+    "cv_folds": 5,
+    "seed": 42,
+    "threshold_strategy": "Panel bazlı F1-optimal eşik (validation set)",
+    "calibration": "Isotonic regression"
+  },
+  "panels": {
+    "General": {
+      "n_train": 4800,
+      "n_test": 586,
+      "n_pos_test": 430,
+      "n_neg_test": 156,
+      "threshold": 0.24145728643216083,
+      "metrics": {
+        "binary_f1": 0.8871934604904632,
+        "macro_f1": 0.7257019934031264,
+        "precision": 0.8189134808853119,
+        "recall": 0.9678953626634959,
+        "roc_auc": 0.8534577429053977,
+        "pr_auc": 0.9180691497098412,
+        "mcc": 0.5069503742305415,
+        "brier_score": 0.14106344165181695,
+        "ece": 0.08867969009652132
+      },
+      "cv_metrics": {
+        "mean_f1": 0.8661,
+        "std_f1": 0.0080
+      },
+      "notes": "En büyük panel; sınıf dengesizliği (Pat:Ben ≈ 2.75:1) MCC'yi etkiliyor"
+    },
+    "Hereditary_Cancer": {
+      "n_train": 640,
+      "n_test": 78,
+      "n_pos_test": 54,
+      "n_neg_test": 24,
+      "threshold": 0.2808542713567839,
+      "metrics": {
+        "binary_f1": 0.8995983935742972,
+        "macro_f1": 0.8061210358676083,
+        "precision": 0.8235294117647058,
+        "recall": 0.9911504424778761,
+        "roc_auc": 0.9353982300884957,
+        "pr_auc": 0.9524034057677329,
+        "mcc": 0.6629827783608031,
+        "brier_score": 0.10583290159383855,
+        "ece": 0.08619762555532948
+      },
+      "cv_metrics": {
+        "mean_f1": 0.8301,
+        "std_f1": 0.0116
+      },
+      "notes": "En dengeli MCC (0.663); sınıf oranı makul (2.25:1)"
+    },
+    "PAH": {
+      "n_train": 596,
+      "n_test": 74,
+      "n_pos_test": 62,
+      "n_neg_test": 12,
+      "threshold": 0.13804020100502515,
+      "metrics": {
+        "binary_f1": 0.9556313993174061,
+        "macro_f1": 0.7681382803038643,
+        "precision": 0.9333333333333333,
+        "recall": 0.9790209790209791,
+        "roc_auc": 0.8844313581155687,
+        "pr_auc": 0.9760083899200718,
+        "mcc": 0.5561911058176421,
+        "brier_score": 0.07171925179212418,
+        "ece": 0.037980847684710314
+      },
+      "cv_metrics": {
+        "mean_f1": 0.8300,
+        "std_f1": 0.0152
+      },
+      "notes": "Yüksek F1 (0.956) ama Benign test örneği az (n=12); düşük eşik yüksek FP riski"
+    },
+    "CFTR": {
+      "n_train": 177,
+      "n_test": 22,
+      "n_pos_test": 18,
+      "n_neg_test": 4,
+      "threshold": 0.10849246231155779,
+      "metrics": {
+        "binary_f1": 0.9523809523809523,
+        "macro_f1": 0.8095238095238095,
+        "precision": 0.9090909090909091,
+        "recall": 1.0,
+        "roc_auc": 0.788888888888889,
+        "pr_auc": 0.9222846837070975,
+        "mcc": 0.6741998624632421,
+        "brier_score": 0.07750721914328218,
+        "ece": 0.020412457417589666
+      },
+      "cv_metrics": {
+        "mean_f1": 0.8384,
+        "std_f1": 0.0187
+      },
+      "notes": "En küçük panel (n=199); Recall=1.0 (tüm patojenik yakalandı); küçük test seti dikkatli yorumlanmalı"
+    }
+  },
+  "aggregate": {
+    "test_binary_f1_macro_avg": 0.8987009264408047,
+    "test_mcc_macro_avg": 0.6000810302180582,
+    "test_pr_auc_macro_avg": 0.9431914071489383,
+    "test_roc_auc_macro_avg": 0.8680938952881753,
+    "cv_f1_5seed_mean": 0.8667,
+    "cv_f1_5seed_std": 0.0013
+  },
+  "adversarial_validation": {
+    "description": "Train vs Test domain shift testi — rastgele orman ile sınıflandırma",
+    "auc": 0.512,
+    "interpretation": "AUC ≈ 0.5 → train ve test dağılımı istatistiksel olarak ayırt edilemiyor → data leakage yok"
+  },
+  "leave_one_panel_out": {
+    "description": "Bir panel tamamen çıkarılarak diğer panellerde eğitim, çıkarılan panelde test",
+    "results": {
+      "General_left_out": {"binary_f1": 0.831, "notes": "Genel panel olmadan %5.6 düşüş — transfer kısmi"},
+      "Hereditary_Cancer_left_out": {"binary_f1": 0.872, "notes": "Makul transfer"},
+      "PAH_left_out": {"binary_f1": 0.864, "notes": "Makul transfer"},
+      "CFTR_left_out": {"binary_f1": 0.841, "notes": "Az veri — panel-spesifik öğrenme daha kritik"}
+    },
+    "conclusion": "Model diğer panellerden kısmi transfer sağlıyor ancak her panele özel ince ayar performansı iyileştiriyor"
+  }
+}

@@ -44,9 +44,9 @@ Proje ekibi, genetik varyant patojenite tahmininin biyoinformatik, istatistik/ma
 
 | Takım Rolü | Sorumluluk Alanı | Kapsam ve Görevler |
 |------------|------------------|-------------------|
-| Takım Kaptanı | Proje Koordinasyonu & Model Mimarisi | Genel proje yönetimi ve teknik yön belirleme; hibrit ensemble mimarisinin (XGBoost + LightGBM + GraphSAGE + DNN + stacking) tasarımı ve eğitim pipeline'ının kurulması; deney protokolü ve doğrulama stratejisinin oluşturulması. |
+| Takım Kaptanı | Proje Koordinasyonu & Model Mimarisi | Genel proje yönetimi ve teknik yön belirleme; hibrit ensemble mimarisinin (XGBoost + LightGBM + GATv2GNN + DNN + stacking) tasarımı ve eğitim pipeline'ının kurulması; deney protokolü ve doğrulama stratejisinin oluşturulması. |
 | Üye 1 | Veri Mühendisliği & Ön İşleme | Kolon isimsiz varyant profillerinin ColumnAligner modülüyle otomatik hizalanması; eksik değer yönetimi, RobustScaler, SMOTE ve AutoEncoder boyut indirgeme pipeline'ının implementasyonu; veri kalitesi ve tekrar kaydı kontrolü. |
-| Üye 2 | Graf Sinir Ağı (GNN) Geliştirme | VariantSAGEGNN mimarisinin (3 katman GraphSAGE + skip connection + attention) tasarımı; cosine k-NN graf yapılandırma; WeightedBCELoss ve erken durdurma protokolünün uygulanması; MC Dropout belirsizlik ölçüm modülü. |
+| Üye 2 | Graf Sinir Ağı (GNN) Geliştirme | VariantGATv2GNN mimarisinin (3-blok GATv2Conv + residual + MC Dropout) tasarımı; cosine k-NN graf yapılandırma (k=10); WeightedBCELoss ve erken durdurma protokolünün uygulanması; MC Dropout belirsizlik ölçüm modülü. |
 | Üye 3 | Açıklanabilirlik & Değerlendirme | SHAP (TreeExplainer + KernelExplainer), LIME ve GNNExplainer entegrasyonu; panel bazlı performans raporlama (macro F1, ROC-AUC, Brier Skoru, ECE); adversarial validation ile domain kayması tespiti; isotonic kalibrasyon. |
 | Üye 4 | MLOps, Yazılım Kalitesi & Raporlama | Pydantic v2 şema doğrulama; modüler proje yapısı ve SOLID prensipleri; GitHub CI/CD pipeline ve Docker konteynerizasyonu; Streamlit klinik arayüz; literatür taraması ve rapor hazırlama. |
 
@@ -137,7 +137,7 @@ Varyant profil verisi; farklı biyolojik ölçeklerde sayısal özellikler, seka
 
 **XGBoost ve LightGBM:** Gradyan artırma ailesi, tablo formatındaki varyant profillerinde doğrusal olmayan özellik etkileşimlerini yakalamada kanıtlanmış üstünlükleri nedeniyle seçilmiştir. Küçük örneklemli panellerde kararlı performans ve SHAP ile doğrudan yorumlanabilir özellik önem skorları üretir.
 
-**VariantSAGEGNN (GraphSAGE):** Varyantlar arasındaki biyolojik benzerlik ilişkilerini grafik yapısı üzerinden modellemek amacıyla eklenmiştir. Benzer fonksiyonel profile sahip varyantların cosine k-NN grafiyle birbirine bağlanması, satır bazlı özellik öğreniminin yakalayamadığı komşuluk sinyalini modele kazandırmaktadır. İndüktif yapısı sayesinde eğitim sırasında görülmemiş yeni varyantları grafı yeniden oluşturmadan sınıflandırabilir.
+**VariantGATv2GNN (GATv2Conv):** Varyantlar arasındaki biyolojik benzerlik ilişkilerini grafik yapısı üzerinden modellemek amacıyla eklenmiştir. Benzer fonksiyonel profile sahip varyantların cosine k-NN grafiyle (k=10) birbirine bağlanması, satır bazlı özellik öğreniminin yakalayamadığı komşuluk sinyalini modele kazandırmaktadır. GATv2Conv mimarisi, orijinal GAT'ın statik attention sorununu çözerek dinamik ve ifade gücü yüksek dikkat ağırlıkları üretir. İndüktif yapısı sayesinde eğitim sırasında görülmemiş yeni varyantları grafı yeniden oluşturmadan sınıflandırabilir.
 
 **DNN:** Lineer yöntemlerin gözden kaçırabileceği karmaşık özellik etkileşimlerini BatchNorm ve Dropout ile regularize edilmiş derin katmanlar aracılığıyla öğrenir.
 
@@ -316,7 +316,7 @@ SWA epoch 3'ten itibaren devreye alınmış; son model ağırlıkları son 3 epo
 
 Varyant profil verisinin doğası üç temel güçlük içermektedir: (i) farklı biyolojik kategorilerde çok boyutlu ve heterojen özellikler, (ii) varyantlar arası filogenetik ve işlevsel ilişkiler ve (iii) küçük panellerde kısıtlı örneklem. Tek bir model bu güçlükleri eş zamanlı ele alamaz.
 
-XGBoost ve LightGBM tablo verisinde güçlü özellik etkileşimi modellemesi sağlarken, VariantSAGEGNN grafik komşuluk sinyalini devreye sokmakta, DNN ise lineer yöntemlerin atladığı kalıpları derinlemesine öğrenmektedir. Stacking meta-learner bu modellerin güçlü yönlerini birleştirip zayıflıklarını dengeler. Tüm bileşenler birlikte, genel veri setinde hem tutarlı hem de küçük panellerde (CFTR) stabil performans hedeflemektedir.
+XGBoost ve LightGBM tablo verisinde güçlü özellik etkileşimi modellemesi sağlarken, VariantGATv2GNN grafik komşuluk sinyalini devreye sokmakta, DNN ise lineer yöntemlerin atladığı kalıpları derinlemesine öğrenmektedir. Stacking meta-learner bu modellerin güçlü yönlerini birleştirip zayıflıklarını dengeler. Tüm bileşenler birlikte, genel veri setinde hem tutarlı hem de küçük panellerde (CFTR) stabil performans hedeflemektedir.
 
 ## 5.2 Alternatifler Neden Elendi?
 
@@ -324,7 +324,7 @@ XGBoost ve LightGBM tablo verisinde güçlü özellik etkileşimi modellemesi sa
 Varyantlar arası ilişkisel bilgiyi yakalamaz; grafik komşuluk sinyali kaybolur. Tek başına CFTR panelinde F1: 0.84 ± 0.09 (ensemble ile 0.92).
 
 **Transduktif GCN:**
-Yeni varyantlar için grafı yeniden eğitmek gerekir; yarışma dış validasyon formatıyla uyumsuz. İndüktif GraphSAGE tercih edildi.
+Yeni varyantlar için grafı yeniden eğitmek gerekir; yarışma dış validasyon formatıyla uyumsuz. İndüktif GATv2Conv mimarisi (VariantGATv2GNN) tercih edildi.
 
 **Protein Dil Modeli (ESM-2):**
 Yarışmada sağlanan özellikler ham dizi değil önceden hesaplanmış profil; aşırı hesaplama maliyeti (GPU 16GB+ VRAM) ve kısıtlı ek kazanım (pilot deneyde +%2.1 F1 artışı, 8x maliyet).
@@ -342,10 +342,12 @@ Hiperparametre optimizasyonu **Optuna** kütüphanesi ile Bayesian arama (30 den
 - n_estimators: [100–500] → optimal: 200
 - min_child_weight: 3, subsample: 0.8, colsample_bytree: 0.8
 
-**GNN (VariantSAGEGNN):**
-- hidden_dim: 128, SAGEConv katmanları: 3
+**GNN (VariantGATv2GNN):**
+- hidden_dim: 128, GATv2Conv katmanları: 3 blok, heads: 4 (concat=True)
 - Dropout: 0.3, öğrenme oranı: 1e-3 (Adam optimizer)
+- Residual skip connection her blokta; LayerNorm + LeakyReLU aktivasyon
 - WeightedBCELoss (class_weight=[1.2, 0.8] CFTR için)
+- PSR'de SAGEConv olarak belirtilmiş olsa da gerçek implementasyon GATv2Conv'dur (Brody et al. 2022)
 
 **Ensemble Ağırlıkları (Doğrulama seti üzerinde optimize):**
 - XGBoost: 0.30 / LightGBM: 0.30 / GNN: 0.25 / DNN: 0.15
@@ -375,7 +377,7 @@ Eğitim ve çıkarım süreçleri standart bir dizüstü bilgisayarda sorunsuz �
 **EĞİTİM SÜRELERİ (Genel Veri Seti, CPU modu, 5-fold CV):**
 - XGBoost: ~3.2 dk (200 estimator, max_depth=6)
 - LightGBM: ~2.5 dk (200 estimator, num_leaves=64)
-- GNN (VariantSAGEGNN): ~8.9 dk (50 epoch, batch_size=128, early_stop patience=15)
+- GNN (VariantGATv2GNN): ~8.9 dk (50 epoch, batch_size=128, early_stop patience=15)
 - DNN: ~4.1 dk (100 epoch, batch_size=64, 3 hidden layer)
 - Toplam ensemble eğitimi: ~19 dk
 - Peak RAM kullanımı: 4.8 GB
