@@ -29,7 +29,8 @@ Implementation:
 from __future__ import annotations
 
 import logging
-from typing import Dict, Iterator, List
+from collections import deque
+from typing import Deque, Dict, Iterator, List
 
 import numpy as np
 import torch
@@ -72,7 +73,7 @@ class SWABuffer:
             raise ValueError("swa_start_fraction must be in (0, 1).")
         self.swa_start_fraction = swa_start_fraction
         self.max_checkpoints    = max_checkpoints
-        self._checkpoints: List[Dict[str, torch.Tensor]] = []
+        self._checkpoints: Deque[Dict[str, torch.Tensor]] = deque(maxlen=max_checkpoints)
         self._n_collected: int = 0
 
     # ------------------------------------------------------------------
@@ -103,9 +104,7 @@ class SWABuffer:
             k: v.detach().cpu().clone()
             for k, v in model.state_dict().items()
         }
-        if len(self._checkpoints) >= self.max_checkpoints:
-            self._checkpoints.pop(0)  # evict oldest
-        self._checkpoints.append(sd)
+        self._checkpoints.append(sd)  # deque(maxlen) otomatik evict eder
         self._n_collected += 1
         return True
 
@@ -164,6 +163,9 @@ class SWABuffer:
         self._checkpoints.clear()
         self._n_collected = 0
 
+    def __len__(self) -> int:
+        return len(self._checkpoints)
+
 
 # ---------------------------------------------------------------------------
 # BatchNorm update after SWA
@@ -200,6 +202,7 @@ def update_batch_norm(
             module.num_batches_tracked.zero_()
 
     model.train()
+    i = 0
     for i, batch in enumerate(data_loader):
         if i >= n_batches:
             break
@@ -255,7 +258,8 @@ class CyclicSWAScheduler:
         Update learning rate for ``epoch_in_swa`` (0-indexed position inside
         SWA phase).  Returns the new LR.
         """
-        t = (epoch_in_swa % self.cycle_length) / self.cycle_length
+        cl = max(1, self.cycle_length)  # sıfıra bölme koruması
+        t = (epoch_in_swa % cl) / cl
         lr = self.lr_min + 0.5 * (self.lr_max - self.lr_min) * (1 - np.cos(np.pi * t))
         for pg in self.optimizer.param_groups:
             pg["lr"] = lr

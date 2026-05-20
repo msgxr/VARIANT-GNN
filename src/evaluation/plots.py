@@ -84,18 +84,21 @@ def plot_pr_curve(
     y_prob: np.ndarray,
     output_path: str | Path = "reports/pr_curve.png",
 ) -> None:
-    path = _ensure_dir(Path(output_path))
+    from sklearn.metrics import average_precision_score
+    path     = _ensure_dir(Path(output_path))
     prec, rec, _ = precision_recall_curve(y_true, y_prob[:, 1])
+    pr_auc   = average_precision_score(y_true, y_prob[:, 1])
 
     plt.figure(figsize=(6, 5))
-    plt.plot(rec, prec, color="darkorange")
+    plt.plot(rec, prec, color="darkorange", label=f"PR (AUC={pr_auc:.3f})")
     plt.xlabel("Recall")
     plt.ylabel("Precision")
-    plt.title("Precision-Recall Curve")
+    plt.title(f"Precision-Recall Curve (AUC={pr_auc:.3f})")
+    plt.legend()
     plt.tight_layout()
     plt.savefig(path, dpi=120)
     plt.close()
-    logger.info("Saved PR curve -> %s", path)
+    logger.info("Saved PR curve -> %s (AUC=%.3f)", path, pr_auc)
 
 
 # ---------------------------------------------------------------------------

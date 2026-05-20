@@ -60,11 +60,13 @@ class VariantDNN(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Standart forward gecisi — (N, input_dim) → (N, num_classes) logits."""
-        # BatchNorm1d tek ornekte eval modunda NaN uretebilir — egitim modunda gec
-        if x.shape[0] == 1 and not self.training:
-            self.train()
-            out = self.net(x)
+        # BatchNorm1d EGITIM modunda tek ornek (N=1) ile Var=0 → NaN uretir.
+        # EVAL modunda running_mean/var kullanir ve N=1 ile sorunsuz calisir.
+        # Cozum: egitim modunda tek ornek gelirse gecici olarak eval moduna gec.
+        if x.shape[0] == 1 and self.training:
             self.eval()
+            out = self.net(x)
+            self.train()
             return out
         return self.net(x)
 

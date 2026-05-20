@@ -79,6 +79,7 @@ def validate_dataset(
             metadata_columns=[],
             label_column=None,
             n_samples=0,
+            warnings=warnings,
             errors=errors,
         )
 

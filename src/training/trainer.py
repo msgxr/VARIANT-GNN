@@ -905,6 +905,18 @@ class VariantTrainer:
                 "GATv2 SWA applied (%d checkpoints averaged).",
                 swa_buffer.n_collected,
             )
+            # GATv2 LayerNorm kullanır (BatchNorm değil) — update gerekmez.
+            # Ama SequenceEncoder CNN katmanları BatchNorm içerebilir; güvenli ol.
+            has_bn = any(
+                isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d))
+                for m in model.modules()
+            )
+            if has_bn:
+                from src.training.swa import update_batch_norm
+                _tmp_loader = _make_geo_loader(
+                    preprocessor, X_tr, y_tr, batch_size=min(32, len(X_tr)), shuffle=False
+                )
+                update_batch_norm(model, _tmp_loader, self.device)
 
         # Persist learning curve JSON for PDR §4.5 reproducibility
         try:
@@ -1013,6 +1025,10 @@ class VariantTrainer:
         if dnn_swa.n_collected >= 2:
             dnn_swa.apply(model)
             logger.info("DNN SWA applied (%d checkpoints).", dnn_swa.n_collected)
+            # SWA ağırlık ortalaması BatchNorm running_mean/var'ı geçersiz kılar.
+            # Yeni ağırlıklarla istatistikleri yeniden hesapla (PyTorch SWA best practice).
+            from src.training.swa import update_batch_norm
+            update_batch_norm(model, train_loader, self.device)
         elif val_loader is not None:
             model.load_state_dict(best_weights)
         return model
