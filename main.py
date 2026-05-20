@@ -164,6 +164,20 @@ def mode_train(args, cfg):
     store.save_all(preprocessor, ensemble, calibrator)
     store.save_threshold(best_thr)
 
+    # ── OOD Dedektörü: eğitim verisiyle fit et, kaydet ──────────────────────
+    # Inference sırasında bu referans kullanılır (inference verisiyle fit YANLIŞ).
+    try:
+        import joblib as _jl
+        from src.scientific.ood_detector import OODDetector
+        X_train_proc = preprocessor.transform(X_tr)
+        _ood_det = OODDetector(z_threshold=3.5, ood_frac_thresh=0.25)
+        _ood_det.fit(X_train_proc)
+        _ood_path = cfg.paths.models_dir / "ood_detector.pkl"
+        _jl.dump(_ood_det, str(_ood_path))
+        logging.info("OOD dedektörü eğitim verisiyle fit edildi → %s", _ood_path)
+    except Exception as _ood_train_exc:
+        logging.warning("OOD dedektörü eğitimi başarısız (non-fatal): %s", _ood_train_exc)
+
     save_all_plots(report, y_test, cal_test_proba, cfg.paths.reports_dir)
 
     # ── Panel bazlı değerlendirme + otomatik panel threshold optimizasyonu ──

@@ -268,17 +268,32 @@ class InferencePipeline:
         result["Probability"]   = raw_proba[:, 1].round(4)
         result["Calibrated_Risk"] = cal_risk
         result["Confidence"]    = confidence
-        result["High_Risk"]     = cal_proba[:, 1] >= cfg.thresholds.high_risk
+        # F1-optimal threshold'u kullan (eğitimde kayıt edilen) — config sabit değeri değil
+        result["High_Risk"]     = cal_proba[:, 1] >= threshold
         result["Clinical_Flag"] = clinical_flag
 
-        # ── OOD Tespiti (opsiyonel) ───────────────────────────────────────────
+        # ── OOD Tespiti — eğitim dağılımından sapma kontrolü ─────────────────
+        # Referans dağılım: eğitimde kayıt edilen OOD dedektörü (models/ood_detector.pkl).
+        # Yoksa devre dışı — inference verisiyle fit etmek YANLIŞTIR (tüm noktalar
+        # kendi dağılımında olur → anlamsız skor).
         try:
             from src.scientific.ood_detector import OODDetector
-            _ood_det = OODDetector(z_threshold=3.5, ood_frac_thresh=0.25)
-            _ood_det.fit(X_scaled)
-            _ood_out = _ood_det.detect(X_scaled)
-            result["OOD_Score"] = _ood_out["ood_scores"].round(3)
-            result["OOD_Flag"]  = _ood_out["ood_flags"]
+            _ood_path = self.store.model_dir / "ood_detector.pkl"
+            if _ood_path.exists():
+                import joblib as _jl
+                _ood_det = _jl.load(str(_ood_path))
+                _ood_out = _ood_det.detect(X_scaled)
+                result["OOD_Score"] = _ood_out["ood_scores"].round(3)
+                result["OOD_Flag"]  = _ood_out["ood_flags"]
+            else:
+                logger.info(
+                    "OOD dedektörü bulunamadı (%s). "
+                    "Eğitimde `python main.py --mode train` çalıştırıldıktan sonra "
+                    "kayıt edilecek. OOD_Score NaN olarak bırakılıyor.",
+                    _ood_path,
+                )
+                result["OOD_Score"] = np.nan
+                result["OOD_Flag"]  = False
         except Exception as _ood_exc:
             logger.warning(
                 "OOD tespiti basarisiz (OOD_Score/OOD_Flag kolonlari olmayacak): %s",
@@ -347,10 +362,11 @@ class InferencePipeline:
         else:
             feature_df = df.drop(columns=drop_cols, errors='ignore').select_dtypes(include=[np.number])
             if feature_df.shape[1] != expected_n:
-                if feature_df.shape[1] > expected_n:
-                    feature_df = feature_df.iloc[:, :expected_n]
-                else:
-                    raise ValueError(f"X has {feature_df.shape[1]} features, model expects {expected_n}")
+                raise ValueError(
+                    f"predict_from_dataframe: DataFrame'de {feature_df.shape[1]} sayısal "
+                    f"özellik var, model {expected_n} bekliyor. "
+                    f"Kolon listesini kontrol edin veya predict_from_csv kullanın."
+                )
 
         if expected_features is not None:
             feature_df = feature_df[expected_features]

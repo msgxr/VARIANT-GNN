@@ -464,10 +464,16 @@ class HybridEnsemble:
 
         def _neg_binary_f1(w_raw: np.ndarray) -> float:
             """§7.3: Binary F1 (Pathogenic, pos_label=1) negatifi."""
+            from src.evaluation.metrics import find_best_threshold as _fbt
             w       = np.abs(w_raw)
             w       = w / (w.sum() + 1e-12)
             blended = sum(wi * mi for wi, mi in zip(w, avail_m))
-            preds   = (blended[:, 1] >= 0.5).astype(int)
+            # Sabit 0.5 değil — val üzerinde optimal eşik bul (daha doğru optimizasyon)
+            try:
+                thr, _ = _fbt(y_val, blended[:, 1], metric="f1", n_steps=50)
+            except Exception:
+                thr = 0.5
+            preds   = (blended[:, 1] >= thr).astype(int)
             return -f1_score(
                 y_val, preds,
                 average="binary", pos_label=1, zero_division=0,

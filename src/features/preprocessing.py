@@ -124,8 +124,16 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
                     for i in range(arr.shape[1]):
                         arr[mask[:, i], i] = medians[i]
                 else:
-                    # Emergency fill with 0
-                    arr = np.nan_to_num(arr, nan=0.0)
+                    # Boyut uyuşmazlığı — medyanları sütun sütun uygula (güvenli fallback)
+                    logger.warning(
+                        "ColumnAligner: imputer boyutu (%d) != çıktı boyutu (%d). "
+                        "Her sütun için ayrı medyan kullanılıyor.",
+                        len(medians), arr.shape[1],
+                    )
+                    col_medians = np.nanmedian(arr, axis=0)
+                    col_medians = np.where(np.isnan(col_medians), 0.0, col_medians)
+                    for i in range(arr.shape[1]):
+                        arr[mask[:, i], i] = col_medians[i]
             return arr
             
         return out_df.values
@@ -173,15 +181,18 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
     Fit on training data only; transform applied identically to val/test.
 
-    Pipeline (fit phase):
-        1. SimpleImputer (median)
-        2. RobustScaler
-        3. VarianceThreshold (if use_feature_selection)
-        4. SelectKBest mutual_info (if use_feature_selection)
-        5. AutoEncoder latent concatenation (if use_autoencoder)
+    Pipeline (fit_resample_train / eğitim fazı — gerçek sıra):
+        1. ColumnAligner  (anonim/karışık kolon hizalama)
+        2. ACMGProxyFeatures (kural-tabanlı biyolojik özellik türetme)
+        3. SimpleImputer  (medyan)
+        4. RobustScaler
+        5. BiologicalEnrichmentTransformer (BLOSUM62/Grantham — varsa)
+        6. SMOTE (yalnızca eğitim split'inde — transform'da UYGULANMAZ)
+        7. VarianceThreshold + SelectKBest (if use_feature_selection)
+        8. AutoEncoder  (latent özellik birleştirme, if use_autoencoder)
+        9. Korelasyon grafı inşası (_build_graph)
 
-    SMOTE is handled separately via ``fit_resample``, not inside transform,
-    because it must not be applied to validation/test data.
+    transform() fazı: adım 1-2-3-4-5-7-8 uygulanır (6=SMOTE, 9=Graf yok).
 
     Graph edges (``edge_index``, ``edge_attr``) are built from training-fold
     correlation after all preprocessing steps.
@@ -342,7 +353,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             logger.debug("Signature computation skipped (%s).", _exc)
             self.feature_signatures = {}
 
-        # 1. Impute (secondary check)
+        # 3. Impute (secondary check — all-NaN sütun koruması)
         # Tumu NaN olan kolon kontrolu — imputer NaN medyan uretir
         all_nan_cols = np.where(np.all(np.isnan(X_aligned), axis=0))[0]
         if len(all_nan_cols) > 0:
@@ -355,29 +366,30 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self._imputer = SimpleImputer(strategy="median")
         X_imputed = self._imputer.fit_transform(X_aligned)
 
-        # 2. Scale
+        # 4. Scale
         self._scaler = RobustScaler()
         X_scaled = self._scaler.fit_transform(X_imputed)
 
-        # 3. Biological Enrichment (Before SMOTE so scores are resampled)
+        # 5. Biological Enrichment (impute+scale sonrası, SMOTE öncesi)
+        # Ham X yerine X_imputed kullanılır — NaN içermeyen veri ile doğru skor
         if self.use_bio_scoring:
             self._bio_transformer = BiologicalEnrichmentTransformer()
-            bio_feats = self._bio_transformer.fit_transform(X)
+            bio_feats = self._bio_transformer.fit_transform(X_imputed)
             if bio_feats.shape[1] > 0:
                 X_scaled = np.hstack([X_scaled, bio_feats])
 
-        # 4. SMOTE (includes bio features)
+        # 6. SMOTE (includes bio features) — eğitim aşamasında, split sonrası
         if apply_smote and y is not None:
             logger.info("Applying SMOTE for class balancing …")
             smote = SMOTE(random_state=self.random_state)
             X_scaled, y = smote.fit_resample(X_scaled, y)
             logger.info("Post-SMOTE shape: %s", X_scaled.shape)
 
-        # 4. Feature selection
+        # 7. Feature selection (SMOTE sonrası — etiket dizisi post-SMOTE'dan gelir)
         if self.use_feature_selection:
             X_scaled = self._fit_feature_selection(X_scaled, y)
 
-        # 5. AutoEncoder
+        # 8. AutoEncoder
         if self.use_autoencoder:
             _input_dim = X_scaled.shape[1]
             _enc_dim   = self.autoencoder_encoding_dim
@@ -434,9 +446,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         X_scaled = self._scaler.transform(X_imputed)
 
         if self.use_bio_scoring and self._bio_transformer is not None:
-             bio_feats = self._bio_transformer.transform(X)
-             if bio_feats.shape[1] > 0:
-                 X_scaled = np.hstack([X_scaled, bio_feats])
+            bio_feats = self._bio_transformer.transform(X_imputed)  # NaN-free X
+            if bio_feats.shape[1] > 0:
+                X_scaled = np.hstack([X_scaled, bio_feats])
 
         if self.use_feature_selection:
             if self._var_selector is not None:
@@ -470,6 +482,15 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
     def _build_graph(self, X_scaled: np.ndarray) -> None:
         """Build feature-correlation graph from TRAINING data only."""
+        if X_scaled.shape[0] < 2:
+            logger.warning(
+                "_build_graph: Korelasyon hesaplamak için en az 2 örnek gerekli "
+                "(%d mevcut). Boş kenar matrisi kullanılıyor.",
+                X_scaled.shape[0],
+            )
+            self.edge_index = torch.empty((2, 0), dtype=torch.long)
+            self.edge_attr  = torch.empty((0,), dtype=torch.float)
+            return
         corr = np.corrcoef(X_scaled, rowvar=False)
         corr = np.nan_to_num(corr, nan=0.0)
 

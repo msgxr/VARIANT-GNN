@@ -107,7 +107,10 @@ class _LGBMBoosterWrapper:
 
     def predict_proba(self, X) -> "numpy.ndarray":  # noqa: F821
         import numpy as _np
-        raw = self._booster.predict(X)
+        import pandas as _pd
+        # LightGBM raw Booster feature_name kontrolü yapar; DataFrame geçmek hata üretebilir
+        X_arr = X.values if isinstance(X, _pd.DataFrame) else _np.asarray(X)
+        raw = self._booster.predict(X_arr)
         if raw.ndim == 1:
             return _np.column_stack([1.0 - raw, raw])
         return raw

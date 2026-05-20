@@ -73,9 +73,9 @@ def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
         out["confidence_level"] = (np.maximum(p, 1 - p) * 100).round(2)
 
     # 6. uncertainty_score  [0-1]  (0=kesin, 1=tamamen belirsiz)
-    if "OOD_Score" in df.columns:
-        out["uncertainty_score"] = df["OOD_Score"].round(4)
-    elif "Confidence" in df.columns:
+    # MC-Dropout std'yi tercih et; yoksa güven tersini kullan.
+    # OOD_Score ≠ uncertainty — OOD dağılım dışılığı ölçer, model belirsizliği değil.
+    if "Confidence" in df.columns:
         # Güvenden türet: yüksek güven → düşük belirsizlik
         out["uncertainty_score"] = (1 - df["Confidence"].clip(0, 100) / 100).round(4)
     else:
