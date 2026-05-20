@@ -1,29 +1,125 @@
 # Katkı Rehberi — VARIANT-GNN
 
-VARIANT-GNN'e katkıda bulunmak istiyorsanız bu rehberi okuyunuz.
+**Proje:** VARIANT-GNN — Missense Varyant Patojenisite Tahmini  
+**Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
+**Resmi Kaynak:** https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/  
+**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4
 
-## Geliştirme Ortamı Kurulumu
+> Bu belgede yer alan tüm kısıtlamalar, yukarıdaki resmi TEKNOFEST şartnamesinden
+> doğrudan alınmıştır. Çelişki durumunda şartname geçerlidir.
+
+---
+
+## 1. Kimler Katkı Yapabilir?
+
+Bu proje TEKNOFEST 2026 yarışma süreci kapsamında geliştirilmektedir.
+
+**XYRA3 Takım Üyeleri:**  
+Şartname §5 gereği, yarışma sürecinde üretilen tüm kod ve modeller takım
+üyelerinin emeğinin ürünüdür. Katkı sağlayanlar bu kurala uymakla yükümlüdür.
+
+**Harici Katkılar:**  
+Hata bildirimi, dokümantasyon iyileştirmesi ve teknik öneri kabul edilir.
+Ancak şartname yükümlülükleri ve NDA kapsamı dahilinde değerlendirme yapılır.
+
+---
+
+## 2. Önce Bunları Oku — Şartname Yükümlülükleri
+
+### 2.1. Yarışma Verisi Kısıtı — Şartname §4
+
+> *"Yarışmacılar, yarışmada paydaşlar tarafından sağlanacak verilere
+> ancak 'Gizlilik Sözleşmesini' imzalı olarak sunmaları halinde erişim
+> sağlayabilecek ve yarışmaya katılabileceklerdir."*
+
+```
+✗  Ham yarışma eğitim/test verisi REPOYA EKLENEMEz
+✗  Sınıf etiketleri veya ground truth dosyaları paylaşılamaz
+✗  Issue / PR / commit mesajında ham veri satırı yazılamaz
+✗  Genomik adres (Chr/Pos) içeren hiçbir çıktı paylaşılamaz
+```
+
+### 2.2. Genomik Adres Yasağı — Şartname §3.2
+
+> *"Yarışma veri setinde varyantların genomik adres (kromozom ve pozisyon)
+> bilgileri... tamamen gizlenmiştir. Yarışmacıların patojenite tahminlerini
+> harici veri kaynaklarına başvurmaksızın... yapmaları sağlanmaktadır."*
+
+```
+✗  ClinVar / gnomAD API ile etiket araması yapılamaz
+✗  Genomik adres üzerinden tersine mühendislik yapılamaz
+✗  Dış veri kaynağıyla etiket sızıntısı (leakage) oluşturulamaz
+```
+
+### 2.3. Klinik Kullanım Yasağı — Şartname §10
+
+> *"Yarışma kapsamında geliştirilen modeller ve elde edilen çıktılar,
+> herhangi bir klinik tanı, tedavi veya tıbbi karar destek amacıyla
+> kullanılamaz. Bu çıktılar yalnızca araştırma ve eğitim amaçlıdır."*
+
+Kod, yorum veya dokümantasyonda şu ifadeler **kullanılamaz**:
+
+```
+✗  "tanı koyar / koyabilir"
+✗  "tedavi önerir"
+✗  "%100 doğru"
+✗  "klinik olarak kanıtlanmıştır"
+✗  "doktor yerine geçer"
+```
+
+### 2.4. Tekrarlanabilirlik Zorunluluğu — Şartname §7.5
+
+> *"Yarışma jürisi, finale kalan takımların kodlarını tekrar çalıştırmasını
+> ve beyan ettikleri sonuçları bulmalarını isteme yetkisine sahiptir."*
+
+Her katkı bu garantiyi korumalıdır:
+
+```
+✅  random_state=42 — tüm stokastik işlemlerde sabit seed
+✅  python main.py --mode train — tek komutla çalıştırılabilir
+✅  requirements.txt — sabit versiyonlarla kilitli
+✅  CV F1 = 0.8347 ± 0.0114  |  Test F1 = 0.8706
+```
+
+---
+
+## 3. Geliştirme Ortamı Kurulumu
 
 ```bash
+# 1. Klonla
 git clone https://github.com/msgxr/VARIANT-GNN.git
 cd VARIANT-GNN
 
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# 2. Sanal Ortam
+python -m venv .venv
 
-# CPU (geliştirme için)
-pip install torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
-pip install torch-scatter torch-sparse torch-geometric \
-  -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+# Windows
+.\.venv\Scripts\Activate.ps1
+# Linux / macOS
+source .venv/bin/activate
 
+# 3. Bağımlılıklar
+pip install --upgrade pip
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+
+# 4. Doğrulama
+python -c "from src.core.gnn import VariantGATv2GNN; print('GNN OK')"
+python -c "from src.core.ensemble import HybridEnsemble; print('Ensemble OK')"
+pytest tests/smoke/ -q
 ```
 
-## Testleri Çalıştırma
+### PyTorch Versiyonu
+
+Bu proje `torch==2.8.0` ve `torch-geometric==2.6.1` kullanır.
+`requirements.txt` sabit versiyonlar içerir — değiştirme.
+
+---
+
+## 4. Testleri Çalıştırma
 
 ```bash
-# Smoke testler (hızlı, import kontrolü)
+# Smoke testler — hızlı import ve yapı kontrolü
 pytest tests/smoke/ -v
 
 # Unit testler
@@ -33,10 +129,24 @@ pytest tests/unit/ -v
 pytest tests/integration/ -v
 
 # Tüm testler
-pytest tests/ -v
+pytest tests/ -v --tb=short
+
+# Belirli modül
+pytest tests/unit/test_preprocessing.py -v
 ```
 
-## Kod Kalitesi
+**Test kuralları:**
+
+```
+✅  Testlerde sentetik veri kullan (data/samples/)
+✅  Her yeni özellik için unit test ekle
+✗   Gerçek yarışma verisi test fixture olarak kullanılamaz (NDA §4)
+✗   Test çıktısında genomik adres veya etiket verisi bulunmamalı
+```
+
+---
+
+## 5. Kod Kalitesi
 
 ```bash
 # Lint
@@ -48,63 +158,175 @@ ruff check --fix src/ tests/ main.py app.py
 # Type check
 mypy src/ --ignore-missing-imports
 
-# Güvenlik taraması
-bandit -r src/ -ll
+# Güvenlik taraması (Bandit)
+bandit -r src/ main.py app.py -ll
+
+# Bağımlılık güvenlik taraması
+pip-audit
 ```
 
-Veya Makefile ile:
+Makefile kısayolları:
 
 ```bash
+make lint       # ruff check
+make typecheck  # mypy
+make test       # pytest
+make security   # bandit + pip-audit
+make all        # hepsi birden
+```
+
+---
+
+## 6. Geliştirme Kuralları
+
+### 6.1. Kod Stili
+
+```python
+# ✅ Doğru
+from __future__ import annotations
+from typing import Optional
+
+def train_fold(X: np.ndarray, y: np.ndarray, fold: int) -> FoldResult:
+    """GATv2 ve ensemble'ı tek fold'da eğitir."""
+    ...
+
+# ✗ Yanlış — gereksiz yorum (WHAT anlatıyor, WHY değil)
+# X array'ini y etiketleriyle fold numarasında eğit
+def train_fold(X, y, fold):
+    ...
+```
+
+- Ruff ile uyumlu Python
+- `from __future__ import annotations` her dosyada
+- Docstring yalnızca WHY (neden) için — WHAT iyi isimler anlatır
+- Sihirli sabit yok: `threshold = 0.4357` değil, `cfg.thresholds.classification`
+
+### 6.2. Veri Sızıntısı Önleme (Kritik)
+
+Şartname §3.2 ve PSR §3.2 uyumu:
+
+```python
+# ✅ DOĞRU — preprocessing SADECE eğitim fold'unda fit edilir
+preprocessor = VariantPreprocessor()
+X_train_proc, y_res = preprocessor.fit_resample_train(X_train, y_train)
+X_val_proc          = preprocessor.transform(X_val)   # fit YOK
+
+# ✗ YANLIŞ — tüm veriyi fit eder → veri sızıntısı
+preprocessor.fit(X_all)   # KESİNLİKLE YAPMA
+```
+
+### 6.3. Commit Mesajı Formatı
+
+```
+<tip>: <kısa açıklama (50 karakter max)>
+
+[opsiyonel gövde — neden bu değişiklik?]
+
+Co-Authored-By: İsim <email>
+```
+
+**Tipler:**
+
+| Tip | Ne Zaman |
+|:---|:---|
+| `feat` | Yeni özellik |
+| `fix` | Hata düzeltme |
+| `docs` | Sadece dokümantasyon |
+| `test` | Test ekleme/güncelleme |
+| `refactor` | Davranış değişikliği olmadan yapı değişikliği |
+| `ci` | CI/CD değişiklikleri |
+| `chore` | Bağımlılık güncelleme, temizlik |
+| `security` | Güvenlik düzeltmesi |
+| `legal` | LICENSE/SECURITY/CONTRIBUTING |
+
+### 6.4. Branch Stratejisi
+
+```
+main          ← stabil, yarışma sürümü (doğrudan push yapılmaz)
+develop       ← aktif geliştirme
+feature/xyz   ← yeni özellik
+fix/xyz       ← hata düzeltme
+docs/xyz      ← dokümantasyon
+```
+
+---
+
+## 7. Pull Request Süreci
+
+```bash
+# 1. Branch oluştur
+git checkout -b feature/panel-threshold-optimization
+
+# 2. Değişiklik yap, test et
+pytest tests/ -q
 make lint
-make typecheck
-make test
 make security
+
+# 3. Commit
+git add src/evaluation/metrics.py
+git commit -m "feat: panel bazlı F1-optimal threshold optimizasyonu"
+
+# 4. Push
+git push origin feature/panel-threshold-optimization
+
+# 5. PR aç — main'e karşı
 ```
 
-## Geliştirme Kuralları
+**PR Kontrol Listesi:**
 
-### Kod Stili
-- Ruff ile uyumlu Python kodu
-- Tip anotasyonları (`from __future__ import annotations`)
-- Sınıf/fonksiyon docstring'leri yalnızca WHY açıklamaları için
-- WHAT açıklamaları iyi isimlendirilmiş değişkenlerle
-
-### Test Yazma
-- Her yeni özellik için unit test
-- Gerçek yarışma verisi test fixture olarak kullanılmamalı
-- `data/samples/` altındaki sentetik veri kullanılmalı
-- Smoke testleri import seviyesinde tutulmalı
-
-### Commit Mesajları
 ```
-<tip>: <kısa açıklama>
-
-[opsiyonel gövde]
+[ ] CI geçiyor (lint + typecheck + test + security)
+[ ] Gerçek yarışma verisi eklenmedi
+[ ] Klinik iddia içermiyor (§10)
+[ ] Genomik adres veya etiket verisi yok (§3.2)
+[ ] Veri sızıntısı riski kontrol edildi
+[ ] random_state=42 korunuyor (§7.5 tekrarlanabilirlik)
+[ ] Test eklenmiş (yeni özellikler için)
+[ ] Commit mesajı formatına uygun
 ```
-Tipler: `feat`, `fix`, `docs`, `test`, `refactor`, `ci`, `chore`
 
-### Branch Stratejisi
-- `main` — stabil, yarışma sürümü
-- `develop` — aktif geliştirme
-- `feature/xyz` — yeni özellik branch'leri
-- `fix/xyz` — hata düzeltme branch'leri
+---
 
-## Kritik Kurallar
+## 8. Kritik Kurallar Özeti
 
-1. **Gerçek yarışma verisi** repoya eklenmez.
-2. **Model binary dosyaları** (.pth, .pkl) gitignore kapsamında tutulur.
-3. **Klinik iddialar** — "tanı koyar", "tedavi önerir" gibi ifadeler kullanılmaz.
-4. **Veri sızıntısı** — preprocessing tüm fold içinde fit edilir.
-5. **Backward compat** — `VariantSAGEGNN` gibi alias'lar belgelenerek korunur.
+| Kural | Kaynak | Sonuç |
+|:---|:---:|:---|
+| Gerçek yarışma verisi repoya eklenmez | §4 NDA | Diskalifiye riski |
+| Klinik iddia kullanılamaz | §10 | Şartname ihlali |
+| Genomik adres araması yapılamaz | §3.2 | Şartname ihlali |
+| random_state=42 korunur | §7.5 | Jüri tekrarı garantisi |
+| Preprocessing fold içinde fit | §3.2 PSR | Sonuç geçersizleşir |
+| Model binary'leri gitignore'da | Güvenlik | SHA256 doğrulaması |
+| Danışman eser sahibi olamaz | §5 | Başvuru geçersizleşir |
 
-## Pull Request Süreci
+---
 
-1. Branch oluştur: `git checkout -b feature/yeni-ozellik`
-2. Değişiklikleri yap ve test et
-3. PR oluştur: `main` branch'e karşı
-4. CI'ın geçmesini bekle (lint + typecheck + test + security)
-5. İnceleme ve merge
+## 9. Sık Yapılan Hatalar
 
-## Güvenlik Bildirimi
+```bash
+# ✗ YANLIŞ — veri tüm sette ön işleniyor
+scaler.fit(X_all)
 
-Güvenlik açığı tespit ederseniz `docs/SECURITY.md` dosyasındaki prosedürü izleyiniz.
+# ✗ YANLIŞ — SMOTE bölmeden önce uygulanıyor
+X_res, y_res = SMOTE().fit_resample(X_all, y_all)
+X_train, X_test = train_test_split(X_res, y_res)
+
+# ✗ YANLIŞ — test seti threshold ayarlamada kullanılıyor
+best_thr = optimize_threshold(y_test, preds_test)
+
+# ✗ YANLIŞ — klinik iddia
+"Bu model %87 doğrulukla tanı koyabilmektedir."
+```
+
+---
+
+## 10. Güvenlik Bildirimi
+
+Güvenlik açığı tespit ederseniz `SECURITY.md` dosyasındaki prosedürü izleyin.  
+**Güvenlik açıklarını herkese açık Issue olarak açmayın.**
+
+Doğrudan iletişim: **sinagun93@gmail.com**
+
+---
+
+*Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*
