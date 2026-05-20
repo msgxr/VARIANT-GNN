@@ -504,8 +504,8 @@ class VariantTrainer:
         # ── Inner val split for GNN/DNN early stopping (AFTER SMOTE) ──────────
         # Carving from the post-SMOTE pool so the ES val set is balanced.
         # Never touches the external test set → no leakage of jury data.
-        inner_val_size = min(0.15, 200 / max(len(X_proc), 1))  # at least 15%
-        inner_val_size = max(inner_val_size, 0.10)
+        inner_val_size = min(0.15, 200 / max(len(X_proc), 1))  # at most 15%
+        inner_val_size = max(inner_val_size, 0.10)               # at least 10%
         idx_inner = np.arange(len(X_proc))
         idx_inner_tr, idx_inner_val = train_test_split(
             idx_inner, test_size=inner_val_size, stratify=y_resampled,
@@ -600,6 +600,7 @@ class VariantTrainer:
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
     ) -> List[FoldResult]:
+        cfg   = self.cfg
         # --- Girdi doğrulama ---
         if len(X) == 0:
             raise ValueError("CV icin en az 1 ornek gerekli; 0 satir geldi.")
@@ -618,7 +619,6 @@ class VariantTrainer:
                 "Hata olusabilir.",
                 len(X), cfg.training.cv_folds, min_samples_needed,
             )
-        cfg   = self.cfg
         skf   = StratifiedKFold(
             n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed
         )
@@ -720,7 +720,7 @@ class VariantTrainer:
             dnn_tr_loader = _make_dnn_loader(X_tr_proc, y_tr_res, cfg.training.batch_size, True)
             dnn_val_loader= _make_dnn_loader(X_val_proc, y_val, cfg.training.batch_size, False)
             dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_train=y_tr_res)
-            dnn_preds, _  = _dnn_eval(dnn_model, dnn_val_loader, self.device)
+            dnn_preds, dnn_probs_fold = _dnn_eval(dnn_model, dnn_val_loader, self.device)
             dnn_f1        = float(f1_score(y_val, dnn_preds[:len(y_val)],
                                            average="binary", pos_label=1, zero_division=0))
 
@@ -728,7 +728,7 @@ class VariantTrainer:
             w         = cfg.ensemble.weights
             xgb_probs = xgb_model.predict_proba(X_val_proc)
             gnn_probs = np.array(gnn_probs_fold)
-            dnn_probs = np.array(_dnn_eval(dnn_model, dnn_val_loader, self.device)[1])
+            dnn_probs = np.array(dnn_probs_fold)  # reuse — no second forward pass
             if lgbm_model_fold is not None and len(w) >= 4:
                 lgbm_probs = lgbm_model_fold.predict_proba(_to_lgbm_frame(X_val_proc))
                 # 4-model weighted combine: [XGB, LGB, GNN, DNN]
@@ -958,7 +958,19 @@ class VariantTrainer:
         if y_train is not None:
             criterion = _make_criterion(y_train, self.device)
         else:
-            criterion = nn.CrossEntropyLoss()
+            # y_train sağlanmadı — loader'dan etiketleri yeniden topla (sınıf dengesi korunsun)
+            try:
+                y_from_loader = np.concatenate([b[1].numpy() for b in train_loader])
+                criterion = _make_criterion(y_from_loader, self.device)
+                logger.warning(
+                    "_train_dnn: y_train=None — class weights DataLoader'dan yeniden hesaplandı."
+                )
+            except Exception:
+                criterion = nn.CrossEntropyLoss()
+                logger.warning(
+                    "_train_dnn: y_train=None ve DataLoader'dan etiket alınamadı "
+                    "— ağırlıksız CrossEntropyLoss kullanılıyor (sınıf dengesizliği riski)."
+                )
         best_f1      = -1.0
         best_weights = copy.deepcopy(model.state_dict())
         dnn_swa = SWABuffer(swa_start_fraction=0.75, max_checkpoints=8)

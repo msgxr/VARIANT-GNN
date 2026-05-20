@@ -164,7 +164,7 @@ def mode_train(args, cfg):
     store.save_all(preprocessor, ensemble, calibrator)
     store.save_threshold(best_thr)
 
-    save_all_plots(report, y_test, raw_tst_proba, cfg.paths.reports_dir)
+    save_all_plots(report, y_test, cal_test_proba, cfg.paths.reports_dir)
 
     # ── Panel bazlı değerlendirme + otomatik panel threshold optimizasyonu ──
     panel_reports_dict: dict = {}
@@ -565,23 +565,46 @@ def mode_train_panels(args, cfg):
     calibrator = EnsembleCalibrator(method=cfg.calibration.method)
     calibrator.fit(raw_cal_proba, y_cal)
 
+    # Kalibrasyon setinde F1-optimal threshold bul (test leakage yok)
+    from src.scientific.metrics.metrics import find_best_threshold as _fbt
+    cal_cal_proba_panels = calibrator.transform(raw_cal_proba)
+    panels_best_thr, _ = _fbt(y_cal, cal_cal_proba_panels[:, 1], metric="f1")
+    logging.info("train_panels threshold (cal set): %.4f", panels_best_thr)
+
     store = ModelStore(cfg.paths.models_dir)
     store.save_all(preprocessor, ensemble, calibrator)
+    store.save_threshold(panels_best_thr)
 
-    # Per-panel evaluation on each panel's train set (validation-split)
+    # Per-panel evaluation — SADECE test split üzerinde (train leakage yok)
+    # X_tr_panels/X_test_p ayrımı, eğitimdeki split ile aynı seed kullanılarak yapılır.
     if "Panel" in ds.metadata.columns:
         panels = ds.metadata["Panel"].unique()
         panel_summary = {}
         for panel_name in panels:
             mask = ds.metadata["Panel"] == panel_name
-            X_p, y_p = X[mask.values], y[mask.values]
-            if len(y_p) < 10:
-                logging.warning("Panel %s: too few samples (%d), skipping.", panel_name, len(y_p))
+            mask_vals = mask.values
+            X_p_all, y_p_all = X[mask_vals], y[mask_vals]
+            if len(y_p_all) < 10:
+                logging.warning("Panel %s: too few samples (%d), skipping.", panel_name, len(y_p_all))
                 continue
+            # Test setine karşılık gelen panel örneklerini seç
+            all_panel_idx = np.where(mask_vals)[0]
+            _, panel_test_idx = train_test_split(
+                all_panel_idx,
+                test_size=cfg.training.test_size,
+                stratify=y[all_panel_idx] if len(np.unique(y[all_panel_idx])) > 1 else None,
+                random_state=cfg.seed,
+            )
+            X_p, y_p = X[panel_test_idx], y[panel_test_idx]
+            if len(y_p) < 5:
+                logging.warning(
+                    "Panel %s test split too small (%d), using full panel.", panel_name, len(y_p)
+                )
+                X_p, y_p = X_p_all, y_p_all
             X_p_proc = preprocessor.transform(X_p)
             _, proba_p = ensemble.predict(X_p_proc)
             cal_proba_p = calibrator.transform(proba_p)
-            report_p = evaluate(y_p, cal_proba_p)
+            report_p = evaluate(y_p, cal_proba_p, threshold=panels_best_thr)
             report_p.log(prefix=f"PANEL_{panel_name}")
             panel_summary[panel_name] = {
                 "n_samples": int(len(y_p)),
@@ -827,7 +850,7 @@ def mode_explain(args, cfg):
     else:
         logging.warning("SHAP explainer başlatılamadı — shap kütüphanesi kurulu mu?")
 
-    # ── 5. Öğrenme eğrisi JSON görselleştirmesi ──────────────────────────────
+    # ── 6. Öğrenme eğrisi JSON görselleştirmesi ──────────────────────────────
     lc_path = cfg.paths.reports_dir / "gnn_learning_curve.json"
     if lc_path.exists():
         try:

@@ -159,5 +159,6 @@ class VariantGATv2GNN(nn.Module):
         results_concat = torch.cat(results, dim=0) # [n_iter, N, num_classes]
         mean_probs = results_concat.mean(dim=0)
         std_probs = results_concat.std(dim=0)
-        
+
+        self.eval()  # restore eval mode after MC-Dropout iterations
         return mean_probs, std_probs

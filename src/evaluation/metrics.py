@@ -279,7 +279,7 @@ def save_threshold_report(
 
     report = {
         "global_optimal_threshold": global_thr,
-        "global_macro_f1_at_threshold": global_f1,
+        "global_binary_f1_at_threshold": global_f1,
         "pr_auc": float(pr_auc),
         "panel_thresholds": panel_thresholds,
         "pr_curve_path": str(fig_path),
