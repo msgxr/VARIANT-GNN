@@ -62,12 +62,22 @@ class ArtifactLoader:
 
     # ------------------------------------------------------------------
     def _load_pickle(self, filename: str) -> Any:
+        """joblib öncelikli yükleme — pickle fallback ile."""
         path = self.model_dir / filename
         if not path.exists():
             raise FileNotFoundError(f"Artifact not found: {path}")
+        # Önce joblib dene (ModelStore joblib.dump ile kaydediyor)
+        try:
+            import joblib
+            obj = joblib.load(str(path))
+            logger.debug("Loaded artifact (joblib): %s", path)
+            return obj
+        except Exception:
+            pass
+        # Fallback: standart pickle
         with open(path, "rb") as fh:
             obj = pickle.load(fh)  # noqa: S301 — own artefakt
-        logger.debug("Loaded artifact: %s", path)
+        logger.debug("Loaded artifact (pickle): %s", path)
         return obj
 
     # ------------------------------------------------------------------

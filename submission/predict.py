@@ -2,12 +2,25 @@
 submission/predict.py
 Competition submission entry point for TEKNOFEST 2026 external validation.
 
-Usage:
+Usage (jüri senaryosu — tam komut):
     python submission/predict.py \\
-        --input data/blind_test.csv \\
-        --model_dir models/final \\
+        --input data/jury_test.csv \\
+        --output submission/predictions.csv
+
+Usage (tüm argümanlar):
+    python submission/predict.py \\
+        --input data/jury_test.csv \\
+        --model_dir models \\
         --output submission/predictions.csv \\
         --config configs/pdr.yaml
+
+Notlar:
+  - --model_dir varsayılan: models/ (proje kökündeki eğitilmiş modeller)
+  - --config   varsayılan: configs/pdr.yaml
+  - Çevrimdışı çalışır; internet erişimi yok.
+  - Blind veri üzerinde fit/train yapılmaz.
+  - Leakage firewall otomatik devreye girer.
+  - Çıktı şeması sabittir (PREDICTION_COLUMNS).
 
 Rules:
   - Fully offline — no internet access.
@@ -42,10 +55,18 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="TEKNOFEST 2026 — Variant-GNN offline inference"
     )
-    parser.add_argument("--input", required=True, type=Path, help="Blind test CSV path")
-    parser.add_argument("--model_dir", required=True, type=Path, help="Trained model directory")
-    parser.add_argument("--output", required=True, type=Path, help="Output predictions CSV")
-    parser.add_argument("--config", required=True, type=Path, help="YAML config (pdr.yaml)")
+    _root = Path(__file__).resolve().parent.parent
+    parser.add_argument("--input", required=True, type=Path,
+                        help="Blind test CSV path (e.g. data/jury_test.csv)")
+    parser.add_argument("--model_dir", required=False, type=Path,
+                        default=_root / "models",
+                        help="Trained model directory (default: models/)")
+    parser.add_argument("--output", required=False, type=Path,
+                        default=_root / "submission" / "predictions.csv",
+                        help="Output predictions CSV (default: submission/predictions.csv)")
+    parser.add_argument("--config", required=False, type=Path,
+                        default=_root / "configs" / "pdr.yaml",
+                        help="YAML config (default: configs/pdr.yaml)")
     parser.add_argument(
         "--local_validation",
         action="store_true",
@@ -82,11 +103,24 @@ def main() -> None:
     setup_reproducibility(seed=seed, deterministic_torch=det_torch)
 
     # ── Validate paths ─────────────────────────────────────────────────
+    # resolve() → Windows UNC path ve relative path sorunlarını çözer
+    args.input     = args.input.resolve()
+    args.model_dir = args.model_dir.resolve()
+    args.output    = args.output.resolve()
+    args.config    = args.config.resolve()
+
     if not args.input.exists():
-        logger.error("Input CSV not found: %s", args.input)
+        logger.error("Input CSV bulunamadi: %s", args.input)
         sys.exit(1)
     if not args.model_dir.exists():
-        logger.error("Model directory not found: %s", args.model_dir)
+        logger.error(
+            "Model dizini bulunamadi: %s\n"
+            "  Önce modeli egit: python main.py --mode train --config configs/pdr.yaml",
+            args.model_dir,
+        )
+        sys.exit(1)
+    if not args.config.exists():
+        logger.error("Config bulunamadi: %s", args.config)
         sys.exit(1)
 
     reports_dir = args.output.parent / "reports"

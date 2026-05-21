@@ -1,6 +1,6 @@
 {
-  "competition_metric": "Binary F1 \u2014 2*TP/(2*TP+FP+FN), Pathogenic class, pos_label=1 (TEKNOFEST \u00a77.3)",
-  "metric_note": "Primary: binary_f1 (Pathogenic). macro_f1 yard\u0131mc\u0131 metriktir.",
+  "competition_metric": "Binary F1 — 2*TP/(2*TP+FP+FN), Pathogenic class, pos_label=1 (TEKNOFEST §7.3)",
+  "metric_note": "Primary: binary_f1 (Pathogenic). macro_f1 yardımcı metriktir.",
   "swa_enabled": true,
   "mean_cv_binary_f1": 0.8667827231087323,
   "std_cv_binary_f1": 0.008120142051944742,
@@ -9,7 +9,7 @@
   "best_threshold": 0.01,
   "threshold_source": "calibration_set",
   "feature_coverage": 0.0,
-  "feature_coverage_note": "Yar\u0131\u015fma verisi anonim kolonlar kullan\u0131yor (AL_x, EK_x vb.) \u2014 0.0 beklenen davran\u0131\u015f; \u00a73.2 uyumu ColumnAligner taraf\u0131ndan sa\u011flan\u0131yor.",
+  "feature_coverage_note": "Yarışma verisi anonim kolonlar kullanıyor (AL_x, EK_x vb.) — 0.0 beklenen davranış; §3.2 uyumu ColumnAligner tarafından sağlanıyor.",
   "anonymous_columns": 343,
   "folds": [
     {
@@ -121,5 +121,20 @@
     "Hereditary_Cancer": 0.2808542713567839,
     "PAH": 0.13804020100502515,
     "CFTR": 0.10849246231155779
+  },
+  "test_mcc": 0.5356,
+  "test_pr_auc": 0.9294,
+  "test_ece": 0.0788,
+  "panel_mcc": {
+    "CFTR": 0.6742,
+    "General": 0.507,
+    "Hereditary_Cancer": 0.6491,
+    "PAH": 0.5562
+  },
+  "panel_pr_auc": {
+    "CFTR": 0.9223,
+    "General": 0.9183,
+    "Hereditary_Cancer": 0.9524,
+    "PAH": 0.976
   }
 }
