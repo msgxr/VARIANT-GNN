@@ -55,6 +55,7 @@ reports/*.bak
 !reports/cv_report.json
 !reports/cross_panel_eval.json
 !reports/seed_stability.json
+!reports/ablation_report.json
 
 # Eğitim logları
 train_log.txt

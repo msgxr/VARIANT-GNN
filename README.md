@@ -4,12 +4,12 @@
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;Test+F1+%3D+0.8706+%7C+CV+F1+%3D+0.8347+%C2%B10.0114;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;Test+F1+%3D+0.8980+%7C+CV+F1+%3D+0.8668+%C2%B10.0081;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
 
 <br/><br/>
 
 [![PSR](https://img.shields.io/badge/PSR_PUANI-93.00_%2F_100-22c55e?style=for-the-badge&logo=checkmarx&logoColor=white&labelColor=052e16)](.)
-[![Test F1](https://img.shields.io/badge/Test_F1-0.8706-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
+[![Test F1](https://img.shields.io/badge/Test_F1-0.8980-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
 [![Takim](https://img.shields.io/badge/Takim-XYRA3_%23909249-8b5cf6?style=for-the-badge&logo=groups&logoColor=white&labelColor=2e1065)](.)
 [![PDR](https://img.shields.io/badge/PDR_Teslim-29_Haziran_2026-f59e0b?style=for-the-badge&logo=calendar&logoColor=white&labelColor=431407)](.)
 
@@ -47,7 +47,7 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri            ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                            ║
-║  Test F1 (§7.3)  ║  0.8706  ·  CV: 0.8347 ± 0.0114  ·  θ = 0.4357             ║
+║  Test F1 (§7.3)  ║  0.8980  ·  CV: 0.8668 ± 0.0081  ·  θ = 0.241             ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00            ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi          ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
@@ -157,7 +157,7 @@ flowchart TD
     ISO --> MCD["🎲 MC Dropout\n10 Forward Pass\nBelirsizlik ölçümü"]
     MCD --> OOD["👁️ OOD Dedektörü\nEğitim ref. — sadece detect()"]
 
-    OOD --> O1["✅ Patojenik / Benign\nθ = 0.4357"]
+    OOD --> O1["✅ Patojenik / Benign\nθ = 0.241 (panel-optimized)"]
     OOD --> O2["📊 Risk Skoru 0–100\nKalibre olasılık"]
     OOD --> O3["⚠️ Uzman Bayrağı\nσ > 0.30"]
     OOD --> O4["🔍 OOD Skoru\nDağılım sapması"]
@@ -504,7 +504,7 @@ flowchart TD
     CV --> F3["...  ..."]
     CV --> F5["Fold 5  train/val"]
 
-    F1 --> AVG["CV Ortalama F1\n= 0.8347 ± 0.0114"]
+    F1 --> AVG["CV Ortalama F1\n= 0.8668 ± 0.0081"]
     F2 --> AVG
     F3 --> AVG
     F5 --> AVG
@@ -568,8 +568,8 @@ flowchart TD
   XGBoost  (tek)  ███████████████████████████████████░░░░░  0.8299
   DNN      (tek)  ████████████████████████████████░░░░░░░░  0.7969
   ─────────────────────────────────────────────────────────────────
-  Ensemble (CV)   █████████████████████████████████████░░░  0.8347
-  Ensemble (Test) ████████████████████████████████████████▌ 0.8706  ← final
+  Ensemble (CV)   ██████████████████████████████████████░░  0.8668
+  Ensemble (Test) ████████████████████████████████████████▌ 0.8980  ← final (augmentation + yeni preprocessing)
 ```
 
 ### Ablation Detay Tablosu
@@ -582,12 +582,12 @@ flowchart TD
 | LightGBM (tek) | 0.8326 | ±0.0171 | 0.8117 | 0.8529 | — |
 | XGBoost (tek) | 0.8299 | ±0.0083 | 0.8220 | 0.8404 | — |
 | DNN (tek) | 0.7969 | ±0.0362 | 0.7581 | 0.8506 | — |
-| **Hibrit Ensemble** | **0.8347** | ±0.0114 | 0.8227 | 0.8512 | **0.8706** |
+| **Hibrit Ensemble** | **0.8668** | ±0.0081 | 0.8644 | 0.8681 | **0.8980** |
 | Baseline (Logistic Reg.) | ~0.74 | — | — | — | — |
 
 </div>
 
-### Panel Bazlı Sonuçlar (θ = 0.4357)
+### Panel Bazlı Sonuçlar (θ = 0.241 global, panel-spesifik)
 
 <div align="center">
 
@@ -597,7 +597,7 @@ flowchart TD
 | **KANSER** | 0.8515 | 0.8812 | 0.8232 | **0.5112** | **0.9095** | **0.8812** | 0.1398 |
 | **PAH** | **0.9051** | **0.9800** | 0.8421 | 0.1466 ⚠️ | **0.9395** | 0.6704 | 0.1782 |
 | **CFTR** | 0.8750 | 0.9333 | 0.8235 | 0.2435 ⚠️ | 0.8394 | 0.6083 | 0.2198 |
-| **TOPLAM** | **0.8706** | **0.9309** | **0.8178** | 0.4063 | 0.8843 | 0.7797 | 0.1789 |
+| **TOPLAM** | **0.8980** | **0.9725** | **0.8341** | 0.5356 | 0.9294 | 0.8673 | 0.1283 |
 
 </div>
 
@@ -714,7 +714,7 @@ flowchart LR
 flowchart TD
     R["Ham Ensemble P_Patojenik"]
     ISO["İsotonik Regresyon\nBrier=0.179  ECE=0.143\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
-    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ = 0.4357"]
+    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ = 0.241 (panel-optimized)"]
     PAT["Patojenik\nP >= theta\nHigh_Risk = True"]
     BEN["Benign\nP < theta\nHigh_Risk = False"]
 
@@ -1054,9 +1054,9 @@ flowchart LR
 ### PDR Metrik Kontrol Listesi
 
 ```
-✅  Binary F1 (§7.3, Patojenik)  =  0.8706
-✅  CV F1                         =  0.8347 ± 0.0114
-✅  MCC                           =  0.4063
+✅  Binary F1 (§7.3, Patojenik)  =  0.8980
+✅  CV F1                         =  0.8668 ± 0.0081
+✅  MCC                           =  0.5356
 ✅  PR-AUC                        =  0.8843
 ✅  ROC-AUC                       =  0.7797
 ✅  Precision / Recall            =  0.8178 / 0.9309
@@ -1133,7 +1133,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 Ensemble Sistemi
 
 ```
-PSR: 93.00/100  ·  CV F1: 0.8347 ± 0.0114  ·  Test F1: 0.8706  ·  θ: 0.4357
+PSR: 93.00/100  ·  CV F1: 0.8668 ± 0.0081  ·  Test F1: 0.8980  ·  MCC: 0.5356  ·  θ: 0.241
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DNN  ·  İsotonik Kalibrasyon  ·  SWA
 ```
 
