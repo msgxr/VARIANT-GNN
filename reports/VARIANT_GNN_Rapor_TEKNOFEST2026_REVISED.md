@@ -261,6 +261,22 @@ Her tahmin için SHAP değerleri otomatik olarak Türkçe klinik yoruma dönüş
 
 ## 4.5 Öğrenme Süreci ve Teknik Evrim
 
+### PSR'dan Bu Yana Teknik Yenilikler
+
+PSR aşamasından PDR aşamasına geçişte yedi yeni teknik katkı gerçekleştirilmiştir:
+
+| # | Yenilik | Etki | Kanıt |
+|---|---------|------|-------|
+| 1 | **GATv2Conv'a geçiş** (SAGEConv'dan) | Dinamik attention, +%1.4 F1 | Brody et al. 2022; trainer.py |
+| 2 | **ACMG proxy özellik mühendisliği** | PP3/BP4/PM1/BA1/PS3/PP2 proxy +7 özellik; varyant biyolojik anlam katmanı | src/features/acmg_proxy_features.py |
+| 3 | **Gaussian feature augmentation** | 3802 → 7604 eğitim örneği; Test F1: 0.8706 → 0.8980 (+2.74) | scripts/augment_train_data.py |
+| 4 | **TTA (Test-Time Augmentation)** | Inference kararlılığı; 5 augmented kopyanın ensemble ortalaması | src/inference/tta.py |
+| 5 | **Rank Aggregation** | Stacking meta-learner yerine sıralama bazlı ensemble alternatifi | src/ensemble/rank_aggregation.py |
+| 6 | **Seed stability testi (5 seed)** | CV inter-seed std = ±0.0013 — deterministik-düzeyinde kararlılık | scripts/seed_stability_test.py |
+| 7 | **Leave-One-Panel-Out cross-validation** | Domain shift dayanıklılığı ölçüldü; ort. LOPO F1 = 0.84 | scripts/cross_panel_eval.py |
+
+Bu yenilikler birlikte PSR'deki "teknik gelişim" (§4.5) ve "açıklanabilirlik" (§4.4) eksiklerini kapsamaktadır.
+
 ### Ablation Çalışması — Bileşen Katkı Analizi
 
 Her bileşenin nicel katkısını ölçmek amacıyla sistematik ablation çalışması yürütülmüştür. Aynı eğitim/test split'inde (random_state=42) her bileşen sırayla devre dışı bırakılmış, Genel Veri Seti üzerinde Binary F1 (Patojenik sınıf) raporlanmıştır:

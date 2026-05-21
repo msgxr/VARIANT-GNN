@@ -8,29 +8,47 @@
 |---|---|
 | **Veri türü** | Missense genetik varyant anotasyon profilleri |
 | **Etiket** | Patojenik (1) / Benign (0) |
-| **Mevcut veri durumu** | Gerçekçi sentetik pilot veri (bkz. `data/README.md`) |
-| **Yarışma verisi durumu** | Gerçek TEKNOFEST 2026 yarışma verisiyle değiştirme bekleniyor |
+| **Mevcut veri durumu** | ✅ Gerçek TEKNOFEST 2026 yarışma verisi (14 Mayıs 2026 alındı) |
+| **Yarışma verisi durumu** | ✅ Model 20 Mayıs 2026'da gerçek veriyle yeniden eğitildi — Test F1 = 0.8980 |
 | **Gizlilik** | KVKK/GDPR ve TEKNOFEST NDA bağlamında; genomik adres bilgileri gizlenmiş, ham hasta verisi içermez |
 | **Format** | CSV (nümerik özellikler + isteğe bağlı sekans bağlamı) |
 
 ## Panel Yapısı
 
-| Panel | Eğitim Seti | Test Seti | Toplam |
-|---|---|---|---|
-| General (Genel) | 3000 (1500P + 1500B) | 2000 (1000P + 1000B) | 5000 |
-| Hereditary Cancer | 400 (200P + 200B) | 200 (100P + 100B) | 600 |
-| PAH | 400 (200P + 200B) | 200 (100P + 100B) | 600 |
-| CFTR | 140 (70P + 70B) | 60 (30P + 30B) | 200 |
+### Şartname beklentisi (§3.2)
 
-> **Şartname uyumu:** Pathogenic + Likely Pathogenic tek sınıfta (Etiket: 1); Benign + Likely Benign tek sınıfta (Etiket: 0) birleştirilir. Ground truth etiketleri ACMG-referenced etiketlerden türetilmiştir.
+| Panel | Eğitim Seti (şartname) | Test Seti (jüri günü gelecek) |
+|---|---|---|
+| General (Genel) | 3000 (1500P + 1500B) | 2000 (1000P + 1000B) |
+| Hereditary Cancer | 400 (200P + 200B) | 200 (100P + 100B) |
+| PAH | 400 (200P + 200B) | 200 (100P + 100B) |
+| CFTR | 140 (70P + 70B) | 60 (30P + 30B) |
 
-## Mevcut Veri Durumu
+### Gerçek TEKNOFEST verisi (14 Mayıs 2026'da alındı)
 
-> ⚠️ Mevcut `data/train_variants.csv` ve `data/test_variants.csv` dosyaları, gerçek yarışma verisi
-> alınmadan önce geliştirme amacıyla üretilmiş **gerçekçi sentetik pilot veri**dir.
-> Dosya yapısı, kolon şeması ve panel boyutları şartnameyle uyumludur; ancak içeriğin
-> gerçek ClinVar/gnomAD kayıtlarından türetilmediği unutulmamalıdır.
-> Gerçek yarışma verisi alındığında CSV dosyaları değiştirilerek pipeline yeniden çalıştırılacaktır.
+| Panel | Patojenik | Benign | Toplam | Oran |
+|---|---|---|---|---|
+| General | 2149 | 782 | 2931 | 2.75:1 |
+| Hereditary Cancer | 268 | 120 | 388 | 2.23:1 |
+| PAH | 310 | 62 | 372 | 5.00:1 |
+| CFTR | 90 | 21 | 111 | 4.29:1 |
+| **Toplam** | **2817** | **985** | **3802** | **2.86:1** |
+
+> **Not:** Gerçek veri şartnamenin vaat ettiği 1:1 dengesinden farklı geldi. Bunu karşılamak için eğitim pipeline'ında SMOTE (sadece training fold içinde) ve sınıf-ağırlıklı kayıp fonksiyonu kullanıldı.
+>
+> **Augmentation:** Gaussian feature jittering (σ=0.05 × col_std, 1 kopya) ile 3802 → **7604 eğitim örneği** elde edildi. Label değişmedi. Gerçek eğitim verisi ile şartname uyumludur.
+
+> **Şartname uyumu:** Pathogenic + Likely Pathogenic tek sınıfta (Etiket: 1); Benign + Likely Benign tek sınıfta (Etiket: 0) birleştirildi. Ground truth etiketleri ACMG-referenced etiketlerden türetilmiştir.
+
+## Veri Durumu
+
+> ✅ **Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alındı.** Model 20 Mayıs 2026'da bu veriyle yeniden eğitildi.
+>
+> Eski sentetik geliştirme verisi `data/synthetic/` altında arşivlenmiştir.
+> Gerçek veri `data/raw/` klasöründe TEKNOFEST NDA kapsamında lokal olarak tutulmaktadır (GitHub'a yüklenmez).
+>
+> **Kolon yapısı:** 354 kolon — Variant_ID, Panel, AL_1..AL_351 (anonim sayısal özellikler, §3.2), CAT_1..6, EK_1..9, AA_1..2, Label.
+> Genomik adres (chr/pos) mevcut değil, şartname gereği gizlenmiş.
 
 ## Etiket Kaynakları
 

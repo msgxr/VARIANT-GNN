@@ -38,7 +38,7 @@
 | **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
 | **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
 | **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |
-| **Veri Durumu** | ⚠️ **Gerçek yarışma verisi henüz paylaşılmadı (5 Mayıs 2026 için planlandı)** |
+| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Model gerçek veriyle eğitildi (20 Mayıs 2026). Test F1 = 0.8980.** |
 
 ---
 
@@ -48,10 +48,13 @@
 
 | Panel | Patojenik | Benign | Toplam |
 |-------|-----------|--------|--------|
-| General | 1500 | 1500 | 3000 |
-| Hereditary Cancer | 200 | 200 | 400 |
-| Phenylketonüri (PAH) | 200 | 200 | 400 |
-| Kistik Fibrozis (CFTR) | 70 | 70 | 140 |
+| General | 2149 | 782 | 2931 |
+| Hereditary Cancer (Kanser) | 268 | 120 | 388 |
+| Fenilketonüri (PAH) | 310 | 62 | 372 |
+| Kistik Fibrozis (CFTR) | 90 | 21 | 111 |
+| **Toplam** | **2817** | **985** | **3802** |
+
+> **Not:** Gaussian feature augmentation (σ=0.05, n_copies=1) ile 3802 → 7604 eğitim örneği elde edilmiştir (label korunarak). SMOTE sadece training fold içinde uygulanmıştır.
 
 ### Test Veri Setleri (§3.2)
 
