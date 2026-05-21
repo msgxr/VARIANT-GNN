@@ -140,20 +140,39 @@ def main() -> None:
         model_dir=args.model_dir,
         reports_dir=reports_dir,
     )
+    import pandas as pd
+    # runner önce kendi iç formatında yazar, sonra jury formatına çevireceğiz
+    _tmp_path = args.output.with_suffix(".tmp.csv")
     predictions = runner.run(
         input_path=args.input,
-        output_path=args.output,
+        output_path=_tmp_path,
         local_validation=args.local_validation,
     )
 
+    # ── Jury submission formatına dönüştür ────────────────────────────
+    # jury_predictions.csv standardı: prediction_label, pathogenic_probability, ...
+    jury = pd.DataFrame()
+    jury["Variant_ID"]              = predictions["Variant_ID"]
+    jury["prediction_label"]        = (predictions["Prediction"] == "Pathogenic").astype(int)
+    jury["pathogenic_probability"]  = predictions["Pathogenic_Probability"].round(4)
+    jury["calibrated_risk"]         = (predictions["Calibrated_Risk"] * 100).round(2)
+    jury["confidence_level"]        = ((1.0 - predictions["Uncertainty"]) * 100).round(2)
+    jury["uncertainty_score"]       = predictions["Uncertainty"].round(4)
+    jury["expert_review_flag"]      = predictions["Uncertainty"] > 0.30
+
+    jury.to_csv(args.output, index=False)
+    _tmp_path.unlink(missing_ok=True)   # geçici dosyayı temizle
+
     logger.info(
         "Done. %d predictions written to %s",
-        len(predictions),
+        len(jury),
         args.output,
     )
     logger.info(
-        "Prediction distribution: %s",
-        predictions["Prediction"].value_counts().to_dict(),
+        "Prediction distribution: Pathogenic=%d | Benign=%d | ExpertReview=%d",
+        int((jury["prediction_label"] == 1).sum()),
+        int((jury["prediction_label"] == 0).sum()),
+        int(jury["expert_review_flag"].sum()),
     )
 
     # ── Otomatik submission formatı doğrulama ─────────────────────────
