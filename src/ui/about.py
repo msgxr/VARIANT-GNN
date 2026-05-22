@@ -110,7 +110,7 @@ def render_about_tab() -> None:
         <h3>Ablasyon — Model Karşılaştırması (CV F1)</h3>
     </div>
     """, unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(_PERF_DATA), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(_PERF_DATA), width='stretch', hide_index=True)
 
     # ── Panel performance ────────────────────────────────────────────────────
     st.markdown("""
@@ -119,7 +119,7 @@ def render_about_tab() -> None:
         <h3>Panel Bazlı Performans (Test Seti)</h3>
     </div>
     """, unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(_PANEL_DATA), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(_PANEL_DATA), width='stretch', hide_index=True)
 
     # ── Tech stack + References ──────────────────────────────────────────────
     col_t1, col_t2 = st.columns(2)

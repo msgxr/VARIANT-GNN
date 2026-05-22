@@ -164,7 +164,7 @@ def render_results_table(df_result: pd.DataFrame) -> None:
     other_cols: List[str] = [c for c in df_result.columns if c not in display_cols]
     df_display: pd.DataFrame = df_result[display_cols + other_cols]
 
-    st.dataframe(df_display, use_container_width=True, height=380)
+    st.dataframe(df_display, width='stretch', height=380)
 
     # Önce İncele - Yüksek Riskli Varyant Sıralaması
     st.markdown("""

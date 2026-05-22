@@ -40,7 +40,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
     col_prev, col_stat = st.columns([3, 1])
     with col_prev:
         st.markdown(f"**Onizleme** — {len(df_raw):,} satir · {df_raw.shape[1]} sutun")
-        st.dataframe(df_raw.head(5), use_container_width=True)
+        st.dataframe(df_raw.head(5), width='stretch')
     with col_stat:
         st.metric("Varyant Sayisi", f"{len(df_raw):,}")
         st.metric("Eksik Veri", f"{df_raw.isnull().mean().mean()*100:.1f}%")
@@ -53,7 +53,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
         )
         return
 
-    if st.button("🚀 ANALIZI BASLAT", type="primary", use_container_width=True):
+    if st.button("🚀 ANALIZI BASLAT", type="primary", width='stretch'):
         with st.spinner("XGBoost + LightGBM + GATv2GNN + DNN modelleri calisiyor..."):
             try:
                 df_result = pipeline.predict_from_dataframe(df_raw)
@@ -78,7 +78,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
             data=df_result.to_csv(index=False).encode(),
             file_name="variant_predictions.csv",
             mime="text/csv",
-            use_container_width=True,
+            width='stretch',
         )
     with col_dl2:
         with st.spinner("PDF hazirlaniyor..."):
@@ -88,7 +88,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
             data=pdf_bytes,
             file_name="variant_analiz_raporu.pdf",
             mime="application/pdf",
-            use_container_width=True,
+            width='stretch',
         )
 
     render_risk_histogram(df_result)

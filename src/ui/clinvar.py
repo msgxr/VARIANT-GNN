@@ -72,7 +72,7 @@ def render_clinvar_tab() -> None:
     with col_inp:
         query: str = st.text_input('Arama Terimi', key='clinvar_search_input', placeholder='Örnek: BRCA1 pathogenic veya rs28897672', label_visibility='collapsed')
     with col_btn:
-        search_btn: bool = st.button('🔍 Ara', type='primary', use_container_width=True)
+        search_btn: bool = st.button('🔍 Ara', type='primary', width='stretch')
 
     st.markdown("**Hızlı örnekler:**")
     col_e1, col_e2, col_e3, col_e4 = st.columns(4)
@@ -85,7 +85,7 @@ def render_clinvar_tab() -> None:
     
     for label, col in examples:
         with col:
-            if st.button(label, use_container_width=True):
+            if st.button(label, width='stretch'):
                 st.session_state['clinvar_search_input'] = label
                 st.rerun()
 

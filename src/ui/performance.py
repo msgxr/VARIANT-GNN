@@ -46,7 +46,7 @@ def render_performance_tab() -> None:
                                 margin-bottom:10px;">{title}</div>
                 </div>
                 """, unsafe_allow_html=True)
-                st.image(img_path, use_column_width=True)
+                st.image(img_path, width='stretch')
             else:
                 st.info(f"{title} — Henüz mevcut değil.")
 
@@ -58,4 +58,4 @@ def render_performance_tab() -> None:
             <h3>Cross-Validation — Fold Detayları</h3>
         </div>
         """, unsafe_allow_html=True)
-        st.dataframe(pd.DataFrame(cv['folds']), use_container_width=True)
+        st.dataframe(pd.DataFrame(cv['folds']), width='stretch')
