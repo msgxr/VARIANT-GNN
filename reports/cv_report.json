@@ -136,5 +136,6 @@
     "General": 0.9183,
     "Hereditary_Cancer": 0.9524,
     "PAH": 0.976
-  }
+  },
+  "threshold_note": "best_threshold=0.01 is the F1-maximizing threshold on the calibration set under the specific class distribution of the real competition data (Pathogenic:Benign ratio ~2.86:1). The production decision threshold theta=0.241 is stored in panel_thresholds.__global__ and models/threshold.json. Test metrics in this report were computed at threshold=0.01 (max-recall configuration). PDR reports use theta=0.241 (F1-balanced configuration)."
 }

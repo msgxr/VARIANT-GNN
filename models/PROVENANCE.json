@@ -13,31 +13,37 @@
   "seed": 42,
   "cv_f1_mean": 0.8668,
   "cv_f1_std": 0.0081,
-  "test_f1": 0.8980,
+  "test_f1": 0.898,
   "test_recall": 0.9725,
   "test_roc_auc": 0.8673,
   "test_brier": 0.1283,
   "panel_f1": {
     "General": 0.8872,
-    "Hereditary_Cancer": 0.8960,
+    "Hereditary_Cancer": 0.896,
     "PAH": 0.9556,
     "CFTR": 0.9524
   },
   "panel_optimal_threshold_f1": {
     "Global": 0.9671,
     "General": 0.9667,
-    "Hereditary_Cancer": 1.0000,
+    "Hereditary_Cancer": 1.0,
     "PAH": 0.9859,
-    "CFTR": 1.0000
+    "CFTR": 1.0
   },
   "seed_stability": {
     "n_seeds": 5,
-    "seeds": [42, 123, 456, 789, 2026],
+    "seeds": [
+      42,
+      123,
+      456,
+      789,
+      2026
+    ],
     "inter_seed_mean_f1": 0.8667,
     "inter_seed_std_f1": 0.0013
   },
   "retrain_command": "python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants_aug.csv",
   "predict_command": "python main.py --mode predict --test_file data/<jury_test.csv> --config configs/pdr.yaml",
   "validation_command": "python main.py --mode external_val --test_file data/<test_labelled.csv> --config configs/pdr.yaml",
-  "note": "Gerçek TEKNOFEST 2026 yarışma verisi (4 panel, 3802 satır) + Gaussian augmentation (7604 satır toplam). NDA kapsamındaki veri lokal makinedan çıkmamıştır."
+  "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir) + Gaussian augmentation (7604 satir toplam). NDA kapsamindaki veri lokal makinede kalmistir."
 }
