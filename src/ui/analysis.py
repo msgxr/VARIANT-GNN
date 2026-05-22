@@ -30,10 +30,21 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
         ),
     )
     if uploaded is None:
-        st.info(
-            "CSV dosyanizi yukleyin. "
-            "Ornek veri: **data/samples/jury_blind_sample.csv**"
-        )
+        st.markdown("""
+        <div style="background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.2);
+                    border-radius:10px;padding:16px 20px;margin-top:8px;">
+            <div style="font-size:0.85rem;font-weight:700;color:#63b3ed;margin-bottom:8px;">
+                📋 Beklenen CSV Formatı
+            </div>
+            <div style="font-size:0.8rem;color:#94a3b8;line-height:1.8;">
+                Model şu özellik sütunlarını bekler:<br>
+                <code style="color:#93c5fd;">SIFT_score, PolyPhen2_HDIV_score, CADD_phred, REVEL_score,
+                GERP_RS, PhyloP100way_vertebrate, gnomAD_exomes_AF</code> vb.<br>
+                <strong style="color:#e2e8f0;">Örnek dosya:</strong>
+                <code>data/samples/jury_blind_sample.csv</code> (34 özellik, 10 satır)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         return
 
     df_raw = pd.read_csv(uploaded)
