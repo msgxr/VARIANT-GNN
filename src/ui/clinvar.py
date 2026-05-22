@@ -68,26 +68,33 @@ def render_clinvar_tab() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    col_inp, col_btn = st.columns([4, 1])
-    with col_inp:
-        query: str = st.text_input('Arama Terimi', key='clinvar_search_input', placeholder='Örnek: BRCA1 pathogenic veya rs28897672', label_visibility='collapsed')
-    with col_btn:
-        search_btn: bool = st.button('🔍 Ara', type='primary', width='stretch')
+    # Quick example buttons — set pending query BEFORE widget instantiation
+    if 'clinvar_pending_query' not in st.session_state:
+        st.session_state['clinvar_pending_query'] = ''
 
     st.markdown("**Hızlı örnekler:**")
     col_e1, col_e2, col_e3, col_e4 = st.columns(4)
-    examples: List[Tuple[str, st.delta_generator.DeltaGenerator]] = [
-        ('BRCA1 pathogenic', col_e1), 
-        ('CFTR p.Phe508del', col_e2), 
-        ('TP53 missense', col_e3), 
-        ('LDLR familial', col_e4)
+    examples = [
+        ('BRCA1 pathogenic', col_e1),
+        ('CFTR p.Phe508del', col_e2),
+        ('TP53 missense',    col_e3),
+        ('LDLR familial',   col_e4),
     ]
-    
     for label, col in examples:
         with col:
-            if st.button(label, width='stretch'):
-                st.session_state['clinvar_search_input'] = label
-                st.rerun()
+            if st.button(label, use_container_width=True):
+                st.session_state['clinvar_pending_query'] = label
+
+    col_inp, col_btn = st.columns([4, 1])
+    with col_inp:
+        query: str = st.text_input(
+            'Arama Terimi',
+            value=st.session_state.get('clinvar_pending_query', ''),
+            placeholder='Örnek: BRCA1 pathogenic veya rs28897672',
+            label_visibility='collapsed',
+        )
+    with col_btn:
+        search_btn: bool = st.button('🔍 Ara', type='primary', use_container_width=True)
 
     if search_btn and query:
         with st.spinner(f'🔎 ClinVar\'da "{query}" aranıyor...'):
