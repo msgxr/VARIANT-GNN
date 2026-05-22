@@ -1,0 +1,96 @@
+"""src/ui/analysis.py — Variant Analysis tab for VARIANT-GNN Streamlit app."""
+from __future__ import annotations
+
+from typing import Any
+
+import pandas as pd
+import streamlit as st
+
+from src.ui.utils import section_header
+from src.ui.analytics import (
+    render_summary_cards,
+    render_risk_histogram,
+    render_risk_map,
+    render_model_comparison,
+    render_results_table,
+)
+from src.ui.reporting import generate_pdf_report
+
+
+def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
+    """Render the Variant Analysis tab: upload -> predict -> results."""
+    section_header("📂", "Veri Yukleme")
+
+    uploaded = st.file_uploader(
+        "Varyant CSV dosyasi yukleyin",
+        type=["csv"],
+        help=(
+            "Sayisal ozellik sutunlari iceren CSV. Label opsiyonel. "
+            "Ornek format: data/samples/jury_blind_sample.csv"
+        ),
+    )
+    if uploaded is None:
+        st.info(
+            "CSV dosyanizi yukleyin. "
+            "Ornek veri: **data/samples/jury_blind_sample.csv**"
+        )
+        return
+
+    df_raw = pd.read_csv(uploaded)
+    col_prev, col_stat = st.columns([3, 1])
+    with col_prev:
+        st.markdown(f"**Onizleme** — {len(df_raw):,} satir · {df_raw.shape[1]} sutun")
+        st.dataframe(df_raw.head(5), use_container_width=True)
+    with col_stat:
+        st.metric("Varyant Sayisi", f"{len(df_raw):,}")
+        st.metric("Eksik Veri", f"{df_raw.isnull().mean().mean()*100:.1f}%")
+        st.metric("Sutun Sayisi", str(df_raw.shape[1]))
+
+    if pipeline is None:
+        st.warning(
+            "Model yuklenemedi. "
+            "`python main.py --mode train --config configs/pdr.yaml` calistirin."
+        )
+        return
+
+    if st.button("🚀 ANALIZI BASLAT", type="primary", use_container_width=True):
+        with st.spinner("XGBoost + LightGBM + GATv2GNN + DNN modelleri calisiyor..."):
+            try:
+                df_result = pipeline.predict_from_dataframe(df_raw)
+            except (ValueError, RuntimeError, KeyError) as exc:
+                st.error(f"Inferans hatasi: {exc}")
+                st.stop()
+        st.success("Analiz tamamlandi!")
+        st.session_state["df_result"] = df_result
+        st.session_state["df_raw"] = df_raw
+
+    if "df_result" not in st.session_state:
+        return
+
+    df_result = st.session_state["df_result"]
+    render_summary_cards(df_result)
+    render_results_table(df_result)
+
+    col_dl1, col_dl2, _ = st.columns([1, 1, 2])
+    with col_dl1:
+        st.download_button(
+            "⬇️ CSV Indir",
+            data=df_result.to_csv(index=False).encode(),
+            file_name="variant_predictions.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+    with col_dl2:
+        with st.spinner("PDF hazirlaniyor..."):
+            pdf_bytes = generate_pdf_report(df_result, cfg)
+        st.download_button(
+            "📄 PDF Rapor Indir",
+            data=pdf_bytes,
+            file_name="variant_analiz_raporu.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+        )
+
+    render_risk_histogram(df_result)
+    render_risk_map(df_result)
+    render_model_comparison(df_result)
