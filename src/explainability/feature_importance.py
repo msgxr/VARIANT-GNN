@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/explainability/feature_importance.py
 Feature Importance analysis for VARIANT-GNN pathogenicity predictions.
 
