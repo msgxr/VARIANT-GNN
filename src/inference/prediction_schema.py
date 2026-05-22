@@ -8,7 +8,7 @@ written to disk.  Column order is canonical and enforced.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,8 @@ PREDICTION_COLUMNS: List[str] = [
     "Clinical_Flag",
     "Model_Version",
     "Inference_Timestamp",
+    "OOD_Score",
+    "OOD_Flag",
 ]
 
 VALID_PREDICTIONS = frozenset({"Pathogenic", "Benign"})
@@ -42,6 +44,8 @@ def build_prediction_frame(
     clinical_flags: np.ndarray,
     threshold: float = 0.5,
     model_version: str = "unknown",
+    ood_scores: Optional[np.ndarray] = None,
+    ood_flags: Optional[np.ndarray] = None,
 ) -> pd.DataFrame:
     """
     Construct a prediction DataFrame conforming to PREDICTION_COLUMNS.
@@ -56,6 +60,8 @@ def build_prediction_frame(
     clinical_flags    : String triage flag per sample.
     threshold         : Decision threshold for binary prediction.
     model_version     : Artifact version string.
+    ood_scores        : OOD anomaly scores per sample (0 = in-distribution).
+    ood_flags         : Boolean OOD flags per sample.
 
     Returns
     -------
@@ -70,6 +76,9 @@ def build_prediction_frame(
     benign_prob = 1.0 - pathogenic_prob
     calibrated_risk = np.clip(np.asarray(calibrated_risk, dtype=float), 0.0, 1.0)
     uncertainty = np.clip(np.asarray(uncertainty, dtype=float), 0.0, 1.0)
+
+    _ood_scores = np.round(np.asarray(ood_scores, dtype=float), 4) if ood_scores is not None else np.zeros(n, dtype=float)
+    _ood_flags = np.asarray(ood_flags, dtype=bool) if ood_flags is not None else np.zeros(n, dtype=bool)
 
     predictions = np.where(pathogenic_prob >= threshold, "Pathogenic", "Benign")
 
@@ -86,6 +95,8 @@ def build_prediction_frame(
             "Clinical_Flag": clinical_flags,
             "Model_Version": model_version,
             "Inference_Timestamp": ts,
+            "OOD_Score": _ood_scores,
+            "OOD_Flag": _ood_flags,
         }
     )
     return df[PREDICTION_COLUMNS]

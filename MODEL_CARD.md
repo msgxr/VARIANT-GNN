@@ -144,18 +144,33 @@
 
 ---
 
-## 🎯 Performans Beklentileri
+## 🎯 Performans Sonuçları (Gerçek TEKNOFEST 2026 Verisi)
 
-> ⚠️ Aşağıdaki rakamlar **sentetik veriye** dayanır; gerçek yarışma verisiyle
-> yeniden eğitildiğinde değişir.
+> ✅ Model 20 Mayıs 2026'da gerçek yarışma verisi (3802 örnek, 4 panel) üzerinde eğitilmiştir.
+> Aşağıdaki metrikler %20 hold-out test seti üzerinden hesaplanmıştır.
 
-| Metrik | Mevcut Durum | Hedef (gerçek veri) |
-|--------|--------------|---------------------|
-| **Binary F1 §7.3 (birincil)** | Gerçek veri bekleniyor | **0.85+** |
-| Macro F1 (yardımcı) | Gerçek veri bekleniyor | 0.85+ |
-| ROC-AUC | Gerçek veri bekleniyor | 0.92+ |
-| ECE (kalibrasyon hatası) | Gerçek veri bekleniyor | <0.10 |
-| CFTR Binary F1 (n=140) | Gerçek veri bekleniyor | 0.75+ |
+**Genel Test Seti (Hold-Out %20):**
+
+| Metrik | Değer | Açıklama |
+|--------|-------|----------|
+| **Binary F1 §7.3 (birincil)** | **0.8980** | pos_label=1 (Patojenik) |
+| MCC | 0.5356 | Dengeli sınıf performansı |
+| PR-AUC | 0.9294 | Eşik bağımsız ayırt edicilik |
+| ROC-AUC | 0.8673 | Genel sınıf ayrımı |
+| Precision | 0.8341 | Patojenik sınıf hassasiyeti |
+| Recall | 0.9725 | Patojenik sınıf duyarlılığı |
+| Brier Skoru | 0.1283 | Kalibrasyon kalitesi |
+| ECE | 0.0788 | Kalibrasyon sapması |
+| 5-Fold CV F1 | 0.8668 ± 0.0081 | Çapraz doğrulama istikrarı |
+
+**Panel Bazlı Sonuçlar:**
+
+| Panel | Binary F1 | MCC | PR-AUC | ROC-AUC |
+|-------|-----------|-----|--------|---------|
+| MASTER (General) | 0.8872 | 0.5070 | 0.9183 | 0.8537 |
+| KANSER (Hereditary_Cancer) | 0.8960 | 0.6491 | 0.9524 | 0.9353 |
+| PAH | 0.9556 | 0.5562 | 0.9760 | 0.8842 |
+| CFTR | 0.9524 | 0.6742 | 0.9223 | 0.7889 |
 
 ---
 
@@ -183,10 +198,12 @@ VARIANT-GNN bu yetkiyi tam olarak destekler:
 
 ```bash
 # 1. Sanal ortam + bağımlılıklar
-python3.10 -m venv venv && source venv/bin/activate
+python3.12 -m venv .venv
+source .venv/bin/activate     # Linux/macOS
+# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
 
-# 2. Test (247/247 yeşil olmalı)
+# 2. Test (277+ yeşil olmalı)
 pytest tests/ -q
 
 # 3. Eğitim (gerçek yarışma verisi paylaşıldıktan sonra)
@@ -255,7 +272,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 
 | Sınırlılık | Açıklama |
 |---|---|
-| **Gerçek veri eğitimi yok** | Mevcut ağırlıklar geliştirme iskeleti verisiyle üretilmiştir; gerçek TEKNOFEST verisi alındığında sıfırdan eğitilmelidir |
+| **CFTR örneklem küçüklüğü (eğitim)** | 111 eğitim örneği ile istatistiksel güç sınırlıdır; bağımsız kohortlarda doğrulama gereklidir |
 | **CFTR panel az örnekli** | 140 eğitim örneği; panel-genelleme riski yüksek, dikkatli yorumlanmalı |
 | **VUS desteği yok** | "Variant of Uncertain Significance" sınıflandırması kapsam dışıdır |
 | **Bağımsız klinik validasyon yok** | Harici klinik kohort üzerinde doğrulanmamıştır |
@@ -267,10 +284,10 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 
 | Alan | Değer |
 |---|---|
-| **Sürüm** | `v1.0.0-dev` |
-| **Durum** | Geliştirme — gerçek veri eğitimi bekleniyor |
-| **Son güncelleme** | PDR aşaması — Mayıs 2026 |
-| **Bir sonraki kilometre taşı** | Gerçek TEKNOFEST verisiyle `v1.0.0-final` |
+| **Sürüm** | `v1.0.0` |
+| **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
+| **Son güncelleme** | 22 Mayıs 2026 — Test F1=0.8980 |
+| **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
-> değişiklikleriyle birlikte güncellenir. Son güncelleme: PDR aşaması — 7 Mayıs 2026.
+> değişiklikleriyle birlikte güncellenir. Son güncelleme: 22 Mayıs 2026.

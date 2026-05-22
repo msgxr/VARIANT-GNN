@@ -245,12 +245,10 @@ class ExternalValidationRunner:
             clinical_flags=clinical_flags,
             threshold=self._threshold,
             model_version=self._model_version,
+            ood_scores=ood_scores,
+            ood_flags=ood_flags,
         )
         validate_prediction_frame(predictions_df)
-
-        # OOD skor sütununu ekle (jüri CSV şemasını bozmamak için ek kolon)
-        predictions_df["OOD_Score"] = np.round(ood_scores, 4)
-        predictions_df["OOD_Flag"]  = ood_flags
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         predictions_df.to_csv(output_path, index=False)
