@@ -141,10 +141,11 @@ Claude always operates with this context active:
 
 **Architecture:** XGBoost(30%) + LightGBM(30%) + VariantGATv2GNN/GATv2Conv(25%) + DNN(15%) + Stacking meta-learner (LogReg)  
 **Pipeline:** Medyan Imputation → RobustScaler → SelectKBest(k=35) → AutoEncoder(43→16) → SMOTE(train only) → Cosine k-NN graph  
-**Split:** 65/15/20, Stratified 5-Fold CV, random_state=42, threshold=0.4357  
-**Results (competition data):** CV F1=0.8347±0.0114, Test F1=0.8706, MCC=0.4063  
+**Split:** 80/20 hold-out + Stratified 5-Fold CV, random_state=42, threshold=0.241 (global), panel-specific: General=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108  
+**Results (real TEKNOFEST data — retrained 2026-05-20):** CV F1=0.8668±0.0081, Test F1=0.8980, MCC=0.5356, PR-AUC=0.9294, ROC-AUC=0.8673, Recall=0.9725  
+**Panel results:** MASTER F1=0.8872 MCC=0.507 | KANSER F1=0.8960 MCC=0.649 | PAH F1=0.9556 MCC=0.556 | CFTR F1=0.9524 MCC=0.674  
 **PSR score:** 93/100. Weak: §4.4 Explainability(3.33/5), §4.5 Tech Evolution(3.33/5), §5.1 Architecture Justification(4/5)  
-**Known risks:** PAH MCC=0.1466, CFTR MCC=0.2435, PSR pilot MCC=0.892 vs actual 0.406, GNN name was "VariantSAGEGNN" in PSR but code uses GATv2Conv  
+**Known risks:** MASTER MCC=0.507 (class imbalance 2.75:1), PSR pilot MCC=0.892 vs real data MCC=0.5356 (explained in PDR §4.2), GNN name was "VariantSAGEGNN" in PSR but code uses GATv2Conv (corrected in PDR)  
 **PDR deadline:** 29.06.2026 | Final: Ağustos–Eylül 2026 @ TEKNOFEST Şanlıurfa  
 **Ethical boundary:** Model is for research/education/competition only — not clinical diagnosis  
 

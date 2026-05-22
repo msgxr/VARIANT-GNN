@@ -47,7 +47,7 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri            ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                            ║
-║  Test F1 (§7.3)  ║  0.8980  ·  CV: 0.8668 ± 0.0081  ·  θ = 0.241             ║
+║  Test F1 (§7.3)  ║  0.8980  ·  CV: 0.8668 ± 0.0081  ·  θ = 0.241 (global)   ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00            ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi          ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
@@ -1057,20 +1057,20 @@ flowchart LR
 ✅  Binary F1 (§7.3, Patojenik)  =  0.8980
 ✅  CV F1                         =  0.8668 ± 0.0081
 ✅  MCC                           =  0.5356
-✅  PR-AUC                        =  0.8843
-✅  ROC-AUC                       =  0.7797
-✅  Precision / Recall            =  0.8178 / 0.9309
-✅  Brier Score                   =  0.1789
-✅  ECE                           =  0.1428
-✅  Confusion Matrix              =  hesaplandı + görseli var
+✅  PR-AUC                        =  0.9294
+✅  ROC-AUC                       =  0.8673
+✅  Precision / Recall            =  0.8341 / 0.9725
+✅  Brier Score                   =  0.1283
+✅  ECE                           =  0.0788
+✅  Confusion Matrix              =  hesaplandı + görseli var  (reports/figures/pdr/04_confusion_matrix_panel.png)
 ✅  Panel kırılımı (4 panel)      =  MASTER · KANSER · PAH · CFTR
 ✅  Baseline karşılaştırması       =  Logistic Regression dahil
-✅  Öğrenme eğrisi (GNN)          =  gnn_learning_curve.json/png
+✅  Öğrenme eğrisi (GNN)          =  reports/figures/pdr/Sekil_4_Learning_Curve.png
 ✅  Adversarial Validation AUC    =  ~0.50 (tüm paneller)
-⬜  Ablation tablosu              =  üretilecek (§4.5)
-⬜  PR eğrisi görseli             =  üretilecek
-⬜  GNNExplainer subgraph görseli =  üretilecek (§4.4)
-⬜  LIME-SHAP örtüşme oranı      =  üretilecek (§4.4)
+✅  Ablation tablosu              =  reports/ablation_report.json · PDR Tablo 9
+✅  PR eğrisi görseli             =  reports/figures/pdr/06_pr_curves.png
+⬜  GNNExplainer subgraph görseli =  PDR §2.4 nümerik sonuçlar mevcut; görsel final aşamasında
+⬜  LIME-SHAP örtüşme oranı      =  PDR §2.4 Spearman ρ=0.89 belgelenmiş; görsel final aşamasında
 ```
 
 ---

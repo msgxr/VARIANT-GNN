@@ -1,7 +1,7 @@
 # Teslim Kontrol Listesi — VARIANT-GNN
 
 **PDR Teslim Tarihi:** 29 Haziran 2026  
-**Son Güncelleme:** 21 Mayıs 2026  
+**Son Güncelleme:** 22 Mayıs 2026  
 **Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle eğitilmiş (20 Mayıs 2026)
 
 ---
@@ -61,7 +61,11 @@
 | LightGBM feature names warning temizlendi | ✅ Tamamlandı | `_to_lgbm_frame()` helper |
 | DataFrame fragmented warning temizlendi | ✅ Tamamlandı | ColumnAligner tek seferde DataFrame |
 | sklearn deprecation warning suppress | ✅ Tamamlandı | `warnings.filterwarnings()` |
-| tests/unit/ testler mevcut | ✅ Tamamlandı | 20+ unit test, smoke test |
+| tests/unit/ testler mevcut | ✅ Tamamlandı | 278/278 test geçiyor (22 Mayıs 2026) |
+| prediction_schema OOD_Score/OOD_Flag | ✅ Tamamlandı | PREDICTION_COLUMNS güncellendi; build_prediction_frame destekliyor |
+| models/threshold.json | ✅ Tamamlandı | θ=0.241 (global F1-optimal) |
+| models/panel_thresholds.json | ✅ Tamamlandı | 4 panel eşik değerleri |
+| models/manifest.json | ✅ Tamamlandı | v1.0.0, model_version, tüm metrikler |
 
 ---
 

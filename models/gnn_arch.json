@@ -1,0 +1,1 @@
+{"type": "VariantSAGEGNN", "numeric_dim": 50, "hidden_dim": 64, "use_multimodal": false}

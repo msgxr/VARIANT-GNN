@@ -37,9 +37,14 @@ models/autoencoder.pth
 # Yedek model klasörleri (NDA — gerçek veri türevi, lokal kalsın)
 models_backup_*/
 models_archive_*/
-# İstisna: eğitim durumu belgesi ve dizin açıklaması git'te kalır
+# İstisna: eğitim durumu belgesi, metadata ve dizin açıklaması git'te kalır
 !models/PROVENANCE.json
 !models/README.md
+!models/manifest.json
+!models/threshold.json
+!models/panel_thresholds.json
+!models/gnn_arch.json
+!models/ensemble_config.json
 
 # Word geçici dosyaları
 ~$*.docx
