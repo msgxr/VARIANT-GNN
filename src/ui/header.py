@@ -1,16 +1,23 @@
+"""src/ui/header.py — Hero banner for VARIANT-GNN Streamlit app."""
 import streamlit as st
 
 
 def render_header() -> None:
-    """Uygulama başlığını ve hero banner bölümünü oluşturur."""
+    """Uygulama hero banner bölümünü oluşturur (eski uyumluluk için)."""
+    render_hero()
+
+
+def render_hero() -> None:
+    """TEKNOFEST 2026 hero banner with project identity."""
     st.markdown("""
-    <div class="hero-container">
-        <h1>🧬 VARIANT-GNN</h1>
-        <p>Next-Generation Pathogenicity Prediction & Clinical Interpretation</p>
-        <div style="display:flex; gap:10px; margin-top:15px; justify-content:center;">
-            <span class="badge">SOTA GNN</span>
-            <span class="badge">Explainable AI</span>
-            <span class="badge">Clinical Insights</span>
-        </div>
+    <div class="hero-banner">
+        <p class="hero-title">🧬 <span>VARIANT-GNN</span></p>
+        <p class="hero-subtitle">
+            Graph Neural Network ve Açıklanabilir Yapay Zeka ile<br>
+            <strong style="color:#93c5fd;">Genetik Varyantların Patojenite Tahmini</strong>
+        </p>
+        <span class="hero-badge">🏆 TEKNOFEST 2026</span>
+        <span class="hero-badge">🔬 Sağlıkta Yapay Zeka</span>
+        <span class="hero-badge">⚡ GNN + XGBoost + LightGBM + DNN</span>
     </div>
     """, unsafe_allow_html=True)

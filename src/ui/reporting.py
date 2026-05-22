@@ -4,7 +4,13 @@ from pathlib import Path
 from typing import Any, List, Tuple
 
 import pandas as pd
-from fpdf import FPDF
+
+try:
+    from fpdf import FPDF
+    FPDF_AVAILABLE = True
+except ImportError:
+    FPDF_AVAILABLE = False
+    FPDF = object  # type: ignore
 
 
 class _PDF(FPDF):
