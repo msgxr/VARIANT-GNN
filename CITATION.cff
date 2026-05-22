@@ -1,17 +1,48 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-authors:
-  - family-names: "Muhammed"
-    given-names: "Variant-GNN Team"
-    affiliation: "TEKNOFEST 2026 Team"
-title: "VARIANT-GNN: Hybrid Graph Neural Networks for Genetic Variant Pathogenicity Prediction"
-version: 2.0.0
-doi: 10.5281/zenodo.1234567
-date-released: 2026-03-30
+type: software
+title: "VARIANT-GNN: Hybrid Graph Neural Network Ensemble for Genetic Variant Pathogenicity Prediction"
+version: 1.0.0
+date-released: 2026-05-20
+repository-code: "https://github.com/msgxr/VARIANT-GNN"
 url: "https://github.com/msgxr/VARIANT-GNN"
+license: "LicenseRef-TEKNOFEST-2026"
+abstract: >
+  VARIANT-GNN is a hybrid ensemble system combining XGBoost, LightGBM,
+  VariantGATv2GNN (Graph Attention Networks v2), and a Deep Neural Network
+  for binary pathogenicity prediction of missense genetic variants.
+  Developed for TEKNOFEST 2026 Saglikta Yapay Zeka Yarisma — University
+  and Above category. Achieves Test F1=0.8980, CV F1=0.8668±0.0081 across
+  four disease panels (General, Hereditary_Cancer, PAH, CFTR).
+authors:
+  - name: "XYRA3 Team"
+    affiliation: "TEKNOFEST 2026 — Saglikta Yapay Zeka Yarisma"
 keywords:
-  - "Bioinformatics"
-  - "Genetics"
-  - "Graph Neural Networks"
-  - "Pathogenicity Prediction"
-  - "Machine Learning"
+  - "bioinformatics"
+  - "genetics"
+  - "variant pathogenicity"
+  - "graph neural networks"
+  - "GATv2"
+  - "ensemble learning"
+  - "missense variants"
+  - "ACMG"
+  - "ClinVar"
+  - "machine learning"
+  - "TEKNOFEST 2026"
+references:
+  - type: article
+    title: "How Attentive are Graph Attention Networks?"
+    authors:
+      - family-names: "Brody"
+        given-names: "Shaked"
+    year: 2022
+    journal: "ICLR"
+    url: "https://arxiv.org/abs/2105.14491"
+  - type: article
+    title: "Standards and guidelines for the interpretation of sequence variants"
+    authors:
+      - family-names: "Richards"
+        given-names: "Sue"
+    year: 2015
+    journal: "Genetics in Medicine"
+    doi: "10.1038/gim.2015.30"
