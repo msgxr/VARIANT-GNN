@@ -56,8 +56,20 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
     if st.button("🚀 ANALIZI BASLAT", type="primary", width='stretch'):
         with st.spinner("XGBoost + LightGBM + GATv2GNN + DNN modelleri calisiyor..."):
             try:
-                df_result = pipeline.predict_from_dataframe(df_raw)
-            except (ValueError, RuntimeError, KeyError) as exc:
+                # predict_from_csv runs the full preprocessing pipeline
+                # (imputer → scaler → SelectKBest → autoencoder → graph)
+                # predict_from_dataframe expects already-processed features — wrong for raw data
+                import tempfile, os
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".csv", delete=False, encoding="utf-8"
+                ) as tmp:
+                    df_raw.to_csv(tmp, index=False)
+                    tmp_path = tmp.name
+                try:
+                    df_result = pipeline.predict_from_csv(tmp_path)
+                finally:
+                    os.unlink(tmp_path)
+            except Exception as exc:
                 st.error(f"Inferans hatasi: {exc}")
                 st.stop()
         st.success("Analiz tamamlandi!")
