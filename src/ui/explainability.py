@@ -67,7 +67,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
         path: str = "reports/shap_waterfall.png"
         explainer.plot_waterfall(X_scaled[idx], output_path=path)
         if Path(path).exists():
-            st.image(path, width='stretch')
+            st.image(path, use_container_width=True)
 
     if opts.get("show_lime"):
         st.markdown(f"""

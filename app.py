@@ -63,12 +63,19 @@ def main() -> None:
         if pipeline is None:
             st.warning("Model yuklenemedi.")
         elif "df_raw" not in st.session_state:
-            st.info("Once 'Varyant Analizi' sekmesinde CSV yukleyin.")
+            st.info("Once 'Varyant Analizi' sekmesinde CSV yukleyin ve analizi baslatın.")
         else:
             df_raw = st.session_state["df_raw"]
             feat_cols = [c for c in df_raw.columns
                          if c not in ("Variant_ID", "Label", "Panel")]
-            render_xai(pipeline, df_raw[feat_cols] if feat_cols else pd.DataFrame(), opts)
+            xai_opts = {
+                "show_shap":     opts.get("show_shap", True),
+                "show_waterfall":opts.get("show_waterfall", True),
+                "show_lime":     opts.get("show_lime", False),
+                "variant_index": opts.get("variant_index", 0),
+                "threshold":     opts.get("threshold", 0.241),
+            }
+            render_xai(pipeline, df_raw[feat_cols] if feat_cols else pd.DataFrame(), xai_opts)
 
     with tab_perf:
         render_performance_tab()
