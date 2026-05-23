@@ -5,6 +5,13 @@ description: Use when drafting, reviewing, or editing the VARIANT-GNN Project De
 
 # PDR Editor — VARIANT-GNN Project Detail Report Compliance
 
+## Official Source Boundary
+
+Yalnızca TEKNOFEST 2026 PDR Şablonu (Üniversite ve Üzeri) esas alınır.  
+URL: cdn.teknofest.org/.../2026_PDR_Şablon_Universite_TR_bCw49.docx  
+Üçüncü taraf kaynak, 2024 şablonu ve lise şablonu kabul edilmez.  
+Doğrulanamayan şablon gereksinimleri UNVERIFIED olarak işaretlenir.
+
 When this skill is active, review or produce PDR content strictly against the official 2026 PDR template for the Üniversite ve Üzeri Seviyesi.
 
 ## Official PDR Structure (100 points total)

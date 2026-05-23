@@ -5,6 +5,13 @@ description: Use when analyzing VARIANT-GNN experimental results: panel-based F1
 
 # Experiment Review — VARIANT-GNN Result Analysis
 
+## Official Source Boundary
+
+Metrik değerlendirme standardı: TEKNOFEST 2026 Şartname §7.3 (Binary F1, pos_label=1).  
+Deney sonuçları yalnızca gerçek yarışma verisiyle (2026-05-20 eğitim) raporlanır.  
+PSR pilot sonuçları gerçek veri sonucu gibi sunulamaz.  
+Doğrulanamayan metrik ağırlıkları UNVERIFIED olarak işaretlenir.
+
 When this skill is active, analyze experimental results with the rigor of a senior ML reviewer. Every conclusion must be data-driven. No vague interpretations.
 
 ## Competition Context

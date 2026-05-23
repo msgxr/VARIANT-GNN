@@ -5,6 +5,13 @@ description: Use when verifying that VARIANT-GNN can be re-run from scratch by a
 
 # Reproducibility Auditor — VARIANT-GNN
 
+## Official Source Boundary
+
+Tekrar üretilebilirlik gereksinimleri: TEKNOFEST 2026 Şartname §7.5.  
+Model artifact dosyaları (.pkl, .pt) Şeyma'nın makinesinde — bu repoda yalnızca JSON config mevcut.  
+Çalıştırılabilirlik testi, ortam kurulumu mümkün olan makinede yapılır.  
+Doğrulanamayan şartname maddeleri UNVERIFIED olarak işaretlenir.
+
 When this skill is active, simulate a jury member who has never seen this project before, opening the repo and trying to reproduce the declared competition results.
 
 ## Legal Basis
