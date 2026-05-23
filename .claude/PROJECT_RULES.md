@@ -68,7 +68,9 @@
 
 ## 7. Git Kimliği Kuralı (Değiştirilemez)
 
-Projede iki takım üyesi commit atabilir. Her push işleminden önce **kim push atacak** mutlaka sorulur.
+Makine kimliği belirler — sormaya gerek yok:
+- **Bu Windows PC** → her zaman `msgxr <mgun345@icloud.com>`
+- **Şeyma'nın Mac'i** → her zaman `cebi101 <seymanurcebi6@gmail.com>`
 
 ### Takım Üyesi Kimlik Tablosu
 

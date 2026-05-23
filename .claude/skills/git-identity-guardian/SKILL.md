@@ -45,17 +45,19 @@ Referans: .claude/PROJECT_RULES.md §7 ve .claude/context/06_team_and_process_ru
 
 ## Step-by-Step Procedure
 
-**Adım 1 — Push Sahibini Sor**
+**Adım 1 — Makineye Göre Kimlik Belirle**
+
 ```
-"Bu commit hangi takım üyesi adına atılacak?
-(1) msgxr — mgun345@icloud.com
-(2) cebi101 (Şeyma) — seymanurcebi6@gmail.com"
+Bu Windows PC → her zaman msgxr
+Şeyma'nın Mac'i → her zaman cebi101
 ```
 
-**Adım 2 — Git Config Ayarla**
+Bu PC'de sormaya gerek yok — her zaman msgxr.
+
+**Adım 2 — Git Config Ayarla (Bu PC)**
 ```bash
-git config user.name "<seçilen isim>"
-git config user.email "<seçilen email>"
+git config user.name "msgxr"
+git config user.email "mgun345@icloud.com"
 ```
 
 **Adım 3 — Kontrol Et**
