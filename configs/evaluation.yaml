@@ -3,9 +3,9 @@
 mode: eval
 
 evaluation:
-  primary_metric: macro_f1
+  primary_metric: binary_f1
   metrics:
-    - macro_f1
+    - binary_f1
     - roc_auc
     - pr_auc
     - mcc
@@ -16,7 +16,7 @@ evaluation:
     - specificity
   report_per_panel: true
   threshold_search: true
-  threshold_search_range: [0.3, 0.7]
+  threshold_search_range: [0.1, 0.5]
   threshold_search_steps: 40
 
 calibration_eval:

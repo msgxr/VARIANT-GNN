@@ -3,28 +3,30 @@
 Bu dizindeki dosyalar **git tarafından takip edilmez** (`.gitignore` ile hariç tutulmuştur).
 Model dosyaları eğitim sonrasında otomatik olarak bu dizine kaydedilir.
 
-## Mevcut Durum
+## Mevcut Durum — Gerçek Veri ile Eğitim Tamamlandı
 
 `PROVENANCE.json` dosyası, mevcut model ağırlıklarının hangi veriyle eğitildiğini belgeler.
 
-> **UYARI:** Gerçek TEKNOFEST verisi henüz alınmamıştır. Mevcut ağırlıklar
-> geliştirme/test amaçlı sentetik veriyle üretilmiştir. Tahminler klinik
-> olarak geçersizdir.
+> **Durum (2026-05-20):** Gerçek TEKNOFEST yarışma verisi (3.802 örnek, 343 anonim kolon)
+> kullanılarak eğitim tamamlanmıştır. Test F1=0.8980, CV F1=0.8668±0.0081.
+> Model artefaktları Şeyma'nın Mac'inde üretilmiş ve bu dizine taşınmıştır.
+> Tahminler yalnızca yarışma/araştırma amaçlıdır — klinik tanı için kullanılamaz.
 
-## Gerçek Veri Geldiğinde
+## Jüri Tekrar Çalıştırma (Tahmin)
 
 ```bash
-# 1. Eğitim verisini data/ klasörüne yerleştir
-cp <teknofest_train.csv> data/train_variants.csv
+# Tahmin üret (jüri için) — sadece test dosyası gerekir
+python main.py --mode predict --test_file data/<test_blind.csv> --output submission/predictions.csv
+```
 
-# 2. Sıfırdan eğit (tüm modeller ve preprocessor otomatik güncellenir)
+## Yeniden Eğitim Gerekirse
+
+```bash
+# Sıfırdan eğit (tüm modeller ve preprocessor otomatik güncellenir)
 python main.py --mode train --data_file data/train_variants.csv
 
-# 3. Çapraz doğrulama (isteğe bağlı)
+# Çapraz doğrulama
 python main.py --mode crossval --data_file data/train_variants.csv
-
-# 4. Tahmin üret (jüri için)
-python main.py --mode predict --test_file data/<test_blind.csv> --output submission/predictions.csv
 ```
 
 ## Artefakt Açıklamaları

@@ -1,10 +1,10 @@
 # configs/thresholds.yaml — Karar eşiği ve risk sınıflandırma ayarları
 
 decision_threshold:
-  default: 0.5
+  default: 0.241
   optimize: true
-  optimize_metric: macro_f1
-  search_range: [0.2, 0.8]
+  optimize_metric: binary_f1
+  search_range: [0.1, 0.5]
   search_steps: 60
 
 risk_categories:
@@ -32,9 +32,15 @@ uncertainty_thresholds:
   medium_uncertainty: 0.20
 
 panel_specific_thresholds:
-  CFTR:
-    decision_threshold: 0.45
-    notes: "Küçük panel; eşik hassasiyeti artırılmış"
+  MASTER:
+    decision_threshold: 0.241
+    notes: "Genel panel; optimize edilmiş binary F1 eşiği"
   Hereditary_Cancer:
-    decision_threshold: 0.45
-    notes: "Yüksek klinik öneme sahip panel"
+    decision_threshold: 0.281
+    notes: "Yüksek klinik öneme sahip panel; optimize eşik"
+  PAH:
+    decision_threshold: 0.138
+    notes: "Küçük panel; yüksek recall öncelikli"
+  CFTR:
+    decision_threshold: 0.108
+    notes: "En küçük panel (30 test örneği); maksimum hassasiyet"

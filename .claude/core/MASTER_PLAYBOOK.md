@@ -88,19 +88,26 @@ Prediction: python submission/predict.py --input <file>
 
 ---
 
-## 6. OPEN PDR BUGS (Fix Before 29.06.2026)
+## 6. PDR BUGS — STATUS
 
-| ID | Location | Problem | Fix |
-|---|---|---|---|
-| BUG-01 | §1.2 | REVEL citation [3] | → [2] |
-| BUG-02 | §1.2 | EVE citation [5] | → [9] |
-| BUG-03 | §1.2 | GATv2 citation [7] | → [8] |
-| BUG-04 | §3.2 | θ = 0.01 | → θ = 0.241 |
-| BUG-05 | §3.1 | reports/roc_curves.png dead | → reports/figures/pdr/05_roc_curves.png |
-| BUG-06 | §3.1 | Şekil 2-5 paths dead | verify under reports/figures/pdr/ |
-| BUG-07 | Header | Training date 15 Mayıs | → 20 Mayıs 2026 |
-| BUG-08 | §4.2 | MCC drop not explained | Add comparison table PSR vs real |
-| BUG-09 | §2 | SAGEConv mentioned | → GATv2Conv / VariantGATv2GNN |
+| ID | Location | Problem | Status | Fixed |
+|---|---|---|---|---|
+| BUG-01 | §1.2 | REVEL citation [3]→[2] | ✅ CLOSED | 2026-05-24 |
+| BUG-02 | §1.2 | EVE citation [5]→[9] | ✅ CLOSED | 2026-05-24 |
+| BUG-03 | §1.2 | GATv2 citation [7]→[8] | ✅ CLOSED | 2026-05-24 |
+| BUG-04 | §3.2 | θ=0.01 → θ=0.241 | ✅ CLOSED | 2026-05-24 |
+| BUG-05 | §3.1 | Figure paths dead | ✅ CLOSED | 2026-05-24 |
+| BUG-06 | §3.1 | Şekil 2-5 path refs | ✅ CLOSED | 2026-05-24 |
+| BUG-07 | Header | Date 15 Mayıs → 20 Mayıs | ✅ CLOSED | 2026-05-24 |
+| BUG-08 | §4.2 | MCC drop explanation | ✅ CLOSED | Already in PDR §4.2 |
+| BUG-09 | §2 | SAGEConv → GATv2Conv | ✅ CLOSED | Already in PDR §2.2 |
+| BUG-10 | configs/ | optimize_metric: macro_f1 | ✅ CLOSED | 2026-05-24 |
+| BUG-11 | configs/ | threshold_search_range narrow | ✅ CLOSED | 2026-05-24 |
+| BUG-12 | configs/ | Panel thresholds wrong | ✅ CLOSED | 2026-05-24 |
+
+**All known bugs closed as of 2026-05-24. PDR ready for final review.**
+
+> **NOTE — jury_predictions.csv:** `submission/teknofest/jury_predictions.csv` is synthetic placeholder (VAR_T IDs, all-label-1 output). Real submission file must be regenerated via `python submission/predict.py --input <AL_test.csv>` when jury provides actual blind test data. The prediction pipeline is correct — it reads `models/threshold.json` (θ=0.241).
 
 ---
 

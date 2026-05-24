@@ -10,7 +10,7 @@
 **Takım ID:** 909249  
 **Başvuru ID:** 4865399  
 **Yarışma Kategorisi:** Sağlıkta Yapay Zekâ — Genetik Varyant Patojenite Tahmini  
-**Rapor Tarihi:** 15 Mayıs 2026  
+**Rapor Tarihi:** 20 Mayıs 2026  
 
 *Yazı tipi notu (Word için): Aptos 12pt, başlıklar 14pt, satır aralığı 1,15*
 
@@ -57,7 +57,7 @@ VARIANT-GNN projesi bu boşluğu hedef almaktadır: dört hastalık panelinde (G
 
 ### 1.2 Literatür Bağlamı
 
-Missense varyant sınıflandırması alanında öne çıkan yaklaşımlar çeşitli sınırlılıklar taşımaktadır. REVEL [3] (Ioannidis ve ark., 2016), 13 in-silico skoru meta-ensemble yöntemiyle birleştirerek ROC-AUC=0.91 elde etmiş; ancak panel özgünlüğünden yoksun kalarak küçük hastalık panellerinde genellemede yetersiz kalmıştır. CADD v1.6 [4] (Kircher ve ark., 2014), 135 milyon SNP üzerinde eğitilen kapsamlı bir puanlama sistemi sunmakla birlikte, genomik adres bağımlılığı nedeniyle anonim özellik formatıyla uyumsuzluk göstermektedir. EVE [5] (Frazer ve ark., 2021), yalnızca evrimsel dizi bilgisine dayanan tek-modaliteli bir variational autoencoder yaklaşımıdır. MutPred2 [6] (Sundaram ve ark., 2018), protein işlev ve filogenetik bilgiyi birleştirmiş; ancak çok boyutlu ensemble birleşiminden yoksun olduğundan makro F1=0.86 ile sınırlı kalmıştır.
+Missense varyant sınıflandırması alanında öne çıkan yaklaşımlar çeşitli sınırlılıklar taşımaktadır. REVEL [2] (Ioannidis ve ark., 2016), 13 in-silico skoru meta-ensemble yöntemiyle birleştirerek ROC-AUC=0.91 elde etmiş; ancak panel özgünlüğünden yoksun kalarak küçük hastalık panellerinde genellemede yetersiz kalmıştır. CADD v1.6 [3] (Kircher ve ark., 2014), 135 milyon SNP üzerinde eğitilen kapsamlı bir puanlama sistemi sunmakla birlikte, genomik adres bağımlılığı nedeniyle anonim özellik formatıyla uyumsuzluk göstermektedir. EVE [9] (Frazer ve ark., 2021), yalnızca evrimsel dizi bilgisine dayanan tek-modaliteli bir variational autoencoder yaklaşımıdır. MutPred2 [11] (Sundaram ve ark., 2018), protein işlev ve filogenetik bilgiyi birleştirmiş; ancak çok boyutlu ensemble birleşiminden yoksun olduğundan makro F1=0.86 ile sınırlı kalmıştır.
 
 Mevcut literatürde eksik olan yönler şunlardır: (i) Varyantlar arası ilişkisel bilginin grafik sinir ağıyla modellenmesi, (ii) panel özgünlüğünü koruyan çok-panel değerlendirme stratejisi, (iii) heterojen özellik uzayını eşzamanlı işleyen hibrit ensemble mimarisi ve (iv) kolon isimsiz ortamda güvenilir tahmin kapasitesi. Bu çalışma, söz konusu boşlukları hedef alan bütünleşik bir çerçeve önermektedir.
 
@@ -139,7 +139,7 @@ VARIANT-GNN, dört temel bileşeni stacking meta-öğrenici ile birleştiren **h
 
 **VariantGATv2GNN Mimarisi ve SAGEConv'dan Geçiş Gerekçesi**
 
-PSR aşamasında yanlışlıkla "GraphSAGE/SAGEConv" olarak adlandırılan bileşen, gerçekte GATv2Conv (Brody ve ark., 2022 [7]) implementasyonudur. Bu tutarsızlık PDR'de düzeltilmiştir; aşağıda iki mimari arasındaki fark açıklanmıştır:
+PSR aşamasında yanlışlıkla "GraphSAGE/SAGEConv" olarak adlandırılan bileşen, gerçekte GATv2Conv (Brody ve ark., 2022 [8]) implementasyonudur. Bu tutarsızlık PDR'de düzeltilmiştir; aşağıda iki mimari arasındaki fark açıklanmıştır:
 
 - **GATv2Conv'un seçim gerekçesi:** Orijinal GAT, statik attention hesaplar — sorgu (query) vektörü sorgu düğümünden bağımsız biçimde ağırlıklandırılır. Brody ve ark. (2022) bu sınırlılığın "expressive" olmayan attention kalıplarına yol açtığını göstermiş; GATv2'nin dinamik attention mekanizması ile bu sorunu çözdüğünü kanıtlamıştır. Geçiş, Genel panelde +1.4% F1 artışı sağlamıştır.
 - **İndüktif yapı:** GATv2Conv, eğitim sırasında görülmemiş yeni varyantları grafı yeniden eğitmeden sınıflandırabilir; bu özellik yarışma test setinde kritik önem taşımaktadır.
@@ -252,14 +252,14 @@ Hibrit ensemble modelinin hold-out test seti (%20, n≈761 örnek) üzerindeki s
 
 CV sonuçlarının incelenmesinde önemli bir bulgu ortaya çıkmaktadır: Bazı fold'larda VariantGATv2GNN bireysel CV skoru ensemble ortalamasının üzerindedir. Bu durum, CV döngüsü içinde meta-öğrenicinin kısa fold eğitim süresinde GNN'in yüksek performanslı fold'larını yeterince ağırlıklandıramamasından kaynaklanmaktadır. Ancak hold-out test seti üzerinde ensemble (F1=0.8980), tek model başarımını net biçimde aşmakta; bu durum tam veri üzerinde adaptif birleştirmenin etkinliğini doğrulamaktadır.
 
-**Şekil 2:** ROC Eğrileri (4 panel karşılaştırması) — *reports/roc_curves.png*  
-**Şekil 3:** PR Eğrisi (Genel test seti) — *reports/pr_curve.png*  
-**Şekil 4:** Confusion Matrix (Genel test seti) — *reports/confusion_matrix.png*  
-**Şekil 5:** Kalibrasyon Eğrisi (isotonic kalibrasyon öncesi/sonrası) — *reports/calibration_curve.png*
+**Şekil 2:** ROC Eğrileri (4 panel karşılaştırması) — *reports/figures/pdr/05_roc_curves.png*  
+**Şekil 3:** PR Eğrisi (Genel test seti) — *reports/figures/pdr/06_pr_curves.png*  
+**Şekil 4:** Confusion Matrix (Genel test seti) — *reports/figures/pdr/04_confusion_matrix_panel.png*  
+**Şekil 5:** Kalibrasyon Eğrisi (isotonic kalibrasyon öncesi/sonrası) — *reports/figures/pdr/07_calibration_curve.png*
 
 ### 3.2 Panel Bazlı Sonuçlar
 
-Her hastalık paneline ait hold-out test seti metrikleri Tablo 7'de sunulmuştur. Tüm metrikler θ=0.01 (global eşik — F1 maksimizasyonu için) ile raporlanmıştır.
+Her hastalık paneline ait hold-out test seti metrikleri Tablo 7'de sunulmuştur. Tüm metrikler θ=0.241 (global eşik — binary F1 maksimizasyonu için) ile raporlanmıştır.
 
 **Tablo 7: Panel Bazlı Performans Metrikleri — Hold-Out Test Seti**
 
@@ -440,4 +440,4 @@ Bu çalışmadan elde edilen bulgular, ileride ele alınması gereken beş araş
 
 *Takım XYRA3 | Takım ID: 909249 | Başvuru ID: 4865399*  
 *TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması — Proje Detay Raporu*  
-*Rapor Tarihi: 15 Mayıs 2026*
+*Rapor Tarihi: 20 Mayıs 2026*
