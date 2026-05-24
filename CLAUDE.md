@@ -116,20 +116,48 @@ Agent definitions: `.claude/agents/<name>/AGENT.md`
 
 ## VII. MISSION SKILLS REFERENCE
 
-Skills are invoked by name or trigger automatically based on task type.
+Skills are invoked by name or trigger automatically based on task type.  
+**Rule:** Every response — even a single-line question — begins with checking the relevant skill.
 
+### Core Compliance Skills
 | Skill | Activates When |
 |---|---|
-| `variant-gnn-review` | General compliance audit vs TEKNOFEST spec |
-| `error-checker` | Bug/error detection across code and reports |
-| `experiment-review` | Analyzing metrics, panels, ablation results |
-| `jury-sim` | Jury preparation, defense rehearsal |
-| `pdr-editor` | PDR drafting, reviewing, formatting |
-| `reproducibility` | End-to-end jury re-run simulation |
-| `mission-readiness` | Competition delivery readiness assessment |
-| `pre-submission-gate` | Hard go/no-go checklist before any major submission |
-| `code-change-verifier` | Post-edit cross-file impact assessment |
-| `meta-audit` | Claude infrastructure self-audit and improvement |
+| `official-source-guardian` | Any yarışma kuralı, deadline, metrik veya gereksinim doğrulaması gerektiğinde |
+| `competition-compliance-auditor` | "Şartnameye uygun mu?", "eksik var mı?", genel uyum denetimi |
+| `data-metric-guardian` | Metrik hesaplama, data leakage şüphesi, KVKK uyumu, veri işleme kararları |
+
+### Report Skills
+| Skill | Activates When |
+|---|---|
+| `psr-editor` | PSR retrospektif analiz, PSR zayıf noktaları jüri savunmasına hazırlama |
+| `pdr-editor` | PDR taslak, inceleme, format ve içerik kontrolü |
+| `report-template-checker` | Herhangi bir raporun resmi şablonla uyum kontrolü |
+
+### Experiment & Science Skills
+| Skill | Activates When |
+|---|---|
+| `experiment-review` | Panel sonuçları, metrik analizi, ablasyon, eşik tartışması |
+| `error-checker` | Kod, rapor veya pipeline'da hata tespiti — her seviyede |
+| `variant-gnn-review` | Genel TEKNOFEST şartname uyum denetimi |
+
+### Delivery & Jury Skills
+| Skill | Activates When |
+|---|---|
+| `jury-sim` | Jüri soru simülasyonu, final savunma provası |
+| `mission-readiness` | "Teslime hazır mıyız?", eksik tarama, zaman çizelgesi |
+| `pre-submission-gate` | Her büyük teslim öncesi kesin GO/NO-GO kararı |
+| `reproducibility` | Jüri tekrar çalıştırma senaryosu, §7.5 uyum testi |
+
+### Engineering Skills
+| Skill | Activates When |
+|---|---|
+| `code-change-verifier` | Her kod değişikliği sonrası etki analizi |
+| `git-identity-guardian` | Her git push — kimlik doğrulama (Bu PC = msgxr) |
+
+### Infrastructure Skills
+| Skill | Activates When |
+|---|---|
+| `meta-audit` | CAPOS altyapı denetimi, skill/agent güncellemesi |
 
 Skill definitions: `.claude/skills/<name>/SKILL.md`
 
@@ -170,16 +198,26 @@ Claude never does the following in this project:
 
 ## X. DELEGATION LOGIC — QUICK REFERENCE
 
+**First action on every request:** Check `.claude/PROJECT_RULES.md` → identify task class → route to correct skill(s)/agent(s).
+
 | User Says... | Claude Does... |
 |---|---|
-| "Projeyi baştan analiz et" | Runs `variant-gnn-review` + invokes `scientist` + `documentalist` |
-| "Bu bugı çöz" | `debugger` reads context → fix → `verifier` checks → report |
-| "Raporu final seviyeye getir" | `pdr-editor` + `jury-adversary` + `mission-readiness` |
-| "Deney sonuçları savunulabilir mi?" | `scientist` + `experiment-review` + `jury-adversary` |
+| "Projeyi baştan analiz et" | `variant-gnn-review` + `scientist` + `documentalist` |
+| "Bu bugı çöz" | `debugger` → fix → `verifier` → `code-change-verifier` |
+| "Raporu final seviyeye getir" | `pdr-editor` + `report-template-checker` + `jury-adversary` + `mission-readiness` |
+| "Deney sonuçları savunulabilir mi?" | `experiment-review` + `data-metric-guardian` + `scientist` + `jury-adversary` |
 | "README ile kod uyuşuyor mu?" | `documentalist` (doc-vs-repo mode) |
-| "Teslime 1 gün kala ne eksik?" | `mission-readiness` + `pre-submission-gate` |
-| "Claude altyapımızı güçlendir" | `meta-governor` + `meta-audit` skill |
+| "Teslime 1 gün kala ne eksik?" | `mission-readiness` + `pre-submission-gate` + `competition-compliance-auditor` |
+| "Claude altyapımızı güçlendir" | `meta-governor` + `meta-audit` |
 | "Jüri ne sorar?" | `jury-sim` + `jury-adversary` |
+| "Şartname kuralı nedir?" | `official-source-guardian` → doğrula veya UNVERIFIED işaretle |
+| "Şartnameye uygun mu?" | `competition-compliance-auditor` + `error-checker` |
+| "Şablona uygun mu?" | `report-template-checker` + `pdr-editor` |
+| "Metrik doğru mu?" | `data-metric-guardian` + `experiment-review` |
+| "PSR zayıf noktaları neler?" | `psr-editor` + `jury-adversary` |
+| "Push yap / commit at" | `git-identity-guardian` → config msgxr → commit → verify → push |
+| "Tekrar çalıştırılabilir mi?" | `reproducibility` + `verifier` |
+| "Kod eksiği / hata var mı?" | `error-checker` + `competition-compliance-auditor` |
 
 ---
 
@@ -199,4 +237,22 @@ If yes to any → propose to user → update infrastructure if approved.
 
 ---
 
-*CAPOS v1.0 — Installed 2026-05-20 | Next review: after PDR submission*
+## XII. GIT IDENTITY PROTOCOL
+
+**Bu Windows PC'de her zaman:**
+```
+git config user.name "msgxr"
+git config user.email "mgun345@icloud.com"
+```
+**Şeyma'nın Mac'inde her zaman:**
+```
+git config user.name "cebi101"
+git config user.email "seymanurcebi6@gmail.com"
+```
+Push öncesi `git log -1 --pretty=fuller` ile Author doğrulanır. Yanlışsa push yapılmaz.  
+Claude, Bot, AI, Automation commit kimliğinde **kesinlikle görünemez**.
+
+---
+
+*CAPOS v2.0 — Updated 2026-05-24 | 16 skills, 9 agents, full official-source guardrails*  
+*Next review: after PDR submission (29.06.2026)*

@@ -3,66 +3,86 @@ name: official-source-guardian
 description: Use when any competition rule, deadline, metric, or requirement needs verification. Enforces the TEKNOFEST 2026 official source policy — rejects third-party sources, marks unverifiable claims as UNVERIFIED, and ensures all competition decisions trace to the official specification. Activate when a rule is cited, when a source is unclear, or when a decision depends on competition requirements.
 ---
 
-# Skill: official-source-guardian
+# Official Source Guardian — VARIANT-GNN
 
-## Purpose
+When this skill is active, every competition-related claim must be traceable to an official TEKNOFEST 2026 document. No exceptions. No approximations. No memory of previous years.
 
-Tüm yarışma kuralı kararlarının yalnızca resmi TEKNOFEST 2026 kaynaklarına dayandığını denetlemek.
+## Source Priority Hierarchy
 
-## Official Source Boundary
+```
+TIER 1 (Binding)   : TEKNOFEST 2026 Türkçe Şartname v4
+TIER 2 (Binding)   : TEKNOFEST 2026 PDR Şablonu — Üniversite ve Üzeri
+TIER 2 (Binding)   : TEKNOFEST 2026 PSR Şablonu — Üniversite ve Üzeri
+TIER 3 (Reference) : teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
+TIER 4 (Reference) : KYS / resmi TEKNOFEST duyurusu / yarışma grubu
 
-**Kabul edilen kaynaklar (öncelik sırasıyla):**
-1. TEKNOFEST 2026 Türkçe Şartname v4
-2. TEKNOFEST 2026 PDR Şablonu (Üniversite ve Üzeri)
-3. TEKNOFEST 2026 PSR Şablonu (Üniversite ve Üzeri)
-4. Resmi TEKNOFEST ana yarışma sayfası
-5. Resmi KYS / duyuru / yarışma grubu bilgilendirmesi
+REJECTED (Zero Trust):
+  - 2024 veya önceki yıl şartnameleri
+  - Blog, forum, sosyal medya, kişisel yorum
+  - Gayriresmi özet, üçüncü taraf doküman
+  - "Geçen yıl böyleydi" hafızası
+```
 
-**Kesinlikle reddedilen kaynaklar:**
-- 2024 veya önceki yıl şartnameleri (kural değişmiş olabilir)
-- Blog, forum, sosyal medya, kişisel yorum
-- Gayriresmi özet, üçüncü taraf doküman
+## Verified Facts (2026 — Confirmed from Official Source)
 
-## Inputs
+| Fact | Value | Source |
+|---|---|---|
+| Yarışma | TEKNOFEST 2026 Sağlıkta Yapay Zeka | Ana sayfa |
+| Kategori | Üniversite ve Üzeri | Şartname |
+| Görev | Patojenik/Benign binary sınıflandırma | Şartname |
+| Birincil metrik | Binary F1 Score, pos_label=1 | Şartname §7.3 |
+| PDR teslim | 29 Haziran 2026, 17:00 | Takvim |
+| Veri dağıtımı | 5 Mayıs 2026 | Takvim |
+| Final | Ağustos–Eylül 2026, Şanlıurfa | Takvim |
+| Ödül 1. | ₺180.000 | Ana sayfa |
+| Takım büyüklüğü | 2–5 kişi (danışman hariç) | Şartname |
+| Gizlilik taahhütü | Kurumsal Gizlilik Taahhütü zorunlu | Şartname |
+| KVKK | Zorunlu uyum | Şartname |
+| PSR teslim | 25 Mart 2026, 17:00 (TAMAMLANDI) | Takvim |
 
-- Yarışma kuralına ilişkin herhangi bir soru, iddia veya karar noktası
+## UNVERIFIED Items (Do Not Present as Fact)
 
-## Outputs
+| Item | Why Unverified |
+|---|---|
+| PDR sayfa limiti (exact) | Şablon DOCX içinde — doğrulanmadı |
+| Puanlama ağırlıkları (% breakdown) | Şartname §7 tam okuma gerekiyor |
+| Teslim formatı (PDF/DOCX) | Sistem duyurusundan gelecek |
+| Final sözlü sunum ağırlığı | Şartname §7 |
+| Mezuniyet tarih kısıtı | Şartname §3 |
 
-- Her bilgi için: kaynak + bölüm numarası + doğrulanmış/UNVERIFIED etiketi
-- Reddedilen kaynakların listesi
-- "OFFICIAL SOURCE REQUIRED" durumunda işin durdurulması ve not düşülmesi
+## Decision Protocol
+
+```
+Step 1: Identify the claim or rule being asserted.
+Step 2: Map to Source Hierarchy above.
+Step 3a: Found in Tier 1–2 → state fact with section reference.
+Step 3b: Found in Tier 3–4 only → state as "reference only, not binding."
+Step 3c: Not found anywhere → mark UNVERIFIED, do not assert.
+Step 3d: Third-party source detected → reject, write "OFFICIAL SOURCE REQUIRED."
+Step 4: If rule determination is required and source is insufficient → STOP, ask user.
+```
+
+## Response Format
+
+When verifying a claim:
+```
+CLAIM: [what was asserted]
+SOURCE: [TEKNOFEST 2026 Şartname §X.X / UNVERIFIED]
+STATUS: [VERIFIED / UNVERIFIED / REJECTED — third party]
+CONFIDENCE: [HIGH / MEDIUM / LOW]
+NOTE: [if any caveat]
+```
 
 ## Hard Rules
 
-1. Kaynak resmi değilse bilgi kullanılmaz.
-2. Doğrulanamayan bilgi UNVERIFIED olarak işaretlenir — kesin kural gibi sunulmaz.
-3. Şartname, şablon, web sayfası çelişirse: Şartname > Şablon > Web sayfası.
-4. Kural uydurulmaz. Emin olunmayan her şey durdurulur.
+1. "2024'te böyleydi" → automatic rejection, year mismatch
+2. Doğrulanamayan bilgi → UNVERIFIED, not assumed true
+3. Tier 1 vs Tier 3 conflict → Tier 1 wins, always
+4. User asks for rule not in any source → "OFFICIAL SOURCE REQUIRED — check şartname §[relevant section]"
+5. Never invent a rule, never round-trip from memory alone
 
-## Step-by-Step Procedure
+## Cross-References
 
-1. İddia edilen kuralı belirle.
-2. Resmi kaynaklar listesini kontrol et (OFFICIAL_REFERENCES.md).
-3. İlgili şartname bölümünü bul.
-4. Bilgiyi doğrula veya UNVERIFIED olarak işaretle.
-5. Kaynak + bölüm numarasını belirterek yanıt ver.
-6. Üçüncü taraf kaynak tespitinde "OFFICIAL SOURCE REQUIRED" yaz ve dur.
-
-## Validation Checklist
-
-- [ ] Bilginin kaynağı resmi TEKNOFEST belgesi mi?
-- [ ] Kaynak 2026 yılına mı ait?
-- [ ] Üçüncü taraf kaynak kullanılmadı mı?
-- [ ] Doğrulanamayan bilgi UNVERIFIED mi?
-- [ ] Şartname ile şablon çelişmiyorsa öncelik doğru mu?
-
-## Failure Conditions
-
-- Üçüncü taraf kaynak kullanılması
-- UNVERIFIED bilginin doğrulanmış gibi sunulması
-- 2024 şartname maddelerinin 2026 kuralı gibi yazılması
-
-## Escalation Rule
-
-Resmi kaynakta açıkça yazılmayan bir kural kesin hüküm gerektiriyorsa → işi durdur, "OFFICIAL SOURCE REQUIRED" yaz, kullanıcıya sor.
+- Verified facts → `.claude/OFFICIAL_REFERENCES.md`
+- Uncertainty log → `.claude/context/07_uncertainty_log.md`
+- Application to audit → `competition-compliance-auditor`
