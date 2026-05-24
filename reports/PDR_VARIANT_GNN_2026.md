@@ -35,7 +35,8 @@
    4.3 Güçlü ve Zayıf Yönler .................................... 11
    4.4 Hata Analizi .............................................. 12
    4.5 Gelecek Çalışma ........................................... 12
-5. KAYNAKÇA (10 puan) ............................................ 13
+   4.6 Final Aşamasında Karşılaşılabilecek Zorluklar ............. 13
+5. KAYNAKÇA (ve RAPOR DÜZENİ 10 PUAN) .......................... 14
 
 ---
 
@@ -95,6 +96,10 @@ TEKNOFEST 2026 yarışma çerçevesinde sağlanan veri seti, dört hastalık pan
 **Adversarial Validation**
 
 Eğitim-test dağılım uyumunu doğrulamak amacıyla ikincil bir sınıflandırıcıya eğitim-test ayırımını tahmin ettirme yöntemi (adversarial validation) uygulanmıştır. ROC-AUC değerleri: MASTER 0.512, KANSER 0.505, PAH 0.498, CFTR 0.521. AUC≈0.50 model eğitim ve test kümesini ayırt edememektedir; bu bulgu veri sızıntısı riskinin bulunmadığını doğrulamaktadır.
+
+**Dış Kaynak Kullanımı**
+
+Veri kümesine dış kaynaklardan yeni örnek eklenmemiştir. Yarışma şartnamesinin §3.2 kapsamındaki TEKNOFEST 2026 yarışma verisi tek veri kaynağıdır; ClinVar/gnomAD'dan doğrudan örnek çekilmemiş, yalnızca literatür bağlamında referans alınmıştır.
 
 **Gaussian Feature Augmentation**
 
@@ -249,6 +254,16 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 Test-CV farkı +0.031, tek modellerin hepsinin üzerinde; adaptif birleştirmenin etkinliğini doğrulamaktadır.
 
+**Tablo 5b: Karmaşıklık Matrisi — Hold-Out Test Seti (N=760, θ=0.241)**
+
+| | **Tahmin: Patojenik (1)** | **Tahmin: Benign (0)** | **Toplam** |
+|:---|:---:|:---:|:---:|
+| **Gerçek: Patojenik (1)** | **TP = 548** | FN = 15 | 563 |
+| **Gerçek: Benign (0)** | FP = 109 | **TN = 88** | 197 |
+| **Toplam** | 657 | 103 | 760 |
+
+*Yorum: FN=15 kaçırılan patojenik varyant; klinik açıdan en kritik hata tipidir. MC Dropout ile bu 15 örneğin %73'ünde σ>0.30 (Uzman Değerlendirmesi bayrağı). FP=109 hatalı Patojenik tahminin %68'inde yüksek in-silico risk + gnomAD AF>0.01 kombinasyonu mevcuttur.*
+
 **Şekil 2:** ROC Eğrileri (4 panel) — *reports/figures/pdr/05_roc_curves.png*
 **Şekil 3:** PR Eğrisi (Genel) — *reports/figures/pdr/06_pr_curves.png*
 **Şekil 4:** Confusion Matrix — *reports/figures/pdr/04_confusion_matrix_panel.png*
@@ -394,9 +409,23 @@ PAH'da düşük karar eşiği (θ=0.138) artmış FP riskine yol açmaktadır. 6
 4. **Protein yapı entegrasyonu:** AlphaFold2 kaynaklı ΔΔG özelliklerinin biyokimyasal gruba eklenmesi.
 5. **Prospektif validasyon:** Gerçek klinik vaka serilerinde retrospektif doğrulama ve ACMG uzman değerlendirmeleriyle karşılaştırma.
 
+### 4.6 Yarışmanın Final Aşamasında Karşılaşılabilecek Zorluklar
+
+*Bu bölüm PDR şablonu §4 zorunlu son maddesi gereği eklenmiştir.*
+
+**Kör Test Verisi ve Dağılım Kayması:** Final aşamasında jüri tarafından sağlanacak kör test verisi eğitim setinden farklı bir varyant profil dağılımı içerebilir. Bu riski azaltmak için adversarial validation (AUC≈0.50) ile eğitim-test dağılım uyumu doğrulanmış; ColumnAligner anonim kolon ortamında dağılımsal imza eşleşmesi ile sağlam hizalama gerçekleştirmektedir.
+
+**Eşik Uyarlaması:** Jürinin sunacağı test verisinde sınıf dengesi eğitim setinden farklı olabilir. Model `models/threshold.json` ve `models/panel_thresholds.json` içindeki eşikleri dynamik olarak yüklemektedir; gerekirse kalibrasyon seti üzerinde hızlı yeniden optimizasyon (`src/evaluation/threshold_optimizer.py`) tek komutla çalıştırılabilir.
+
+**Tekrar Çalıştırma Güvenilirliği (§7.5):** Jürinin kodu kendi ortamında çalıştırması durumunda Python/kütüphane versiyonu farkları sonuç sapmasına yol açabilir. Bu risk `requirements.txt` sabit versiyonları, `seed=42` deterministik yapılandırması ve `submission/predict.py` tek-giriş-noktası ile minimize edilmiştir; Docker imajı (CPU+GPU) ortam bağımsızlığı sağlar.
+
+**Hesaplama Süresi Kısıtı:** GATv2GNN inference süresi CPU ortamında gecikmeye yol açabilir. `scripts/test_cpu_inference.py` ile CPU benchmark doğrulanmıştır; model ONNX ihracı hazır tutulmaktadır. Jüri laptop ortamında ~500 örnek için beklenen tahmin süresi <90 saniye.
+
+**Kolon Yapısı Farkı:** Final veri setindeki kolon sayısı veya sıralaması eğitimden farklı gelebilir. ColumnAligner bu durumu dağılımsal eşleşme ile otomatik olarak ele alır; `data/contracts/predict_schema.json` sözleşmesi eksik/fazla kolonları tolere etmektedir.
+
 ---
 
-## 5. KAYNAKÇA (10 puan)
+## 5. KAYNAKÇA (ve RAPOR DÜZENİ 10 PUAN)
 
 [1] S. Richards, N. Aziz, S. Bale, D. Bick, S. Das, J. Gastier-Foster, W. W. Grody, M. Hegde, E. Lyon, E. Spector, K. Voelkerding, and H. L. Rehm, "Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology," *Genet. Med.*, vol. 17, no. 5, pp. 405–424, May 2015. doi:10.1038/gim.2015.30
 
