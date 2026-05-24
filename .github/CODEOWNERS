@@ -1,0 +1,28 @@
+# CODEOWNERS — VARIANT-GNN / XYRA3
+# Sözdizimi: <path> <@github-username>
+# Bir dosya birden fazla satırla eşleşirse en spesifik kural kazanır.
+
+# ── Varsayılan sahip (eşleşme yoksa) ──────────────────────────────────────
+*                           @msgxr
+
+# ── Model ve eğitim kodu ──────────────────────────────────────────────────
+src/core/gnn.py             @cebi101
+src/core/pipeline.py        @cebi101
+src/models/                 @cebi101
+configs/                    @cebi101 @msgxr
+
+# ── Submission ────────────────────────────────────────────────────────────
+submission/                 @cebi101 @msgxr
+
+# ── CI / DevOps ───────────────────────────────────────────────────────────
+.github/                    @msgxr
+.github/workflows/          @msgxr
+
+# ── Dokümantasyon ve rapor ────────────────────────────────────────────────
+docs/                       @msgxr
+reports/                    @msgxr @cebi101
+README.md                   @msgxr
+
+# ── Claude altyapısı ─────────────────────────────────────────────────────
+.claude/                    @msgxr
+CLAUDE.md                   @msgxr
