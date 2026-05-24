@@ -4,6 +4,24 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 
 ---
 
+## [3.2.1] — 24 Mayıs 2026 (PDR Tam Yeniden Yazma + Resmi Formül Düzeltmesi)
+
+### Düzeltildi
+- **F1 formülü (KRİTİK):** Tüm resmi dokümanlarda `2·TP/(2·TP+FP+FN)` → `TP/(TP+0.5·FP+0.5·FN)` (şartname §7.3 resmi gösterimi) — PDR, README, MODEL_CARD, evaluation_protocol.md
+- **PDR Tablo 6:** XGBoost CV ort. `0.8382` → `0.8582` (rakam hatası; fold değerlerinden doğrulandı: cv_report.json)
+- **PDR Tablo 10:** Augmentation kaldırıldı test F1: `0.871` → `0.8706` (ablation_report.json gerçek değeri)
+- **README.md:** Brier badge 0.179 → 0.1283 (gerçek eğitim metriği)
+
+### Eklendi
+- **PDR tam yeniden yazma:** Panel bazlı SHAP katkı tablosu (Tablo 4) — PSR §4.4 zayıflığı giderildi
+- **PDR:** 3 bireysel SHAP waterfall örneği (Patojenik/Benign/Sınır)
+- **PDR:** 4-Model × 4-Panel Binary F1 karşılaştırma tablosu (Tablo 8) — PSR §5.1 giderildi
+- **PDR:** LIME panel-bazlı Spearman ρ değerleri (MASTER:0.91, KANSER:0.87, PAH:0.86, CFTR:0.83)
+- **PDR:** GNNExplainer nümerik sonuçları (200 örnek, kenar ağırlığı analizi)
+- **PDR:** 5-seed inter-seed stabilite (std=±0.0013) eklendi
+
+---
+
 ## [3.2.0] — 24 Mayıs 2026 (Kritik Hata Düzeltmeleri + Altyapı)
 
 ### Düzeltildi

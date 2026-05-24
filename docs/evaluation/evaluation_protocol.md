@@ -12,7 +12,7 @@
 > hesaplanan **F1 Skoru** olacaktır."
 
 ```
-F1 = 2·TP / (2·TP + FP + FN)
+F1 = TP / (TP + 0.5·FP + 0.5·FN)
 ```
 
 Bu, Patojenik (positive=1) sınıfı için **Binary F1** skorudur. Sistemde

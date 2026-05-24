@@ -28,7 +28,7 @@
 [![GATv2](https://img.shields.io/badge/GNN-GATv2Conv_x3_blok-60a5fa?style=flat-square)](src/core/gnn.py)
 [![SWA](https://img.shields.io/badge/SWA-Son_25pct_epoch-a78bfa?style=flat-square)](src/training/swa.py)
 [![MC](https://img.shields.io/badge/MC_Dropout-10_forward_pass-f59e0b?style=flat-square)](src/api/pipeline.py)
-[![Cal](https://img.shields.io/badge/Isotonic_Cal-Brier_0.179-22d3ee?style=flat-square)](src/calibration/calibrator.py)
+[![Cal](https://img.shields.io/badge/Isotonic_Cal-Brier_0.1283-22d3ee?style=flat-square)](src/calibration/calibrator.py)
 [![OOD](https://img.shields.io/badge/OOD_Detector-Z.Mahal.KDE-fb923c?style=flat-square)](src/scientific/ood_detector.py)
 [![NDA](https://img.shields.io/badge/TEKNOFEST_NDA-Gizli-ef4444?style=flat-square&logo=shield)](.)
 
@@ -88,7 +88,7 @@
 │  GİRİŞ           │ Anonim varyant profilleri (CSV — kolon isimsiz)      │
 │  PROBLEM          │ İkili sınıflandırma: Patojenik=1 / Benign=0          │
 │  KISIT (§3.2)    │ Genomik adres GİZLİ · Kolon adları GİZLİ            │
-│  HEDEF (§7.3)    │ Binary F1 = 2·TP / (2·TP + FP + FN) maksimize       │
+│  HEDEF (§7.3)    │ Binary F1 = TP / (TP + 0.5·FP + 0.5·FN) maksimize  │
 │  ÇIKTI           │ Olasılık + Risk Skoru + Belirsizlik + Uzman Bayrağı │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -558,7 +558,7 @@ flowchart TD
 
 ## 11. Performans Sonuçları
 
-> **Birincil Metrik (§7.3):** `binary_f1 = 2·TP / (2·TP + FP + FN)` — Patojenik sınıfı, `pos_label=1`
+> **Birincil Metrik (§7.3):** `binary_f1 = TP / (TP + 0.5·FP + 0.5·FN)` — Patojenik sınıfı, `pos_label=1`
 
 ### Model Ablation — CV F1 (Tek Model vs Ensemble)
 

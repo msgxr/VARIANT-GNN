@@ -226,7 +226,7 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 | Metrik | Değer | Açıklama |
 |:-------|:-----:|:---------|
-| **Binary F1 (birincil, §7.3)** | **0.8980** | 2·TP/(2·TP+FP+FN), pos_label=1 |
+| **Binary F1 (birincil, §7.3)** | **0.8980** | TP/(TP+0.5·FP+0.5·FN), pos_label=1 |
 | MCC | 0.5356 | Dengeli dört-sınıf performansı |
 | PR-AUC | 0.9294 | Eşik bağımsız ayırt edicilik |
 | ROC-AUC | 0.8673 | Genel sınıf ayrımı |
@@ -240,7 +240,7 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 | Model | CV Ort. | Std | F1-1 | F1-2 | F1-3 | F1-4 | F1-5 | Test |
 |:------|:-------:|:---:|:----:|:----:|:----:|:----:|:----:|:----:|
-| XGBoost | 0.8382 | ±0.009 | 0.845 | 0.857 | 0.869 | 0.861 | 0.859 | — |
+| XGBoost | 0.8582 | ±0.009 | 0.845 | 0.857 | 0.869 | 0.861 | 0.859 | — |
 | LightGBM | 0.8764 | ±0.006 | 0.863 | 0.875 | 0.887 | 0.874 | 0.882 | — |
 | VariantGATv2GNN | 0.8385 | ±0.011 | 0.846 | 0.825 | 0.830 | 0.854 | 0.839 | — |
 | DNN | 0.8208 | ±0.015 | 0.810 | 0.842 | 0.821 | 0.826 | 0.805 | — |
@@ -315,7 +315,7 @@ Eşik stratejisi: Patojenik bir varyantı kaçırmak (FN) klinik açıdan hatal�
 | XGBoost kaldırıldı | ~0.860 | −0.038 | En büyük tekil kayıp |
 | GNN kaldırıldı | ~0.876 | −0.022 | Graf komşuluk sinyali kayboldu |
 | SMOTE kaldırıldı | ~0.875 | −0.023 | Azınlık sınıf duyarlılığı düştü |
-| Augmentation kaldırıldı | 0.871 | −0.027 | Örneklem azaldı, genelleme zayıfladı |
+| Augmentation kaldırıldı | 0.8706 | −0.027 | Örneklem azaldı, genelleme zayıfladı |
 | Kalibrasyon kaldırıldı | ~0.898 | ≈0 | ECE belirgin yükseliş; F1 değişmez |
 | SAGEConv (GATv2 yerine) | ~0.884 | −0.014 | Statik attention yetersizliği |
 

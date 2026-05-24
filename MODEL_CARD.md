@@ -34,7 +34,7 @@
 | **Takım** | XYRA3 (909249) — Başvuru ID: 4865399 |
 | **Yarışma** | TEKNOFEST 2026 Sağlıkta Yapay Zeka — Üniversite ve Üzeri |
 | **Görev** | Missense genetik varyantların Patojenik / Benign ikili sınıflandırması (§3.2) |
-| **Birincil Metrik** | Binary F1 = 2·TP / (2·TP + FP + FN) — Patojenik sınıfı (§7.3) |
+| **Birincil Metrik** | Binary F1 = TP / (TP + 0.5·FP + 0.5·FN) — Patojenik sınıfı (§7.3) |
 | **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
 | **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
 | **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |

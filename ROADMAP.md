@@ -14,9 +14,9 @@
 - [x] Anonim kolon modunu gerçek veriyle test et (feature_coverage=0.0, beklenen)
 - [x] Reproducibility checklist'i tamamla (SHA256, PROVENANCE.json, seed=42)
 - [ ] PDR raporunu resmi DOCX şablonuna aktar ve teslim et (29 Haziran 2026)
-- [ ] SHAP waterfall görseli PDR §2.4'e ekle (§4.4 puanı +1.67)
+- [x] SHAP waterfall görseli PDR §2.4'e ekle (§4.4 puanı +1.67) — 24 Mayıs 2026
 - [ ] Deney günlüğü tablosu PDR §4.5'e ekle (§4.5 puanı +1.67)
-- [ ] 5×4 model-panel ablasyon tablosu (§5.1 puanı +1.00)
+- [x] 5×4 model-panel ablasyon tablosu (§5.1 puanı +1.00) — PDR Tablo 8, 24 Mayıs 2026
 
 ## P1 — Jüri Hazırlık (Haziran–Temmuz 2026)
 
