@@ -47,11 +47,11 @@ First determine current competition phase:
 
 #### Dimension 3: Scientific Defensibility
 ```
-[ ] F1=0.8706 can be verified in code output
-[ ] MCC gap (PSR 0.892 → actual 0.406) has documented explanation
-[ ] PAH MCC=0.1466 explained as sensitivity/precision tradeoff
-[ ] GNN architecture name inconsistency resolved in PDR
-[ ] All metrics computed correctly (binary F1, threshold=0.4357)
+[ ] F1=0.8980 can be verified in code output (reports/cv_report.json)
+[ ] MCC gap (PSR 0.892 → actual 0.536) has documented explanation (PDR §4.2)
+[ ] MASTER MCC=0.507 explained as class imbalance 2.75:1 (PDR §4.2)
+[ ] GNN architecture name inconsistency resolved in PDR (VariantGATv2GNN confirmed)
+[ ] All metrics computed correctly (binary F1, threshold=0.241 global, panel-specific)
 [ ] No data leakage in preprocessing pipeline
 [ ] SMOTE applied only to train split
 [ ] Ablation study showing GNN contribution

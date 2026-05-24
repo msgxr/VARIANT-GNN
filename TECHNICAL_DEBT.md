@@ -1,6 +1,6 @@
 # Teknik Borç — VARIANT-GNN
 
-**Güncelleme tarihi:** Nisan 2026
+**Güncelleme tarihi:** 24 Mayıs 2026
 
 Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken alanları listeler.
 

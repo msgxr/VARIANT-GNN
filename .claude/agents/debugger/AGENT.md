@@ -122,7 +122,8 @@ X_train_res, y_train_res = SMOTE().fit_resample(X_train, y_train)
 
 ### Pattern 8: Threshold Application
 ```python
-# threshold = 0.4357 (from configs/thresholds.yaml)
+# threshold = 0.241 global (from models/threshold.json + configs/thresholds.yaml)
+# panel-specific: KANSER=0.281, PAH=0.138, CFTR=0.108 (from models/panel_thresholds.json)
 # WRONG: Using 0.5 for binary decision
 # WRONG: Threshold not applied consistently across all 4 panels
 # CORRECT: y_pred = (y_prob >= threshold).astype(int)

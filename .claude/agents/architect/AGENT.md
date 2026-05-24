@@ -50,11 +50,11 @@ configs/
   pdr.yaml        ← PDR-specific config
   final.yaml      ← competition final config
   panels.yaml     ← panel-specific settings
-  thresholds.yaml ← decision thresholds (0.4357)
+  thresholds.yaml ← decision thresholds (global=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108)
   inference.yaml  ← inference config
   evaluation.yaml ← eval config
 ```
-**Rule:** Check if `configs/final.yaml` is what actually runs in competition scenario. Verify `thresholds.yaml` has threshold=0.4357.
+**Rule:** Check if `configs/pdr.yaml` is what actually runs in competition scenario. Verify `thresholds.yaml` has `optimize_metric: binary_f1` and `default: 0.241`.
 
 ### Entry Points
 ```

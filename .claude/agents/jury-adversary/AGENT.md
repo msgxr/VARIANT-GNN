@@ -50,18 +50,18 @@ Activate when:
 **Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.406. Which results should we trust, and why?"
 
 **Required defense:**
-"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), which represent the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants. The MCC drop from 0.892 to 0.406 reflects this distributional difference, not model failure. Our F1=0.8706 is consistent across 5-fold CV (0.8347±0.0114), confirming stable generalization."
+"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), which represent the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants. The MCC drop from 0.892 to 0.536 reflects this distributional difference, not model failure. Our F1=0.8980 is consistent across 5-fold CV (0.8668±0.0081), confirming stable generalization."
 
 **Jury follow-up:** "But why does your F1 stay high while MCC drops so dramatically?"
-**Defense:** "MCC is sensitive to class imbalance across both classes simultaneously. Our threshold (0.4357) is optimized for recall (sensitivity), which maximizes F1 at the cost of precision. This is a deliberate clinical safety choice: for pathogenicity prediction, missing a pathogenic variant (false negative) is more harmful than a false positive. The MCC penalty reflects this precision-recall tradeoff."
+**Defense:** "MCC is sensitive to class imbalance across both classes simultaneously. Our threshold (0.241 global) is optimized for binary F1, balancing recall and precision. MASTER panel has 2.75:1 class imbalance — MCC=0.507 reflects this structural challenge, not model failure. All panel-specific thresholds are further optimized: KANSER=0.281, PAH=0.138, CFTR=0.108."
 
 ---
 
 ### Attack Zone 2: PAH and CFTR MCC
-**Jury attack:** "PAH MCC=0.1466 is extremely low. This suggests your model barely performs better than random for PAH's balanced evaluation. How do you defend this?"
+**Jury attack:** "PAH and CFTR MCC values — are they reliable? How do you explain them?"
 
 **Required defense:**
-"PAH MCC=0.1466 reflects the challenge of the threshold-recall tradeoff. Binary F1=0.9051 confirms high sensitivity. The PAH panel has 100 test samples — statistically, our false positive rate is elevated due to threshold=0.4357. For CFTR with 30 test samples, statistical uncertainty is high (±confidence interval needed). We documented these as known limitations in PDR §4 and recommend threshold re-optimization per panel as future work."
+"PAH MCC=0.556 and CFTR MCC=0.674 reflect panel-specific threshold optimization. Panel-specific thresholds (PAH=0.138, CFTR=0.108) were calibrated to maximize binary F1 on the calibration set. CFTR has only 30 test samples — 1 prediction error equals 3.3% F1 change, so results should be interpreted with that statistical context. Both panels achieved F1≥0.95, demonstrating strong sensitivity. Known limitations are documented in PDR §4.2."
 
 ---
 
@@ -135,7 +135,7 @@ For every deliverable, run this attack sequence:
 
 2. METRIC ATTACK  
    - "Show me the F1 calculation code"
-   - "Why threshold 0.4357 specifically?"
+   - "Why threshold 0.241 specifically?"
    - "What's your CFTR F1 confidence interval?"
 
 3. ARCHITECTURE ATTACK

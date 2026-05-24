@@ -37,8 +37,8 @@ Activate when:
 Mapping of claims to verification sources:
 | Document Claim | Must Verify In |
 |---|---|
-| "Binary F1: 0.8706" | `reports/cv_report.json` |
-| "Threshold: 0.4357" | `configs/thresholds.yaml` |
+| "Binary F1: 0.8980" | `reports/cv_report.json` |
+| "Threshold: 0.241" | `configs/thresholds.yaml` + `models/threshold.json` |
 | "VariantGATv2GNN" | `src/core/gnn.py` — class name |
 | "AutoEncoder 43→16" | `src/features/autoencoder.py` — actual dims |
 | "SelectKBest k=35" | `src/features/preprocessing.py` |
@@ -115,8 +115,8 @@ CONTENT:
 [ ] Purpose: competition research only
 [ ] Input format: anonymous feature vector
 [ ] Output: probability + binary prediction (Pathogenic=1/Benign=0)
-[ ] Threshold: 0.4357 documented
-[ ] Performance: F1=0.8706 test, all panel breakdown
+[ ] Threshold: 0.241 (global), panel-specific: KANSER=0.281, PAH=0.138, CFTR=0.108
+[ ] Performance: F1=0.8980 test, CV F1=0.8668±0.0081, all panel breakdown
 [ ] NOT TO BE USED FOR: clinical diagnosis, treatment decisions
 [ ] Requires: physician oversight for any clinical interpretation
 [ ] Architecture: full ensemble description with weights
@@ -147,8 +147,8 @@ CONTENT:
 - "Can be used in clinical practice" → FORBIDDEN
 
 ### Required Precision Patterns
-- Metric: always report as "F1=0.8706 (test set, threshold=0.4357)"
-- Comparison: "Ensemble F1=0.8706 vs XGBoost-only baseline F1=0.84xx"
+- Metric: always report as "F1=0.8980 (test set, threshold=0.241)"
+- Comparison: "Ensemble F1=0.8980 vs XGBoost-only baseline F1=~0.83"
 - Limitation: "PAH panel MCC=0.1466, reflecting threshold calibration for sensitivity"
 - Claim: pair every claim with its evidence source
 

@@ -593,10 +593,10 @@ flowchart TD
 
 | Panel | F1_Pat | Recall_P | Prec_P | MCC | PR-AUC | ROC-AUC | Brier |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **MASTER** | 0.8675 | **0.9309** | 0.8178 | 0.4199 | 0.8778 | 0.7795 | 0.1822 |
-| **KANSER** | 0.8515 | 0.8812 | 0.8232 | **0.5112** | **0.9095** | **0.8812** | 0.1398 |
-| **PAH** | **0.9051** | **0.9800** | 0.8421 | 0.1466 ⚠️ | **0.9395** | 0.6704 | 0.1782 |
-| **CFTR** | 0.8750 | 0.9333 | 0.8235 | 0.2435 ⚠️ | 0.8394 | 0.6083 | 0.2198 |
+| **MASTER** | 0.8872 | 0.9679 | 0.8189 | 0.507 | 0.9183 | 0.8537 | 0.141 |
+| **KANSER** | 0.8960 | 0.9912 | 0.8175 | **0.649** | **0.9524** | **0.9353** | 0.106 |
+| **PAH** | **0.9556** | 0.9790 | **0.9333** | 0.556 | **0.9760** | 0.8842 | 0.072 |
+| **CFTR** | 0.9524 | **1.0000** | 0.9091 | 0.674 | 0.9223 | 0.7889 | 0.078 |
 | **TOPLAM** | **0.8980** | **0.9725** | **0.8341** | 0.5356 | 0.9294 | 0.8673 | 0.1283 |
 
 </div>
@@ -604,20 +604,19 @@ flowchart TD
 ### Panel MCC Karşılaştırması
 
 ```
-  MASTER  ████████████████████░░░░░░░░░░░░  MCC = 0.4199
-  KANSER  █████████████████████████░░░░░░░  MCC = 0.5112  ← en iyi
-  PAH     ████░░░░░░░░░░░░░░░░░░░░░░░░░░░  MCC = 0.1466  ⚠️
-  CFTR    ██████░░░░░░░░░░░░░░░░░░░░░░░░░  MCC = 0.2435  ⚠️
+  MASTER  ████████████████████████░░░░░░░░  MCC = 0.507
+  KANSER  ████████████████████████████████  MCC = 0.649  ← en iyi
+  PAH     ████████████████████████████░░░  MCC = 0.556
+  CFTR    █████████████████████████████░░  MCC = 0.674
 ```
 
-**⚠️ Düşük MCC Açıklaması:**
+**Panel Eşikleri (binary F1 optimize, kalibrasyon setinde):**
 
 ```
-Problem: θ=0.4357 duyarlılık öncelikli → Recall_P ≥ 0.93 ama yüksek FP
-         MCC her iki sınıfı dengeli değerlendirir → Benign zayıflığı yansır
-
-Çözüm:  Panel-spesifik eşikler kalibrasyon setinde optimize edildi:
-         MASTER=0.271 · KANSER=0.286 · PAH=0.384 · CFTR=0.256
+Global:  θ = 0.241  (MASTER)
+KANSER:  θ = 0.281  (yüksek özgüllük)
+PAH:     θ = 0.138  (yüksek recall öncelikli)
+CFTR:    θ = 0.108  (n=30 test; maksimum duyarlılık)
 ```
 
 ### PSR Hakem Puanları — 93.00 / 100
@@ -962,7 +961,7 @@ VARIANT-GNN/
 │   ├── ood_detector.pkl         ★ Train fit — inference'da detect()
 │   ├── ensemble_config.json     Optimize agirliklar
 │   ├── panel_thresholds.json    4 panel x optimal esik
-│   ├── threshold.json           Global F1-optimal esik θ=0.4357
+│   ├── threshold.json           Global F1-optimal esik θ=0.241
 │   ├── feature_names.json       XGBoost ozellik isimleri
 │   ├── metadata.json            SHA256 + versiyon
 │   └── manifest.json            Artifact versiyonlama

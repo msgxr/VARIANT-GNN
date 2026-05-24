@@ -65,7 +65,7 @@ def test_f1_binary_average():
     """f1_score called with average='binary'"""
 
 def test_threshold_applied():
-    """Predictions use threshold=0.4357, not 0.5"""
+    """Predictions use threshold=0.241 (global), not 0.5"""
 
 def test_panel_f1_computed_separately():
     """Each panel's F1 computed independently"""
@@ -138,7 +138,7 @@ python main.py --config configs/final.yaml --smoke-test
 #### Failure Mode 4: Threshold Not Applied
 - Source: Using `model.predict()` instead of `(model.predict_proba()[:,1] >= threshold)`
 - Detection: Verify prediction logic in inference pipeline
-- Impact: All predictions use 0.5 threshold instead of 0.4357 → different F1
+- Impact: All predictions use 0.5 threshold instead of 0.241 → different F1
 
 #### Failure Mode 5: Panel Code Mismatch
 - Source: Code uses "Hereditary_Cancer" but submission expects "KANSER"

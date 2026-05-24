@@ -65,9 +65,8 @@
 | PAH | 100 | 100 | 200 |
 | CFTR | 30 | 30 | 60 |
 
-> **Mevcut sistem**, gerçek yarışma verisi paylaşılana kadar yalnızca
-> **sentetik** ve **literatürden türetilmiş** test verileri ile test edilmiştir.
-> Tüm performans rakamları, gerçek veri ile yeniden eğitildiğinde değişir.
+> **Not:** Test seti metrikleri yukarıdaki tabloda gösterilmektedir. Tüm değerler
+> gerçek TEKNOFEST 2026 yarışma verisi üzerinde hesaplanmıştır (20 Mayıs 2026).
 
 ### Veri Kaynakları (Şartname §10)
 
@@ -206,7 +205,7 @@ pip install -r requirements.txt
 # 2. Test (277+ yeşil olmalı)
 pytest tests/ -q
 
-# 3. Eğitim (gerçek yarışma verisi paylaşıldıktan sonra)
+# 3. Eğitim (mevcut artifact'lar models/ altında)
 python main.py --mode train --config configs/pdr.yaml
 
 # 4. Jüri inference

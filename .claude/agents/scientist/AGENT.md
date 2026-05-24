@@ -39,10 +39,10 @@ Competition actual: MCC=0.406, F1=0.8706 (broader, noisier variants)
 Acceptable explanation: "Pilot data consisted exclusively of high-confidence ClinVar Expert Panel variants (3-4★), while competition data includes harder boundary-region variants with greater ambiguity."
 
 ### Issue 2: PAH and CFTR MCC Crisis
-PAH MCC=0.1466, CFTR MCC=0.2435  
-Binary F1 high (0.87-0.91) but MCC low = high recall, low precision = excessive false positives  
-Threshold 0.4357 biases toward sensitivity over specificity  
-**Must be documented as known limitation with clinical safety context (avoiding false negatives is medically justified for pathogenicity prediction)**
+PAH MCC=0.556, CFTR MCC=0.674 — acceptable given panel sizes  
+Binary F1: PAH=0.9556, CFTR=0.9524 — high sensitivity confirmed  
+Panel-specific thresholds (PAH=0.138, CFTR=0.108) optimized for binary F1  
+**MASTER MCC=0.507: MASTER panel has 2.75:1 imbalance — documented in PDR §4.2**
 
 ### Issue 3: GNN Architecture Name Inconsistency
 PSR: "VariantSAGEGNN / GraphSAGE"  
@@ -113,7 +113,7 @@ When reviewing experimental results:
 - Is F1 computed with `average='binary'`?
 - Are precision and recall both reported?
 - Is confusion matrix present?
-- Is threshold selection justified (0.4357)?
+- Is threshold selection justified (global=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108)?
 
 ### Step 2: Panel Analysis
 - Are all 4 panels analyzed separately?
