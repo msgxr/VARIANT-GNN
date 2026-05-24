@@ -39,5 +39,5 @@ py3Dmol>=2.0.0,<3.0
 # ── REST API + load testing (opsiyonel — variant-gnn-api Docker servisi için) ──
 fastapi>=0.110.0,<1.0
 uvicorn[standard]>=0.27.0,<1.0
-python-multipart>=0.0.9,<1.0
+python-multipart>=0.0.29,<1.0
 locust>=2.24.0,<3.0
