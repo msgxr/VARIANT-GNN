@@ -285,7 +285,7 @@ jobs:
           cache: pip
 
       - name: Download test reports (py3.11)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: test-reports-py3.11
           path: reports/
