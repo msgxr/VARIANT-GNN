@@ -5,7 +5,8 @@
     "empirical_coverage": 0.9434954007884363,
     "is_valid": true,
     "singleton_pct": 81.1,
-    "abstain_pct": 18.9
+    "abstain_pct": 18.9,
+    "empty_pct": 0.0
   },
   "95%": {
     "alpha": 0.05,
@@ -13,14 +14,16 @@
     "empirical_coverage": 0.9434954007884363,
     "is_valid": true,
     "singleton_pct": 81.1,
-    "abstain_pct": 18.9
+    "abstain_pct": 18.9,
+    "empty_pct": 0.0
   },
   "99%": {
     "alpha": 0.01,
     "target_coverage": 0.99,
-    "empirical_coverage": 0.9868593955321945,
+    "empirical_coverage": 0.9908015768725361,
     "is_valid": true,
-    "singleton_pct": 44.8,
-    "abstain_pct": 55.2
+    "singleton_pct": 39.4,
+    "abstain_pct": 60.6,
+    "empty_pct": 0.0
   }
 }

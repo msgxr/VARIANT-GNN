@@ -38,10 +38,11 @@ reset_settings()
 cfg = get_settings(str(REPO / "configs" / "pdr.yaml"))
 set_global_seed(42)
 
-print("Veri yükleniyor...")
-ds = load_csv(str(REPO / "data" / "train_variants_aug.csv"))
+print("Veri yükleniyor (orijinal, augmented değil)...")
+ds = load_csv(str(REPO / "data" / "train_variants.csv"))
 X, y = ds.features.values, ds.labels
 
+# Orijinal veri: PDR confusion matrix (N=760) ile tutarlı bölme
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 X_tr2, X_cal, y_tr2, y_cal = train_test_split(X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=42+99)
 

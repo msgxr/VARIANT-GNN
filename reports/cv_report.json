@@ -6,8 +6,8 @@
   "std_cv_binary_f1": 0.008120142051944742,
   "test_binary_f1": 0.8979926259729619,
   "test_macro_f1": 0.7418415708899752,
-  "best_threshold": 0.01,
-  "threshold_source": "calibration_set",
+  "best_threshold": 0.241,
+  "threshold_source": "panel_thresholds.json — F1-optimal on calibration set",
   "feature_coverage": 0.0,
   "feature_coverage_note": "Yarışma verisi anonim kolonlar kullanıyor (AL_x, EK_x vb.) — 0.0 beklenen davranış; §3.2 uyumu ColumnAligner tarafından sağlanıyor.",
   "anonymous_columns": 343,
@@ -137,5 +137,5 @@
     "Hereditary_Cancer": 0.9524,
     "PAH": 0.976
   },
-  "threshold_note": "best_threshold=0.01 is the F1-maximizing threshold on the calibration set under the specific class distribution of the real competition data (Pathogenic:Benign ratio ~2.86:1). The production decision threshold theta=0.241 is stored in panel_thresholds.__global__ and models/threshold.json. Test metrics in this report were computed at threshold=0.01 (max-recall configuration). PDR reports use theta=0.241 (F1-balanced configuration)."
+  "threshold_note": "Production decision threshold theta=0.241 (global, F1-optimal). Panel-specific: General=0.241, Hereditary_Cancer=0.281, PAH=0.138, CFTR=0.108. Stored in models/threshold.json and models/panel_thresholds.json. Test metrics computed at theta=0.241."
 }
