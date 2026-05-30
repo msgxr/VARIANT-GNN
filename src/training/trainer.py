@@ -409,6 +409,32 @@ class VariantTrainer:
                                    random_state=cfg.seed)
             X_train_all, _X_test = X[idx_tr], X[idx_te]
             y_train_all, _y_test = y[idx_tr], y[idx_te]
+
+            # ── ConfidentLearner — opsiyonel etiket gürültüsü filtresi ──────
+            # use_label_cleaning=True ile gürültülü örnekler eğitimden çıkarılır.
+            # Referans: Northcutt et al. (2021) JAIR 70:1373; §4.4 veri kalitesi
+            if getattr(getattr(cfg, "training", cfg), "use_label_cleaning", False):
+                try:
+                    from src.scientific.label_quality import ConfidentLearner
+                    from src.features.preprocessing import VariantPreprocessor
+                    _cl = ConfidentLearner(noise_threshold=0.45)
+                    _preproc_tmp = VariantPreprocessor()
+                    _X_tmp, _y_tmp = _preproc_tmp.fit_resample_train(
+                        X_train_all, y_train_all
+                    )
+                    _report = _cl.fit(_X_tmp, _y_tmp)
+                    _clean_mask = _report.clean_mask()
+                    _keep = np.where(_clean_mask)[0]
+                    X_train_all = X_train_all[_keep]
+                    y_train_all = y_train_all[_keep]
+                    logger.info(
+                        "ConfidentLearner: %d → %d örnek (%d şüpheli çıkarıldı, "
+                        "tahmini gürültü %%%.1f)",
+                        len(_clean_mask), len(_keep),
+                        _report.n_flagged, _report.estimated_noise_rate * 100,
+                    )
+                except Exception as _cl_err:
+                    logger.warning("ConfidentLearner atlandı: %s", _cl_err)
             nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
             aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
 
