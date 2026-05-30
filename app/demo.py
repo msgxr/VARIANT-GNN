@@ -30,8 +30,7 @@ def load_pipeline():
     reset_settings()
     cfg = get_settings(str(REPO / "configs" / "pdr.yaml"))
     store = ModelStore(cfg.paths.models_dir)
-    preproc = store.load_preprocessor()
-    ensemble = store.load_ensemble()
+    preproc, ensemble, _ = store.load_all()
     thresholds = json.loads((REPO / "models" / "panel_thresholds.json").read_text())
     return preproc, ensemble, thresholds
 
