@@ -1,1 +1,8 @@
-{"type": "VariantSAGEGNN", "numeric_dim": 50, "hidden_dim": 64, "use_multimodal": false}
+{
+  "type": "VariantGATv2GNN",
+  "numeric_dim": 51,
+  "hidden_dim": 128,
+  "use_multimodal": false,
+  "heads": 4,
+  "note": "Ger\u00e7ek checkpoint boyutlar\u0131ndan t\u00fcretildi (input_proj.weight=[128,51])"
+}

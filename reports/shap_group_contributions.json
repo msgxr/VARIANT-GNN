@@ -86,5 +86,58 @@
       "expected_pct": 2.0
     }
   ],
-  "note": "AL_x kolonları PSR §4.4 pozisyonel dağılımına göre gruplara atandı. AE latent boyutlar dominant gruba (in_silico_risk) atandı."
+  "note": "AL_x kolonları PSR §4.4 pozisyonel dağılımına göre gruplara atandı. AE latent boyutlar dominant gruba (in_silico_risk) atandı.",
+  "full_spectrum_kb_scores": {
+    "in_silico_risk": 31.2,
+    "evolutionary_conservation": 68.8,
+    "population_data": 0.0,
+    "biochemical_structural": 0.0,
+    "sequence_context": 0.0,
+    "local_sequence": 0.0
+  },
+  "full_spectrum_ranked": [
+    {
+      "group_key": "evolutionary_conservation",
+      "label_tr": "Evrimsel Korunmuşluk",
+      "contribution_pct": 68.8,
+      "expected_pct": 27.0,
+      "n_features": 90
+    },
+    {
+      "group_key": "in_silico_risk",
+      "label_tr": "In Silico Risk Skorları",
+      "contribution_pct": 31.2,
+      "expected_pct": 38.0,
+      "n_features": 130
+    },
+    {
+      "group_key": "population_data",
+      "label_tr": "Popülasyon Verileri",
+      "contribution_pct": 0.0,
+      "expected_pct": 18.0,
+      "n_features": 0
+    },
+    {
+      "group_key": "biochemical_structural",
+      "label_tr": "Biyokimyasal/Yapısal",
+      "contribution_pct": 0.0,
+      "expected_pct": 10.0,
+      "n_features": 0
+    },
+    {
+      "group_key": "sequence_context",
+      "label_tr": "Sekans Bağlamı",
+      "contribution_pct": 0.0,
+      "expected_pct": 5.0,
+      "n_features": 0
+    },
+    {
+      "group_key": "local_sequence",
+      "label_tr": "Yerel Sekans Özellikleri",
+      "contribution_pct": 0.0,
+      "expected_pct": 2.0,
+      "n_features": 0
+    }
+  ],
+  "note_full_spectrum": "SelectKBest F-skor tabanlı tam spektrum analizi (220 numerik özellik). Evrimsel korunmuşluk özellikleri dominant (AL_128-217 aralığı yüksek F-skoru). SHAP sadece seçili 35 özelliği gösterirken tam spektrum 0% olmayan grupları ortaya çıkarır."
 }
