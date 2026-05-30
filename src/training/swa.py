@@ -69,8 +69,8 @@ class SWABuffer:
         swa_start_fraction: float = 0.75,
         max_checkpoints: int = 10,
     ) -> None:
-        if not 0.0 < swa_start_fraction < 1.0:
-            raise ValueError("swa_start_fraction must be in (0, 1).")
+        if not 0.0 <= swa_start_fraction < 1.0:
+            raise ValueError("swa_start_fraction must be in [0, 1).")
         self.swa_start_fraction = swa_start_fraction
         self.max_checkpoints    = max_checkpoints
         self._checkpoints: Deque[Dict[str, torch.Tensor]] = deque(maxlen=max_checkpoints)
