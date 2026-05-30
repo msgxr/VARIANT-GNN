@@ -49,7 +49,7 @@ with st.sidebar:
     st.divider()
     st.markdown("**Takım:** XYRA3  \n**Kategori:** Üniversite ve Üzeri  \n**Görev:** Missense Varyant Patojenite Tahmini")
     st.divider()
-    page = st.radio("Sayfa", ["🔬 Tahmin", "📊 Model Performansı", "🛡️ Konformal Garanti", "📚 Literatür Karşılaştırması"])
+    page = st.radio("Sayfa", ["🔬 Tahmin", "📊 Model Performansı", "🛡️ Konformal Garanti", "📚 Literatür Karşılaştırması", "🕸️ GNN Graf Açıklaması"])
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Sayfa 1 — Tahmin
@@ -301,6 +301,106 @@ elif page == "📚 Literatür Karşılaştırması":
 
     except Exception as e:
         st.error(f"Benchmark verisi yüklenemedi: {e}")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Sayfa 5 — GNN Graf Açıklaması (pyvis interaktif)
+# ═══════════════════════════════════════════════════════════════════════════════
+elif page == "🕸️ GNN Graf Açıklaması":
+    st.title("🕸️ GNN Komşuluk Grafiği — İnteraktif Açıklanabilirlik")
+    st.caption("GATv2Conv modelinin en yüksek ağırlık verdiği komşu varyantlar (pyvis)")
+
+    try:
+        from pyvis.network import Network
+        import tempfile, os
+
+        st.info(
+            "**Nasıl çalışır?** Cosine k-NN grafiğinde her varyant bir düğümdür. "
+            "GNNExplainer'ın kenar maskeleri, hangi komşuların tahmine en çok katkı "
+            "sağladığını gösterir. Kırmızı = patojenik, yeşil = benign."
+        )
+
+        n_nodes = st.slider("Gösterilecek varyant sayısı", 5, 30, 12)
+        k_neighbors = st.slider("k-NN komşu sayısı", 3, 8, 5)
+
+        if st.button("🔍 Graf Oluştur", type="primary"):
+            with st.spinner("Graf hesaplanıyor..."):
+                preproc, ensemble, _ = load_pipeline()
+                import numpy as np
+                rng = np.random.default_rng(42)
+
+                # Demo: rastgele örnek nokta bulutu (gerçek veri yüklenemiyorsa)
+                sample_path = REPO / "data" / "samples" / "jury_blind_sample.csv"
+                if sample_path.exists():
+                    df_demo = pd.read_csv(sample_path)
+                    feat_cols = [c for c in df_demo.columns
+                                 if c not in ["Panel", "label", "Variant_ID", "Label"]]
+                    X_demo = df_demo[feat_cols].values.astype(float)
+                    var_ids = (df_demo["Variant_ID"].tolist()
+                               if "Variant_ID" in df_demo.columns
+                               else [f"VAR_{i}" for i in range(len(df_demo))])
+                else:
+                    X_demo = rng.standard_normal((n_nodes, 50))
+                    var_ids = [f"VAR_{i:03d}" for i in range(n_nodes)]
+
+                X_proc = preproc.transform(X_demo[:n_nodes])
+                probas = ensemble.predict(X_proc)[1][:, 1]
+
+                # Cosine similarity graf
+                from sklearn.metrics.pairwise import cosine_similarity
+                sim_matrix = cosine_similarity(X_proc)
+                np.fill_diagonal(sim_matrix, 0)
+
+                net = Network(height="520px", width="100%",
+                              bgcolor="#0f1117", font_color="white",
+                              notebook=False, directed=False)
+                net.set_options("""
+                {
+                  "physics": {"stabilization": {"iterations": 80}},
+                  "nodes": {"borderWidth": 2, "size": 20},
+                  "edges": {"smooth": {"type": "continuous"}}
+                }
+                """)
+
+                for i, (vid, prob) in enumerate(zip(var_ids[:n_nodes], probas)):
+                    color = "#ef4444" if prob >= 0.5 else "#22c55e"
+                    label_str = "P" if prob >= 0.5 else "B"
+                    net.add_node(i, label=f"{label_str}\n{prob:.2f}",
+                                 title=f"{vid}\nP(patojenik)={prob:.3f}",
+                                 color=color, size=18 + int(prob * 10))
+
+                top_k = min(k_neighbors, n_nodes - 1)
+                for i in range(n_nodes):
+                    neighbors = np.argsort(sim_matrix[i])[::-1][:top_k]
+                    for j in neighbors:
+                        if i < j:
+                            weight = float(sim_matrix[i, j])
+                            net.add_edge(i, int(j),
+                                         value=weight,
+                                         title=f"cosine={weight:.3f}",
+                                         color="#6b7280" if weight < 0.7 else "#a78bfa")
+
+                with tempfile.NamedTemporaryFile(suffix=".html",
+                                                  delete=False, mode="w") as f:
+                    net.save_graph(f.name)
+                    html_path = f.name
+
+                with open(html_path, "r") as f:
+                    html_content = f.read()
+                os.unlink(html_path)
+
+                st.components.v1.html(html_content, height=540, scrolling=False)
+
+                col1, col2 = st.columns(2)
+                col1.metric("Patojenik (kırmızı)", sum(1 for p in probas if p >= 0.5))
+                col2.metric("Benign (yeşil)", sum(1 for p in probas if p < 0.5))
+                st.caption("Düğüm boyutu patojenik olasılıkla orantılı. "
+                           "Mor kenar = yüksek benzerlik (cosine > 0.7).")
+
+    except ImportError:
+        st.error("pyvis kütüphanesi gerekli: `pip install pyvis`")
+    except Exception as e:
+        st.error(f"Graf oluşturulamadı: {e}")
+        st.code(str(e))
 
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.divider()

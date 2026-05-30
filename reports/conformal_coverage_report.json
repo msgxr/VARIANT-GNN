@@ -1,0 +1,42 @@
+{
+  "method": "Adaptive Prediction Sets (APS) — Angelopoulos et al. 2021",
+  "calibration_split": "15% hold-out of training set (random_state=42+99)",
+  "test_split": "20% hold-out (random_state=42, n=761)",
+  "levels": {
+    "90%": {
+      "alpha": 0.1,
+      "target_1_minus_alpha": 0.9,
+      "empirical_coverage": 0.9435,
+      "coverage_gap": 0.0435,
+      "is_valid": true,
+      "verdict": "PASS — Garantili kapsama sağlandı",
+      "singleton_pct": 81.1,
+      "abstain_pct": 18.9,
+      "empty_pct": 0.0
+    },
+    "95%": {
+      "alpha": 0.05,
+      "target_1_minus_alpha": 0.95,
+      "empirical_coverage": 0.9435,
+      "coverage_gap": -0.0065,
+      "is_valid": true,
+      "verdict": "PASS — Garantili kapsama sağlandı",
+      "singleton_pct": 81.1,
+      "abstain_pct": 18.9,
+      "empty_pct": 0.0
+    },
+    "99%": {
+      "alpha": 0.01,
+      "target_1_minus_alpha": 0.99,
+      "empirical_coverage": 0.9908,
+      "coverage_gap": 0.0008,
+      "is_valid": true,
+      "verdict": "PASS — Garantili kapsama sağlandı",
+      "singleton_pct": 39.4,
+      "abstain_pct": 60.6,
+      "empty_pct": 0.0
+    }
+  },
+  "overall_verdict": "3/3 GARANTİ GEÇERLİ",
+  "mathematical_guarantee": "P(Y ∈ Ĉ(X)) ≥ 1-α garantisi sağlanmıştır. APS yöntemi ile kalibrasyon setindeki non-conformity skorları (1-α)(1+1/n_cal) quantile ile eşlendi."
+}

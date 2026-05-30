@@ -65,6 +65,8 @@ reports/*.bak
 !reports/threshold_analysis.json
 !reports/conformal_results.json
 !reports/shap_group_contributions.json
+!reports/conformal_coverage_report.json
+!reports/generalization_analysis.json
 !reports/label_quality_report.json
 
 # Eğitim logları
@@ -140,7 +142,7 @@ submission/archive/
 
 # Büyük yarışma dosyaları (NDA gereği repoda olmamalı)
 *.docx
-create_*.py
+# create_*.py — scripts/altina tasindi
 markdown_to_word.py
 VARIANT_GNN_*.docx
 
