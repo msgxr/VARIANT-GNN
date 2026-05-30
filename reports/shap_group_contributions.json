@@ -1,0 +1,90 @@
+{
+  "method": "XGBoost TreeExplainer — mean |SHAP| on test subset (n=500)",
+  "n_features_total": 51,
+  "n_kb_features": 35,
+  "n_ae_features": 16,
+  "selected_kb_features": [
+    "AL_11",
+    "AL_12",
+    "AL_13",
+    "AL_15",
+    "AL_16",
+    "AL_63",
+    "AL_66",
+    "AL_67",
+    "AL_125",
+    "AL_127",
+    "AL_128",
+    "AL_130",
+    "AL_131",
+    "AL_132",
+    "AL_135",
+    "AL_137",
+    "AL_140",
+    "AL_145",
+    "AL_149",
+    "AL_150",
+    "AL_151",
+    "AL_155",
+    "AL_157",
+    "AL_161",
+    "AL_171",
+    "AL_185",
+    "AL_194",
+    "AL_196",
+    "AL_199",
+    "AL_208",
+    "AL_209",
+    "AL_210",
+    "AL_211",
+    "AL_212",
+    "AL_213"
+  ],
+  "group_contributions_pct": {
+    "in_silico_risk": 41.3,
+    "evolutionary_conservation": 58.7,
+    "population_data": 0.0,
+    "biochemical_structural": 0.0,
+    "sequence_context": 0.0,
+    "local_sequence": 0.0
+  },
+  "ranked_groups": [
+    {
+      "group_key": "evolutionary_conservation",
+      "label_tr": "Evrimsel Korunmuşluk",
+      "contribution_pct": 58.7,
+      "expected_pct": 27.0
+    },
+    {
+      "group_key": "in_silico_risk",
+      "label_tr": "In Silico Risk Skorları",
+      "contribution_pct": 41.3,
+      "expected_pct": 38.0
+    },
+    {
+      "group_key": "population_data",
+      "label_tr": "Popülasyon Verileri",
+      "contribution_pct": 0.0,
+      "expected_pct": 18.0
+    },
+    {
+      "group_key": "biochemical_structural",
+      "label_tr": "Biyokimyasal/Yapısal",
+      "contribution_pct": 0.0,
+      "expected_pct": 10.0
+    },
+    {
+      "group_key": "sequence_context",
+      "label_tr": "Sekans Bağlamı",
+      "contribution_pct": 0.0,
+      "expected_pct": 5.0
+    },
+    {
+      "group_key": "local_sequence",
+      "label_tr": "Yerel Sekans Özellikleri",
+      "contribution_pct": 0.0,
+      "expected_pct": 2.0
+    }
+  ],
+  "note": "AL_x kolonları PSR §4.4 pozisyonel dağılımına göre gruplara atandı. AE latent boyutlar dominant gruba (in_silico_risk) atandı."
+}

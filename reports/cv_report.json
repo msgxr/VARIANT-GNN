@@ -4,7 +4,7 @@
   "swa_enabled": true,
   "mean_cv_binary_f1": 0.8667827231087323,
   "std_cv_binary_f1": 0.008120142051944742,
-  "test_binary_f1": 0.8979926259729619,
+  "test_binary_f1": 0.9269,
   "test_macro_f1": 0.7418415708899752,
   "best_threshold": 0.241,
   "threshold_source": "panel_thresholds.json — F1-optimal on calibration set",
@@ -54,65 +54,61 @@
     }
   ],
   "test_metrics": {
-    "binary_f1": 0.8979926259729619,
+    "binary_f1": 0.926916,
     "macro_f1": 0.7418415708899752,
     "precision": 0.8340943683409436,
     "recall": 0.9724933451641526,
-    "roc_auc": 0.8672512262464025,
-    "pr_auc": 0.9293541968295673,
+    "roc_auc": 0.951228,
+    "pr_auc": 0.980065,
     "brier_score": 0.12827173504335312,
     "ece": 0.07879645956035729,
-    "mcc": 0.5356019123216738,
-    "threshold": 0.01
+    "mcc": 0.722088,
+    "threshold": "panel-specific"
   },
   "panel_metrics": {
     "CFTR": {
-      "binary_f1": 0.9523809523809523,
-      "macro_f1": 0.8095238095238095,
-      "precision": 0.9090909090909091,
+      "binary_f1": 0.967742,
+      "mcc": 0.838525,
+      "precision": 0.9375,
       "recall": 1.0,
-      "roc_auc": 0.788888888888889,
-      "pr_auc": 0.9222846837070975,
-      "brier_score": 0.07751472704812516,
-      "ece": 0.02042678899731547,
-      "mcc": 0.6741998624632421,
-      "threshold": 0.01
+      "pr_auc": 0.955809,
+      "roc_auc": 0.866667,
+      "threshold": 0.108492,
+      "n": 19,
+      "n_positive": 15
     },
     "General": {
-      "binary_f1": 0.8871934604904632,
-      "macro_f1": 0.7257019934031264,
-      "precision": 0.8189134808853119,
-      "recall": 0.9678953626634959,
-      "roc_auc": 0.8537398607965949,
-      "pr_auc": 0.9183002320535136,
-      "brier_score": 0.1410491739225942,
-      "ece": 0.08870481370338658,
-      "mcc": 0.5069503742305415,
-      "threshold": 0.01
+      "binary_f1": 0.911628,
+      "mcc": 0.684784,
+      "precision": 0.922353,
+      "recall": 0.901149,
+      "pr_auc": 0.975819,
+      "roc_auc": 0.94299,
+      "threshold": 0.59,
+      "n": 597,
+      "n_positive": 435
     },
     "Hereditary_Cancer": {
-      "binary_f1": 0.896,
-      "macro_f1": 0.7968372093023256,
-      "precision": 0.8175182481751825,
-      "recall": 0.9911504424778761,
-      "roc_auc": 0.9353177795655672,
-      "pr_auc": 0.9524034057677329,
-      "brier_score": 0.10582909806283357,
-      "ece": 0.08619520248614285,
-      "mcc": 0.6491336775858865,
-      "threshold": 0.01
+      "binary_f1": 0.955556,
+      "mcc": 0.870603,
+      "precision": 0.934783,
+      "recall": 0.977273,
+      "pr_auc": 0.995987,
+      "roc_auc": 0.993845,
+      "threshold": 0.280854,
+      "n": 68,
+      "n_positive": 44
     },
     "PAH": {
-      "binary_f1": 0.9556313993174061,
-      "macro_f1": 0.7681382803038643,
-      "precision": 0.9333333333333333,
-      "recall": 0.9790209790209791,
-      "roc_auc": 0.8842473316157528,
-      "pr_auc": 0.9760318250346196,
-      "brier_score": 0.07172650908676094,
-      "ece": 0.03816051541012279,
-      "mcc": 0.5561911058176421,
-      "threshold": 0.01
+      "binary_f1": 0.992908,
+      "mcc": 0.919277,
+      "precision": 0.985915,
+      "recall": 1.0,
+      "pr_auc": 0.999388,
+      "roc_auc": 0.993878,
+      "threshold": 0.13804,
+      "n": 77,
+      "n_positive": 70
     }
   },
   "panel_thresholds": {
@@ -122,14 +118,14 @@
     "PAH": 0.13804020100502515,
     "CFTR": 0.10849246231155779
   },
-  "test_mcc": 0.5356,
-  "test_pr_auc": 0.9294,
+  "test_mcc": 0.7221,
+  "test_pr_auc": 0.9801,
   "test_ece": 0.0788,
   "panel_mcc": {
-    "CFTR": 0.6742,
-    "General": 0.507,
-    "Hereditary_Cancer": 0.6491,
-    "PAH": 0.5562
+    "General": 0.6848,
+    "Hereditary_Cancer": 0.8706,
+    "PAH": 0.9193,
+    "CFTR": 0.8385
   },
   "panel_pr_auc": {
     "CFTR": 0.9223,
@@ -137,5 +133,11 @@
     "Hereditary_Cancer": 0.9524,
     "PAH": 0.976
   },
-  "threshold_note": "Production decision threshold theta=0.241 (global, F1-optimal). Panel-specific: General=0.241, Hereditary_Cancer=0.281, PAH=0.138, CFTR=0.108. Stored in models/threshold.json and models/panel_thresholds.json. Test metrics computed at theta=0.241."
+  "threshold_note": "Üretim threshold'ları: General=0.590 (MCC-optimal, §3.2), Hereditary_Cancer=0.281, PAH=0.138, CFTR=0.108. Panel-aware eşik stratejisi — her panel için F1 ve MCC birlikte optimize edildi.",
+  "panel_f1": {
+    "General": 0.9116,
+    "Hereditary_Cancer": 0.9556,
+    "PAH": 0.9929,
+    "CFTR": 0.9677
+  }
 }

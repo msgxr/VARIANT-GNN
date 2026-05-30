@@ -91,26 +91,68 @@ _GROUP_ORDER = [
 def assign_feature_group(feature_name: str) -> str:
     """Özellik adını 6 biyolojik kategoriden birine atar.
 
-    Anonim sütunlar (Col_0, 0, feature_12 vb.) 'in_silico_risk'e fallback eder.
+    TEKNOFEST 2026 anonim kolon şeması (PSR §4.4 dağılımına göre):
+      AL_x   : Pozisyonel atama — indeks aralığına göre (334 toplam AL kolonu)
+                 1–127  → in_silico_risk        (%38)
+                 128–217 → evolutionary_conservation (%27)
+                 218–278 → population_data      (%18)
+                 279–314 → biochemical_structural (%11)
+                 315–334 → sequence_context     (%6)
+      CAT_x  : Kategorik amino asit değişim tipi → biochemical_structural
+      EK_x   : Ek in-silico skorlar              → in_silico_risk
+      AA_x   : Amino asit özellikleri            → biochemical_structural
+      ae_x   : AutoEncoder latent boyutlar       → in_silico_risk (dominant grup)
     """
     name_lower = feature_name.lower()
 
-    # Anonim kolon tespiti
+    # ── AL_x anonim sayısal kolonlar ──────────────────────────────────────────
+    if name_lower.startswith("al_"):
+        try:
+            idx = int(name_lower[3:])
+        except ValueError:
+            return "in_silico_risk"
+        # AL kolonları 1-334 arası; 334 toplam × PSR §4.4 oranlarına göre
+        if idx <= 127:
+            return "in_silico_risk"
+        elif idx <= 217:
+            return "evolutionary_conservation"
+        elif idx <= 278:
+            return "population_data"
+        elif idx <= 314:
+            return "biochemical_structural"
+        else:
+            return "sequence_context"
+
+    # ── CAT_x kategorik değişim tipi kolonları ────────────────────────────────
+    if name_lower.startswith("cat_"):
+        return "biochemical_structural"
+
+    # ── EK_x ek in-silico skor kolonları ──────────────────────────────────────
+    if name_lower.startswith("ek_"):
+        return "in_silico_risk"
+
+    # ── AA_x amino asit özellik kolonları ─────────────────────────────────────
+    if name_lower.startswith("aa_"):
+        return "biochemical_structural"
+
+    # ── AutoEncoder latent boyutları ──────────────────────────────────────────
+    if name_lower.startswith("ae_") or name_lower.startswith("latent_"):
+        return "in_silico_risk"
+
+    # ── col_ / feature_ eski kolon isimleri (geriye uyum) ────────────────────
     if name_lower.startswith(("col_", "feature_")) or name_lower.isdigit():
-        # Sütun indeksine göre deterministik atama (dağılımı yansıtmak için)
         try:
             idx = int(name_lower.split("_")[-1])
         except ValueError:
             idx = 0
-        groups = _GROUP_ORDER
-        # Yaklaşık PSR dağılımını yansıt: ilk gruba daha fazla anonim sütun
         thresholds = [38, 65, 83, 93, 98, 100]
         slot = idx % 100
         for i, t in enumerate(thresholds):
             if slot < t:
-                return groups[i]
-        return groups[-1]
+                return _GROUP_ORDER[i]
+        return _GROUP_ORDER[-1]
 
+    # ── İsme göre anahtar kelime eşleştirme ──────────────────────────────────
     for group_key, info in BIOLOGICAL_GROUPS.items():
         for kw in info["keywords"]:
             if kw in name_lower:

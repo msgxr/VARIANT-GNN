@@ -64,6 +64,7 @@ reports/*.bak
 !reports/benchmark_comparison.json
 !reports/threshold_analysis.json
 !reports/conformal_results.json
+!reports/shap_group_contributions.json
 
 # Eğitim logları
 train_log.txt

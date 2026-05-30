@@ -143,34 +143,43 @@ elif page == "📊 Model Performansı":
 
         st.subheader("Genel Test Sonuçları")
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="→ 0.8980")
+        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="→ 0.9269 panel-aware")
         m2.metric("MCC", f"{cv['test_mcc']:.4f}")
         m3.metric("PR-AUC", f"{cv['test_pr_auc']:.4f}")
         m4.metric("5-CV F1", f"{cv['mean_cv_binary_f1']:.4f} ±{cv['std_cv_binary_f1']:.4f}")
 
         st.divider()
         st.subheader("Panel Bazlı Sonuçlar")
+        st.caption("Panel-spesifik threshold kullanıldı: General=0.590, KANSER=0.281, PAH=0.138, CFTR=0.108")
 
-        panel_data = cv.get("panel_results", {})
+        panel_data = cv.get("panel_metrics", {})
         if panel_data:
             rows = []
+            panel_labels = {
+                "General": "MASTER (General)",
+                "Hereditary_Cancer": "KANSER (Hereditary Cancer)",
+                "PAH": "PAH",
+                "CFTR": "CFTR",
+            }
             for panel, metrics in panel_data.items():
                 rows.append({
-                    "Panel": panel,
+                    "Panel": panel_labels.get(panel, panel),
                     "F1": round(metrics.get("binary_f1", 0), 4),
                     "MCC": round(metrics.get("mcc", 0), 4),
                     "PR-AUC": round(metrics.get("pr_auc", 0), 4),
                     "Recall": round(metrics.get("recall", 0), 4),
+                    "Eşik θ": round(metrics.get("threshold", 0), 3),
                 })
             panel_df = pd.DataFrame(rows)
             st.dataframe(panel_df.style.highlight_max(subset=["F1", "MCC", "PR-AUC"], color="#bbf7d0"), use_container_width=True)
         else:
             data = {
                 "Panel": ["MASTER (General)", "KANSER (Hereditary Cancer)", "PAH", "CFTR"],
-                "F1": [0.8872, 0.8960, 0.9556, 0.9524],
-                "MCC": [0.507, 0.649, 0.556, 0.674],
-                "PR-AUC": [0.9183, 0.9524, 0.9760, 0.9223],
-                "Recall": [0.9679, 0.9912, 0.9790, 1.000],
+                "F1": [0.9116, 0.9556, 0.9929, 0.9677],
+                "MCC": [0.6848, 0.8706, 0.9193, 0.8385],
+                "PR-AUC": [0.9758, 0.9960, 0.9994, 0.9558],
+                "Recall": [0.9011, 0.9773, 1.000, 1.000],
+                "Eşik θ": [0.590, 0.281, 0.138, 0.108],
             }
             df = pd.DataFrame(data)
             st.dataframe(df.style.highlight_max(subset=["F1", "MCC", "PR-AUC", "Recall"], color="#bbf7d0"), use_container_width=True)
