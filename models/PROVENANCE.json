@@ -45,5 +45,24 @@
   "retrain_command": "python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants_aug.csv",
   "predict_command": "python main.py --mode predict --test_file data/<jury_test.csv> --config configs/pdr.yaml",
   "validation_command": "python main.py --mode external_val --test_file data/<test_labelled.csv> --config configs/pdr.yaml",
-  "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir) + Gaussian augmentation (7604 satir toplam). NDA kapsamindaki veri lokal makinede kalmistir."
+  "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir) + Gaussian augmentation (7604 satir toplam). NDA kapsamindaki veri lokal makinede kalmistir.",
+  "global_threshold_strategy": "MCC-optimal (F1 >= baseline-0.01 k\u0131s\u0131t\u0131yla)",
+  "panel_optimal_threshold_mcc": {
+    "General": 0.59,
+    "Hereditary_Cancer": 0.2808542713567839,
+    "PAH": 0.13804020100502515,
+    "CFTR": 0.10849246231155779
+  },
+  "master_mcc_optimization": {
+    "method": "5-fold CV threshold sweep on XGBoost (F1 floor = baseline-0.01)",
+    "old_threshold": 0.241,
+    "new_threshold": 0.59,
+    "cv_mcc_before": 0.5452,
+    "cv_mcc_after": 0.6732,
+    "delta_mcc": 0.128,
+    "cv_f1_before": 0.9001,
+    "cv_f1_after": 0.9049,
+    "delta_f1": 0.0048,
+    "note": "No retraining \u2014 decision boundary optimization only"
+  }
 }

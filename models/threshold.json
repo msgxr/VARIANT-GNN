@@ -1,5 +1,5 @@
 {
-  "threshold": 0.24145728643216083,
+  "threshold": 0.59,
   "source": "calibration_set",
   "metric": "F1_max"
 }
