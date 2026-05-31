@@ -1,6 +1,20 @@
 {
+  "description": "Global eşik analizi — tüm paneller birleştirilmiş ham çıktı üzerinde. Panel-spesifik eşikler için panel_thresholds.json bakınız.",
+  "scope": "global_combined_all_panels",
   "optimal_threshold": 0.30000000000000004,
   "optimal_f1": 0.9070331447049312,
+  "production_setup": {
+    "approach": "panel_specific_thresholds",
+    "thresholds": {
+      "General": 0.590,
+      "Hereditary_Cancer": 0.281,
+      "PAH": 0.138,
+      "CFTR": 0.108
+    },
+    "production_f1": 0.9269,
+    "why_better_than_global": "Global optimal eşik (θ=0.30) tüm panellere tek bir karar sınırı uygular. Panel-spesifik eşikler, her panelin sınıf dengesizliğine ve klinik önceliğine göre kalibre edilir: PAH/CFTR için düşük eşik yüksek recall sağlar (nadir hastalık, FN maliyeti yüksek); General için yüksek eşik (θ=0.590) precision'ı artırır (2.75:1 dengesizlik, FP maliyeti azaltılır). Sonuç: global 0.907 → panel-spesifik 0.9269 (+2.2pp F1)."
+  },
+  "interpretation_note": "Bu dosyadaki 'optimal_threshold: 0.30' değeri tüm panellerin birleşik metriğidir ve karşılaştırma referansı olarak tutulmuştur. Üretim (submission) kodunda panel_thresholds.json kullanılır.",
   "curve": [
     {
       "threshold": 0.05,
