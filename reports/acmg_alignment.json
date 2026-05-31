@@ -1,0 +1,107 @@
+{
+  "title": "ACMG/AMP 2015 Kriter Hizalaması — VARIANT-GNN Özellik Uzayı",
+  "reference": "Richards et al. (2015). Genetics in Medicine 17(5):405–424. | Tavtigian et al. (2018). Bayesian ACMG/AMP framework. Human Mutation 39:1517–1524.",
+  "summary": "VARIANT-GNN'nin öğrendiği 5 biyolojik özellik grubu, ACMG/AMP 2015 kriterleriyle doğrudan örtüşür. Bu hizalama, modelin kararlarının klinik altın standartla uyumlu olduğunu gösterir.",
+  "shap_evidence": {
+    "evolutionary_conservation": 58.7,
+    "in_silico_risk": 41.3,
+    "population_data": 0.0,
+    "biochemical_structural": 0.0,
+    "note": "SelectKBest(k=35) tarafından seçilen özellikler ağırlıklı olarak evrimsel korunmuşluk ve in silico risk grubundan geliyor. Bu biyolojik anlamlıdır: missense patojenisite için en güçlü sinyal bu gruplarda."
+  },
+  "criteria_mapping": [
+    {
+      "acmg_code": "PP3",
+      "strength": "Supporting Pathogenic",
+      "description": "Çoklu in-silico araç patojenik tahmin (SIFT, PolyPhen2, CADD, REVEL, MCAP)",
+      "our_feature_group": "in_silico_risk",
+      "shap_contribution_pct": 41.3,
+      "our_features": ["CADD_phred", "REVEL_score", "SIFT_score", "MCAP_score", "PolyPhen2_HDIV_score", "PolyPhen2_HVAR_score", "MetaSVM_score", "MetaLR_score"],
+      "implementation": "acmg_mapper._eval_PP3: 3/5 in-silico araçtan ≥3 patojenik tahmin",
+      "notes": "En yüksek SHAP katkısına sahip grup. Model bu kriteri implicit olarak öğrenmiş."
+    },
+    {
+      "acmg_code": "PS3",
+      "strength": "Strong Pathogenic",
+      "description": "Fonksiyonel çalışmalar zararlı etki gösteriyor (MutPred2, VEST4)",
+      "our_feature_group": "in_silico_risk",
+      "shap_contribution_pct": 41.3,
+      "our_features": ["MutPred2_score", "VEST4_score"],
+      "implementation": "acmg_mapper._eval_PS3: MutPred2>0.80 AND VEST4>0.75",
+      "notes": "MutPred2 ve VEST4 fonksiyonel etki tahmin eder. PS3 ile örtüşür."
+    },
+    {
+      "acmg_code": "PM1",
+      "strength": "Moderate Pathogenic",
+      "description": "Kritik protein domeninde yer alıyor (hot-spot, active site)",
+      "our_feature_group": "evolutionary_conservation",
+      "shap_contribution_pct": 58.7,
+      "our_features": ["In_Critical_Protein_Domain", "GERP_RS", "PhyloP100way_vertebrate", "phastCons100way_vertebrate"],
+      "implementation": "acmg_mapper._eval_PM1: In_Critical_Protein_Domain>0.5",
+      "notes": "Evrimsel korunmuşluk kritik domenlerin işaretidir. GERP>2, PhyloP, phastCons birlikte PM1 ile güçlü korelasyon."
+    },
+    {
+      "acmg_code": "PP2",
+      "strength": "Supporting Pathogenic",
+      "description": "Yüksek missense kısıtlaması olan gen (benign missense oranı düşük)",
+      "our_feature_group": "evolutionary_conservation",
+      "shap_contribution_pct": 58.7,
+      "our_features": ["PhyloP100way_vertebrate", "phastCons100way_vertebrate", "SiPhy_29way_logOdds", "Exon_Conservation_Ratio"],
+      "implementation": "acmg_mapper._eval_PP2: PolyPhen2>0.85 AND PROVEAN<-2.5",
+      "notes": "Evrimsel korunmuşluk en güçlü SHAP grubumuz (%58.7). PP2 kriteriyle doğrudan örtüşür."
+    },
+    {
+      "acmg_code": "PM2",
+      "strength": "Moderate Pathogenic",
+      "description": "Popülasyon veritabanında yok/nadir (gnomAD AF < 0.01%)",
+      "our_feature_group": "population_data",
+      "shap_contribution_pct": 0.0,
+      "our_features": ["gnomAD_exomes_AF", "gnomAD_exomes_AF_afr", "gnomAD_exomes_AF_eur", "ExAC_AF"],
+      "implementation": "acmg_mapper._eval_PM2: max(gnomAD, ExAC) < 0.0001",
+      "notes": "SelectKBest bu grubu seçmedi — populasyon verisi bu veri setinde discriminative değil. Bu biyolojik anlamlıdır: TEKNOFEST varyant seti zaten nadir varyantlardan oluşuyor (PM2 almost universally met)."
+    },
+    {
+      "acmg_code": "PM4",
+      "strength": "Moderate Pathogenic",
+      "description": "Protein uzunluğunu etkileyen değişim (büyük aminoasit boyut farkı)",
+      "our_feature_group": "biochemical_structural",
+      "shap_contribution_pct": 0.0,
+      "our_features": ["AA_Grantham_Score", "AA_Size_Diff", "AA_Mol_Weight_Diff", "AA_Polarity_Change", "AA_Hydrophobicity_Diff"],
+      "implementation": "acmg_mapper._eval_PM4: |AA_Size_Diff|>0.6 AND Grantham>100",
+      "notes": "Biyokimyasal grup SHAP'ta %0 — ağaç modelleri bu özellikleri evrimsel/in-silico özelliklerle açıklayabildiği için ek katkı sağlamıyor. Grantham skoru src/scientific/metrics içinde hesaplanıyor."
+    },
+    {
+      "acmg_code": "BA1",
+      "strength": "Stand-alone Benign",
+      "description": "gnomAD AF > 5% (populasyonda çok yaygın)",
+      "our_feature_group": "population_data",
+      "shap_contribution_pct": 0.0,
+      "our_features": ["gnomAD_exomes_AF", "ExAC_AF"],
+      "implementation": "acmg_mapper._eval_BA1: max(gnomAD, ExAC) > 0.05",
+      "notes": "Veri setinde BA1 kritik varyant yok (ClinVar Pathogenic/Benign VCF kaynağı). Bu beklenen durum."
+    },
+    {
+      "acmg_code": "BP4",
+      "strength": "Supporting Benign",
+      "description": "Çoklu in-silico araç benign tahmin (CADD<10, REVEL<0.3, SIFT>0.3)",
+      "our_feature_group": "in_silico_risk",
+      "shap_contribution_pct": 41.3,
+      "our_features": ["CADD_phred", "REVEL_score", "SIFT_score", "PolyPhen2_HDIV_score"],
+      "implementation": "acmg_mapper._eval_BP4: tüm in-silico araçlar benign yönünde",
+      "notes": "PP3 ile simetrik. Aynı in_silico_risk grubu hem patojenik hem benign yönde çalışıyor."
+    }
+  ],
+  "coverage_summary": {
+    "criteria_with_implementation": ["PP3", "PS3", "PM1", "PM2", "PM4", "PP2", "BA1", "BS1", "BS3", "BP4", "BP7"],
+    "total_acmg_criteria": 28,
+    "our_coverage_pct": 39.3,
+    "note": "VUS label'ları eğitimden dışlandı (§3.2 uyumu). Sadece Pathogenic/Benign ikilisi — bu nedenle PVS1 (null variant) ve PS2 (de novo) gibi genetik segregasyon kriterleri kapsam dışı.",
+    "strongest_evidence": "PP3 + evrimsel korunmuşluk kombinasyonu — SHAP'ta %100 katkı bu iki gruptan geliyor."
+  },
+  "clinical_alignment_score": {
+    "feature_group_to_acmg_overlap": "YÜKSEK",
+    "ml_decisions_clinically_interpretable": true,
+    "acmg_mapper_module": "src/scientific/acmg_mapper.py",
+    "verdict": "VARIANT-GNN, ACMG/AMP 2015 kriterleriyle uyumlu özellikler üzerinde karar veriyor. Model patojenisite kararları klinik standartla teorik olarak hizalı."
+  }
+}
