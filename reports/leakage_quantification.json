@@ -1,0 +1,10 @@
+{
+  "leaky_aug_stratkfold": 0.9268,
+  "orig_stratkfold": 0.8915,
+  "honest_groupkfold": 0.8897,
+  "total_inflation_pp": 3.71,
+  "augmentation_pp": 3.53,
+  "panel_overlap_pp": 0.18,
+  "model": "HistGradientBoosting (proxy; gap is model-agnostic)",
+  "note": "Same Variant_ID appears in train+test via panel overlap (578 IDs) and augmentation (369 straddle). GroupKFold by Variant_ID removes it."
+}

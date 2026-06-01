@@ -86,6 +86,11 @@ reports/*.bak
 !reports/uncertainty_profile.json
 !reports/feature_stability.json
 !reports/panel_cross_generalization.json
+# Sızıntısız retrain kanıt raporları (RESULTS_CANONICAL + dökümanlar atıf yapıyor)
+!reports/leakage_quantification.json
+!reports/preprocessing_diagnostic.json
+!reports/dann_lopo_validation.json
+!reports/bio_feature_ablation.json
 
 # Eğitim logları
 train_log.txt

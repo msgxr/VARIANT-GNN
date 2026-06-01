@@ -1,0 +1,27 @@
+{
+  "General": {
+    "baseline": 0.5868,
+    "dann": 0.6917,
+    "delta_pp": 10.49
+  },
+  "Hereditary_Cancer": {
+    "baseline": 0.8864,
+    "dann": 0.8408,
+    "delta_pp": -4.56
+  },
+  "PAH": {
+    "baseline": 0.904,
+    "dann": 0.9049,
+    "delta_pp": 0.1
+  },
+  "CFTR": {
+    "baseline": 0.857,
+    "dann": 0.8837,
+    "delta_pp": 2.67
+  },
+  "_mean": {
+    "baseline": 0.8085,
+    "dann": 0.8303,
+    "delta_pp": 2.17
+  }
+}
