@@ -195,3 +195,4 @@ build_notebook.py
 !reports/weight_optimization.json
 !reports/weight_scheme_test.json
 !reports/oof_per_model.npz
+!reports/balanced_weights.json

@@ -1,0 +1,19 @@
+{
+  "meta_learner_f1": 0.9025,
+  "current_wavg_f1": 0.8972,
+  "balanced_weights": [
+    0.4955,
+    0.2822,
+    0.1539,
+    0.0684
+  ],
+  "balanced_oof_f1": 0.8942,
+  "balanced_test_f1": 0.902,
+  "delta_vs_meta_pp": -0.06,
+  "models": [
+    "XGB",
+    "LGBM",
+    "GNN",
+    "DNN"
+  ]
+}
