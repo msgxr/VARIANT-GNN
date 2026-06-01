@@ -54,7 +54,10 @@
 | Kistik Fibrozis (CFTR) | 90 | 21 | 111 |
 | **Toplam** | **2817** | **985** | **3802** |
 
-> **Not:** Gaussian feature augmentation (σ=0.05, n_copies=1) ile 3802 → 7604 eğitim örneği elde edilmiştir (label korunarak). SMOTE sadece training fold içinde uygulanmıştır.
+> **Not:** Gaussian augmentation **KAPALI** — önceden materyalize edilmiş `train_variants_aug.csv`
+> (3802→7604), jitter'lı near-twin kopyaları satır-bazlı split'in iki yanına düşürerek sızıntı
+> yaratıyordu (`reports/leakage_quantification.json`). Eğitim 3802 orijinal örnek üzerinde,
+> `Variant_ID`'ye göre **group-aware** bölme + sadece eğitim fold'unda SMOTE ile yapılır.
 
 ### Test Veri Setleri (§3.2)
 

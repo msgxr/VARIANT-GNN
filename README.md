@@ -134,27 +134,25 @@ flowchart TD
 
     A --> LFW["🛡️ LeakageFirewall\nGenomik adres + etiket bloklama"]
 
-    LFW --> P1["① ColumnAligner\nAnonim kolon hizalama · Dağılımsal eşleme"]
-    P1  --> P2["② ACMGProxyFeatures\nKural-tabanlı biyolojik özellik türetme"]
-    P2  --> P3["③ SimpleImputer  —  Median\nEksik değer dolduruluyor"]
-    P3  --> P4["④ RobustScaler  —  IQR\nOutlier dayanıklı normalizasyon"]
-    P4  --> P5["⑤ BiologicalEnrichment\nBLOSUM62 + Grantham — NaN-free üzerinde"]
-    P5  --> P6["⑥ SMOTE  ⚠️ İsteğe bağlı\nSadece eğitim fold · Varsayılan: KAPALI"]
-    P6  --> P7["⑦ VarianceThreshold + SelectKBest k=35\nANOVA — eğitim fold'unda fit"]
-    P7  --> P8["⑧ AutoEncoder  dim→16  append=True\nLatent temsil — eğitim fold'unda fit"]
-    P8  --> P9["⑨ Cosine k-NN Graf  k=10  eşik=0.3\nKoordinatsız — §3.2 uyumlu"]
+    LFW --> SPLIT["✂️ GROUP-AWARE Split\nVariant_ID'ye göre · leakage guard\n(aynı varyant train+test'te olmaz)"]
+    SPLIT --> P1["① ColumnAligner\nAnonim kolon hizalama · Dağılımsal eşleme"]
+    P1  --> P2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM · CAT popülasyon/bölge · EK in-silico"]
+    P2  --> P3["③ SimpleImputer — Median\nEksik değer (train medyanı)"]
+    P3  --> P4["④ RobustScaler — IQR\nOutlier dayanıklı normalizasyon"]
+    P4  --> P6["⑤ SMOTE\nSadece eğitim fold (azınlık dengeleme)"]
+    P6  --> P9["⑥ Cosine k-NN Graf  k=10\nKoordinatsız — §3.2 uyumlu · TAM öznitelik seti"]
 
     P9 --> M1["📦 XGBoost\n%30"]
     P9 --> M2["📦 LightGBM\n%30"]
     P9 --> M3["📦 VariantGATv2GNN\n%25"]
-    P9 --> M4["📦 DNN\n%15"]
+    P9 --> M4["📦 DNN — Domain-Adversarial\n%15 (panel-invariant)"]
 
     M1 --> ST["🧠 Stacking Meta-Öğrenici\nLojistik Regresyon\nNelder-Mead Ağırlık Opt."]
     M2 --> ST
     M3 --> ST
     M4 --> ST
 
-    ST --> ISO["🔬 İsotonik Kalibrasyon\nBrier=0.179  ECE=0.143"]
+    ST --> ISO["🔬 İsotonik Kalibrasyon\nBrier=0.1286  ECE=0.0965"]
     ISO --> MCD["🎲 MC Dropout\n10 Forward Pass\nBelirsizlik ölçümü"]
     MCD --> OOD["👁️ OOD Dedektörü\nEğitim ref. — sadece detect()"]
 
@@ -451,37 +449,37 @@ AUC ≈ 1.00  →  Ciddi domain shift var                ❌ genelleme zayif
 
 ---
 
-## 9. Önişleme Pipeline — 9 Adım
+## 9. Önişleme Pipeline — 6 Adım (sızıntısız)
 
 ```mermaid
 flowchart TD
+    S0["✂️ GROUP-AWARE Split\nVariant_ID · leakage guard\n(panel-overlap + augmentation sızıntısı kapatıldı)"]
     S1["① ColumnAligner\nAnonim kolon hizalama\nDagilimsal eslesme"]
-    S2["② ACMGProxyFeatures\nKural-tabanli biyolojik\nozellik turetme"]
+    S2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM\nCAT popülasyon/bölge · EK in-silico"]
     S3["③ SimpleImputer\nMedian · All-NaN koruma"]
     S4["④ RobustScaler\nIQR normalizasyon"]
-    S5["⑤ BiologicalEnrichment\nBLOSUM62 + Grantham\nNaN-free X_imputed uzerinde"]
-    S6["⑥ SMOTE\nİstege bagli\nVarsayilan: KAPALI\nSadece egitim fold"]
-    S7["⑦ VarianceThreshold\n+ SelectKBest k=35\nANOVA · Egitimde fit"]
-    S8["⑧ AutoEncoder\ndim→16 latent\nappend=True · Egitimde fit"]
-    S9["⑨ Cosine k-NN Graf\nk=10 · esik=0.3\nKoordinatsiz §3.2"]
+    S6["⑤ SMOTE\nSadece egitim fold\n(azınlık dengeleme)"]
+    S9["⑥ Cosine k-NN Graf\nk=10 · TAM öznitelik seti\nKoordinatsiz §3.2"]
 
-    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
+    S0 --> S1 --> S2 --> S3 --> S4 --> S6 --> S9
 
-    TR["Egitim: fit+transform\nTest/Val: SADECE transform\nHic sizinti yok"]
+    TR["Egitim: fit+transform\nTest/Val: SADECE transform\nGroup-aware → sızıntı yok"]
 
     S9 --> TR
 ```
 
+> **Not (sızıntısız retrain):** Eski `SelectKBest(k=35)` + `AutoEncoder(→16)` adımları
+> **kaldırıldı** — sızıntısız group-aware CV'de sinyal atıp ~5.3pp F1 kaybettiriyorlardı
+> (`reports/preprocessing_diagnostic.json`). Artık **tam öznitelik seti** kullanılıyor.
+
 ```
-Boyut Akışı (örnek):
-  Ham CSV          [N × ~100 kolon]
-      ↓ ColumnAligner + ACMG
-      ↓ Imputer + Scaler      [N × 100]
-      ↓ SMOTE (kapalı)        [N × 100]
-      ↓ VarianceThreshold     [N ×  ~80]
-      ↓ SelectKBest k=35      [N ×   35]
-      ↓ AutoEncoder append    [N ×   51]  (35 + 16 latent)
-      ↓ k-NN Graf             PyG Data(x=[N,51], edge=[2,E])
+Boyut Akışı:
+  Ham CSV          [N × ~343 anonim kolon]
+      ↓ CategoricalBioFeaturizer  [N × 343 + 22 bio/kategorik]
+      ↓ + Panel one-hot           [N × 369]
+      ↓ Imputer + Scaler          [N × 369]
+      ↓ SMOTE (train fold)        [N' × 369]
+      ↓ k-NN Graf                 PyG Data(x=[N',369], edge=[2,E])
 ```
 
 ---
@@ -713,7 +711,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     R["Ham Ensemble P_Patojenik"]
-    ISO["İsotonik Regresyon\nBrier=0.179  ECE=0.143\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
+    ISO["İsotonik Regresyon\nBrier=0.1286  ECE=0.0965\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
     TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ panel-spesifik (General=0.335)"]
     PAT["Patojenik\nP >= theta\nHigh_Risk = True"]
     BEN["Benign\nP < theta\nHigh_Risk = False"]

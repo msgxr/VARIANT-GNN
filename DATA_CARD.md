@@ -36,7 +36,10 @@
 
 > **Not:** Gerçek veri şartnamenin vaat ettiği 1:1 dengesinden farklı geldi. Bunu karşılamak için eğitim pipeline'ında SMOTE (sadece training fold içinde) ve sınıf-ağırlıklı kayıp fonksiyonu kullanıldı.
 >
-> **Augmentation:** Gaussian feature jittering (σ=0.05 × col_std, 1 kopya) ile 3802 → **7604 eğitim örneği** elde edildi. Label değişmedi. Gerçek eğitim verisi ile şartname uyumludur.
+> **Augmentation (KAPALI):** Önceden materyalize edilmiş Gaussian jitter'lı `train_variants_aug.csv`
+> (3802→7604), near-twin kopyalarla satır-bazlı split'te **train/test sızıntısı** yaratıyordu →
+> devre dışı bırakıldı. Eğitim 3802 orijinal örnek + `Variant_ID` **group-aware** split ile yapılır
+> (`reports/leakage_quantification.json`).
 
 > **Şartname uyumu:** Pathogenic + Likely Pathogenic tek sınıfta (Etiket: 1); Benign + Likely Benign tek sınıfta (Etiket: 0) birleştirildi. Ground truth etiketleri ACMG-referenced etiketlerden türetilmiştir.
 
