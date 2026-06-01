@@ -3,6 +3,14 @@ src/features/acmg_proxy_features.py
 =====================================
 ACMG/AMP 2015 Kriter Proxy Özellik Mühendisliği
 
+⚠️ REFERANS UYGULAMA — ANONİM YARIŞMA VERİSİNDE AKTİF DEĞİL (use_acmg_proxy=false).
+Bu modül ADLANDIRILMIŞ kolonlar (CADD_phred, REVEL_score, gnomAD_exomes_AF ...)
+bekler. Gerçek TEKNOFEST verisinde kolonlar anonimdir (yalnızca AA_/AL_/CAT_/EK_),
+dolayısıyla bu adlandırılmış-kolon yolu KULLANILMAZ. Anonim veride ACMG sinyali
+`src/features/categorical_bio_features.py` (CategoricalBioFeaturizer) ile
+AA_1→AA_2 + CAT_* + EK_* üzerinden türetilir (PP3/BP4/PM4/BA1 → reports/acmg_alignment.json).
+Bu modül, adlandırılmış kolonlu (ör. dışsal validasyon) veri içindir.
+
 TEKNOFEST 2026 §3.2 uyumlu: Yalnızca şartname tarafından izin verilen
 in-silico skorlar ve popülasyon verilerinden türetilmiş ACMG kriteri proxy'leri.
 Hiçbir dış veri tabanına erişim yapılmaz.

@@ -2,6 +2,10 @@
 src/scientific/acmg_mapper.py
 ACMG/AMP 2015 Kriter Haritalayıcı
 
+⚠️ REFERANS UYGULAMA — adlandırılmış kolonlar (CADD_phred/REVEL_score ...) bekler;
+anonim yarışma verisinde (AA_/AL_/CAT_/EK_) AKTİF DEĞİL. Anonim veride ACMG
+hizalaması reports/acmg_alignment.json + CategoricalBioFeaturizer üzerinden yapılır.
+
 SHAP değerleri + ham varyant özellikleri → ACMG kriterleri (PM2, PP3, vb.)
 
 Referans:
