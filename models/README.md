@@ -8,7 +8,7 @@ Model dosyaları eğitim sonrasında otomatik olarak bu dizine kaydedilir.
 `PROVENANCE.json` dosyası, mevcut model ağırlıklarının hangi veriyle eğitildiğini belgeler.
 
 > **Durum (2026-05-20):** Gerçek TEKNOFEST yarışma verisi (3.802 örnek, 343 anonim kolon)
-> kullanılarak eğitim tamamlanmıştır. Test F1=0.8980, CV F1=0.8668±0.0081.
+> kullanılarak eğitim tamamlanmıştır. Test F1=0.8969, CV F1=0.8779±0.0062.
 > Model artefaktları Şeyma'nın Mac'inde üretilmiş ve bu dizine taşınmıştır.
 > Tahminler yalnızca yarışma/araştırma amaçlıdır — klinik tanı için kullanılamaz.
 

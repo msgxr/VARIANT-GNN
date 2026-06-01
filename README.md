@@ -962,7 +962,7 @@ VARIANT-GNN/
 │   ├── ood_detector.pkl         ★ Train fit — inference'da detect()
 │   ├── ensemble_config.json     Optimize agirliklar
 │   ├── panel_thresholds.json    4 panel x optimal esik
-│   ├── threshold.json           Global F1-optimal esik θ=0.241
+│   ├── threshold.json           Global F1-optimal esik θ=0.6831
 │   ├── feature_names.json       XGBoost ozellik isimleri
 │   ├── metadata.json            SHA256 + versiyon
 │   └── manifest.json            Artifact versiyonlama

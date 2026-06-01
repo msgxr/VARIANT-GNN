@@ -12,7 +12,7 @@ abstract: >
   VariantGATv2GNN (Graph Attention Networks v2), and a Deep Neural Network
   for binary pathogenicity prediction of missense genetic variants.
   Developed for TEKNOFEST 2026 Saglikta Yapay Zeka Yarisma — University
-  and Above category. Achieves Test F1=0.8980, CV F1=0.8668±0.0081 across
+  and Above category. Achieves Test F1=0.8969, CV F1=0.8779±0.0062 across
   four disease panels (General, Hereditary_Cancer, PAH, CFTR).
 authors:
   - name: "XYRA3 Team"

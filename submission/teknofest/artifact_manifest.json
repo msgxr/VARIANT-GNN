@@ -22,8 +22,8 @@
     "seed": 42,
     "cv_f1_mean": 0.8779,
     "cv_f1_std": 0.0062,
-    "test_f1": 0.8963,
-    "test_mcc": 0.5313,
+    "test_f1": 0.8969,
+    "test_mcc": 0.5863,
     "test_recall": 0.9354,
     "test_roc_auc": 0.8485,
     "test_brier": 0.1286,
@@ -63,29 +63,29 @@
         "name": "preprocessor.pkl",
         "path": "models/preprocessor.pkl",
         "type": "Preprocessing pipeline (imputer + RobustScaler + SMOTE; full §3.2 feature set)",
-        "sha256": "8a1a0027daa7c87857416fd4a9ab8c71611637f5cd81c6835d1be42c975e8b16",
+        "sha256": "4629b005ca921ce468ae3743b11125494f2dd218fdc79fdf2a0bd40f48925b48",
         "size_bytes": 427125
       },
       {
         "name": "calibrator.pkl",
         "path": "models/calibrator.pkl",
         "type": "Isotonic calibrator",
-        "sha256": "445b857cdc16af6f100b77b0770aedebb2a0aae592c8be20a76ee9192cb0ff0b",
-        "size_bytes": 1015
+        "sha256": "77f0a741c8c2c8380712fa708610906756eeb98d6d071c8ebd9b7442c2c4e20c",
+        "size_bytes": 983
       },
       {
         "name": "ensemble.pkl",
         "path": "models/ensemble.pkl",
         "type": "HybridEnsemble (4-model + meta-learner)",
-        "sha256": "3533fad312c5d897ce42465ed6da4eb78951ce62feb5dff9b5f38dbdea8cce19",
-        "size_bytes": 2612485
+        "sha256": "d00f5d726c2880ca569b50ddcf2dee033d64d301a942619a0491e9a011731b4e",
+        "size_bytes": 2612437
       },
       {
         "name": "meta_learner.pkl",
         "path": "models/meta_learner.pkl",
         "type": "Stacking meta-learner (logistic regression)",
-        "sha256": "e7185d95a078428c648dab315f97f58a45249211bfe7274b0ea34787806a8d86",
-        "size_bytes": 911
+        "sha256": "139e9d6b60812ea334e1a963a82a06a95f8d2f39c3bc1293cc8bd137f798df2b",
+        "size_bytes": 895
       },
       {
         "name": "ood_detector.pkl",
@@ -98,15 +98,15 @@
         "name": "threshold.json",
         "path": "models/threshold.json",
         "type": "Global F1-optimal threshold",
-        "sha256": "1b6ca2fe650bd05ad583819c72237003c3e258dd4bf8891e8ffbf2615cda686c",
-        "size_bytes": 49
+        "sha256": "5b17895ee139e3f52069f2aec8b6c064bb0c127bf8e929c529dacb5757cfc9b3",
+        "size_bytes": 48
       },
       {
         "name": "panel_thresholds.json",
         "path": "models/panel_thresholds.json",
         "type": "Panel-specific F1-optimal thresholds (4 panels)",
-        "sha256": "47daecf6585da273597c1cb674737e7c88135c73285f770c993672c2b76e0f76",
-        "size_bytes": 177
+        "sha256": "7ac8913f35d36ff3c6097d682b30ae9591920707c2c56716c6dc78e6ca23be37",
+        "size_bytes": 176
       }
     ],
     "config_files": [
@@ -117,5 +117,6 @@
       }
     ]
   },
-  "notes": "SHA256 1 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8779±0.0062, Test F1=0.8963. NDA verisi lokal kaldı."
+  "notes": "SHA256 1 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8779±0.0062, Test F1=0.8969 (hold-out) / balanced_jury_f1=0.8134. NDA verisi lokal kaldı.",
+  "balanced_jury_f1": 0.8134
 }

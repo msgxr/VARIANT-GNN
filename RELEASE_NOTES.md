@@ -12,10 +12,10 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 ## 2026-05 (Gerçek veri eğitimi)
 
 - **Gerçek veri alındı:** 14 Mayıs 2026 — 3802 örnek, 343 anonim kolon, 4 panel
-- **Model eğitildi:** 20 Mayıs 2026 — CV F1=0.8668±0.0081, Test F1=0.8980, MCC=0.5356
+- **Model eğitildi:** 20 Mayıs 2026 — CV F1=0.8779±0.0062, Test F1=0.8969, MCC=0.5863
 - **Gaussian augmentation:** 3802 → 7604 eğitim örneği (σ=0.05)
 - **Panel sonuçları:** MASTER=0.8872 · KANSER=0.8960 · PAH=0.9556 · CFTR=0.9524
-- **Panel eşikleri optimize edildi:** θ_global=0.241, CFTR=0.108, KANSER=0.281, PAH=0.138
+- **Panel eşikleri optimize edildi:** θ_global=0.6831, CFTR=0.108, KANSER=0.281, PAH=0.138
 - **Submission paketi hazırlandı:** artifact_manifest, checksums, SHA256 doğrulandı
 
 ## 2026-04 (PDR hazırlık dönemi)

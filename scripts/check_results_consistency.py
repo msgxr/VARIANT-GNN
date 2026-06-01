@@ -24,9 +24,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TOL = 0.005
 
-# Numbers that were withdrawn as leakage-inflated — must not reappear as a claim.
-WITHDRAWN = ["0.8980", "0.9269", "0.5356", "0.722088", "0.7221"]
-JURY_DOCS = ["README.md", "MODEL_CARD.md", "PROJECT_STATUS.md", "CLAUDE.md"]
+# Numbers that were withdrawn as leakage-inflated / superseded — must not reappear
+# as a current claim (allowed only on lines that explicitly withdraw/supersede them).
+WITHDRAWN = ["0.8980", "0.9269", "0.5356", "0.722088", "0.7221",
+             "0.8668", "0.5313", "θ=0.241", "θ = 0.241"]
+# Every jury/governance-facing doc — drift here is the exact failure mode that
+# nearly sank the project (leakage-inflated numbers surviving in metadata files).
+JURY_DOCS = ["README.md", "MODEL_CARD.md", "PROJECT_STATUS.md", "CLAUDE.md",
+             "REPRODUCE.md", "CITATION.cff", "CODE_OF_CONDUCT.md", "DATA_CARD.md",
+             "RELEASE_NOTES.md", "ROADMAP.md", "models/README.md",
+             "submission/SUBMISSION_CHECKLIST.md"]
 
 
 def fail(msg: str) -> None:
@@ -88,6 +95,26 @@ def main() -> int:
     for p in (ROOT / "reports").glob("*.json"):
         if "sentetik proxy" in p.read_text().lower() or "synthetic proxy" in p.read_text().lower():
             fail(f"{p.name}: contains synthetic-proxy language")
+            errors += 1
+    if errors == 0:
+        print("   ok")
+
+    # 5. threshold single-source-of-truth: shipped == canonical, no contradictory θ
+    print("5. Threshold single source of truth (shipped == canonical, no rival θ)")
+    thr_path = ROOT / "models" / "threshold.json"
+    gthr = canon.get("global_threshold")
+    if thr_path.exists() and gthr is not None:
+        shipped = json.loads(thr_path.read_text()).get("classification_threshold")
+        if shipped is None or abs(shipped - gthr) > 1e-3:
+            fail(f"shipped threshold {shipped} != canonical global_threshold {gthr}")
+            errors += 1
+    # no rival global-threshold value asserted in canonical free-text (panel block exempt)
+    rivals = ["0.3367", "0.3104", "0.2562", "0.4456", "θ=0.241"]
+    canon_txt = canon_path.read_text()
+    for ln in canon_txt.splitlines():
+        if any(r in ln for r in rivals) and "panel" not in ln.lower() and "0.764" not in ln \
+                and not re.search(r"önceki|geçersiz|withdraw|supersed|geri çek|eski", ln, re.I):
+            fail(f"RESULTS_CANONICAL.json: rival threshold in '{ln.strip()[:70]}'")
             errors += 1
     if errors == 0:
         print("   ok")
