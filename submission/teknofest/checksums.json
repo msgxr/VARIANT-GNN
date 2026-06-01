@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-06-01",
-  "_note": "OOF-stacking modeli (Test 0.9069). RESULTS_CANONICAL.json",
+  "_note": "OOF-stacking modeli. jury_predictions.csv KALDIRILDI (stale, tüm-etiket=1 bozuk orphan; gerçek deliverable = submission/predict.py). Eşik dengeli-cal türevli (§3.2 50/50 jüri prior).",
   "models/xgb_model.json": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
   "models/lgbm_model.txt": "699700a2a6864c569110a3b032582ee52744bdd1920f1110ea3cd690aec33f7b",
   "models/gnn_model.pth": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
@@ -11,6 +11,5 @@
   "models/meta_learner.pkl": "139e9d6b60812ea334e1a963a82a06a95f8d2f39c3bc1293cc8bd137f798df2b",
   "models/ood_detector.pkl": "750ceeb6de1c0bf4f892ea5eed8609cf315ac54ba88fef7db54038aaef10abad",
   "models/threshold.json": "2d7793c502a1a52117aa9e78e7cd5d0f9dbaa207b5c40d1d831a965f580221b9",
-  "models/panel_thresholds.json": "7ac8913f35d36ff3c6097d682b30ae9591920707c2c56716c6dc78e6ca23be37",
-  "submission/teknofest/jury_predictions.csv": "ad721d59c3b29e4e658f09805d2d6b923f5b8585bbbe18ccfa0d746f5959159f"
+  "models/panel_thresholds.json": "7ac8913f35d36ff3c6097d682b30ae9591920707c2c56716c6dc78e6ca23be37"
 }
