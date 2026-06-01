@@ -96,6 +96,18 @@ def mode_train(args, cfg):
     logging.info("CV summary — Binary F1 (§7.3): %.4f ± %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
+    # Stacking meta-öğrenicisini GERÇEK group-aware OOF üzerinde yeniden eğit
+    # (Wolpert 1992 doğru stacking). Trainer içindeki inner-val fit'i suboptimaldir;
+    # OOF fit nested-CV'de +0.59pp / held-out +0.85pp (reports/stacking_improvement.json).
+    try:
+        _oof_path = cfg.paths.reports_dir / "oof_per_model.npz"
+        if _oof_path.exists() and hasattr(result.ensemble, "fit_meta_learner_from_oof"):
+            _oofz = np.load(_oof_path)
+            result.ensemble.fit_meta_learner_from_oof(_oofz["oof"], _oofz["labels"])
+            logging.info("Meta-learner GENUINE OOF üzerinde yeniden eğitildi (stacking iyileştirmesi).")
+    except Exception as _oof_exc:
+        logging.warning("OOF meta-learner override atlandı: %s", _oof_exc)
+
     preprocessor = result.preprocessor
     ensemble = result.ensemble
 

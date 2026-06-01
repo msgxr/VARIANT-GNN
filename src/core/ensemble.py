@@ -643,6 +643,43 @@ class HybridEnsemble:
             len(y_val), meta_X.shape[1], meta_f1,
         )
 
+    def fit_meta_learner_from_oof(
+        self,
+        oof_predictions: np.ndarray,
+        y: np.ndarray,
+    ) -> None:
+        """Stacking meta-öğrenicisini GERÇEK group-aware OOF (out-of-sample) tahminleri
+        üzerinde eğit — Wolpert (1992) doğru stacking yöntemi.
+
+        Production'ın inner-val (post-SMOTE küçük slice) fit'i suboptimaldir; genuine
+        OOF üzerinde fit etmek nested-CV'de +0.59pp (5-seed, std≈0) ve held-out'ta
+        +0.85pp daha iyi (kanıt: reports/stacking_improvement.json). Overfit-safe:
+        OOF tahminleri tanım gereği out-of-sample.
+
+        oof_predictions : (N, 4) [XGB, LGBM, GNN, DNN] Pathogenic prob (combine() ile
+                          aynı kolon sırası, class_weight YOK — Pathogenic çoğunluk).
+        """
+        from sklearn.linear_model import LogisticRegression
+
+        oof_predictions = np.asarray(oof_predictions, dtype=float)
+        if oof_predictions.ndim != 2 or oof_predictions.shape[1] < 2:
+            logger.warning(
+                "fit_meta_learner_from_oof: geçersiz OOF şekli %s — atlandı.",
+                oof_predictions.shape,
+            )
+            return
+        lr = LogisticRegression(C=1.0, solver="lbfgs", max_iter=1000, random_state=42)
+        lr.fit(oof_predictions, np.asarray(y).astype(int))
+        self.meta_learner = lr
+        meta_f1 = f1_score(
+            np.asarray(y).astype(int), lr.predict(oof_predictions),
+            average="binary", pos_label=1, zero_division=0,
+        )
+        logger.info(
+            "fit_meta_learner_from_oof (GENUINE OOF stacking): %d örnek → OOF Binary F1=%.4f",
+            len(y), meta_f1,
+        )
+
     # ------------------------------------------------------------------
     # Yardımcı statik/sınıf metodları
     # ------------------------------------------------------------------

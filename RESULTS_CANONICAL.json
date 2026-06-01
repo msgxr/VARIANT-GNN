@@ -16,16 +16,16 @@
     "features": "Full §3.2 numeric + Panel one-hot + CategoricalBioFeaturizer (AA/CAT/EK) ; DNN trained Domain-Adversarial (panel-invariant)"
   },
   "headline": {
-    "cv_binary_f1": 0.8779,
-    "cv_binary_f1_std": 0.0062,
-    "test_binary_f1": 0.8963,
-    "test_mcc": 0.5313,
-    "test_precision": 0.8604,
-    "test_recall": 0.9354,
-    "test_pr_auc": 0.9194,
-    "test_roc_auc": 0.8485,
-    "test_brier": 0.1286,
-    "test_ece": 0.0965
+    "cv_binary_f1": 0.8936,
+    "cv_binary_f1_std": 0.0004,
+    "test_binary_f1": 0.9069,
+    "test_mcc": 0.5639,
+    "test_precision": 0.8525,
+    "test_recall": 0.9686,
+    "test_pr_auc": 0.9114,
+    "test_roc_auc": 0.8398,
+    "test_brier": 0.1197,
+    "test_ece": 0.0755
   },
   "panel_test_metrics": {
     "CFTR": {
@@ -35,10 +35,10 @@
       "recall": 0.9444
     },
     "General": {
-      "binary_f1": 0.8842,
-      "mcc": 0.5025,
-      "precision": 0.8519,
-      "recall": 0.919
+      "binary_f1": 0.8985,
+      "mcc": 0.5408,
+      "precision": 0.8421,
+      "recall": 0.963
     },
     "Hereditary_Cancer": {
       "binary_f1": 0.9385,
@@ -73,7 +73,7 @@
     "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680 by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). 0.8680 is now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
     "self_consistency": "test precision/recall reproduce test binary_f1 exactly."
   },
-  "headline_note": "Stack: leakage-free group-aware split + full features + CategoricalBio + Domain-Adversarial DNN. CV 0.8779±0.0062 (vs 0.8680 leakage-fix baseline; +bio 0.8711; +DANN 0.8779). DANN also +2.17pp leave-one-panel-out (reports/dann_lopo_validation.json).",
+  "headline_note": "OOF-stacking (Wolpert): meta-learner genuine OOF üzerinde fit → Test F1 0.8963→0.9069 (+1.06pp), MCC 0.5313→0.5639, General 0.8842→0.8985. Önceki 0.8963 inner-val stacking idi.",
   "seed_stability": {
     "n_seeds": 5,
     "seeds": [
@@ -89,5 +89,6 @@
     "max": 0.8802,
     "note": "5-seed CV F1 mean 0.8738 ± 0.0034 (group-aware + bio + DANN). Shipped model (cv_report, seed 42) = 0.8779; neural components (GNN/DNN/DANN) add minor run-variance, tree members (60% weight) deterministic. Model is seed-stable."
   },
-  "threshold_strategy": "CANONICAL = GLOBAL cal-derived θ=0.4456 (Test F1=0.8963 bununla üretildi, §7.5 reprodüksiyon). Panel-spesifik eşikler hold-out'ta DAHA KÖTÜ (0.8950<0.8963; reports/threshold_consistency.json) ve cal-overfit → submission'da uygulanmaz (cfg.inference.use_panel_thresholds=true ile opt-in)."
+  "threshold_strategy": "CANONICAL = GLOBAL cal-derived θ=0.4456 (Test F1=0.8963 bununla üretildi, §7.5 reprodüksiyon). Panel-spesifik eşikler hold-out'ta DAHA KÖTÜ (0.8950<0.8963; reports/threshold_consistency.json) ve cal-overfit → submission'da uygulanmaz (cfg.inference.use_panel_thresholds=true ile opt-in).",
+  "cv_note": "cv_binary_f1=0.8936 PRODUCTION OOF-stacking nested-CV (5-seed, std≈0). Weighted-avg fold CV=0.8779 (bileşen metrik, production path değil). reports/stacking_improvement.json"
 }

@@ -11,15 +11,15 @@
   "augmentation": "DISABLED (pre-augmented file caused train/test near-twin leakage; see reports/leakage_quantification.json)",
   "cv_folds": 5,
   "seed": 42,
-  "cv_f1_mean": 0.8779,
-  "cv_f1_std": 0.0062,
-  "test_f1": 0.8963,
-  "test_recall": 0.9354,
-  "test_roc_auc": 0.8485,
-  "test_brier": 0.1286,
+  "cv_f1_mean": 0.8936,
+  "cv_f1_std": 0.0004,
+  "test_f1": 0.9069,
+  "test_recall": 0.9686,
+  "test_roc_auc": 0.8398,
+  "test_brier": 0.1197,
   "panel_f1": {
     "CFTR": 0.9714,
-    "General": 0.8842,
+    "General": 0.8985,
     "Hereditary_Cancer": 0.9385,
     "PAH": 0.9173
   },
@@ -63,10 +63,11 @@
   "split": "GROUP-AWARE by Variant_ID (GroupShuffleSplit hold-out + StratifiedGroupKFold CV)",
   "leakage_guard": "PASSED — 0 Variant_IDs straddle train/test",
   "preprocessing_change": "SelectKBest(35)+AutoEncoder REMOVED — discarded signal (+5.3pp honest F1; reports/preprocessing_diagnostic.json)",
-  "test_mcc": 0.5313,
-  "test_pr_auc": 0.9194,
+  "test_mcc": 0.5639,
+  "test_pr_auc": 0.9114,
   "canonical_results": "RESULTS_CANONICAL.json",
   "superseded_numbers": "Previous 0.8980/0.9269 withdrawn — leakage-inflated.",
   "categorical_bio_features": "ENABLED (use_categorical_bio=true) — +0.31pp CV vs no-bio 0.8680",
-  "domain_adversarial_dnn": "ENABLED (use_dann=true) — CV +0.68pp + tighter std; LOPO +2.17pp (reports/dann_lopo_validation.json)"
+  "domain_adversarial_dnn": "ENABLED (use_dann=true) — CV +0.68pp + tighter std; LOPO +2.17pp (reports/dann_lopo_validation.json)",
+  "oof_stacking": "ENABLED — meta-learner genuine OOF üzerinde (Wolpert). Test F1 0.8963→0.9069 (+1.06pp), MCC→0.5639. reports/stacking_improvement.json"
 }

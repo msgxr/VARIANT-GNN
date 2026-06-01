@@ -196,3 +196,5 @@ build_notebook.py
 !reports/weight_scheme_test.json
 !reports/oof_per_model.npz
 !reports/balanced_weights.json
+!reports/stacking_improvement.json
+!reports/threshold_deep.json

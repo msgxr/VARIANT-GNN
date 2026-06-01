@@ -1,0 +1,19 @@
+{
+  "current_stack_f1": 0.8963,
+  "oof_meta_f1": 0.9048,
+  "oof_meta_agreement_f1": 0.897,
+  "oof_meta_agreement_L2_f1": 0.897,
+  "_README": "OOF-stacking iyileştirmesi — meta-learner inner-val yerine GENUINE group-aware OOF üzerinde fit.",
+  "production_before_test_f1": 0.8963,
+  "production_after_test_f1": 0.9069,
+  "delta_test_pp": 1.06,
+  "production_before_mcc": 0.5313,
+  "production_after_mcc": 0.5639,
+  "nested_cv_fixed_weight": 0.8877,
+  "nested_cv_oof_stacking": 0.8936,
+  "nested_cv_delta_pp": 0.59,
+  "nested_cv_std": 0.0004,
+  "method": "Wolpert (1992) doğru stacking — out-of-sample OOF; overfit-safe (4 teyit: inceleme, nested-CV, held-out, ilke)",
+  "general_panel_before": 0.8842,
+  "general_panel_after": 0.8985
+}

@@ -38,7 +38,7 @@
 | **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
 | **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
 | **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |
-| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Sızıntısız (group-aware) protokolle yeniden eğitildi (1 Haziran 2026). Test F1 = 0.8963, CV F1 = 0.8779.** |
+| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Sızıntısız (group-aware) protokolle yeniden eğitildi (1 Haziran 2026). Test F1 = 0.9069, CV F1 = 0.8936.** |
 
 ---
 
@@ -158,21 +158,21 @@
 
 | Metrik | Değer | Açıklama |
 |--------|-------|----------|
-| **CV Binary F1 (5-fold, birincil)** | **0.8779 ± 0.0062** | StratifiedGroupKFold by Variant_ID — en güvenilir tahmin |
-| Test Binary F1 (hold-out) | 0.8963 | pos_label=1; tek group-aware bölme (n=762) |
-| MCC (test) | 0.5313 | precision/recall, binary_f1'i birebir üretir |
-| PR-AUC (test) | 0.9194 | Eşik bağımsız ayırt edicilik |
-| ROC-AUC (test) | 0.8485 | Genel sınıf ayrımı |
-| Precision / Recall (test) | 0.8604 / 0.9354 | Patojenik sınıf |
-| Brier / ECE (test) | 0.1286 / 0.0965 | Kalibrasyon kalitesi/sapması |
+| **CV Binary F1 (OOF-stacking nested)** | **0.8936 ± 0.0004** | Production OOF-stacking nested-CV (5-seed). Weighted-avg fold CV=0.8779 (bileşen). |
+| Test Binary F1 (hold-out) | 0.9069 | pos_label=1; tek group-aware bölme (n=762) |
+| MCC (test) | 0.5639 | precision/recall, binary_f1'i birebir üretir |
+| PR-AUC (test) | 0.9114 | Eşik bağımsız ayırt edicilik |
+| ROC-AUC (test) | 0.8398 | Genel sınıf ayrımı |
+| Precision / Recall (test) | 0.8525 / 0.9686 | Patojenik sınıf |
+| Brier / ECE (test) | 0.1197 / 0.0755 | Kalibrasyon kalitesi/sapması |
 
 **Panel Bazlı Sonuçlar (test, sızıntısız):**
 
 | Panel | Binary F1 | MCC | PR-AUC |
 |-------|-----------|-----|--------|
-| MASTER (General) | 0.8842 | 0.5025 | 0.9172 |
-| KANSER (Hereditary_Cancer) | 0.9385 | 0.7753 | 0.9604 |
-| PAH | 0.9173 | 0.4215 | 0.8900 |
+| MASTER (General) | 0.8985 | 0.5410 | 0.9102 |
+| KANSER (Hereditary_Cancer) | 0.9385 | 0.7753 | 0.9393 |
+| PAH | 0.9173 | 0.4215 | 0.8843 |
 | CFTR | 0.9714 | — (küçük n) | 1.0000 |
 
 > **Not:** CFTR test n çok küçük (büyük çoğunluk patojenik) → MCC tanımsız/0; F1 ve PR-AUC
@@ -292,7 +292,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 |---|---|
 | **Sürüm** | `v1.0.0` |
 | **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
-| **Son güncelleme** | 1 Haziran 2026 — Test F1=0.8963 (sızıntısız, group-aware) |
+| **Son güncelleme** | 1 Haziran 2026 — Test F1=0.9069 (sızıntısız, group-aware) |
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod

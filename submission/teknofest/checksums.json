@@ -1,16 +1,16 @@
 {
   "generated_at": "2026-06-01",
-  "_note": "Sızıntısız (group-aware) + bio + DANN modeli için. RESULTS_CANONICAL.json.",
+  "_note": "OOF-stacking modeli (Test 0.9069). RESULTS_CANONICAL.json",
   "models/xgb_model.json": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
   "models/lgbm_model.txt": "699700a2a6864c569110a3b032582ee52744bdd1920f1110ea3cd690aec33f7b",
   "models/gnn_model.pth": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
   "models/dnn_model.pth": "6c9957ccfc04e4993e8df8c195076e9ec9b04ea96a0b9806f0e3a2caac1c83bc",
-  "models/preprocessor.pkl": "8a1a0027daa7c87857416fd4a9ab8c71611637f5cd81c6835d1be42c975e8b16",
-  "models/calibrator.pkl": "445b857cdc16af6f100b77b0770aedebb2a0aae592c8be20a76ee9192cb0ff0b",
-  "models/ensemble.pkl": "3533fad312c5d897ce42465ed6da4eb78951ce62feb5dff9b5f38dbdea8cce19",
-  "models/meta_learner.pkl": "e7185d95a078428c648dab315f97f58a45249211bfe7274b0ea34787806a8d86",
+  "models/preprocessor.pkl": "baaa1792cddcf65b71170c33b06d831309a5815100adbeb64d76c383aa9beaa3",
+  "models/calibrator.pkl": "77f0a741c8c2c8380712fa708610906756eeb98d6d071c8ebd9b7442c2c4e20c",
+  "models/ensemble.pkl": "7c462791d51f8eda40c5665710666e229f1afb11aa651f16a505bba83d14a57d",
+  "models/meta_learner.pkl": "139e9d6b60812ea334e1a963a82a06a95f8d2f39c3bc1293cc8bd137f798df2b",
   "models/ood_detector.pkl": "750ceeb6de1c0bf4f892ea5eed8609cf315ac54ba88fef7db54038aaef10abad",
-  "models/threshold.json": "1b6ca2fe650bd05ad583819c72237003c3e258dd4bf8891e8ffbf2615cda686c",
-  "models/panel_thresholds.json": "47daecf6585da273597c1cb674737e7c88135c73285f770c993672c2b76e0f76",
+  "models/threshold.json": "2d7793c502a1a52117aa9e78e7cd5d0f9dbaa207b5c40d1d831a965f580221b9",
+  "models/panel_thresholds.json": "7ac8913f35d36ff3c6097d682b30ae9591920707c2c56716c6dc78e6ca23be37",
   "submission/teknofest/jury_predictions.csv": "ad721d59c3b29e4e658f09805d2d6b923f5b8585bbbe18ccfa0d746f5959159f"
 }

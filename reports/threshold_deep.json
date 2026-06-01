@@ -1,0 +1,9 @@
+{
+  "canonical_thr": 0.4456,
+  "canonical_f1": 0.8963,
+  "cal_derived_thr_mean": 0.769,
+  "cal_derived_thr_std": 0.0556,
+  "cal_derived_f1_mean": 0.8928,
+  "cal_derived_f1_std": 0.0029,
+  "test_optimal_upper_bound": 0.8963
+}
