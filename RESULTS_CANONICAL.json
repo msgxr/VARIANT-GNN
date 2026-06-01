@@ -73,5 +73,20 @@
     "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680 by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). 0.8680 is now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
     "self_consistency": "test precision/recall reproduce test binary_f1 exactly."
   },
-  "headline_note": "Stack: leakage-free group-aware split + full features + CategoricalBio + Domain-Adversarial DNN. CV 0.8779±0.0062 (vs 0.8680 leakage-fix baseline; +bio 0.8711; +DANN 0.8779). DANN also +2.17pp leave-one-panel-out (reports/dann_lopo_validation.json)."
+  "headline_note": "Stack: leakage-free group-aware split + full features + CategoricalBio + Domain-Adversarial DNN. CV 0.8779±0.0062 (vs 0.8680 leakage-fix baseline; +bio 0.8711; +DANN 0.8779). DANN also +2.17pp leave-one-panel-out (reports/dann_lopo_validation.json).",
+  "seed_stability": {
+    "n_seeds": 5,
+    "seeds": [
+      42,
+      123,
+      456,
+      789,
+      2026
+    ],
+    "mean_cv_f1": 0.8738,
+    "inter_seed_std": 0.00344,
+    "min": 0.87,
+    "max": 0.8802,
+    "note": "5-seed CV F1 mean 0.8738 ± 0.0034 (group-aware + bio + DANN). Shipped model (cv_report, seed 42) = 0.8779; neural components (GNN/DNN/DANN) add minor run-variance, tree members (60% weight) deterministic. Model is seed-stable."
+  }
 }

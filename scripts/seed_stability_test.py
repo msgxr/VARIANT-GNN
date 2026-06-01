@@ -46,8 +46,11 @@ logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s |
 logger = logging.getLogger(__name__)
 
 
-def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None) -> dict:
-    """Tek seed ile crossval çalıştır, F1 sonuçlarını döndür."""
+def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None,
+                 groups=None, panels=None) -> dict:
+    """Tek seed ile crossval çalıştır, F1 sonuçlarını döndür.
+    groups/panels geçilirse production pipeline ile birebir aynı (sızıntısız
+    group-aware split + Domain-Adversarial DNN)."""
     reset_settings()
     cfg = get_settings(str(REPO_ROOT / "configs" / "pdr.yaml"))
     cfg.seed = seed
@@ -56,7 +59,8 @@ def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None) -> dict:
     set_global_seed(seed)
 
     trainer = VariantTrainer()
-    result = trainer.train(X, y, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs)
+    result = trainer.train(X, y, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs,
+                           groups=groups, panels=panels)
 
     return {
         "seed": seed,
@@ -68,7 +72,7 @@ def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", default=str(REPO_ROOT / "data" / "train_variants_aug.csv"))
+    parser.add_argument("--data", default=str(REPO_ROOT / "data" / "train_variants.csv"))
     parser.add_argument("--seeds", nargs="+", type=int, default=[42, 123, 456, 789, 2026])
     parser.add_argument("--out",  default=str(REPO_ROOT / "reports" / "seed_stability.json"))
     args = parser.parse_args()
@@ -80,7 +84,15 @@ def main() -> int:
     ds = load_csv(args.data)
     X = ds.features.values
     y = ds.labels
+    # Group-aware (Variant_ID) + panel labels → production pipeline ile aynı
+    groups = None
+    panels = None
+    if "Variant_ID" in ds.metadata.columns and len(ds.metadata) == len(X):
+        groups = ds.metadata["Variant_ID"].astype(str).str.replace(r"_aug\d*$", "", regex=True).values
+    if "Panel" in ds.metadata.columns and len(ds.metadata) == len(X):
+        panels = ds.metadata["Panel"].astype(str).values
     print(f"Veri boyutu: {X.shape}, sınıf dağılımı: {dict(zip(*np.unique(y, return_counts=True)))}")
+    print(f"Group-aware: {groups is not None} | DANN panels: {panels is not None}")
     print()
 
     results = []
@@ -88,7 +100,8 @@ def main() -> int:
         print(f"{'='*60}")
         print(f"  [{i}/{len(args.seeds)}] Seed = {seed}")
         print(f"{'='*60}")
-        res = run_one_seed(seed, X, y, ds.nuc_sequences, ds.aa_sequences)
+        res = run_one_seed(seed, X, y, ds.nuc_sequences, ds.aa_sequences,
+                           groups=groups, panels=panels)
         results.append(res)
         print(f"  → CV F1 = {res['cv_mean_f1']:.4f} ± {res['cv_std_f1']:.4f}")
         print(f"    Fold F1'leri: {[f'{f:.4f}' for f in res['fold_f1s']]}")
