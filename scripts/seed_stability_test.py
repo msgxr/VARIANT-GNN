@@ -113,6 +113,7 @@ def main() -> int:
         "individual_runs":  results,
         "overall_mean_f1":  float(np.mean(all_cv_means)),
         "overall_std_f1":   float(np.std(all_cv_means)),
+        "inter_seed_std_f1": float(np.std(all_cv_means)),  # alias (test contract)
         "overall_min_f1":   float(np.min(all_cv_means)),
         "overall_max_f1":   float(np.max(all_cv_means)),
         "n_seeds":          len(args.seeds),

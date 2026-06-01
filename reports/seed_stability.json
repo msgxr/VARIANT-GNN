@@ -73,5 +73,6 @@
   "overall_min_f1": 0.8700083205713316,
   "overall_max_f1": 0.8801595960158174,
   "n_seeds": 5,
-  "data_file": "data/train_variants.csv"
+  "data_file": "data/train_variants.csv",
+  "inter_seed_std_f1": 0.0034401551568204332
 }
