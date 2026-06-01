@@ -4,12 +4,12 @@
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;Test+F1+%3D+0.9069+%7C+CV+F1+%3D+0.8936+(leakage-free);Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;JURI+F1+(dengeli+%C2%A73.2)+%3D+0.813+%7C+hold-out+0.897;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
 
 <br/><br/>
 
 [![PSR](https://img.shields.io/badge/PSR_PUANI-93.00_%2F_100-22c55e?style=for-the-badge&logo=checkmarx&logoColor=white&labelColor=052e16)](.)
-[![Test F1](https://img.shields.io/badge/Test_F1-0.9069-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
+[![Test F1](https://img.shields.io/badge/Juri_F1_dengeli-0.813-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
 [![CV F1](https://img.shields.io/badge/CV_F1-0.8936±0.0004_(leakage--free)-0ea5e9?style=for-the-badge&logo=scikitlearn&logoColor=white&labelColor=082f49)](.)
 [![Takim](https://img.shields.io/badge/Takim-XYRA3_%23909249-8b5cf6?style=for-the-badge&logo=groups&logoColor=white&labelColor=2e1065)](.)
 [![PDR](https://img.shields.io/badge/PDR_Teslim-29_Haziran_2026-f59e0b?style=for-the-badge&logo=calendar&logoColor=white&labelColor=431407)](.)
@@ -48,12 +48,14 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri            ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                            ║
-║  Test F1 (§7.3)  ║  0.9069  ·  CV: 0.8936 ± 0.0004  ·  θ=0.3367 (global, canonical)   ║
+║  F1 §7.3 (juri)  ║  0.813 dengeli(§3.2) · 0.897 holdout · θ=0.6831 balanced-OOF ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00            ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi          ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
 ```
 
+> **🎯 YARIŞMA METRİĞİ (dürüst):** Şartname §3.2 jüri/test seti **sınıf-dengelidir (50/50)**. Bizim asıl beklenen yarışma skorumuz **Binary F1 ≈ 0.813** (dengeli jüri prior'ı, θ=0.6831 balanced-OOF eşik). İç %75-pozitif hold-out'taki **0.897** sayısı modelin *ayrım gücüdür*, jüri skoru değildir. Eşiği eğitim dağılımında (%74-poz) ayarlamak dengeli sette ~5pp kaybettirir; biz eşiği jüri prior'ına göre türetip bu kaybı kapattık (A→B çapraz-doğrulandı, overfit yok — `reports/balanced_jury_f1.json`).
+>
 > **⚠️ KLİNİK UYARI:** Model çıktıları **yalnızca araştırma, eğitim ve yarışma değerlendirmesi** amaçlıdır. Klinik tanı, tedavi veya tıbbi karar desteği için **kullanılamaz**.
 
 </div>
@@ -156,7 +158,7 @@ flowchart TD
     ISO --> MCD["🎲 MC Dropout\n10 Forward Pass\nBelirsizlik ölçümü"]
     MCD --> OOD["👁️ OOD Dedektörü\nEğitim ref. — sadece detect()"]
 
-    OOD --> O1["✅ Patojenik / Benign\nθ=0.3367 (global cal-türevli)"]
+    OOD --> O1["✅ Patojenik / Benign\nθ=0.6831 (global cal-türevli)"]
     OOD --> O2["📊 Risk Skoru 0–100\nKalibre olasılık"]
     OOD --> O3["⚠️ Uzman Bayrağı\nσ > 0.30"]
     OOD --> O4["🔍 OOD Skoru\nDağılım sapması"]
@@ -568,7 +570,7 @@ flowchart TD
   DNN      (tek)  ████████████████████████████████░░░░░░░░  0.7969
   ─────────────────────────────────────────────────────────────────
   Ensemble (CV)   ██████████████████████████████████████░░  0.8936
-  Ensemble (Test) ████████████████████████████████████████▌ 0.9069  ← final (leakage-free, group-aware split)
+  Ensemble (Test) ████████████████████████████████████████▌ 0.8969  ← final (leakage-free, group-aware split)
 ```
 
 ### Ablation Detay Tablosu
@@ -581,22 +583,22 @@ flowchart TD
 | LightGBM (tek) | 0.8326 | ±0.0171 | 0.8117 | 0.8529 | — |
 | XGBoost (tek) | 0.8299 | ±0.0083 | 0.8220 | 0.8404 | — |
 | DNN (tek) | 0.7969 | ±0.0362 | 0.7581 | 0.8506 | — |
-| **Hibrit Ensemble** | **0.8936** | ±0.0081 | 0.8644 | 0.8681 | **0.9069** |
+| **Hibrit Ensemble** | **0.8936** | ±0.0081 | 0.8644 | 0.8681 | **0.8969** |
 | Baseline (Logistic Reg.) | ~0.74 | — | — | — | — |
 
 </div>
 
-### Panel Bazlı Sonuçlar (global θ=0.3367 — canonical; panel-spesifik test'te daha kötü, opt-in)
+### Panel Bazlı Sonuçlar (global θ=0.6831 — canonical; panel-spesifik test'te daha kötü, opt-in)
 
 <div align="center">
 
 | Panel | F1_Pat | Recall_P | Prec_P | MCC | PR-AUC | ROC-AUC | Brier |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **MASTER** | 0.8985 | 0.9630 | 0.8421 | 0.541 | 0.9102 | 0.8416 | 0.124 |
-| **KANSER** | 0.9385 | 1.0000 | 0.8841 | **0.775** | **0.9393** | **0.9161** | 0.080 |
-| **PAH** | 0.9173 | 0.9839 | 0.8592 | 0.422 | 0.8843 | 0.7051 | 0.141 |
-| **CFTR** | **0.9714** | 0.9444 | **1.0000** | — | **1.0000** | — | 0.070 |
-| **TOPLAM** | **0.9069** | **0.9686** | **0.8525** | 0.5639 | 0.9114 | 0.8398 | 0.1197 |
+| **MASTER** | 0.8865 | 0.9630 | 0.8421 | 0.541 | 0.9102 | 0.8416 | 0.124 |
+| **KANSER** | 0.944 | 1.0000 | 0.8841 | **0.775** | **0.9393** | **0.9161** | 0.080 |
+| **PAH** | 0.9077 | 0.9839 | 0.8592 | 0.422 | 0.8843 | 0.7051 | 0.141 |
+| **CFTR** | **0.9412** | 0.9444 | **1.0000** | — | **1.0000** | — | 0.070 |
+| **TOPLAM** | **0.8969** | **0.8953** | **0.8984** | 0.5863 | 0.9114 | 0.8398 | 0.1197 |
 
 </div>
 
@@ -712,7 +714,7 @@ flowchart LR
 flowchart TD
     R["Ham Ensemble P_Patojenik"]
     ISO["İsotonik Regresyon\nBrier=0.1197  ECE=0.0965\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
-    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ=0.3367 (global cal-türevli)"]
+    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ=0.6831 (global cal-türevli)"]
     PAT["Patojenik\nP >= theta\nHigh_Risk = True"]
     BEN["Benign\nP < theta\nHigh_Risk = False"]
 
@@ -1052,12 +1054,12 @@ flowchart LR
 ### PDR Metrik Kontrol Listesi
 
 ```
-✅  Binary F1 (§7.3, Patojenik)  =  0.9069
+✅  Binary F1 (§7.3, Patojenik)  =  0.8969
 ✅  CV F1                         =  0.8936 ± 0.0004
-✅  MCC                           =  0.5639
+✅  MCC                           =  0.5863
 ✅  PR-AUC                        =  0.9114
 ✅  ROC-AUC                       =  0.8398
-✅  Precision / Recall            =  0.8525 / 0.9686
+✅  Precision / Recall            =  0.8984 / 0.8953
 ✅  Brier Score                   =  0.1197
 ✅  ECE                           =  0.0788
 ✅  Confusion Matrix              =  hesaplandı + görseli var  (reports/figures/pdr/04_confusion_matrix_panel.png)
@@ -1131,7 +1133,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 Ensemble Sistemi
 
 ```
-PSR: 93.00/100  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.9069  ·  MCC: 0.5639  ·  θ: 0.3367 (global)
+PSR: 93.00/100  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.8969  ·  MCC: 0.5863  ·  θ: 0.6831 (global)
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DNN  ·  İsotonik Kalibrasyon  ·  SWA
 ```
 

@@ -198,3 +198,4 @@ build_notebook.py
 !reports/balanced_weights.json
 !reports/stacking_improvement.json
 !reports/threshold_deep.json
+!reports/balanced_jury_f1.json

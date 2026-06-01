@@ -1,7 +1,7 @@
 {
   "model_version": "1.0.0",
-  "created_at": "2026-06-01T17:28:47Z",
-  "git_commit": "3f2e2d4f95abda0da22564ba96113c6f89218018",
+  "created_at": "2026-06-01T21:11:13Z",
+  "git_commit": "9a02265052b88c28f500dde7f5b3491a0d31c3b8",
   "python_version": "3.9.6",
   "platform": "macOS-14.6-arm64-arm-64bit",
   "package_versions": {
@@ -17,8 +17,8 @@
   "config_hash": "not_provided",
   "dataset_fingerprints": {},
   "artifact_checksums": {
-    "preprocessor.pkl": "3ccab94a6e8859ebdf8982b37ef7f4b66536ccbdd529c6575252d0854bf6ff2d",
-    "ensemble.pkl": "726606610821d7990a622945a298f1ccdd7ca24e3b32380c4364e1134d725583",
+    "preprocessor.pkl": "4629b005ca921ce468ae3743b11125494f2dd218fdc79fdf2a0bd40f48925b48",
+    "ensemble.pkl": "d00f5d726c2880ca569b50ddcf2dee033d64d301a942619a0491e9a011731b4e",
     "calibrator.pkl": "77f0a741c8c2c8380712fa708610906756eeb98d6d071c8ebd9b7442c2c4e20c",
     "threshold.json": "2d7793c502a1a52117aa9e78e7cd5d0f9dbaa207b5c40d1d831a965f580221b9"
   }
