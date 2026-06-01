@@ -1,4 +1,5 @@
 {
+  "_SUPERSEDED": "⚠️ SUPERSEDED — bu dosyadaki sayılar 1 Haziran 2026 SIZINTISIZ (group-aware) yeniden eğitiminden ÖNCESİNE aittir (eski leaky pipeline: augmentation + k=35+AE + satır-bazlı split). GÜNCEL/CANONICAL değerler: RESULTS_CANONICAL.json. Önceki 0.8980/0.9269 sayıları geri çekildi.",
   "description": "Ablation study — Her bileşen sırayla devre dışı bırakıldı, Binary F1 (Patojenik, §7.3) ölçüldü",
   "baseline": "Tam ensemble (XGBoost + LightGBM + GATv2GNN + DNN + SMOTE + Augmentation + Calibration)",
   "baseline_cv_f1": 0.8668,

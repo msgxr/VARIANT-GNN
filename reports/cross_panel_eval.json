@@ -1,4 +1,5 @@
 {
+  "_SUPERSEDED": "⚠️ SUPERSEDED — bu dosyadaki sayılar 1 Haziran 2026 SIZINTISIZ (group-aware) yeniden eğitiminden ÖNCESİNE aittir (eski leaky pipeline: augmentation + k=35+AE + satır-bazlı split). GÜNCEL/CANONICAL değerler: RESULTS_CANONICAL.json. Önceki 0.8980/0.9269 sayıları geri çekildi.",
   "_meta": {
     "description": "Panel bazlı çapraz değerlendirme — iki eşik stratejisi ile karşılaştırmalı",
     "global_threshold": 0.241,
@@ -17,10 +18,19 @@
     "precision": 0.8433734939759037,
     "recall": 0.7817589576547231,
     "roc_auc": 0.7641863996696256,
-    "confusion_matrix": [[470, 312], [469, 1680]],
+    "confusion_matrix": [
+      [
+        470,
+        312
+      ],
+      [
+        469,
+        1680
+      ]
+    ],
     "cv_mean_f1": 0.8897743016199058,
     "cv_std_f1": 0.015148335087395631,
-    "panel_specific_threshold": 0.590,
+    "panel_specific_threshold": 0.59,
     "panel_specific_f1": 0.8872,
     "panel_specific_mcc": 0.6848,
     "panel_specific_note": "θ=0.590 ile precision artırıldı (2.75:1 dengesizlik — FP maliyeti azaltma öncelikli). Global θ=0.241 yüksek recall verir ama precision düşer."
@@ -35,11 +45,20 @@
     "precision": 0.8650519031141869,
     "recall": 0.9328358208955224,
     "roc_auc": 0.8681281094527363,
-    "confusion_matrix": [[81, 39], [18, 250]],
+    "confusion_matrix": [
+      [
+        81,
+        39
+      ],
+      [
+        18,
+        250
+      ]
+    ],
     "cv_mean_f1": 0.8301235803003324,
     "cv_std_f1": 0.011636584581197993,
     "panel_specific_threshold": 0.281,
-    "panel_specific_f1": 0.8960,
+    "panel_specific_f1": 0.896,
     "panel_specific_mcc": 0.8706,
     "panel_specific_note": "θ=0.281 ≈ global eşiğe yakın — iki strateji tutarlı sonuç veriyor."
   },
@@ -53,7 +72,16 @@
     "precision": 0.9227053140096618,
     "recall": 0.6161290322580645,
     "roc_auc": 0.7214880332986472,
-    "confusion_matrix": [[46, 16], [119, 191]],
+    "confusion_matrix": [
+      [
+        46,
+        16
+      ],
+      [
+        119,
+        191
+      ]
+    ],
     "cv_mean_f1": 0.8299746782265792,
     "cv_std_f1": 0.015195864503813024,
     "panel_specific_threshold": 0.138,
@@ -71,7 +99,16 @@
     "precision": 0.865979381443299,
     "recall": 0.9333333333333333,
     "roc_auc": 0.791005291005291,
-    "confusion_matrix": [[8, 13], [6, 84]],
+    "confusion_matrix": [
+      [
+        8,
+        13
+      ],
+      [
+        6,
+        84
+      ]
+    ],
     "cv_mean_f1": 0.8383626970430228,
     "cv_std_f1": 0.01868026856675566,
     "panel_specific_threshold": 0.108,

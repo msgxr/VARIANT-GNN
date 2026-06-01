@@ -1,11 +1,32 @@
 {
+  "_SUPERSEDED": "⚠️ SUPERSEDED — bu dosyadaki sayılar 1 Haziran 2026 SIZINTISIZ (group-aware) yeniden eğitiminden ÖNCESİNE aittir (eski leaky pipeline: augmentation + k=35+AE + satır-bazlı split). GÜNCEL/CANONICAL değerler: RESULTS_CANONICAL.json. Önceki 0.8980/0.9269 sayıları geri çekildi.",
   "title": "Panel Çapraz Genelleme Matrisi — VARIANT-GNN",
   "description": "Her panelin özellik imzasının diğer panellere ne ölçüde transfer ettiğini gösteren analiz. Diagonal = production sonuçları (panel-spesifik eşik). Off-diagonal = feature overlap ve domain shift analizi.",
   "production_diagonal": {
-    "General":           {"f1": 0.8872, "mcc": 0.6848, "threshold": 0.590, "n": 2931},
-    "Hereditary_Cancer": {"f1": 0.8960, "mcc": 0.8706, "threshold": 0.281, "n": 388},
-    "PAH":               {"f1": 0.9556, "mcc": 0.9193, "threshold": 0.138, "n": 372},
-    "CFTR":              {"f1": 0.9524, "mcc": 0.8385, "threshold": 0.108, "n": 111}
+    "General": {
+      "f1": 0.8872,
+      "mcc": 0.6848,
+      "threshold": 0.59,
+      "n": 2931
+    },
+    "Hereditary_Cancer": {
+      "f1": 0.896,
+      "mcc": 0.8706,
+      "threshold": 0.281,
+      "n": 388
+    },
+    "PAH": {
+      "f1": 0.9556,
+      "mcc": 0.9193,
+      "threshold": 0.138,
+      "n": 372
+    },
+    "CFTR": {
+      "f1": 0.9524,
+      "mcc": 0.8385,
+      "threshold": 0.108,
+      "n": 111
+    }
   },
   "cross_panel_analysis": {
     "General_to_others": {
@@ -45,7 +66,10 @@
     ],
     "universal_features": {
       "description": "Her panelde geçerli olan özellik grupları",
-      "groups": ["evolutionary_conservation", "in_silico_risk"],
+      "groups": [
+        "evolutionary_conservation",
+        "in_silico_risk"
+      ],
       "evidence": "SelectKBest her fold ve her panel subset'inde aynı 2 grubu seçiyor — evrensel patojenite sinyali",
       "shap_combined": 100.0
     }
