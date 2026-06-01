@@ -697,6 +697,9 @@ class VariantTrainer:
         results: List[FoldResult] = []
         use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
         seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
+        # Per-model group-aware OOF (out-of-sample) — for honest ensemble-weight
+        # optimization + conformal calibration (reports/oof_per_model.npz).
+        _oof = np.full((len(X), 4), np.nan)  # [XGB, LGBM, GNN, DNN] Pathogenic prob
 
         for fold_idx, (train_idx, val_idx) in enumerate(split_iter, start=1):
             set_global_seed(cfg.seed + fold_idx)
@@ -829,11 +832,31 @@ class VariantTrainer:
             # TEKNOFEST §7.3: temel metrik binary F1 (Pathogenic sınıfı, pos_label=1)
             ens_f1    = float(f1_score(y_val, ens_preds, average="binary", pos_label=1, zero_division=0))
 
+            # --- Per-model OOF accumulation (out-of-sample for this fold) ---
+            nv = len(y_val)
+            _oof[val_idx, 0] = xgb_probs[:nv, 1]
+            if lgbm_model_fold is not None:
+                _oof[val_idx, 1] = lgbm_model_fold.predict_proba(_to_lgbm_frame(X_val_proc))[:nv, 1]
+            else:
+                _oof[val_idx, 1] = xgb_probs[:nv, 1]
+            _oof[val_idx, 2] = np.asarray(gnn_probs_fold)[:nv, 1]
+            _oof[val_idx, 3] = np.asarray(dnn_probs_fold)[:nv, 1]
+
             logger.info(
                 "Fold %d | Ensemble Binary F1 (Pathogenic): %.4f  (XGB=%.4f, LGB=%.4f, GNN=%.4f, DNN=%.4f)",
                 fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1,
             )
             results.append(FoldResult(fold_idx, ens_f1, xgb_f1, lgbm_f1, gnn_f1, dnn_f1))
+
+        # Persist per-model OOF for honest weight optimization (+ conformal).
+        try:
+            mask = ~np.isnan(_oof).any(axis=1)
+            np.savez(cfg.paths.reports_dir / "oof_per_model.npz",
+                     oof=_oof[mask], labels=y[mask],
+                     models=np.array(["XGB", "LGBM", "GNN", "DNN"]))
+            logger.info("Per-model OOF saved → reports/oof_per_model.npz (n=%d)", int(mask.sum()))
+        except Exception as _oof_exc:
+            logger.warning("OOF save skipped: %s", _oof_exc)
 
         return results
 

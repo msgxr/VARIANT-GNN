@@ -191,3 +191,7 @@ build_notebook.py
 !reports/ensemble_weight_justification.json
 !reports/figures/ensemble_weight_justification.png
 !reports/lever_test.json
+!reports/oof_per_model.json
+!reports/weight_optimization.json
+!reports/weight_scheme_test.json
+!reports/oof_per_model.npz
