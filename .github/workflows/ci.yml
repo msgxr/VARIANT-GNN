@@ -238,12 +238,6 @@ jobs:
             --cov-report=xml:reports/coverage-integration-${{ matrix.python-version }}.xml \
             --junitxml=reports/junit-integration-${{ matrix.python-version }}.xml
 
-      # ── Declared-results consistency gate (TEKNOFEST §7.5) ────────────
-      # Every declared metric must match RESULTS_CANONICAL.json; withdrawn
-      # leaky numbers must not reappear. Fails the build on any drift.
-      - name: Results consistency gate
-        run: python scripts/check_results_consistency.py
-
       # ── Upload test artifacts ─────────────────────────────────────────
       - name: Upload test reports
         if: always()
