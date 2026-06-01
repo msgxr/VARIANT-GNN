@@ -20,5 +20,6 @@
     "LGBM",
     "GNN",
     "DNN"
-  ]
+  ],
+  "_CORRECTION": "ONEMLI: Buradaki +0.70pp WEIGHTED-AVERAGE yoluna karsidir. Production LogReg STACKING meta-learner kullanir (held-out 0.9025) ve zaten optimal kombinasyonu ogrenir. Re-weighting production stacking-i GECMEZ (balanced -0.06pp; pure-optimal +0.17pp marjinal). Guvenli re-weight kazanci YOK; kanonik model degismedi. Detay: reports/balanced_weights.json"
 }
