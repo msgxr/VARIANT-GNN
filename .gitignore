@@ -190,3 +190,4 @@ build_notebook.py
 !reports/figures/conformal_coverage.png
 !reports/ensemble_weight_justification.json
 !reports/figures/ensemble_weight_justification.png
+!reports/lever_test.json
