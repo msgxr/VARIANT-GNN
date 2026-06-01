@@ -60,7 +60,7 @@
     "PAH": 0.3104,
     "CFTR": 0.074
   },
-  "global_threshold": 0.208,
+  "global_threshold": 0.4456,
   "cv_fold_f1": [
     0.8717,
     0.8817,
@@ -88,5 +88,6 @@
     "min": 0.87,
     "max": 0.8802,
     "note": "5-seed CV F1 mean 0.8738 ± 0.0034 (group-aware + bio + DANN). Shipped model (cv_report, seed 42) = 0.8779; neural components (GNN/DNN/DANN) add minor run-variance, tree members (60% weight) deterministic. Model is seed-stable."
-  }
+  },
+  "threshold_strategy": "CANONICAL = GLOBAL cal-derived θ=0.4456 (Test F1=0.8963 bununla üretildi, §7.5 reprodüksiyon). Panel-spesifik eşikler hold-out'ta DAHA KÖTÜ (0.8950<0.8963; reports/threshold_consistency.json) ve cal-overfit → submission'da uygulanmaz (cfg.inference.use_panel_thresholds=true ile opt-in)."
 }

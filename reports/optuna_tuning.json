@@ -1,0 +1,25 @@
+{
+  "baseline_f1": 0.8978,
+  "best_f1": 0.8993,
+  "delta_pp": 0.15,
+  "best_params": {
+    "xgb_max_depth": 8,
+    "xgb_lr": 0.03563456908738524,
+    "xgb_n_est": 493,
+    "xgb_subsample": 0.7107884444055954,
+    "xgb_colsample": 0.6258019465560443,
+    "xgb_mcw": 3,
+    "xgb_ra": 0.9997942985045764,
+    "xgb_rl": 2.5630128368545684,
+    "lgb_leaves": 66,
+    "lgb_lr": 0.07593308216388023,
+    "lgb_n_est": 309,
+    "lgb_subsample": 0.7959038563975245,
+    "lgb_colsample": 0.8988733020311849,
+    "lgb_mcs": 11,
+    "lgb_ra": 0.6921686236451662,
+    "lgb_rl": 0.5243911851957919
+  },
+  "n_trials": 50,
+  "protocol": "StratifiedGroupKFold 3-fold, XGB+LGB 0.5/0.5 blend, F1-opt threshold"
+}

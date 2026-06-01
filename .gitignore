@@ -91,6 +91,8 @@ reports/*.bak
 !reports/preprocessing_diagnostic.json
 !reports/dann_lopo_validation.json
 !reports/bio_feature_ablation.json
+!reports/threshold_consistency.json
+!reports/optuna_tuning.json
 
 # Eğitim logları
 train_log.txt

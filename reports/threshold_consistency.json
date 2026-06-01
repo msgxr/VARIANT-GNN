@@ -1,0 +1,9 @@
+{
+  "global_thr": 0.4456,
+  "global_f1": 0.8963,
+  "global_mcc": 0.5313,
+  "panel_f1": 0.895,
+  "panel_mcc": 0.5214,
+  "canonical_uses": "global",
+  "recommendation": "global"
+}

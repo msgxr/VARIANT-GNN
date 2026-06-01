@@ -266,11 +266,15 @@ class InferencePipeline:
 
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
 
-        # ── Panel-aware karar eşiği (TEKNOFEST §3.2 / §7.3) ──────────────────
-        # Her satıra Panel'ine göre F1-optimal eşik uygula; Panel yoksa veya panel
-        # eşiği tanımlı değilse global eşiğe düş. Bu, submission'ın rapor edilen
-        # panel-spesifik F1 değerlerini yeniden üretmesini sağlar.
-        if panel_thresholds and "Panel" in dataset.metadata.columns:
+        # ── Karar eşiği: GLOBAL (canonical) ─────────────────────────────────
+        # preds yukarıda zaten global cal-türevli eşikle (threshold) hesaplandı —
+        # RESULTS_CANONICAL.json Test F1=0.8963 BU eşikle üretildi (§7.5 reprodüksiyon).
+        # Panel-spesifik eşikler hold-out test'te DAHA KÖTÜ (0.8950 < 0.8963) ve
+        # cal-set üzerinde aşırı-uyumlu olduğundan VARSAYILAN OLARAK UYGULANMAZ
+        # (kanıt: reports/threshold_consistency.json). İsteğe bağlı olarak
+        # cfg.inference.use_panel_thresholds=true ile açılabilir.
+        use_panel = bool(getattr(getattr(cfg, "inference", None), "use_panel_thresholds", False))
+        if use_panel and panel_thresholds and "Panel" in dataset.metadata.columns:
             proba_pathogenic = raw_proba[:, 1]
             row_thr = (
                 dataset.metadata["Panel"]
@@ -279,10 +283,8 @@ class InferencePipeline:
                 .values
             )
             preds = (proba_pathogenic >= row_thr).astype(int)
-            logger.info(
-                "Panel-aware eşik uygulandı: %s",
-                {k: round(float(v), 3) for k, v in panel_thresholds.items()},
-            )
+            logger.info("Panel-aware eşik (opt-in) uygulandı: %s",
+                        {k: round(float(v), 3) for k, v in panel_thresholds.items()})
 
         # Çıktı DataFrame
         result: pd.DataFrame = dataset.metadata.copy()

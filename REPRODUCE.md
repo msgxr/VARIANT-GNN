@@ -39,7 +39,7 @@ python main.py --mode predict --test_file <jury_test.csv>
 # Çıktı: reports/predictions_full.csv (panel-aware eşik otomatik uygulanır)
 ```
 
-Panel-spesifik eşikler (`models/panel_thresholds.json`) inference'ta otomatik
+GLOBAL eşik θ=0.4456 (canonical, models/threshold.json) inference'ta otomatik
 yüklenir ve her satıra `Panel`'ine göre uygulanır.
 
 ## 3. Sıfırdan eğitim (NDA verisine sahip olanlar için)
