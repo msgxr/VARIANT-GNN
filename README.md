@@ -48,7 +48,7 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri            ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                            ║
-║  Test F1 (§7.3)  ║  0.9069  ·  CV: 0.8936 ± 0.0004  ·  θ=0.4456 (global, canonical)   ║
+║  Test F1 (§7.3)  ║  0.9069  ·  CV: 0.8936 ± 0.0004  ·  θ=0.3367 (global, canonical)   ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00            ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi          ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
@@ -156,7 +156,7 @@ flowchart TD
     ISO --> MCD["🎲 MC Dropout\n10 Forward Pass\nBelirsizlik ölçümü"]
     MCD --> OOD["👁️ OOD Dedektörü\nEğitim ref. — sadece detect()"]
 
-    OOD --> O1["✅ Patojenik / Benign\nθ=0.4456 (global cal-türevli)"]
+    OOD --> O1["✅ Patojenik / Benign\nθ=0.3367 (global cal-türevli)"]
     OOD --> O2["📊 Risk Skoru 0–100\nKalibre olasılık"]
     OOD --> O3["⚠️ Uzman Bayrağı\nσ > 0.30"]
     OOD --> O4["🔍 OOD Skoru\nDağılım sapması"]
@@ -586,7 +586,7 @@ flowchart TD
 
 </div>
 
-### Panel Bazlı Sonuçlar (global θ=0.4456 — canonical; panel-spesifik test'te daha kötü, opt-in)
+### Panel Bazlı Sonuçlar (global θ=0.3367 — canonical; panel-spesifik test'te daha kötü, opt-in)
 
 <div align="center">
 
@@ -712,7 +712,7 @@ flowchart LR
 flowchart TD
     R["Ham Ensemble P_Patojenik"]
     ISO["İsotonik Regresyon\nBrier=0.1197  ECE=0.0965\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
-    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ=0.4456 (global cal-türevli)"]
+    TH["Threshold Optimizasyon\nF1 maximize\nKalibrasyon setinde\nθ=0.3367 (global cal-türevli)"]
     PAT["Patojenik\nP >= theta\nHigh_Risk = True"]
     BEN["Benign\nP < theta\nHigh_Risk = False"]
 
@@ -1131,7 +1131,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 Ensemble Sistemi
 
 ```
-PSR: 93.00/100  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.9069  ·  MCC: 0.5639  ·  θ: 0.4456 (global)
+PSR: 93.00/100  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.9069  ·  MCC: 0.5639  ·  θ: 0.3367 (global)
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DNN  ·  İsotonik Kalibrasyon  ·  SWA
 ```
 

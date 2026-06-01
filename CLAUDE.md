@@ -169,7 +169,7 @@ Claude always operates with this context active:
 
 **Architecture:** XGBoost(30%) + LightGBM(30%) + VariantGATv2GNN/GATv2Conv(25%) + DNN(15%) + Stacking meta-learner (LogReg)  
 **Pipeline:** Medyan Imputation → RobustScaler → (full §3.2 feature set — no aggressive SelectKBest/AE) → SMOTE(train only) → Cosine k-NN graph  
-**Split:** GROUP-AWARE 80/20 hold-out by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-Fold, random_state=42. Leakage guard: 0 variants straddle train/test. Karar eşiği: GLOBAL cal-türevli θ=0.4456 (canonical; Test F1=0.9069 bununla). Panel-spesifik eşikler test'te daha kötü (0.8950) → opt-in.  
+**Split:** GROUP-AWARE 80/20 hold-out by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-Fold, random_state=42. Leakage guard: 0 variants straddle train/test. Karar eşiği: GLOBAL cal-türevli θ=0.3367 (canonical; Test F1=0.9069 bununla). Panel-spesifik eşikler test'te daha kötü (0.8950) → opt-in.  
 **Results (real TEKNOFEST data — LEAKAGE-FREE retrain 2026-06-01, canonical: RESULTS_CANONICAL.json):** CV F1=0.8936±0.0004, Test F1=0.9069, MCC=0.5639, PR-AUC=0.9080, ROC-AUC=0.8431, Recall=0.9686 (precision/recall reproduce binary_f1 exactly)  
 **Panel results (test, group-aware):** General F1=0.8985 MCC=0.50 | KANSER F1=0.9385 MCC=0.78 | PAH F1=0.9173 MCC=0.422 | CFTR F1=0.9714  
 **PSR score:** 93/100. Weak: §4.4 Explainability(3.33/5), §4.5 Tech Evolution(3.33/5), §5.1 Architecture Justification(4/5)  
