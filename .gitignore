@@ -188,3 +188,5 @@ build_notebook.py
 !reports/shap_waterfall.png
 !reports/figures/shap_group_contributions_honest.png
 !reports/figures/conformal_coverage.png
+!reports/ensemble_weight_justification.json
+!reports/figures/ensemble_weight_justification.png

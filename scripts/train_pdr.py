@@ -192,17 +192,29 @@ def main() -> None:
     calibrator.fit(raw_proba_cal, y[idx_cal])
     logger.info("Calibrator fitted (method=%s).", cfg.calibration.method)
 
-    # ── OOF predictions for panel-aware ensemble ───────────────────────
+    # ── OOF predictions for panel-aware ensemble (GROUP-AWARE, de-faked) ──
+    # NOT: panel_ensemble_weights.json KANONİK DEĞİL — src/ hiçbir yerde kullanmaz.
+    # Kanonik 4-model ağırlıkları group-aware train.py OOF-inner-val yolundan gelir.
+    # Önceki sürüm (a) StratifiedKFold (group-aware DEĞİL) ve (b) GNN/DNN kolonlarını
+    # tüm-veri ensemble proxy'siyle SAHTE dolduruyordu — ikisi de sızıntıydı, kaldırıldı.
+    # Bu yan-artefakt artık yalnızca group-aware GERÇEK tree-member (XGB+LGBM) OOF kullanır.
     if panel_aware:
-        from sklearn.model_selection import StratifiedKFold
+        from sklearn.model_selection import StratifiedGroupKFold
         from src.ensemble.panel_aware_ensemble import PanelAwareEnsemble
         import xgboost as _xgb
 
-        n_models = 4  # XGB, LGB, GNN, DNN
-        skf = StratifiedKFold(n_splits=cfg.training.cv_folds, shuffle=True, random_state=seed)
+        base_ids = (
+            dataset.metadata["Variant_ID"].astype(str)
+            .str.replace(r"_aug\d*$", "", regex=True).values
+        )
+        if getattr(args, "panel", None):  # panel maskesi gruplara da uygulanır
+            base_ids = base_ids[mask]
+
+        n_models = 2  # GERÇEK out-of-fold: XGB, LGBM (sahte GNN/DNN proxy yok)
+        sgkf = StratifiedGroupKFold(n_splits=cfg.training.cv_folds, shuffle=True, random_state=seed)
         oof_preds = np.zeros((len(X), n_models))
 
-        for _, (tr_idx, val_idx) in enumerate(skf.split(X, y)):
+        for tr_idx, val_idx in sgkf.split(X, y, base_ids):
             prep_fold = build_preprocessor_from_config()
             X_tr_p, y_tr_p = prep_fold.fit_resample_train(X[tr_idx], y[tr_idx])
             X_val_p = prep_fold.transform(X[val_idx])
@@ -210,7 +222,6 @@ def main() -> None:
             xgb_fold = _xgb.XGBClassifier(**cfg.xgb.as_dict())
             xgb_fold.fit(X_tr_p, y_tr_p, verbose=False)
             oof_preds[val_idx, 0] = xgb_fold.predict_proba(X_val_p)[:, 1]
-
             try:
                 import lightgbm as _lgb
                 lgb_fold = _lgb.LGBMClassifier(**cfg.lgbm.as_dict())
@@ -219,16 +230,11 @@ def main() -> None:
             except Exception:
                 oof_preds[val_idx, 1] = oof_preds[val_idx, 0]
 
-            # GNN and DNN: use final ensemble as OOF proxy for these folds
-            _, ens_proba_fold = result.ensemble.predict(X_val_p)
-            oof_preds[val_idx, 2] = ens_proba_fold[:, 1]
-            oof_preds[val_idx, 3] = ens_proba_fold[:, 1]
-
         panel_ensemble = PanelAwareEnsemble(n_models=n_models, seed=seed)
         panel_ensemble.fit(oof_preds, y, panels.tolist())
         panel_weights_path = args.output / "panel_ensemble_weights.json"
         panel_ensemble.save(panel_weights_path)
-        logger.info("Panel-aware ensemble weights saved to %s", panel_weights_path)
+        logger.info("Panel-aware (group-aware, genuine XGB+LGBM OOF) weights -> %s", panel_weights_path)
 
     # ── F1-optimal threshold ───────────────────────────────────────────
     from src.scientific.metrics.metrics import find_best_threshold
