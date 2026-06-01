@@ -155,6 +155,7 @@ class PreprocessingSettings:
     smote_enabled: bool = False          # YAML default: TEKNOFEST §3.2 dengeli veri
     use_bio_scoring: bool = False        # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
     use_acmg_proxy: bool = False         # §3.2: yarışma kolon adları anonim → CADD/REVEL gibi adlar yok
+    use_categorical_bio: bool = False    # AA_1→AA_2 + CAT_* sinyalini kurtar (CategoricalBioFeaturizer)
 
 
 @dataclass
@@ -348,6 +349,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         smote_enabled           = raw_pre.get("smote_enabled", True),
         use_bio_scoring         = raw_pre.get("use_bio_scoring", False),
         use_acmg_proxy          = raw_pre.get("use_acmg_proxy", False),
+        use_categorical_bio     = raw_pre.get("use_categorical_bio", False),
     )
 
     raw_cal = raw.get("calibration", {})

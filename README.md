@@ -4,13 +4,13 @@
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;Test+F1+%3D+0.9024+%7C+CV+F1+%3D+0.8680+(leakage-free);Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;Test+F1+%3D+0.8939+%7C+CV+F1+%3D+0.8711+(leakage-free);Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
 
 <br/><br/>
 
 [![PSR](https://img.shields.io/badge/PSR_PUANI-93.00_%2F_100-22c55e?style=for-the-badge&logo=checkmarx&logoColor=white&labelColor=052e16)](.)
-[![Test F1](https://img.shields.io/badge/Test_F1-0.9024-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
-[![CV F1](https://img.shields.io/badge/CV_F1-0.8680±0.0083_(leakage--free)-0ea5e9?style=for-the-badge&logo=scikitlearn&logoColor=white&labelColor=082f49)](.)
+[![Test F1](https://img.shields.io/badge/Test_F1-0.8939-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](.)
+[![CV F1](https://img.shields.io/badge/CV_F1-0.8711±0.0094_(leakage--free)-0ea5e9?style=for-the-badge&logo=scikitlearn&logoColor=white&labelColor=082f49)](.)
 [![Takim](https://img.shields.io/badge/Takim-XYRA3_%23909249-8b5cf6?style=for-the-badge&logo=groups&logoColor=white&labelColor=2e1065)](.)
 [![PDR](https://img.shields.io/badge/PDR_Teslim-29_Haziran_2026-f59e0b?style=for-the-badge&logo=calendar&logoColor=white&labelColor=431407)](.)
 
@@ -29,7 +29,7 @@
 [![GATv2](https://img.shields.io/badge/GNN-GATv2Conv_x3_blok-60a5fa?style=flat-square)](src/core/gnn.py)
 [![SWA](https://img.shields.io/badge/SWA-Son_25pct_epoch-a78bfa?style=flat-square)](src/training/swa.py)
 [![MC](https://img.shields.io/badge/MC_Dropout-10_forward_pass-f59e0b?style=flat-square)](src/api/pipeline.py)
-[![Cal](https://img.shields.io/badge/Isotonic_Cal-Brier_0.1242-22d3ee?style=flat-square)](src/calibration/calibrator.py)
+[![Cal](https://img.shields.io/badge/Isotonic_Cal-Brier_0.1334-22d3ee?style=flat-square)](src/calibration/calibrator.py)
 [![OOD](https://img.shields.io/badge/OOD_Detector-Z.Mahal.KDE-fb923c?style=flat-square)](src/scientific/ood_detector.py)
 [![NDA](https://img.shields.io/badge/TEKNOFEST_NDA-Gizli-ef4444?style=flat-square&logo=shield)](.)
 
@@ -48,7 +48,7 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri            ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                            ║
-║  Test F1 (§7.3)  ║  0.9024  ·  CV: 0.8680 ± 0.0083  ·  θ panel-spesifik (0.08–0.37)   ║
+║  Test F1 (§7.3)  ║  0.8939  ·  CV: 0.8711 ± 0.0094  ·  θ panel-spesifik (0.08–0.37)   ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00            ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi          ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
@@ -505,7 +505,7 @@ flowchart TD
     CV --> F3["...  ..."]
     CV --> F5["Fold 5  train/val"]
 
-    F1 --> AVG["CV Ortalama F1\n= 0.8680 ± 0.0083"]
+    F1 --> AVG["CV Ortalama F1\n= 0.8711 ± 0.0094"]
     F2 --> AVG
     F3 --> AVG
     F5 --> AVG
@@ -569,8 +569,8 @@ flowchart TD
   XGBoost  (tek)  ███████████████████████████████████░░░░░  0.8299
   DNN      (tek)  ████████████████████████████████░░░░░░░░  0.7969
   ─────────────────────────────────────────────────────────────────
-  Ensemble (CV)   ██████████████████████████████████████░░  0.8680
-  Ensemble (Test) ████████████████████████████████████████▌ 0.9024  ← final (leakage-free, group-aware split)
+  Ensemble (CV)   ██████████████████████████████████████░░  0.8711
+  Ensemble (Test) ████████████████████████████████████████▌ 0.8939  ← final (leakage-free, group-aware split)
 ```
 
 ### Ablation Detay Tablosu
@@ -583,7 +583,7 @@ flowchart TD
 | LightGBM (tek) | 0.8326 | ±0.0171 | 0.8117 | 0.8529 | — |
 | XGBoost (tek) | 0.8299 | ±0.0083 | 0.8220 | 0.8404 | — |
 | DNN (tek) | 0.7969 | ±0.0362 | 0.7581 | 0.8506 | — |
-| **Hibrit Ensemble** | **0.8680** | ±0.0081 | 0.8644 | 0.8681 | **0.9024** |
+| **Hibrit Ensemble** | **0.8711** | ±0.0081 | 0.8644 | 0.8681 | **0.8939** |
 | Baseline (Logistic Reg.) | ~0.74 | — | — | — | — |
 
 </div>
@@ -594,11 +594,11 @@ flowchart TD
 
 | Panel | F1_Pat | Recall_P | Prec_P | MCC | PR-AUC | ROC-AUC | Brier |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **MASTER** | 0.8872 | 0.9679 | 0.8189 | 0.507 | 0.9183 | 0.8537 | 0.141 |
-| **KANSER** | 0.8960 | 0.9912 | 0.8175 | **0.649** | **0.9524** | **0.9353** | 0.106 |
-| **PAH** | **0.9556** | 0.9790 | **0.9333** | 0.556 | **0.9760** | 0.8842 | 0.072 |
-| **CFTR** | 0.9524 | **1.0000** | 0.9091 | 0.674 | 0.9223 | 0.7889 | 0.078 |
-| **TOPLAM** | **0.9024** | **0.9599** | **0.8514** | 0.5433 | 0.9103 | 0.8347 | 0.1242 |
+| **MASTER** | 0.8822 | 0.9190 | 0.8483 | 0.491 | 0.9102 | 0.8390 | 0.143 |
+| **KANSER** | 0.9302 | 0.9836 | 0.8824 | **0.741** | **0.9601** | **0.9407** | 0.086 |
+| **PAH** | 0.9173 | 0.9839 | 0.8592 | 0.422 | 0.8752 | 0.6728 | 0.137 |
+| **CFTR** | **0.9714** | 0.9444 | **1.0000** | — | **1.0000** | — | 0.046 |
+| **TOPLAM** | **0.8939** | **0.9337** | **0.8574** | 0.5190 | 0.9133 | 0.8403 | 0.1334 |
 
 </div>
 
@@ -1054,13 +1054,13 @@ flowchart LR
 ### PDR Metrik Kontrol Listesi
 
 ```
-✅  Binary F1 (§7.3, Patojenik)  =  0.9024
-✅  CV F1                         =  0.8680 ± 0.0083
-✅  MCC                           =  0.5433
-✅  PR-AUC                        =  0.9103
-✅  ROC-AUC                       =  0.8347
-✅  Precision / Recall            =  0.8514 / 0.9599
-✅  Brier Score                   =  0.1242
+✅  Binary F1 (§7.3, Patojenik)  =  0.8939
+✅  CV F1                         =  0.8711 ± 0.0094
+✅  MCC                           =  0.5190
+✅  PR-AUC                        =  0.9133
+✅  ROC-AUC                       =  0.8403
+✅  Precision / Recall            =  0.8574 / 0.9337
+✅  Brier Score                   =  0.1334
 ✅  ECE                           =  0.0788
 ✅  Confusion Matrix              =  hesaplandı + görseli var  (reports/figures/pdr/04_confusion_matrix_panel.png)
 ✅  Panel kırılımı (4 panel)      =  MASTER · KANSER · PAH · CFTR
@@ -1133,7 +1133,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 Ensemble Sistemi
 
 ```
-PSR: 93.00/100  ·  CV F1: 0.8680 ± 0.0083  ·  Test F1: 0.9024  ·  MCC: 0.5433  ·  θ: panel-spesifik
+PSR: 93.00/100  ·  CV F1: 0.8711 ± 0.0094  ·  Test F1: 0.8939  ·  MCC: 0.5190  ·  θ: panel-spesifik
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DNN  ·  İsotonik Kalibrasyon  ·  SWA
 ```
 

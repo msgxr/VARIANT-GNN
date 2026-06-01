@@ -1,7 +1,7 @@
 {
   "model_version": "1.0.0",
-  "created_at": "2026-06-01T09:15:52Z",
-  "git_commit": "7cbefe4db4c64f41fb326e81d2f38e15d8e05554",
+  "created_at": "2026-06-01T09:39:59Z",
+  "git_commit": "ce8278d1db99a9ecae1acdb2b3260fc9ff78ac9f",
   "python_version": "3.9.6",
   "platform": "macOS-14.6-arm64-arm-64bit",
   "package_versions": {
@@ -17,9 +17,9 @@
   "config_hash": "not_provided",
   "dataset_fingerprints": {},
   "artifact_checksums": {
-    "preprocessor.pkl": "b55eba53c8968e4ec5c8a26124f5f794a6a0718a8cfe6524286895f2214458b8",
-    "ensemble.pkl": "97ff0cd7f71a869b980f5936f4bb0a26e199ba3bbbfb126b3be10d846f0fba03",
-    "calibrator.pkl": "1cabb82f90b923052686f647e7eda60ca58eb2b1c296c433012e8bb86c4cf0e8",
-    "threshold.json": "56355720b7be9e3408f112c3f93854ed4568661a87a439d1062b2d2c9d3b0eba"
+    "preprocessor.pkl": "7f41f77fb87f4e69b05114f3050365ae86aab61e6112f2bb59ee2c607e175600",
+    "ensemble.pkl": "60458881ee1ec0988bf8978d51e8bc77b495309e92b9b9bd8cf5961447215575",
+    "calibrator.pkl": "3f550d525e89ca1a51eda0ad67d4bc6757b1c5b3e8d8bc9c401e1437a2605fcc",
+    "threshold.json": "2b0857cc44972c977a62c30f1861adfa736d4d90fe6dc8fead3be644325b18a6"
   }
 }

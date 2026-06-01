@@ -198,6 +198,22 @@ def load_csv(
             feature_df[col] = (panel_series == panel_name).astype(float)
         logger.info("Panel one-hot features added: %s", [f"Panel_{p}" for p in KNOWN_PANELS])
 
+    # ── Kategorik/biyolojik sinyal kurtarma (§3.2) ──────────────────────
+    # AA_1→AA_2 (amino asit değişimi), CAT_1/2 (popülasyon), CAT_6 (bölge),
+    # EK_* (in-silico) sinyalini sayısal özniteliklere çevirir. ColumnAligner
+    # (predict yolu load_csv'i çağırır) bio_* kolonlarını ada göre eşler →
+    # hem eğitim hem çıkarımda tutarlı. Doğrulama: reports/bio_feature_ablation.json
+    if getattr(getattr(cfg, "preprocessing", None), "use_categorical_bio", False):
+        try:
+            from src.features.categorical_bio_features import CategoricalBioFeaturizer
+            bio_src = (df.loc[label_valid_mask] if label_valid_mask is not None else df).reset_index(drop=True)
+            eng = CategoricalBioFeaturizer(append=False).fit(bio_src).transform(bio_src)
+            for c in eng.columns:
+                feature_df[c] = eng[c].to_numpy()
+            logger.info("Categorical-bio özellikleri eklendi: %d kolon (AA/CAT/EK kurtarma)", eng.shape[1])
+        except Exception as _bio_exc:
+            logger.warning("CategoricalBioFeaturizer atlandı (non-fatal): %s", _bio_exc)
+
     return LoadedDataset(
         features        = feature_df,
         labels          = labels,

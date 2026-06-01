@@ -12,19 +12,20 @@
     "threshold_strategy": "Per-panel F1-optimal on calibration set; global fallback",
     "calibration": "Isotonic regression",
     "data": "data/train_variants.csv (3802 rows, 3224 unique variants, 4 panels)",
-    "config": "configs/pdr.yaml"
+    "config": "configs/pdr.yaml",
+    "features": "Full §3.2 numeric set + Panel one-hot + CategoricalBioFeaturizer (AA→Grantham/BLOSUM, population, region, in-silico consensus)"
   },
   "headline": {
-    "cv_binary_f1": 0.868,
-    "cv_binary_f1_std": 0.0083,
-    "test_binary_f1": 0.9024,
-    "test_mcc": 0.5433,
-    "test_precision": 0.8514,
-    "test_recall": 0.9599,
-    "test_pr_auc": 0.9103,
-    "test_roc_auc": 0.8347,
-    "test_brier": 0.1242,
-    "test_ece": 0.0586
+    "cv_binary_f1": 0.8711,
+    "cv_binary_f1_std": 0.0094,
+    "test_binary_f1": 0.8939,
+    "test_mcc": 0.519,
+    "test_precision": 0.8574,
+    "test_recall": 0.9337,
+    "test_pr_auc": 0.9133,
+    "test_roc_auc": 0.8403,
+    "test_brier": 0.1334,
+    "test_ece": 0.1034
   },
   "panel_test_metrics": {
     "CFTR": {
@@ -34,16 +35,16 @@
       "recall": 0.9444
     },
     "General": {
-      "binary_f1": 0.8915,
-      "mcc": 0.5092,
-      "precision": 0.8388,
-      "recall": 0.9514
+      "binary_f1": 0.8822,
+      "mcc": 0.4911,
+      "precision": 0.8483,
+      "recall": 0.919
     },
     "Hereditary_Cancer": {
-      "binary_f1": 0.9457,
-      "mcc": 0.8037,
-      "precision": 0.8971,
-      "recall": 1.0
+      "binary_f1": 0.9302,
+      "mcc": 0.7407,
+      "precision": 0.8824,
+      "recall": 0.9836
     },
     "PAH": {
       "binary_f1": 0.9173,
@@ -53,23 +54,24 @@
     }
   },
   "panel_thresholds": {
-    "__global__": 0.3646,
-    "General": 0.335,
-    "Hereditary_Cancer": 0.3646,
-    "PAH": 0.3006,
-    "CFTR": 0.0789
+    "__global__": 0.2907,
+    "General": 0.2464,
+    "Hereditary_Cancer": 0.2168,
+    "PAH": 0.2907,
+    "CFTR": 0.074
   },
   "global_threshold": 0.208,
   "cv_fold_f1": [
-    0.8603,
-    0.8678,
+    0.8658,
     0.8708,
-    0.8821,
-    0.859
+    0.8775,
+    0.8843,
+    0.8571
   ],
   "integrity_note": {
     "previous_reported_f1_0.8980_or_0.9269": "WITHDRAWN — those were leakage-inflated (augmentation near-twins + panel-overlap straddled the row-wise split). See reports/leakage_quantification.json.",
     "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680 by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). 0.8680 is now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
     "self_consistency": "test precision/recall reproduce test binary_f1 exactly."
-  }
+  },
+  "headline_note": "Primary metric is CV Binary F1 (5-fold StratifiedGroupKFold) — most reliable estimate of hidden-test performance. Test = single group-aware hold-out (n=762, higher variance). Bio features: +0.31pp CV vs no-bio baseline 0.8680 (validated +0.38pp in reports/bio_feature_ablation.json)."
 }

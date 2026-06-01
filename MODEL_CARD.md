@@ -38,7 +38,7 @@
 | **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
 | **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
 | **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |
-| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Sızıntısız (group-aware) protokolle yeniden eğitildi (1 Haziran 2026). Test F1 = 0.9024, CV F1 = 0.8680.** |
+| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Sızıntısız (group-aware) protokolle yeniden eğitildi (1 Haziran 2026). Test F1 = 0.8939, CV F1 = 0.8711.** |
 
 ---
 
@@ -145,32 +145,35 @@
 
 ## 🎯 Performans Sonuçları (Gerçek TEKNOFEST 2026 Verisi)
 
-> ✅ Model 20 Mayıs 2026'da gerçek yarışma verisi (3802 örnek, 4 panel) üzerinde eğitilmiştir.
-> Aşağıdaki metrikler %20 hold-out test seti üzerinden hesaplanmıştır.
+> ✅ Model 1 Haziran 2026'da gerçek yarışma verisi (3802 örnek, 3224 benzersiz varyant,
+> 4 panel) üzerinde **sızıntısız (group-aware, Variant_ID)** protokolle eğitilmiştir.
+> Birincil metrik 5-fold CV; test = tek group-aware hold-out (n=762, daha yüksek varyans).
+> Önceki 0.8980/0.9269 sayıları satır-bazlı split sızıntısı nedeniyle geri çekildi
+> (`RESULTS_CANONICAL.json`, `reports/leakage_quantification.json`).
 
-**Genel Test Seti (Hold-Out %20):**
+**Genel (Hold-Out + 5-fold CV):**
 
 | Metrik | Değer | Açıklama |
 |--------|-------|----------|
-| **Binary F1 §7.3 (birincil, test)** | **0.9024** | pos_label=1 (Patojenik); leakage-free group-aware split |
-| **CV Binary F1 (5-fold group-aware)** | **0.8680 ± 0.0083** | StratifiedGroupKFold by Variant_ID |
-| MCC | 0.5433 | Dengeli sınıf performansı |
-| PR-AUC | 0.9103 | Eşik bağımsız ayırt edicilik |
-| ROC-AUC | 0.8347 | Genel sınıf ayrımı |
-| Precision | 0.8514 | Patojenik sınıf hassasiyeti (binary_f1'i birebir üretir) |
-| Recall | 0.9599 | Patojenik sınıf duyarlılığı |
-| Brier Skoru | 0.1283 | Kalibrasyon kalitesi |
-| ECE | 0.0788 | Kalibrasyon sapması |
-| 5-Fold CV F1 | 0.8668 ± 0.0081 | Çapraz doğrulama istikrarı |
+| **CV Binary F1 (5-fold, birincil)** | **0.8711 ± 0.0094** | StratifiedGroupKFold by Variant_ID — en güvenilir tahmin |
+| Test Binary F1 (hold-out) | 0.8939 | pos_label=1; tek group-aware bölme (n=762) |
+| MCC (test) | 0.5190 | precision/recall, binary_f1'i birebir üretir |
+| PR-AUC (test) | 0.9133 | Eşik bağımsız ayırt edicilik |
+| ROC-AUC (test) | 0.8403 | Genel sınıf ayrımı |
+| Precision / Recall (test) | 0.8574 / 0.9337 | Patojenik sınıf |
+| Brier / ECE (test) | 0.1334 / 0.1034 | Kalibrasyon kalitesi/sapması |
 
-**Panel Bazlı Sonuçlar:**
+**Panel Bazlı Sonuçlar (test, sızıntısız):**
 
-| Panel | Binary F1 | MCC | PR-AUC | ROC-AUC |
-|-------|-----------|-----|--------|---------|
-| MASTER (General) | 0.8872 | 0.5070 | 0.9183 | 0.8537 |
-| KANSER (Hereditary_Cancer) | 0.8960 | 0.6491 | 0.9524 | 0.9353 |
-| PAH | 0.9556 | 0.5562 | 0.9760 | 0.8842 |
-| CFTR | 0.9524 | 0.6742 | 0.9223 | 0.7889 |
+| Panel | Binary F1 | MCC | PR-AUC |
+|-------|-----------|-----|--------|
+| MASTER (General) | 0.8822 | 0.4911 | 0.9102 |
+| KANSER (Hereditary_Cancer) | 0.9302 | 0.7407 | 0.9601 |
+| PAH | 0.9173 | 0.4215 | 0.8752 |
+| CFTR | 0.9714 | — (küçük n) | 1.0000 |
+
+> **Not:** CFTR test n çok küçük (büyük çoğunluk patojenik) → MCC tanımsız/0; F1 ve PR-AUC
+> daha anlamlı. Tüm sayılar `RESULTS_CANONICAL.json`'dan üretilir.
 
 ---
 
@@ -286,7 +289,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 |---|---|
 | **Sürüm** | `v1.0.0` |
 | **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
-| **Son güncelleme** | 1 Haziran 2026 — Test F1=0.9024 (sızıntısız, group-aware) |
+| **Son güncelleme** | 1 Haziran 2026 — Test F1=0.8939 (sızıntısız, group-aware) |
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod

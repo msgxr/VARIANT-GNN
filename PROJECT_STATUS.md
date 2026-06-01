@@ -12,7 +12,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 
 > ✅ Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alınmıştır.
 > Model 1 Haziran 2026'da **sızıntısız (leakage-free, group-aware) protokol** ile yeniden eğitilmiştir.
-> CV F1 = **0.8680 ± 0.0083** | Test F1 = **0.9024** | MCC = 0.5433 *(precision/recall, binary_f1'i birebir üretir)*
+> CV F1 = **0.8711 ± 0.0094** | Test F1 = **0.8939** | MCC = 0.5190 *(precision/recall, binary_f1'i birebir üretir)*
 > ⚠️ Önceki 0.8980/0.9269 sayıları geri çekildi — satır-bazlı split sızıntısıyla şişikti (RESULTS_CANONICAL.json).
 
 ## Olgunluk Seviyesi
@@ -22,10 +22,10 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | Boyut | Durum | Kanıt |
 |---|---|---|
 | **Model mimarisi** | ✅ Stabil | XGB(30%) + LGB(30%) + GATv2GNN(25%) + DNN(15%), stacking LogReg |
-| **Eğitim — sızıntısız, gerçek veri** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-06-01, group-aware, Test F1=0.9024 |
-| **5-fold CV — group-aware** | ✅ Tamamlandı | `reports/cv_report.json` → CV F1=0.8680±0.0083 (StratifiedGroupKFold) |
+| **Eğitim — sızıntısız, gerçek veri** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-06-01, group-aware, Test F1=0.8939 |
+| **5-fold CV — group-aware** | ✅ Tamamlandı | `reports/cv_report.json` → CV F1=0.8711±0.0094 (StratifiedGroupKFold) |
 | **Leakage guard** | ✅ Geçti | 0 Variant_ID train/test'i çaprazlamıyor (`src/cli/modes/train.py`) |
-| **Panel bazlı metrikler (test)** | ✅ Tamamlandı | General=0.8915 · KANSER=0.9457 · PAH=0.9173 · CFTR=0.9714 |
+| **Panel bazlı metrikler (test)** | ✅ Tamamlandı | General=0.8822 · KANSER=0.9302 · PAH=0.9173 · CFTR=0.9714 |
 | **Eğitim pipeline (kod)** | ✅ Çalışıyor | `python main.py --mode train --config configs/pdr.yaml` |
 | **Inference pipeline** | ✅ Çalışıyor | Batch + tekli tahmin, belirsizlik desteği |
 | **Açıklanabilirlik** | ✅ Çalışıyor | SHAP, LIME, GNNExplainer, Türkçe rapor |

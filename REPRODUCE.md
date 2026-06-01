@@ -8,10 +8,10 @@ için gereken kesin adımları içerir. Tüm sonuçlar tek bir kaynaktan gelir:
 
 | Metrik | Değer | Protokol |
 |---|---|---|
-| **CV Binary F1** | **0.8680 ± 0.0083** | StratifiedGroupKFold (Variant_ID), 5 fold |
-| **Test Binary F1** | **0.9024** | Group-aware 80/20 hold-out |
-| Test MCC | 0.5433 | precision/recall, binary_f1'i birebir üretir |
-| Panel F1 (test) | General 0.8915 · KANSER 0.9457 · PAH 0.9173 · CFTR 0.9714 | |
+| **CV Binary F1** | **0.8711 ± 0.0094** | StratifiedGroupKFold (Variant_ID), 5 fold |
+| **Test Binary F1** | **0.8939** | Group-aware 80/20 hold-out |
+| Test MCC | 0.5190 | precision/recall, binary_f1'i birebir üretir |
+| Panel F1 (test) | General 0.8822 · KANSER 0.9302 · PAH 0.9173 · CFTR 0.9714 | |
 
 > **Sızıntısızlık garantisi:** Eğitim, `Variant_ID`'ye göre **grup-farkında** bölme
 > kullanır; aynı varyant asla hem train hem test'te yer almaz. Eğitim çıktısında
@@ -51,9 +51,9 @@ Beklenen log:
 ```
 Group-aware splitting ON: 3802 rows → 3224 unique variants
 CV: StratifiedGroupKFold (group-aware)
-Cross-validation complete: Binary F1 (§7.3) = 0.8680 ± 0.0083
+Cross-validation complete: Binary F1 (§7.3) = 0.8711 ± 0.0094
 Leakage guard PASSED: 0 variants straddle train/test
-[TEST] [§7.3 PRIMARY] Binary F1 : 0.9024
+[TEST] [§7.3 PRIMARY] Binary F1 : 0.8939
 ```
 `seed=42` deterministiktir; her çalıştırma aynı sonucu verir.
 

@@ -1,16 +1,16 @@
 {
   "version": "1.0.0",
-  "timestamp": "2026-06-01T12:15:52.832730",
+  "timestamp": "2026-06-01T12:39:59.325689",
   "model_version": "1.0.0",
   "sha256_checksums": {
-    "xgb": "de3aa0e5fcad6f4c67f11fe6120587477ae621254df7b7bf8dbc34e23c8da56e",
-    "gnn": "33b0f40094c376039883c7fce00bf87e07febbf6d5d8a254994a47ea0f748e25",
-    "dnn": "47cd83ff82d0da89442fbd43b3959b7ead53a36fd8ccd7140bb269c68cbc98b8"
+    "xgb": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
+    "gnn": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
+    "dnn": "9458b9d36860d448eef559e396ea752911a34e5f8d6437b28009f31f4eeb9339"
   },
   "training_config": [
-    0.3,
-    0.3,
-    0.25,
-    0.15
+    0.2993050193050193,
+    0.2993050193050193,
+    0.25405405405405407,
+    0.1473359073359073
   ]
 }
