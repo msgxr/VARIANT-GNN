@@ -1,42 +1,75 @@
 {
-  "method": "Adaptive Prediction Sets (APS) — Angelopoulos et al. 2021",
-  "calibration_split": "15% hold-out of training set (random_state=42+99)",
-  "test_split": "20% hold-out (random_state=42, n=761)",
+  "_README": "DÜRÜST conformal — group-aware OOF (out-of-sample) kalibrasyonu. Eski rapor in-sample cal nedeniyle under-cover ediyordu + 95% PASS yanlıştı. LAC, ikili sınıf için.",
+  "method": "Split-Conformal LAC, calibrated on GROUP-AWARE OOF tree-blend (XGB+LGBM 60% ağırlık) — out-of-sample; Mondrian per-panel",
+  "calibration": "group-aware 5-fold OOF (n=3040), out-of-sample probs (reports/oof_probs.npz)",
+  "test": "group-aware 20pct hold-out (n=762)",
+  "guarantee": "P(Y∈Ĉ)≥1-α DAĞILIMDAN BAĞIMSIZ ama yalnızca EXCHANGEABILITY altında; gizli external sette kovaryant kayması → OOD-gated abstention ile tamamlanır.",
   "levels": {
     "90%": {
       "alpha": 0.1,
-      "target_1_minus_alpha": 0.9,
-      "empirical_coverage": 0.9435,
-      "coverage_gap": 0.0435,
-      "is_valid": true,
-      "verdict": "PASS — Garantili kapsama sağlandı",
-      "singleton_pct": 81.1,
-      "abstain_pct": 18.9,
-      "empty_pct": 0.0
+      "target": 0.9,
+      "empirical_coverage": 0.9226,
+      "abstain_pct": 17.5,
+      "n": 762,
+      "q_hat": 0.7283,
+      "valid_marginal": true
     },
     "95%": {
       "alpha": 0.05,
-      "target_1_minus_alpha": 0.95,
-      "empirical_coverage": 0.9435,
-      "coverage_gap": -0.0065,
-      "is_valid": true,
-      "verdict": "PASS — Garantili kapsama sağlandı",
-      "singleton_pct": 81.1,
-      "abstain_pct": 18.9,
-      "empty_pct": 0.0
+      "target": 0.95,
+      "empirical_coverage": 0.9593,
+      "abstain_pct": 37.5,
+      "n": 762,
+      "q_hat": 0.9023,
+      "valid_marginal": true
     },
     "99%": {
       "alpha": 0.01,
-      "target_1_minus_alpha": 0.99,
-      "empirical_coverage": 0.9908,
-      "coverage_gap": 0.0008,
-      "is_valid": true,
-      "verdict": "PASS — Garantili kapsama sağlandı",
-      "singleton_pct": 39.4,
-      "abstain_pct": 60.6,
-      "empty_pct": 0.0
+      "target": 0.99,
+      "empirical_coverage": 0.9882,
+      "abstain_pct": 79.5,
+      "n": 762,
+      "q_hat": 0.9796,
+      "valid_marginal": false
     }
   },
-  "overall_verdict": "3/3 GARANTİ GEÇERLİ",
-  "mathematical_guarantee": "P(Y ∈ Ĉ(X)) ≥ 1-α garantisi sağlanmıştır. APS yöntemi ile kalibrasyon setindeki non-conformity skorları (1-α)(1+1/n_cal) quantile ile eşlendi."
+  "mondrian_per_panel_90pct": {
+    "General": {
+      "alpha": 0.1,
+      "target": 0.9,
+      "empirical_coverage": 0.9244,
+      "abstain_pct": 20.4,
+      "n": 582,
+      "q_hat": 0.7283
+    },
+    "Hereditary_Cancer": {
+      "alpha": 0.1,
+      "target": 0.9,
+      "empirical_coverage": 0.9302,
+      "abstain_pct": 7.0,
+      "n": 86,
+      "q_hat": 0.7283
+    },
+    "PAH": {
+      "alpha": 0.1,
+      "target": 0.9,
+      "empirical_coverage": 0.8816,
+      "abstain_pct": 6.6,
+      "n": 76,
+      "q_hat": 0.7283
+    },
+    "CFTR": {
+      "alpha": 0.1,
+      "target": 0.9,
+      "empirical_coverage": 1.0,
+      "abstain_pct": 16.7,
+      "n": 18,
+      "q_hat": 0.7283
+    }
+  },
+  "honest_caveats": [
+    "OOF kalibrasyonu → geçerli marjinal coverage (in-sample cal under-cover ediyordu).",
+    "İkili APS/LAC kümeleri kaba; coverage α'ya basamaklı tepki verir.",
+    "Coverage yalnızca exchangeability altında; festival gizli seti için OOD abstention."
+  ]
 }

@@ -187,3 +187,4 @@ build_notebook.py
 !reports/shap_summary.png
 !reports/shap_waterfall.png
 !reports/figures/shap_group_contributions_honest.png
+!reports/figures/conformal_coverage.png
