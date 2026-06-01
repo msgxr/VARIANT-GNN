@@ -231,6 +231,10 @@ class InferencePipeline:
         # Load F1-optimal threshold saved during training (TEKNOFEST §7.3)
         # Falls back to config value (0.50) when no saved threshold exists.
         threshold = self.store.load_threshold(default=cfg.thresholds.classification)
+        # Per-panel F1-optimal thresholds (TEKNOFEST §3.2): applied below so the
+        # submission reproduces the reported panel-specific numbers, not a single
+        # global cut that matches no report.
+        panel_thresholds = self.store.load_panel_thresholds()
 
         if isinstance(self._ensemble.gnn, VariantGATv2GNN):
             # MC-Dropout ile belirsizlik tahmini (multimodal token'lar dahil)
@@ -261,6 +265,24 @@ class InferencePipeline:
             cal_proba = raw_proba
 
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
+
+        # ── Panel-aware karar eşiği (TEKNOFEST §3.2 / §7.3) ──────────────────
+        # Her satıra Panel'ine göre F1-optimal eşik uygula; Panel yoksa veya panel
+        # eşiği tanımlı değilse global eşiğe düş. Bu, submission'ın rapor edilen
+        # panel-spesifik F1 değerlerini yeniden üretmesini sağlar.
+        if panel_thresholds and "Panel" in dataset.metadata.columns:
+            proba_pathogenic = raw_proba[:, 1]
+            row_thr = (
+                dataset.metadata["Panel"]
+                .map(lambda p: float(panel_thresholds.get(str(p), threshold)))
+                .astype(float)
+                .values
+            )
+            preds = (proba_pathogenic >= row_thr).astype(int)
+            logger.info(
+                "Panel-aware eşik uygulandı: %s",
+                {k: round(float(v), 3) for k, v in panel_thresholds.items()},
+            )
 
         # Çıktı DataFrame
         result: pd.DataFrame = dataset.metadata.copy()

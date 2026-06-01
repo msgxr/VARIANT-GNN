@@ -68,11 +68,15 @@ ensemble:
 
 preprocessing:
   corr_threshold: 0.25
-  use_autoencoder: true
+  # AutoEncoder + aggressive SelectKBest(35) DISCARD signal: under leakage-free
+  # group-aware CV they cost ~5.3pp F1 (0.8135 with k=35+AE vs 0.8668 with all
+  # 343 features). The §3.2 profile is information-dense → keep all features.
+  # Evidence: reports/preprocessing_diagnostic.json
+  use_autoencoder: false
   autoencoder_encoding_dim: 16
   autoencoder_epochs: 10
-  use_feature_selection: true
-  k_best_features: 35
+  use_feature_selection: false
+  k_best_features: 150
   smote_enabled: true
   use_bio_scoring: false      # §3.2: yarışma verisinde kolon adları anonim (AL_1..AL_351); Grantham/BLOSUM eşlemesi imkânsız
   use_acmg_proxy: false       # §3.2: anonim kolonlarda CADD/REVEL/SIFT yakalanamaz → 7 ACMG özelliği sabit 0 olur, gürültü ekler

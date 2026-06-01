@@ -1,0 +1,79 @@
+{
+  "mode": "external_validation",
+  "test_file": "/tmp/sample_train.csv",
+  "n_samples": 200,
+  "threshold_used": 0.01,
+  "threshold_source": "training_artifact",
+  "metrics": {
+    "binary_f1": 0.7138263665594855,
+    "macro_f1": 0.35691318327974275,
+    "precision": 0.555,
+    "recall": 1.0,
+    "roc_auc": 0.10542565036947059,
+    "pr_auc": 0.37081895748166244,
+    "brier_score": 0.30258166119999996,
+    "ece": 0.34842100000000004,
+    "mcc": 0.0,
+    "threshold": 0.01
+  },
+  "confusion_matrix": [
+    [
+      0,
+      89
+    ],
+    [
+      0,
+      111
+    ]
+  ],
+  "panel_metrics": {
+    "CFTR": {
+      "binary_f1": 0.8,
+      "macro_f1": 0.4,
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "roc_auc": 0.14660493827160495,
+      "pr_auc": 0.49315185606777256,
+      "brier_score": 0.2952458285185185,
+      "ece": 0.36783333333333335,
+      "mcc": 0.0,
+      "threshold": 0.01
+    },
+    "General": {
+      "binary_f1": 0.6857142857142857,
+      "macro_f1": 0.34285714285714286,
+      "precision": 0.5217391304347826,
+      "recall": 1.0,
+      "roc_auc": 0.03219696969696969,
+      "pr_auc": 0.3381725592722649,
+      "brier_score": 0.31117865391304345,
+      "ece": 0.36660434782608703,
+      "mcc": 0.0,
+      "threshold": 0.01
+    },
+    "Hereditary_Cancer": {
+      "binary_f1": 0.6268656716417911,
+      "macro_f1": 0.31343283582089554,
+      "precision": 0.45652173913043476,
+      "recall": 1.0,
+      "roc_auc": 0.11428571428571427,
+      "pr_auc": 0.3026089621200365,
+      "brier_score": 0.30684513152173915,
+      "ece": 0.3458413043478261,
+      "mcc": 0.0,
+      "threshold": 0.01
+    },
+    "PAH": {
+      "binary_f1": 0.7142857142857143,
+      "macro_f1": 0.35714285714285715,
+      "precision": 0.5555555555555556,
+      "recall": 1.0,
+      "roc_auc": 0.10138888888888889,
+      "pr_auc": 0.3773346930559405,
+      "brier_score": 0.2989622846296296,
+      "ece": 0.3233685185185185,
+      "mcc": 0.0,
+      "threshold": 0.01
+    }
+  }
+}

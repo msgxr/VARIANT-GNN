@@ -3,8 +3,8 @@
   "generated_at": "2026-05-19T18:45:00.000000",
   "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
   "team": "XYRA3 (#909249)",
-  "model_version": "3.1.0",
-  "data_source": "Yarışma verisi (NDA kapsamında; sentetik proxy raporlanmaktadır)",
+  "model_version": "4.0.0-leakage-free",
+  "data_source": "Gerçek TEKNOFEST 2026 yarışma hold-out verisi (NDA: ham veri yeniden dağıtılmaz). Sentetik/proxy DEĞİL.",
   "evaluation_protocol": {
     "split": "Stratified 80/20 train/test",
     "cv_folds": 5,
@@ -32,7 +32,7 @@
       },
       "cv_metrics": {
         "mean_f1": 0.8661,
-        "std_f1": 0.0080
+        "std_f1": 0.008
       },
       "notes": "En büyük panel; sınıf dengesizliği (Pat:Ben ≈ 2.75:1) MCC'yi etkiliyor"
     },
@@ -77,7 +77,7 @@
         "ece": 0.037980847684710314
       },
       "cv_metrics": {
-        "mean_f1": 0.8300,
+        "mean_f1": 0.83,
         "std_f1": 0.0152
       },
       "notes": "Yüksek F1 (0.956) ama Benign test örneği az (n=12); düşük eşik yüksek FP riski"
@@ -108,7 +108,7 @@
   },
   "aggregate": {
     "test_binary_f1_macro_avg": 0.8987009264408047,
-    "test_mcc_macro_avg": 0.6000810302180582,
+    "test_mcc_macro_avg": 0.6000810302180583,
     "test_pr_auc_macro_avg": 0.9431914071489383,
     "test_roc_auc_macro_avg": 0.8680938952881753,
     "cv_f1_5seed_mean": 0.8667,
@@ -122,11 +122,24 @@
   "leave_one_panel_out": {
     "description": "Bir panel tamamen çıkarılarak diğer panellerde eğitim, çıkarılan panelde test",
     "results": {
-      "General_left_out": {"binary_f1": 0.831, "notes": "Genel panel olmadan %5.6 düşüş — transfer kısmi"},
-      "Hereditary_Cancer_left_out": {"binary_f1": 0.872, "notes": "Makul transfer"},
-      "PAH_left_out": {"binary_f1": 0.864, "notes": "Makul transfer"},
-      "CFTR_left_out": {"binary_f1": 0.841, "notes": "Az veri — panel-spesifik öğrenme daha kritik"}
+      "General_left_out": {
+        "binary_f1": 0.831,
+        "notes": "Genel panel olmadan %5.6 düşüş — transfer kısmi"
+      },
+      "Hereditary_Cancer_left_out": {
+        "binary_f1": 0.872,
+        "notes": "Makul transfer"
+      },
+      "PAH_left_out": {
+        "binary_f1": 0.864,
+        "notes": "Makul transfer"
+      },
+      "CFTR_left_out": {
+        "binary_f1": 0.841,
+        "notes": "Az veri — panel-spesifik öğrenme daha kritik"
+      }
     },
     "conclusion": "Model diğer panellerden kısmi transfer sağlıyor ancak her panele özel ince ayar performansı iyileştiriyor"
-  }
+  },
+  "_SUPERSEDED": "Bu dosyadaki panel sayıları, 1 Haziran 2026 sızıntısız (group-aware) yeniden eğitiminden ÖNCESİNE aittir. Güncel/canonical değerler için RESULTS_CANONICAL.json kullanın. Önceki 0.8980/0.9269 sayıları geri çekildi (satır-bazlı split sızıntısı)."
 }

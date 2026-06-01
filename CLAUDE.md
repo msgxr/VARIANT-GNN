@@ -168,12 +168,12 @@ Skill definitions: `.claude/skills/<name>/SKILL.md`
 Claude always operates with this context active:
 
 **Architecture:** XGBoost(30%) + LightGBM(30%) + VariantGATv2GNN/GATv2Conv(25%) + DNN(15%) + Stacking meta-learner (LogReg)  
-**Pipeline:** Medyan Imputation → RobustScaler → SelectKBest(k=35) → AutoEncoder(43→16) → SMOTE(train only) → Cosine k-NN graph  
-**Split:** 80/20 hold-out + Stratified 5-Fold CV, random_state=42, threshold=0.241 (global), panel-specific: General=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108  
-**Results (real TEKNOFEST data — retrained 2026-05-20):** CV F1=0.8668±0.0081, Test F1=0.8980, MCC=0.5356, PR-AUC=0.9294, ROC-AUC=0.8673, Recall=0.9725  
-**Panel results:** MASTER F1=0.8872 MCC=0.507 | KANSER F1=0.8960 MCC=0.649 | PAH F1=0.9556 MCC=0.556 | CFTR F1=0.9524 MCC=0.674  
+**Pipeline:** Medyan Imputation → RobustScaler → (full §3.2 feature set — no aggressive SelectKBest/AE) → SMOTE(train only) → Cosine k-NN graph  
+**Split:** GROUP-AWARE 80/20 hold-out by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-Fold, random_state=42. Leakage guard: 0 variants straddle train/test. Panel-spesifik F1-optimal eşik: General=0.335, KANSER=0.365, PAH=0.301, CFTR=0.079 (global fallback=0.208)  
+**Results (real TEKNOFEST data — LEAKAGE-FREE retrain 2026-06-01, canonical: RESULTS_CANONICAL.json):** CV F1=0.8680±0.0083, Test F1=0.9024, MCC=0.5433, PR-AUC=0.9103, ROC-AUC=0.8347, Recall=0.9599 (precision/recall reproduce binary_f1 exactly)  
+**Panel results (test, group-aware):** General F1=0.8915 MCC=0.509 | KANSER F1=0.9457 MCC=0.804 | PAH F1=0.9173 MCC=0.422 | CFTR F1=0.9714  
 **PSR score:** 93/100. Weak: §4.4 Explainability(3.33/5), §4.5 Tech Evolution(3.33/5), §5.1 Architecture Justification(4/5)  
-**Known risks:** MASTER MCC=0.507 (class imbalance 2.75:1), PSR pilot MCC=0.892 vs real data MCC=0.5356 (explained in PDR §4.2), GNN name was "VariantSAGEGNN" in PSR but code uses GATv2Conv (corrected in PDR)  
+**Known risks:** Önceki 0.8980/0.9269 sayıları GERİ ÇEKİLDİ — augmentation near-twin + panel-overlap satır-bazlı split sızıntısıyla şişikti (reports/leakage_quantification.json). Düzeltildi: group-aware split + SelectKBest(35)+AE kaldırıldı (+5.3pp dürüst geri kazanım, reports/preprocessing_diagnostic.json). PSR pilot MCC=0.892 vs gerçek MCC=0.5433 (PDR §4.2). GNN PSR'de "VariantSAGEGNN", kodda GATv2Conv (PDR'de düzeltildi)  
 **PDR deadline:** 29.06.2026 | Final: Ağustos–Eylül 2026 @ TEKNOFEST Şanlıurfa  
 **Ethical boundary:** Model is for research/education/competition only — not clinical diagnosis  
 

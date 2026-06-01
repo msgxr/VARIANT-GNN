@@ -1,34 +1,27 @@
 {
-  "status": "REAL_DATA_TRAINED",
+  "status": "REAL_DATA_TRAINED_LEAKAGE_FREE",
   "data_source": "TEKNOFEST 2026 official training set (4 panels)",
   "real_data_received": true,
   "real_data_received_date": "2026-05-14",
   "generated_at": "2026-05-20T21:15:04",
   "train_config": "configs/pdr.yaml",
-  "train_data_file": "data/train_variants_aug.csv",
-  "train_samples": 7604,
+  "train_data_file": "data/train_variants.csv",
+  "train_samples": 3802,
   "original_samples": 3802,
-  "augmentation": "Gaussian feature jittering (sigma=0.05 * col_std, n_copies=1)",
+  "augmentation": "DISABLED (pre-augmented file caused train/test near-twin leakage; see reports/leakage_quantification.json)",
   "cv_folds": 5,
   "seed": 42,
-  "cv_f1_mean": 0.8668,
-  "cv_f1_std": 0.0081,
-  "test_f1": 0.898,
-  "test_recall": 0.9725,
-  "test_roc_auc": 0.8673,
-  "test_brier": 0.1283,
+  "cv_f1_mean": 0.868,
+  "cv_f1_std": 0.0083,
+  "test_f1": 0.9024,
+  "test_recall": 0.9599,
+  "test_roc_auc": 0.8347,
+  "test_brier": 0.1242,
   "panel_f1": {
-    "General": 0.8872,
-    "Hereditary_Cancer": 0.896,
-    "PAH": 0.9556,
-    "CFTR": 0.9524
-  },
-  "panel_optimal_threshold_f1": {
-    "Global": 0.9671,
-    "General": 0.9667,
-    "Hereditary_Cancer": 1.0,
-    "PAH": 0.9859,
-    "CFTR": 1.0
+    "CFTR": 0.9714,
+    "General": 0.8915,
+    "Hereditary_Cancer": 0.9457,
+    "PAH": 0.9173
   },
   "seed_stability": {
     "n_seeds": 5,
@@ -46,7 +39,7 @@
   "predict_command": "python main.py --mode predict --test_file data/<jury_test.csv> --config configs/pdr.yaml",
   "validation_command": "python main.py --mode external_val --test_file data/<test_labelled.csv> --config configs/pdr.yaml",
   "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir) + Gaussian augmentation (7604 satir toplam). NDA kapsamindaki veri lokal makinede kalmistir.",
-  "global_threshold_strategy": "MCC-optimal (F1 >= baseline-0.01 k\u0131s\u0131t\u0131yla)",
+  "global_threshold_strategy": "MCC-optimal (F1 >= baseline-0.01 kısıtıyla)",
   "panel_optimal_threshold_mcc": {
     "General": 0.59,
     "Hereditary_Cancer": 0.2808542713567839,
@@ -63,6 +56,15 @@
     "cv_f1_before": 0.9001,
     "cv_f1_after": 0.9049,
     "delta_f1": 0.0048,
-    "note": "No retraining \u2014 decision boundary optimization only"
-  }
+    "note": "No retraining — decision boundary optimization only"
+  },
+  "retrain_date": "2026-06-01",
+  "unique_variants": 3224,
+  "split": "GROUP-AWARE by Variant_ID (GroupShuffleSplit hold-out + StratifiedGroupKFold CV)",
+  "leakage_guard": "PASSED — 0 Variant_IDs straddle train/test",
+  "preprocessing_change": "SelectKBest(35)+AutoEncoder REMOVED — discarded signal (+5.3pp honest F1; reports/preprocessing_diagnostic.json)",
+  "test_mcc": 0.5433,
+  "test_pr_auc": 0.9103,
+  "canonical_results": "RESULTS_CANONICAL.json",
+  "superseded_numbers": "Previous 0.8980/0.9269 withdrawn — leakage-inflated."
 }

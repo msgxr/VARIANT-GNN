@@ -70,25 +70,71 @@ def mode_train(args, cfg):
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 
+    # ── Group-aware leakage guard (TEKNOFEST §7.5) ──────────────────────────
+    # The same variant appears across panels (panel overlap) and as augmented
+    # near-twins; splitting by row leaks it into both train and test, inflating
+    # internal metrics. Group by base Variant_ID (strip any _aug suffix) so a
+    # variant never straddles the split.
+    groups = None
+    if "Variant_ID" in ds.metadata.columns and len(ds.metadata) == len(X):
+        groups = (
+            ds.metadata["Variant_ID"].astype(str)
+            .str.replace(r"_aug\d*$", "", regex=True)
+            .values
+        )
+        n_groups = len(np.unique(groups))
+        logging.info("Group-aware splitting ON: %d rows → %d unique variants", len(X), n_groups)
+
     trainer = VariantTrainer()
-    result = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
+    result = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences,
+                           groups=groups)
     logging.info("CV summary — Binary F1 (§7.3): %.4f ± %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
     preprocessor = result.preprocessor
     ensemble = result.ensemble
 
+    # Reuse the SAME held-out split the trainer used (group-aware, consistent).
     all_indices = np.arange(len(X))
-    X_tr, X_test, y_tr, y_test = train_test_split(
-        X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
-    )
-    _, test_indices = train_test_split(
-        all_indices, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
-    )
+    test_indices = result.test_indices
+    if test_indices is None:  # backward-compat fallback
+        _, test_indices = train_test_split(
+            all_indices, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed
+        )
+    train_indices = np.setdiff1d(all_indices, test_indices)
+    X_tr, y_tr = X[train_indices], y[train_indices]
+    X_test, y_test = X[test_indices], y[test_indices]
 
-    X_tr2, X_cal, y_tr2, y_cal = train_test_split(
-        X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=cfg.seed + 99
-    )
+    # Adversarial leakage guard (§7.5): no variant may appear in both splits.
+    if groups is not None:
+        _overlap = np.intersect1d(np.unique(groups[train_indices]),
+                                  np.unique(groups[test_indices]))
+        if len(_overlap) > 0:
+            raise RuntimeError(
+                f"LEAKAGE: {len(_overlap)} Variant_ID(s) straddle train/test "
+                f"(e.g. {_overlap[:3].tolist()}). Group-aware split failed."
+            )
+        logging.info("Leakage guard PASSED: 0 variants straddle train/test "
+                     "(test n=%d, %d unique variants).",
+                     len(test_indices), len(np.unique(groups[test_indices])))
+
+    # Calibration split from the train portion — group-aware so calibration/
+    # threshold are never fit on a variant also in train. cal_indices are in
+    # ORIGINAL X space so panel labels can be recovered consistently below.
+    if groups is not None:
+        from sklearn.model_selection import GroupShuffleSplit
+        _g_tr = groups[train_indices]
+        _pos_tr, _pos_cal = next(
+            GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=cfg.seed + 99)
+            .split(np.arange(len(train_indices)), y_tr, _g_tr)
+        )
+    else:
+        _pos_tr, _pos_cal = train_test_split(
+            np.arange(len(train_indices)), test_size=0.15,
+            stratify=y_tr, random_state=cfg.seed + 99
+        )
+    cal_indices = train_indices[_pos_cal]
+    X_cal, y_cal = X[cal_indices], y[cal_indices]
     X_cal_proc = preprocessor.transform(X_cal)
     _, raw_cal_proba = ensemble.predict(X_cal_proc)
     calibrator = EnsembleCalibrator(method=cfg.calibration.method)
@@ -136,19 +182,8 @@ def mode_train(args, cfg):
 
         cal_panels = np.array([])
         if len(ds.metadata) == len(X):
-            try:
-                _train_idx, _ = train_test_split(
-                    all_indices, test_size=cfg.training.test_size,
-                    stratify=y, random_state=cfg.seed
-                )
-                _, _cal_pos = train_test_split(
-                    np.arange(len(_train_idx)), test_size=0.15,
-                    stratify=y[_train_idx], random_state=cfg.seed + 99
-                )
-                _cal_orig_idx = _train_idx[_cal_pos]
-                cal_panels = ds.metadata["Panel"].values[_cal_orig_idx]
-            except Exception as exc:
-                logging.warning("Panel indexing failed — threshold opt skipped: %s", exc)
+            # Reuse the exact group-aware calibration indices computed above.
+            cal_panels = ds.metadata["Panel"].values[cal_indices]
 
         if len(cal_panels) == len(y_cal):
             panel_thresholds_dict = ensemble.optimise_panel_thresholds(

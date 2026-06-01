@@ -38,7 +38,7 @@
 | **Mimari** | XGBoost + LightGBM + VariantGATv2GNN + VariantDNN ağırlıklı topluluk |
 | **Aşama** | PDR (Proje Detay Raporu) — Teslim 29 Haziran 2026 |
 | **Kapsam** | 4 panel: General / Hereditary_Cancer / PAH / CFTR |
-| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Model gerçek veriyle eğitildi (20 Mayıs 2026). Test F1 = 0.8980.** |
+| **Veri Durumu** | ✅ **Gerçek yarışma verisi alındı (14 Mayıs 2026). Sızıntısız (group-aware) protokolle yeniden eğitildi (1 Haziran 2026). Test F1 = 0.9024, CV F1 = 0.8680.** |
 
 ---
 
@@ -152,12 +152,13 @@
 
 | Metrik | Değer | Açıklama |
 |--------|-------|----------|
-| **Binary F1 §7.3 (birincil)** | **0.8980** | pos_label=1 (Patojenik) |
-| MCC | 0.5356 | Dengeli sınıf performansı |
-| PR-AUC | 0.9294 | Eşik bağımsız ayırt edicilik |
-| ROC-AUC | 0.8673 | Genel sınıf ayrımı |
-| Precision | 0.8341 | Patojenik sınıf hassasiyeti |
-| Recall | 0.9725 | Patojenik sınıf duyarlılığı |
+| **Binary F1 §7.3 (birincil, test)** | **0.9024** | pos_label=1 (Patojenik); leakage-free group-aware split |
+| **CV Binary F1 (5-fold group-aware)** | **0.8680 ± 0.0083** | StratifiedGroupKFold by Variant_ID |
+| MCC | 0.5433 | Dengeli sınıf performansı |
+| PR-AUC | 0.9103 | Eşik bağımsız ayırt edicilik |
+| ROC-AUC | 0.8347 | Genel sınıf ayrımı |
+| Precision | 0.8514 | Patojenik sınıf hassasiyeti (binary_f1'i birebir üretir) |
+| Recall | 0.9599 | Patojenik sınıf duyarlılığı |
 | Brier Skoru | 0.1283 | Kalibrasyon kalitesi |
 | ECE | 0.0788 | Kalibrasyon sapması |
 | 5-Fold CV F1 | 0.8668 ± 0.0081 | Çapraz doğrulama istikrarı |
@@ -285,7 +286,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 |---|---|
 | **Sürüm** | `v1.0.0` |
 | **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
-| **Son güncelleme** | 22 Mayıs 2026 — Test F1=0.8980 |
+| **Son güncelleme** | 1 Haziran 2026 — Test F1=0.9024 (sızıntısız, group-aware) |
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod

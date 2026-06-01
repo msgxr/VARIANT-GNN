@@ -1,40 +1,25 @@
 {
-  "model_version": "v1.0.0",
-  "project": "VARIANT-GNN",
-  "team": "XYRA3",
-  "team_id": "909249",
-  "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
-  "generated_at": "2026-05-20T21:15:04",
-  "status": "REAL_DATA_TRAINED",
-  "architecture": "XGBoost(30%) + LightGBM(30%) + VariantGATv2GNN(25%) + DNN(15%) + LogReg stacking",
-  "training": {
-    "data_source": "TEKNOFEST 2026 official training set (4 panels)",
-    "train_samples": 7604,
-    "original_samples": 3802,
-    "augmentation": "Gaussian feature jittering sigma=0.05, n_copies=1",
-    "cv_folds": 5,
-    "seed": 42,
-    "cv_f1_mean": 0.8668,
-    "cv_f1_std": 0.0081,
-    "test_f1": 0.8980,
-    "test_mcc": 0.5356,
-    "test_pr_auc": 0.9294,
-    "test_roc_auc": 0.8673,
-    "test_recall": 0.9725,
-    "test_precision": 0.8341,
-    "threshold": 0.24145728643216083
+  "model_version": "1.0.0",
+  "created_at": "2026-06-01T09:15:52Z",
+  "git_commit": "7cbefe4db4c64f41fb326e81d2f38e15d8e05554",
+  "python_version": "3.9.6",
+  "platform": "macOS-14.6-arm64-arm-64bit",
+  "package_versions": {
+    "numpy": "2.0.2",
+    "pandas": "2.3.3",
+    "scikit-learn": "not_installed",
+    "torch": "2.8.0",
+    "torch_geometric": "2.6.1",
+    "xgboost": "2.1.4",
+    "lightgbm": "4.6.0",
+    "scipy": "1.13.1"
   },
-  "panel_f1": {
-    "General": 0.8872,
-    "Hereditary_Cancer": 0.8960,
-    "PAH": 0.9556,
-    "CFTR": 0.9524
-  },
-  "panel_thresholds": {
-    "__global__": 0.24145728643216083,
-    "General": 0.24145728643216083,
-    "Hereditary_Cancer": 0.2808542713567839,
-    "PAH": 0.13804020100502515,
-    "CFTR": 0.10849246231155779
+  "config_hash": "not_provided",
+  "dataset_fingerprints": {},
+  "artifact_checksums": {
+    "preprocessor.pkl": "b55eba53c8968e4ec5c8a26124f5f794a6a0718a8cfe6524286895f2214458b8",
+    "ensemble.pkl": "97ff0cd7f71a869b980f5936f4bb0a26e199ba3bbbfb126b3be10d846f0fba03",
+    "calibrator.pkl": "1cabb82f90b923052686f647e7eda60ca58eb2b1c296c433012e8bb86c4cf0e8",
+    "threshold.json": "56355720b7be9e3408f112c3f93854ed4568661a87a439d1062b2d2c9d3b0eba"
   }
 }

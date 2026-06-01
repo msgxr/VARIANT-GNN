@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-06-01T12:15:52.832730",
+  "model_version": "1.0.0",
+  "sha256_checksums": {
+    "xgb": "de3aa0e5fcad6f4c67f11fe6120587477ae621254df7b7bf8dbc34e23c8da56e",
+    "gnn": "33b0f40094c376039883c7fce00bf87e07febbf6d5d8a254994a47ea0f748e25",
+    "dnn": "47cd83ff82d0da89442fbd43b3959b7ead53a36fd8ccd7140bb269c68cbc98b8"
+  },
+  "training_config": [
+    0.3,
+    0.3,
+    0.25,
+    0.15
+  ]
+}

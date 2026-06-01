@@ -11,8 +11,9 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 ## Veri ve Model Durumu
 
 > ✅ Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alınmıştır.
-> Model 20 Mayıs 2026'da gerçek veriyle yeniden eğitilmiştir.
-> Test F1 = **0.8980** | CV F1 = 0.8668 ± 0.0081 | MCC = 0.5356
+> Model 1 Haziran 2026'da **sızıntısız (leakage-free, group-aware) protokol** ile yeniden eğitilmiştir.
+> CV F1 = **0.8680 ± 0.0083** | Test F1 = **0.9024** | MCC = 0.5433 *(precision/recall, binary_f1'i birebir üretir)*
+> ⚠️ Önceki 0.8980/0.9269 sayıları geri çekildi — satır-bazlı split sızıntısıyla şişikti (RESULTS_CANONICAL.json).
 
 ## Olgunluk Seviyesi
 
@@ -21,9 +22,10 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | Boyut | Durum | Kanıt |
 |---|---|---|
 | **Model mimarisi** | ✅ Stabil | XGB(30%) + LGB(30%) + GATv2GNN(25%) + DNN(15%), stacking LogReg |
-| **Eğitim — gerçek yarışma verisi** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-05-20, Test F1=0.8980 |
-| **5-fold CV — gerçek veri** | ✅ Tamamlandı | `reports/cv_report.json` → CV F1=0.8668±0.0081 |
-| **Panel bazlı metrikler** | ✅ Tamamlandı | MASTER=0.8872 · KANSER=0.8960 · PAH=0.9556 · CFTR=0.9524 |
+| **Eğitim — sızıntısız, gerçek veri** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-06-01, group-aware, Test F1=0.9024 |
+| **5-fold CV — group-aware** | ✅ Tamamlandı | `reports/cv_report.json` → CV F1=0.8680±0.0083 (StratifiedGroupKFold) |
+| **Leakage guard** | ✅ Geçti | 0 Variant_ID train/test'i çaprazlamıyor (`src/cli/modes/train.py`) |
+| **Panel bazlı metrikler (test)** | ✅ Tamamlandı | General=0.8915 · KANSER=0.9457 · PAH=0.9173 · CFTR=0.9714 |
 | **Eğitim pipeline (kod)** | ✅ Çalışıyor | `python main.py --mode train --config configs/pdr.yaml` |
 | **Inference pipeline** | ✅ Çalışıyor | Batch + tekli tahmin, belirsizlik desteği |
 | **Açıklanabilirlik** | ✅ Çalışıyor | SHAP, LIME, GNNExplainer, Türkçe rapor |
@@ -38,7 +40,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | **CI pipeline** | ✅ Çalışıyor | GitHub Actions: lint, typecheck, test, security |
 | **Docker** | ✅ Mevcut | CPU ve GPU destekli |
 | **Test altyapısı** | ✅ 278/278 test | Smoke, unit, integration testler (22 Mayıs 2026) |
-| **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, θ=0.241 (24 Mayıs 2026) |
+| **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, panel-spesifik F1-optimal eşik (General=0.335, KANSER=0.365, PAH=0.301, CFTR=0.079) |
 | **PDR belge hataları** | ✅ Tümü kapatıldı | BUG-01..12 CLOSED (24 Mayıs 2026) |
 | **Bağımsız klinik validasyon** | ❌ Kapsam dışı | Araştırma prototipi; kasıtlı kapsam dışı |
 | **VUS sınıflandırma** | ❌ Yok | Etiketli VUS verisi gerektirir |

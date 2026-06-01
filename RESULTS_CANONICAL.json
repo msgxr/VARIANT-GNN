@@ -1,0 +1,75 @@
+{
+  "_README": "SINGLE SOURCE OF TRUTH for all declared metrics. Generated from reports/cv_report.json after the leakage-free group-aware retrain. ALL docs (README, MODEL_CARD, PDR, PROJECT_STATUS, CLAUDE.md) must match these numbers. Verify with scripts/check_results_consistency.py.",
+  "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
+  "task": "Binary missense variant pathogenicity (Pathogenic=1 / Benign=0)",
+  "primary_metric": "Binary F1 (TP/FP/FN, pos_label=1) — §7.3",
+  "generated_from": "reports/cv_report.json",
+  "evaluation_protocol": {
+    "split": "Group-aware hold-out 80/20 by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-fold",
+    "leakage_free": true,
+    "leakage_guard": "PASSED — 0 Variant_IDs straddle train/test",
+    "seed": 42,
+    "threshold_strategy": "Per-panel F1-optimal on calibration set; global fallback",
+    "calibration": "Isotonic regression",
+    "data": "data/train_variants.csv (3802 rows, 3224 unique variants, 4 panels)",
+    "config": "configs/pdr.yaml"
+  },
+  "headline": {
+    "cv_binary_f1": 0.868,
+    "cv_binary_f1_std": 0.0083,
+    "test_binary_f1": 0.9024,
+    "test_mcc": 0.5433,
+    "test_precision": 0.8514,
+    "test_recall": 0.9599,
+    "test_pr_auc": 0.9103,
+    "test_roc_auc": 0.8347,
+    "test_brier": 0.1242,
+    "test_ece": 0.0586
+  },
+  "panel_test_metrics": {
+    "CFTR": {
+      "binary_f1": 0.9714,
+      "mcc": 0.0,
+      "precision": 1.0,
+      "recall": 0.9444
+    },
+    "General": {
+      "binary_f1": 0.8915,
+      "mcc": 0.5092,
+      "precision": 0.8388,
+      "recall": 0.9514
+    },
+    "Hereditary_Cancer": {
+      "binary_f1": 0.9457,
+      "mcc": 0.8037,
+      "precision": 0.8971,
+      "recall": 1.0
+    },
+    "PAH": {
+      "binary_f1": 0.9173,
+      "mcc": 0.4215,
+      "precision": 0.8592,
+      "recall": 0.9839
+    }
+  },
+  "panel_thresholds": {
+    "__global__": 0.3646,
+    "General": 0.335,
+    "Hereditary_Cancer": 0.3646,
+    "PAH": 0.3006,
+    "CFTR": 0.0789
+  },
+  "global_threshold": 0.208,
+  "cv_fold_f1": [
+    0.8603,
+    0.8678,
+    0.8708,
+    0.8821,
+    0.859
+  ],
+  "integrity_note": {
+    "previous_reported_f1_0.8980_or_0.9269": "WITHDRAWN — those were leakage-inflated (augmentation near-twins + panel-overlap straddled the row-wise split). See reports/leakage_quantification.json.",
+    "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680 by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). 0.8680 is now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
+    "self_consistency": "test precision/recall reproduce test binary_f1 exactly."
+  }
+}

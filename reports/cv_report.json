@@ -1,143 +1,124 @@
 {
-  "competition_metric": "Binary F1 — 2*TP/(2*TP+FP+FN), Pathogenic class, pos_label=1 (TEKNOFEST §7.3)",
-  "metric_note": "Primary: binary_f1 (Pathogenic). macro_f1 yardımcı metriktir.",
+  "competition_metric": "Binary F1 \u2014 2*TP/(2*TP+FP+FN), pos_label=1 (TEKNOFEST \u00a77.3)",
+  "metric_note": "Primary: binary_f1 (Pathogenic). macro_f1 is auxiliary.",
   "swa_enabled": true,
-  "mean_cv_binary_f1": 0.8667827231087323,
-  "std_cv_binary_f1": 0.008120142051944742,
-  "test_binary_f1": 0.9269,
-  "test_macro_f1": 0.7418415708899752,
-  "best_threshold": 0.241,
-  "threshold_source": "panel_thresholds.json — F1-optimal on calibration set",
+  "mean_cv_binary_f1": 0.8680018780300618,
+  "std_cv_binary_f1": 0.00832451314339599,
+  "test_binary_f1": 0.9023789991796555,
+  "test_macro_f1": 0.756107532376713,
+  "best_threshold": 0.207979797979798,
+  "threshold_source": "calibration_set",
   "feature_coverage": 0.0,
-  "feature_coverage_note": "Yarışma verisi anonim kolonlar kullanıyor (AL_x, EK_x vb.) — 0.0 beklenen davranış; §3.2 uyumu ColumnAligner tarafından sağlanıyor.",
   "anonymous_columns": 343,
   "folds": [
     {
       "fold": 1,
-      "f1": 0.8526077097505669,
-      "xgb_f1": 0.845150311968236,
-      "lgbm_f1": 0.863406408094435,
-      "gnn_f1": 0.8459915611814346,
-      "dnn_f1": 0.8101415094339622
+      "f1": 0.8602860286028603,
+      "xgb_f1": 0.863013698630137,
+      "lgbm_f1": 0.8591065292096219,
+      "gnn_f1": 0.8189910979228486,
+      "dnn_f1": 0.358695652173913
     },
     {
       "fold": 2,
-      "f1": 0.865990990990991,
-      "xgb_f1": 0.8564946114577425,
-      "lgbm_f1": 0.8754246885617214,
-      "gnn_f1": 0.8244942591580099,
-      "dnn_f1": 0.841743119266055
+      "f1": 0.8678038379530917,
+      "xgb_f1": 0.869198312236287,
+      "lgbm_f1": 0.8684491978609625,
+      "gnn_f1": 0.789247311827957,
+      "dnn_f1": 0.7751412429378531
     },
     {
       "fold": 3,
-      "f1": 0.8771331058020477,
-      "xgb_f1": 0.8693181818181818,
-      "lgbm_f1": 0.8866213151927438,
-      "gnn_f1": 0.8297988036976618,
-      "dnn_f1": 0.8209399167162403
+      "f1": 0.8707926167209555,
+      "xgb_f1": 0.8671023965141612,
+      "lgbm_f1": 0.8809523809523809,
+      "gnn_f1": 0.7863636363636364,
+      "dnn_f1": 0.8311688311688312
     },
     {
       "fold": 4,
-      "f1": 0.8668171557562077,
-      "xgb_f1": 0.8610169491525423,
-      "lgbm_f1": 0.8738738738738738,
-      "gnn_f1": 0.8535300316122234,
-      "dnn_f1": 0.8259587020648967
+      "f1": 0.8820960698689956,
+      "xgb_f1": 0.8828633405639913,
+      "lgbm_f1": 0.8845738942826321,
+      "gnn_f1": 0.7741935483870968,
+      "dnn_f1": 0.7686996547756041
     },
     {
       "fold": 5,
-      "f1": 0.8713646532438478,
-      "xgb_f1": 0.8589164785553047,
-      "lgbm_f1": 0.8824188129899216,
-      "gnn_f1": 0.8385389094759131,
-      "dnn_f1": 0.8054245283018868
+      "f1": 0.8590308370044053,
+      "xgb_f1": 0.8704318936877077,
+      "lgbm_f1": 0.8717948717948718,
+      "gnn_f1": 0.7579185520361991,
+      "dnn_f1": 0.76
     }
   ],
   "test_metrics": {
-    "binary_f1": 0.926916,
-    "macro_f1": 0.7418415708899752,
-    "precision": 0.8340943683409436,
-    "recall": 0.9724933451641526,
-    "roc_auc": 0.951228,
-    "pr_auc": 0.980065,
-    "brier_score": 0.12827173504335312,
-    "ece": 0.07879645956035729,
-    "mcc": 0.722088,
-    "threshold": "panel-specific"
+    "binary_f1": 0.9023789991796555,
+    "macro_f1": 0.756107532376713,
+    "precision": 0.8513931888544891,
+    "recall": 0.9598603839441536,
+    "roc_auc": 0.8347230301855084,
+    "pr_auc": 0.9103205190633855,
+    "brier_score": 0.1241837170452076,
+    "ece": 0.05859791995617978,
+    "mcc": 0.5432856650130444,
+    "threshold": 0.207979797979798
   },
   "panel_metrics": {
     "CFTR": {
-      "binary_f1": 0.967742,
-      "mcc": 0.838525,
-      "precision": 0.9375,
-      "recall": 1.0,
-      "pr_auc": 0.955809,
-      "roc_auc": 0.866667,
-      "threshold": 0.108492,
-      "n": 19,
-      "n_positive": 15
+      "binary_f1": 0.9714285714285714,
+      "macro_f1": 0.4857142857142857,
+      "precision": 1.0,
+      "recall": 0.9444444444444444,
+      "roc_auc": NaN,
+      "pr_auc": 1.0,
+      "brier_score": 0.04780063741345972,
+      "ece": 0.09625508205512934,
+      "mcc": 0.0,
+      "threshold": 0.207979797979798
     },
     "General": {
-      "binary_f1": 0.911628,
-      "mcc": 0.684784,
-      "precision": 0.922353,
-      "recall": 0.901149,
-      "pr_auc": 0.975819,
-      "roc_auc": 0.94299,
-      "threshold": 0.59,
-      "n": 597,
-      "n_positive": 435
+      "binary_f1": 0.8915401301518439,
+      "macro_f1": 0.7391584948279881,
+      "precision": 0.8387755102040816,
+      "recall": 0.9513888888888888,
+      "roc_auc": 0.8334182098765432,
+      "pr_auc": 0.9086498393513995,
+      "brier_score": 0.13352186178898656,
+      "ece": 0.0663484402250131,
+      "mcc": 0.5092142327855143,
+      "threshold": 0.207979797979798
     },
     "Hereditary_Cancer": {
-      "binary_f1": 0.955556,
-      "mcc": 0.870603,
-      "precision": 0.934783,
-      "recall": 0.977273,
-      "pr_auc": 0.995987,
-      "roc_auc": 0.993845,
-      "threshold": 0.280854,
-      "n": 68,
-      "n_positive": 44
+      "binary_f1": 0.9457364341085271,
+      "macro_f1": 0.8914728682170543,
+      "precision": 0.8970588235294118,
+      "recall": 1.0,
+      "roc_auc": 0.9409836065573771,
+      "pr_auc": 0.9579575193007239,
+      "brier_score": 0.07081241104924323,
+      "ece": 0.09825338870301874,
+      "mcc": 0.8036680614166377,
+      "threshold": 0.207979797979798
     },
     "PAH": {
-      "binary_f1": 0.992908,
-      "mcc": 0.919277,
-      "precision": 0.985915,
-      "recall": 1.0,
-      "pr_auc": 0.999388,
-      "roc_auc": 0.993878,
-      "threshold": 0.13804,
-      "n": 77,
-      "n_positive": 70
+      "binary_f1": 0.9172932330827067,
+      "macro_f1": 0.6691729323308271,
+      "precision": 0.8591549295774648,
+      "recall": 0.9838709677419355,
+      "roc_auc": 0.6359447004608295,
+      "pr_auc": 0.8581042398124221,
+      "brier_score": 0.13115776320501094,
+      "ece": 0.05366201047856999,
+      "mcc": 0.4215429382127739,
+      "threshold": 0.207979797979798
     }
   },
   "panel_thresholds": {
-    "__global__": 0.24145728643216083,
-    "General": 0.24145728643216083,
-    "Hereditary_Cancer": 0.2808542713567839,
-    "PAH": 0.13804020100502515,
-    "CFTR": 0.10849246231155779
-  },
-  "test_mcc": 0.7221,
-  "test_pr_auc": 0.9801,
-  "test_ece": 0.0788,
-  "panel_mcc": {
-    "General": 0.6848,
-    "Hereditary_Cancer": 0.8706,
-    "PAH": 0.9193,
-    "CFTR": 0.8385
-  },
-  "panel_pr_auc": {
-    "CFTR": 0.9223,
-    "General": 0.9183,
-    "Hereditary_Cancer": 0.9524,
-    "PAH": 0.976
-  },
-  "threshold_note": "Üretim threshold'ları: General=0.590 (MCC-optimal, §3.2), Hereditary_Cancer=0.281, PAH=0.138, CFTR=0.108. Panel-aware eşik stratejisi — her panel için F1 ve MCC birlikte optimize edildi.",
-  "panel_f1": {
-    "General": 0.9116,
-    "Hereditary_Cancer": 0.9556,
-    "PAH": 0.9929,
-    "CFTR": 0.9677
+    "__global__": 0.36457286432160807,
+    "General": 0.33502512562814074,
+    "Hereditary_Cancer": 0.36457286432160807,
+    "PAH": 0.3005527638190955,
+    "CFTR": 0.07894472361809045
   }
 }

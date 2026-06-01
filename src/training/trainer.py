@@ -323,6 +323,10 @@ class TrainResult:
     fold_results: List[FoldResult] = field(default_factory=list)
     mean_cv_f1:  float = 0.0
     std_cv_f1:   float = 0.0
+    # Held-out test indices used internally — returned so the caller evaluates
+    # on the SAME split (group-aware when groups are provided). Prevents the
+    # two-independent-splits inconsistency and guarantees leakage-free eval.
+    test_indices: Optional[np.ndarray] = None
 
 
 # ---------------------------------------------------------------------------
@@ -368,6 +372,7 @@ class VariantTrainer:
         y: np.ndarray,
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
+        groups:   Optional[np.ndarray] = None,
     ) -> TrainResult:
         """
         Train on provided arrays with a final held-out test split,
@@ -402,13 +407,26 @@ class VariantTrainer:
                     "ensemble_weights": str(cfg.ensemble.weights)
                 })
 
-            # Split indices so we can slice sequences in parallel
+            # Split indices so we can slice sequences in parallel.
+            # GROUP-AWARE when groups (e.g. Variant_ID) are provided → the same
+            # variant never straddles train/test (panel-overlap + augmentation
+            # leakage eliminated, TEKNOFEST §7.5 integrity).
             from sklearn.model_selection import train_test_split as _tts
             idx = np.arange(len(X))
-            idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
-                                   random_state=cfg.seed)
+            if groups is not None:
+                from sklearn.model_selection import GroupShuffleSplit
+                gss = GroupShuffleSplit(
+                    n_splits=1, test_size=cfg.training.test_size, random_state=cfg.seed
+                )
+                idx_tr, idx_te = next(gss.split(idx, y, groups))
+                logger.info("Hold-out split: GROUP-AWARE by group id (n_groups=%d)",
+                            len(np.unique(groups)))
+            else:
+                idx_tr, idx_te = _tts(idx, test_size=cfg.training.test_size, stratify=y,
+                                       random_state=cfg.seed)
             X_train_all, _X_test = X[idx_tr], X[idx_te]
             y_train_all, _y_test = y[idx_tr], y[idx_te]
+            groups_tr = groups[idx_tr] if groups is not None else None
 
             # ── ConfidentLearner — opsiyonel etiket gürültüsü filtresi ──────
             # use_label_cleaning=True ile gürültülü örnekler eğitimden çıkarılır.
@@ -438,9 +456,10 @@ class VariantTrainer:
             nuc_tr = ([nuc_seqs[i] for i in idx_tr] if nuc_seqs else None)
             aa_tr  = ([aa_seqs[i]  for i in idx_tr] if aa_seqs  else None)
 
-            # Cross-validate on train portion
+            # Cross-validate on train portion (group-aware when groups given)
             fold_results = self._cross_validate(X_train_all, y_train_all,
-                                                nuc_seqs=nuc_tr, aa_seqs=aa_tr)
+                                                nuc_seqs=nuc_tr, aa_seqs=aa_tr,
+                                                groups=groups_tr)
             mean_f1 = float(np.mean([r.f1 for r in fold_results]))
             std_f1  = float(np.std( [r.f1 for r in fold_results]))
             
@@ -487,6 +506,7 @@ class VariantTrainer:
                 fold_results  = fold_results,
                 mean_cv_f1    = mean_f1,
                 std_cv_f1     = std_f1,
+                test_indices  = idx_te,
             )
 
     # ------------------------------------------------------------------
@@ -625,6 +645,7 @@ class VariantTrainer:
         self, X: np.ndarray, y: np.ndarray,
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
+        groups:   Optional[np.ndarray] = None,
     ) -> List[FoldResult]:
         cfg   = self.cfg
         # --- Girdi doğrulama ---
@@ -645,14 +666,25 @@ class VariantTrainer:
                 "Hata olusabilir.",
                 len(X), cfg.training.cv_folds, min_samples_needed,
             )
-        skf   = StratifiedKFold(
-            n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed
-        )
+        # Group-aware CV when groups provided → no variant straddles folds.
+        if groups is not None:
+            from sklearn.model_selection import StratifiedGroupKFold
+            skf = StratifiedGroupKFold(
+                n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed
+            )
+            split_iter = skf.split(X, y, groups)
+            logger.info("CV: StratifiedGroupKFold (group-aware, n_groups=%d)",
+                        len(np.unique(groups)))
+        else:
+            skf = StratifiedKFold(
+                n_splits=cfg.training.cv_folds, shuffle=True, random_state=cfg.seed
+            )
+            split_iter = skf.split(X, y)
         results: List[FoldResult] = []
         use_multimodal = getattr(cfg.gnn, "use_multimodal", False)
         seq_enc_dim    = getattr(cfg.gnn, "seq_enc_dim", 32)
 
-        for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y), start=1):
+        for fold_idx, (train_idx, val_idx) in enumerate(split_iter, start=1):
             set_global_seed(cfg.seed + fold_idx)
             logger.info("--- Fold %d/%d ---", fold_idx, cfg.training.cv_folds)
 

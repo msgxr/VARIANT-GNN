@@ -326,13 +326,24 @@ class ModelStore:
         logger.info("Threshold -> %s  (thr=%.4f)", self._threshold_path, threshold)
 
     def load_threshold(self, default: float = 0.50) -> float:
-        """Load saved threshold; return default if not found."""
+        """Load saved threshold; return default if not found.
+
+        Tolerant of both key conventions: 'classification_threshold' (written by
+        save_threshold) and 'threshold' (written by the calibration/optimisation
+        scripts, e.g. models/threshold.json). Prevents the §7.5 jury re-run from
+        silently falling back to a default and reproducing none of the reported
+        numbers.
+        """
         import json
         if not self._threshold_path.exists():
             return default
         try:
             with open(self._threshold_path) as fh:
-                return float(json.load(fh).get("classification_threshold", default))
+                data = json.load(fh)
+            for key in ("classification_threshold", "threshold"):
+                if key in data and data[key] is not None:
+                    return float(data[key])
+            return default
         except Exception:
             return default
 
@@ -340,18 +351,37 @@ class ModelStore:
     def _panel_threshold_path(self) -> Path: return self.model_dir / "panel_thresholds.json"
 
     def save_panel_thresholds(self, thresholds: dict) -> None:
+        # FLAT format ({"General": 0.33, ...}) — human-readable and the convention
+        # the shipped file + tests expect. load_panel_thresholds() reads both flat
+        # and legacy wrapped files.
         import json
         with open(self._panel_threshold_path, "w") as fh:
-            json.dump({"panel_thresholds": thresholds}, fh)
+            json.dump({k: float(v) for k, v in thresholds.items()}, fh, indent=2)
         logger.info("Panel Thresholds -> %s", self._panel_threshold_path)
 
     def load_panel_thresholds(self) -> dict:
+        """Load per-panel thresholds; tolerant of wrapped and flat file formats.
+
+        save_panel_thresholds writes {"panel_thresholds": {...}} but the shipped
+        models/panel_thresholds.json is flat ({"General": 0.59, ...}). Without this
+        tolerance load_panel_thresholds() returns {} and inference silently applies
+        a single global threshold to all four panels — reproducing none of the
+        panel-specific reported F1 values (TEKNOFEST §7.5).
+        """
         import json
         if not self._panel_threshold_path.exists():
             return {}
         try:
             with open(self._panel_threshold_path) as fh:
-                return json.load(fh).get("panel_thresholds", {})
+                data = json.load(fh)
+            if isinstance(data, dict) and "panel_thresholds" in data:
+                return data["panel_thresholds"] or {}
+            # Flat file: treat the dict itself as the panel→threshold mapping
+            # (ignore non-float bookkeeping keys defensively).
+            if isinstance(data, dict):
+                return {k: float(v) for k, v in data.items()
+                        if isinstance(v, (int, float))}
+            return {}
         except Exception:
             return {}
 
