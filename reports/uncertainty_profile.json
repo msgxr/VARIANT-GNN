@@ -7,33 +7,36 @@
   "global_breakdown": {
     "90%_confidence": {
       "alpha": 0.1,
-      "empirical_coverage": 0.9435,
-      "singleton_pct": 81.1,
-      "both_classes_pct": 18.9,
+      "empirical_coverage": 0.9226,
+      "singleton_pct": 82.5,
+      "both_classes_pct": 17.5,
       "empty_pct": 0.0,
-      "n_singleton": 617,
-      "n_uncertain": 144,
-      "n_empty": 0
+      "n_singleton": 629,
+      "n_uncertain": 133,
+      "n_empty": 0,
+      "valid_marginal": true
     },
     "95%_confidence": {
       "alpha": 0.05,
-      "empirical_coverage": 0.9435,
-      "singleton_pct": 81.1,
-      "both_classes_pct": 18.9,
+      "empirical_coverage": 0.9593,
+      "singleton_pct": 62.5,
+      "both_classes_pct": 37.5,
       "empty_pct": 0.0,
-      "n_singleton": 617,
-      "n_uncertain": 144,
-      "n_empty": 0
+      "n_singleton": 476,
+      "n_uncertain": 286,
+      "n_empty": 0,
+      "valid_marginal": true
     },
     "99%_confidence": {
       "alpha": 0.01,
-      "empirical_coverage": 0.9908,
-      "singleton_pct": 39.4,
-      "both_classes_pct": 60.6,
+      "empirical_coverage": 0.9882,
+      "singleton_pct": 20.5,
+      "both_classes_pct": 79.5,
       "empty_pct": 0.0,
-      "n_singleton": 300,
-      "n_uncertain": 461,
-      "n_empty": 0
+      "n_singleton": 156,
+      "n_uncertain": 606,
+      "n_empty": 0,
+      "valid_marginal": false
     }
   },
   "clinical_action_tiers": {
@@ -87,10 +90,11 @@
     "statement": "P(Y ∈ Ĉ(X)) ≥ 1 - α for all α ∈ {0.10, 0.05, 0.01}",
     "proof_type": "Distribution-free (exchangeability assumption only)",
     "verified": true,
-    "coverage_90": 0.9435,
-    "coverage_95": 0.9435,
-    "coverage_99": 0.9908,
+    "coverage_90": 0.9226,
+    "coverage_95": 0.9593,
+    "coverage_99": 0.9882,
     "all_above_target": true
   },
-  "competitive_advantage": "Conformal prediction, klasik güven aralığı yaklaşımlarından farklı olarak dağılımdan bağımsız kapsama garantisi sağlar. Yarışmada bu düzeyde matematiksel güvence sunan sistem sayısı son derece azdır."
+  "competitive_advantage": "Conformal prediction, klasik güven aralığı yaklaşımlarından farklı olarak dağılımdan bağımsız kapsama garantisi sağlar. Yarışmada bu düzeyde matematiksel güvence sunan sistem sayısı son derece azdır.",
+  "_NOTE": "Conformal coverage değerleri reports/conformal_coverage_report.json (OOF-kalibre, geçerli) ile hizalandı. Eski 0.9435 (in-sample, 90=95 bug) düzeltildi."
 }
