@@ -182,3 +182,8 @@ __MACOSX/
 # Büyük scriptler (geçici)
 generate_report_pdf.py
 build_notebook.py
+
+# Dürüst SHAP §4.4 görselleri (PDR kanıtı)
+!reports/shap_summary.png
+!reports/shap_waterfall.png
+!reports/figures/shap_group_contributions_honest.png

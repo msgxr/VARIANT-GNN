@@ -1,143 +1,34 @@
 {
-  "method": "XGBoost TreeExplainer — mean |SHAP| on test subset (n=500)",
-  "n_features_total": 51,
-  "n_kb_features": 35,
-  "n_ae_features": 16,
-  "selected_kb_features": [
-    "AL_11",
-    "AL_12",
-    "AL_13",
-    "AL_15",
-    "AL_16",
-    "AL_63",
-    "AL_66",
-    "AL_67",
-    "AL_125",
-    "AL_127",
-    "AL_128",
-    "AL_130",
-    "AL_131",
-    "AL_132",
-    "AL_135",
-    "AL_137",
-    "AL_140",
-    "AL_145",
-    "AL_149",
-    "AL_150",
-    "AL_151",
-    "AL_155",
-    "AL_157",
-    "AL_161",
-    "AL_171",
-    "AL_185",
-    "AL_194",
-    "AL_196",
-    "AL_199",
-    "AL_208",
-    "AL_209",
-    "AL_210",
-    "AL_211",
-    "AL_212",
-    "AL_213"
-  ],
+  "_README": "DÜRÜST group-SHAP — 1 Haziran 2026 sızıntısız model (369 öznitelik, SelectKBest/AutoEncoder YOK). Eski 51-feature (k=35+AE16) leaky SHAP GERİ ÇEKİLDİ; reports/acmg_alignment.json ile tutarlı.",
+  "method": "XGBoost TreeExplainer mean|SHAP| — group-aware hold-out test (n=762), tam 369-öznitelik uzayı",
+  "n_features_total": 369,
   "group_contributions_pct": {
-    "in_silico_risk": 41.3,
-    "evolutionary_conservation": 58.7,
-    "population_data": 0.0,
-    "biochemical_structural": 0.0,
-    "sequence_context": 0.0,
-    "local_sequence": 0.0
+    "Korunmuşluk/sekans imzası (anonim AL_*)": 64.19999694824219,
+    "PP3/PS3 — in-silico + korunmuşluk skorları": 18.59000015258789,
+    "PM4/PP2 — biyokimyasal AA değişimi": 10.5,
+    "BA1/BS1 — popülasyon frekansı/genişliği": 2.880000114440918,
+    "PP3/BP4 — in-silico uzlaşı": 2.7300000190734863,
+    "Panel bağlamı": 0.8199999928474426,
+    "Yerel sekans bağlamı (nükleotid/genotip)": 0.2800000011920929,
+    "Mappability/bölge (LCR/segdup)": 0.0,
+    "PVS1-proxy — stop-gain": 0.0
   },
-  "ranked_groups": [
-    {
-      "group_key": "evolutionary_conservation",
-      "label_tr": "Evrimsel Korunmuşluk",
-      "contribution_pct": 58.7,
-      "expected_pct": 27.0
-    },
-    {
-      "group_key": "in_silico_risk",
-      "label_tr": "In Silico Risk Skorları",
-      "contribution_pct": 41.3,
-      "expected_pct": 38.0
-    },
-    {
-      "group_key": "population_data",
-      "label_tr": "Popülasyon Verileri",
-      "contribution_pct": 0.0,
-      "expected_pct": 18.0
-    },
-    {
-      "group_key": "biochemical_structural",
-      "label_tr": "Biyokimyasal/Yapısal",
-      "contribution_pct": 0.0,
-      "expected_pct": 10.0
-    },
-    {
-      "group_key": "sequence_context",
-      "label_tr": "Sekans Bağlamı",
-      "contribution_pct": 0.0,
-      "expected_pct": 5.0
-    },
-    {
-      "group_key": "local_sequence",
-      "label_tr": "Yerel Sekans Özellikleri",
-      "contribution_pct": 0.0,
-      "expected_pct": 2.0
-    }
-  ],
-  "note": "AL_x kolonları PSR §4.4 pozisyonel dağılımına göre gruplara atandı. AE latent boyutlar dominant gruba (in_silico_risk) atandı.",
-  "full_spectrum_kb_scores": {
-    "in_silico_risk": 31.2,
-    "evolutionary_conservation": 68.8,
-    "population_data": 0.0,
-    "biochemical_structural": 0.0,
-    "sequence_context": 0.0,
-    "local_sequence": 0.0
+  "top_features": {
+    "EK_7": 0.51202,
+    "EK_9": 0.22913,
+    "AL_327": 0.19363,
+    "bio_blosum62": 0.16501,
+    "pop_breadth_CAT_1": 0.1627,
+    "bio_d_volume": 0.15717,
+    "insilico_consensus": 0.12753,
+    "AL_40": 0.12172,
+    "AL_311": 0.09408,
+    "AL_287": 0.08974,
+    "AL_73": 0.08618,
+    "AL_298": 0.08101,
+    "AL_318": 0.08003,
+    "AL_17": 0.07311,
+    "EK_2": 0.07297
   },
-  "full_spectrum_ranked": [
-    {
-      "group_key": "evolutionary_conservation",
-      "label_tr": "Evrimsel Korunmuşluk",
-      "contribution_pct": 68.8,
-      "expected_pct": 27.0,
-      "n_features": 90
-    },
-    {
-      "group_key": "in_silico_risk",
-      "label_tr": "In Silico Risk Skorları",
-      "contribution_pct": 31.2,
-      "expected_pct": 38.0,
-      "n_features": 130
-    },
-    {
-      "group_key": "population_data",
-      "label_tr": "Popülasyon Verileri",
-      "contribution_pct": 0.0,
-      "expected_pct": 18.0,
-      "n_features": 0
-    },
-    {
-      "group_key": "biochemical_structural",
-      "label_tr": "Biyokimyasal/Yapısal",
-      "contribution_pct": 0.0,
-      "expected_pct": 10.0,
-      "n_features": 0
-    },
-    {
-      "group_key": "sequence_context",
-      "label_tr": "Sekans Bağlamı",
-      "contribution_pct": 0.0,
-      "expected_pct": 5.0,
-      "n_features": 0
-    },
-    {
-      "group_key": "local_sequence",
-      "label_tr": "Yerel Sekans Özellikleri",
-      "contribution_pct": 0.0,
-      "expected_pct": 2.0,
-      "n_features": 0
-    }
-  ],
-  "note_full_spectrum": "SelectKBest F-skor tabanlı tam spektrum analizi (220 numerik özellik). Evrimsel korunmuşluk özellikleri dominant (AL_128-217 aralığı yüksek F-skoru). SHAP sadece seçili 35 özelliği gösterirken tam spektrum 0% olmayan grupları ortaya çıkarır."
+  "acmg_concordance_note": "En yüksek katkılı gruplar (korunmuşluk/in-silico + AA biyokimyası) ACMG PP3/PS3/PM4 kriterleriyle örtüşür — kararlar etiketleri üreten çerçeveyle hizalı. Detaylı kriter eşlemesi: reports/acmg_alignment.json"
 }

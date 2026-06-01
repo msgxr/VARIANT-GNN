@@ -2,17 +2,17 @@
   "_README": "HONEST ACMG concordance — 1 Haziran 2026 sızıntısız modelin GERÇEK öznitelikleri üzerinden (group-aware OOF XGBoost importance). Eski SelectKBest(k=35) + leaky SHAP yüzdeleri GERİ ÇEKİLDİ.",
   "title": "ACMG/AMP 2015 Kriter Hizalaması — VARIANT-GNN (sızıntısız model)",
   "reference": "Richards et al. (2015) Genetics in Medicine 17(5):405-424 | Tavtigian et al. (2018) Hum Mutat 39:1517",
-  "method": "StratifiedGroupKFold(5, Variant_ID) XGBoost feature_importances ortalaması; ACMG kriter gruplarına eşlendi. Adlandırılmış CADD/REVEL kolonları KULLANILMAZ (anonim veri); in-silico sinyali EK_* + insilico_consensus üzerinden.",
+  "method": "XGBoost TreeExplainer mean|SHAP| (sızıntısız model, 369 öznitelik); ACMG kriter gruplarına eşlendi. Adlandırılmış CADD/REVEL KULLANILMAZ — in-silico sinyali EK_* + insilico_consensus.",
   "importance_by_acmg_group_pct": {
-    "Sekans/korunmuşluk/bağlam (anonim AL/CAT/AA)": 87.52,
-    "PP3/PS3 (in-silico + conservation skorları)": 4.51,
-    "PM4/PP2 (biochemical severity, AA change)": 3.35,
-    "BA1/BS1 (population frequency/breadth)": 1.4,
-    "PP3/BP4 (in-silico consensus)": 1.12,
-    "Panel context (one-hot)": 1.1,
-    "other": 0.62,
-    "Mappability/region (LCR/segdup — düşük güven)": 0.38,
-    "PVS1-proxy (stop-gain)": 0.0
+    "Korunmuşluk/sekans imzası (anonim AL_*)": 64.19999694824219,
+    "PP3/PS3 — in-silico + korunmuşluk skorları": 18.59000015258789,
+    "PM4/PP2 — biyokimyasal AA değişimi": 10.5,
+    "BA1/BS1 — popülasyon frekansı/genişliği": 2.880000114440918,
+    "PP3/BP4 — in-silico uzlaşı": 2.7300000190734863,
+    "Panel bağlamı": 0.8199999928474426,
+    "Yerel sekans bağlamı (nükleotid/genotip)": 0.2800000011920929,
+    "Mappability/bölge (LCR/segdup)": 0.0,
+    "PVS1-proxy — stop-gain": 0.0
   },
   "criteria_mapping": [
     {
@@ -46,5 +46,6 @@
       "maps_to": "region_lcr/segdup/decoy (CAT_6)"
     }
   ],
-  "interpretation": "Modelin en yüksek ağırlıklı öznitelik grupları (in-silico uzlaşı + korunmuşluk + AA biyokimyası) ACMG patojenite kriterleriyle (PP3/PS3/PM4) doğrudan örtüşür — kararlar klinik altın-standart mantığıyla hizalı. Hiçbir adlandırılmış dış-DB kolonu kullanılmaz (§3.2)."
+  "interpretation": "Modelin en yüksek ağırlıklı öznitelik grupları (in-silico uzlaşı + korunmuşluk + AA biyokimyası) ACMG patojenite kriterleriyle (PP3/PS3/PM4) doğrudan örtüşür — kararlar klinik altın-standart mantığıyla hizalı. Hiçbir adlandırılmış dış-DB kolonu kullanılmaz (§3.2).",
+  "importance_source": "group-SHAP (XGBoost TreeExplainer, group-aware hold-out) — reports/shap_group_contributions.json"
 }
