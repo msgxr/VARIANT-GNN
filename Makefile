@@ -1,5 +1,5 @@
 .PHONY: install install-dev install-ci test test-smoke test-unit test-integration \
-        lint typecheck format security clean-cache clean-artifacts \
+        lint typecheck format security results-check check clean-cache clean-artifacts \
         train predict eval crossval external-val adversarial-val explain \
         predict-jury external-val-full ablation pdr-report pdr-evidence \
         app api docker-build docker-run docker-up help
@@ -61,7 +61,10 @@ typecheck:
 security:
 	bandit -r src/ data_contracts/ main.py app.py -ll --skip B101,B301,B403
 
-check: lint typecheck security
+results-check:
+	python scripts/check_results_consistency.py
+
+check: lint typecheck security results-check
 
 # ─── Model Operasyonları ─────────────────────────────────────────────────────
 

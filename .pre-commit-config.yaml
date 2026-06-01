@@ -33,3 +33,10 @@ repos:
         language: system
         entry: bash -c 'git diff --cached --name-only | grep -q "__pycache__" && echo "ERROR: __pycache__ commit edilmeye çalışılıyor!" && exit 1 || exit 0'
         pass_filenames: false # Python
+
+      - id: results-consistency
+        name: 'Beyan edilen metrikler RESULTS_CANONICAL.json ile tutarlı (§7.5)'
+        language: system
+        entry: python scripts/check_results_consistency.py
+        pass_filenames: false
+        files: '(RESULTS_CANONICAL\.json|README\.md|MODEL_CARD\.md|PROJECT_STATUS\.md|CLAUDE\.md|reports/cv_report\.json)$'
