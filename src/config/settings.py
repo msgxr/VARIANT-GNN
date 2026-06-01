@@ -68,6 +68,8 @@ class DNNSettings:
     epochs: int = 20
     lr: float = 0.001
     weight_decay: float = 1e-4
+    use_dann: bool = False        # Domain-Adversarial (panel-invariant DNN). LOPO +2.17pp.
+    dann_gamma: float = 10.0      # λ schedule sharpness (Ganin 2015)
 
 
 @dataclass
@@ -298,6 +300,8 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         epochs       = raw_dnn.get("epochs", 20),
         lr           = raw_dnn.get("lr", 0.001),
         weight_decay = raw_dnn.get("weight_decay", 1e-4),
+        use_dann     = raw_dnn.get("use_dann", False),
+        dann_gamma   = raw_dnn.get("dann_gamma", 10.0),
     )
 
     raw_xgb = raw.get("xgb", {})

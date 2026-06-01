@@ -30,6 +30,7 @@ gnn:
 dnn:
   hidden_dim: 128
   epochs: 30
+  use_dann: true   # Domain-Adversarial (panel-invariant) — LOPO +2.17pp
   lr: 0.001
   weight_decay: 1.0e-4
 

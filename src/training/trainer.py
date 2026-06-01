@@ -373,6 +373,7 @@ class VariantTrainer:
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
         groups:   Optional[np.ndarray] = None,
+        panels:   Optional[np.ndarray] = None,
     ) -> TrainResult:
         """
         Train on provided arrays with a final held-out test split,
@@ -427,6 +428,7 @@ class VariantTrainer:
             X_train_all, _X_test = X[idx_tr], X[idx_te]
             y_train_all, _y_test = y[idx_tr], y[idx_te]
             groups_tr = groups[idx_tr] if groups is not None else None
+            panels_tr = panels[idx_tr] if panels is not None else None
 
             # ── ConfidentLearner — opsiyonel etiket gürültüsü filtresi ──────
             # use_label_cleaning=True ile gürültülü örnekler eğitimden çıkarılır.
@@ -459,7 +461,7 @@ class VariantTrainer:
             # Cross-validate on train portion (group-aware when groups given)
             fold_results = self._cross_validate(X_train_all, y_train_all,
                                                 nuc_seqs=nuc_tr, aa_seqs=aa_tr,
-                                                groups=groups_tr)
+                                                groups=groups_tr, panels=panels_tr)
             mean_f1 = float(np.mean([r.f1 for r in fold_results]))
             std_f1  = float(np.std( [r.f1 for r in fold_results]))
             
@@ -473,7 +475,8 @@ class VariantTrainer:
 
             # Final model — fit on full training set
             preprocessor, ensemble, X_opt_val, y_opt_val = self._fit_single(
-                X_train_all, y_train_all, nuc_seqs=nuc_tr, aa_seqs=aa_tr
+                X_train_all, y_train_all, nuc_seqs=nuc_tr, aa_seqs=aa_tr,
+                panels=panels_tr,
             )
 
             # Stacking/Weight optimization (logging this is useful)
@@ -519,6 +522,7 @@ class VariantTrainer:
         y_train: np.ndarray,
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
+        panels:   Optional[np.ndarray] = None,
     ) -> Tuple["VariantPreprocessor", "HybridEnsemble", np.ndarray, np.ndarray]:
         """
         Fit ALL preprocessing + ALL models on X_train / y_train.
@@ -622,9 +626,18 @@ class VariantTrainer:
             hidden_dim = cfg.dnn.hidden_dim,
             num_classes= 2,
         ).to(self.device)
-        dnn_tr_loader  = _make_dnn_loader(X_inner_tr, y_inner_tr, cfg.training.batch_size, True)
-        dnn_val_loader = _make_dnn_loader(X_inner_val, y_inner_val, cfg.training.batch_size, False)
-        dnn_model = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_inner_tr)
+        if getattr(cfg.dnn, "use_dann", False) and panels is not None:
+            # Domain-adversarial final DNN — trained on pre-SMOTE original rows
+            # (panel labels defined). X_proc[:n_orig] are the original rows.
+            n_orig = len(X_train)
+            p_arr = np.asarray(panels)[:n_orig]
+            dnn_model = self._train_dnn_dann(
+                dnn_model, X_proc[:n_orig], y_resampled[:n_orig], p_arr
+            )
+        else:
+            dnn_tr_loader  = _make_dnn_loader(X_inner_tr, y_inner_tr, cfg.training.batch_size, True)
+            dnn_val_loader = _make_dnn_loader(X_inner_val, y_inner_val, cfg.training.batch_size, False)
+            dnn_model = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_inner_tr)
 
         ensemble = HybridEnsemble(
             xgb_model  = xgb_model,
@@ -646,6 +659,7 @@ class VariantTrainer:
         nuc_seqs: Optional[List[str]] = None,
         aa_seqs:  Optional[List[str]] = None,
         groups:   Optional[np.ndarray] = None,
+        panels:   Optional[np.ndarray] = None,
     ) -> List[FoldResult]:
         cfg   = self.cfg
         # --- Girdi doğrulama ---
@@ -775,9 +789,16 @@ class VariantTrainer:
 
             # --- DNN ---
             dnn_model     = VariantDNN(X_tr_proc.shape[1], cfg.dnn.hidden_dim, 2).to(self.device)
-            dnn_tr_loader = _make_dnn_loader(X_tr_proc, y_tr_res, cfg.training.batch_size, True)
             dnn_val_loader= _make_dnn_loader(X_val_proc, y_val, cfg.training.batch_size, False)
-            dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_train=y_tr_res)
+            if getattr(cfg.dnn, "use_dann", False) and panels is not None:
+                # Domain-adversarial: train on pre-SMOTE fold rows (panels defined).
+                p_fold = np.asarray(panels)[train_idx][:n_orig_tr]
+                dnn_model = self._train_dnn_dann(
+                    dnn_model, X_tr_proc[:n_orig_tr], y_tr_res[:n_orig_tr], p_fold
+                )
+            else:
+                dnn_tr_loader = _make_dnn_loader(X_tr_proc, y_tr_res, cfg.training.batch_size, True)
+                dnn_model     = self._train_dnn(dnn_model, dnn_tr_loader, dnn_val_loader, y_train=y_tr_res)
             dnn_preds, dnn_probs_fold = _dnn_eval(dnn_model, dnn_val_loader, self.device)
             dnn_f1        = float(f1_score(y_val, dnn_preds[:len(y_val)],
                                            average="binary", pos_label=1, zero_division=0))
@@ -1089,4 +1110,57 @@ class VariantTrainer:
             update_batch_norm(model, train_loader, self.device)
         elif val_loader is not None:
             model.load_state_dict(best_weights)
+        return model
+
+    def _train_dnn_dann(
+        self,
+        model:  VariantDNN,
+        X:      np.ndarray,
+        y:      np.ndarray,
+        panels: np.ndarray,
+    ) -> VariantDNN:
+        """Domain-Adversarial DNN training (Ganin 2015): the encoder is pushed to
+        produce PANEL-INVARIANT features via a gradient-reversed panel discriminator.
+        Improves cross-panel / distribution-shift generalization (LOPO +2.17pp,
+        reports/dann_lopo_validation.json). Trained on pre-SMOTE rows where panel
+        labels are defined. ``model.net`` = Sequential(encoder..., head)."""
+        import torch.nn as _nn
+        from src.training.domain_adversarial import (
+            PanelDiscriminator, dann_lambda, encode_panels,
+        )
+        cfg, dev = self.cfg, self.device
+        encoder    = _nn.Sequential(*list(model.net[:-1]))
+        head       = model.net[-1]
+        feat_dim   = head.in_features
+        pe, _      = encode_panels(list(panels))
+        n_panels   = int(pe.max()) + 1
+        disc       = PanelDiscriminator(feat_dim, n_panels=max(n_panels, 2)).to(dev)
+
+        Xt = torch.tensor(X, dtype=torch.float32).to(dev)
+        yt = torch.tensor(y, dtype=torch.long).to(dev)
+        pt = torch.tensor(pe, dtype=torch.long).to(dev)
+
+        # Class-weighted variant loss (imbalance) + panel CE (adversarial).
+        counts = np.bincount(y, minlength=2).astype(float)
+        cw = torch.tensor(counts.sum() / (2.0 * np.clip(counts, 1, None)),
+                          dtype=torch.float32).to(dev)
+        var_crit = _nn.CrossEntropyLoss(weight=cw)
+        pan_crit = _nn.CrossEntropyLoss()
+        params = list(encoder.parameters()) + list(head.parameters()) + list(disc.parameters())
+        opt = torch.optim.Adam(params, lr=cfg.dnn.lr, weight_decay=cfg.dnn.weight_decay)
+
+        gamma = getattr(cfg.dnn, "dann_gamma", 10.0)
+        model.train()
+        for epoch in range(cfg.dnn.epochs):
+            encoder.train(); head.train(); disc.train()
+            opt.zero_grad()
+            feats = encoder(Xt)
+            v_logits = head(feats)
+            lam = dann_lambda(epoch / max(cfg.dnn.epochs, 1), gamma=gamma)
+            p_logits = disc(feats, lambda_=lam)
+            loss = var_crit(v_logits, yt) + lam * pan_crit(p_logits, pt)
+            loss.backward()
+            opt.step()
+        model.eval()
+        logger.info("DNN trained with DANN (panel-invariant, λ_max@end, n_panels=%d)", n_panels)
         return model

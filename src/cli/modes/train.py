@@ -85,9 +85,14 @@ def mode_train(args, cfg):
         n_groups = len(np.unique(groups))
         logging.info("Group-aware splitting ON: %d rows → %d unique variants", len(X), n_groups)
 
+    # Panel labels for optional Domain-Adversarial (DANN) DNN training.
+    panels_arr = None
+    if "Panel" in ds.metadata.columns and len(ds.metadata) == len(X):
+        panels_arr = ds.metadata["Panel"].astype(str).values
+
     trainer = VariantTrainer()
     result = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences,
-                           groups=groups)
+                           groups=groups, panels=panels_arr)
     logging.info("CV summary — Binary F1 (§7.3): %.4f ± %.4f",
                  result.mean_cv_f1, result.std_cv_f1)
 
