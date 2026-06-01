@@ -1,28 +1,33 @@
 {
   "project": "VARIANT-GNN",
-  "version": "3.2.0",
+  "version": "4.0.0-leakage-free",
   "competition": "TEKNOFEST 2026 Sağlıkta Yapay Zekâ — Üniversite ve Üzeri",
   "team": "XYRA3",
   "team_id": "909249",
   "application_id": "4865399",
-  "generated_at": "2026-05-21T10:13:11",
-  "status": "HAZIR — gerçek TEKNOFEST verisiyle eğitilmiş model ağırlıkları; SHA256 doğrulandı",
+  "generated_at": "2026-06-01",
+  "status": "HAZIR — sızıntısız (group-aware) gerçek-veri modeli; SHA256 güncel; RESULTS_CANONICAL.json",
   "training_info": {
     "data_source": "TEKNOFEST 2026 official training set (4 panels)",
     "real_data_received": true,
     "real_data_received_date": "2026-05-14",
-    "retrain_completed_date": "2026-05-20",
-    "train_samples": 7604,
-    "original_samples": 3802,
-    "augmentation": "Gaussian feature jittering (sigma=0.05, n_copies=1)",
+    "retrain_completed_date": "2026-06-01",
+    "split": "GROUP-AWARE by Variant_ID (GroupShuffleSplit + StratifiedGroupKFold) — leakage guard PASSED",
+    "train_samples": 3802,
+    "unique_variants": 3224,
+    "augmentation": "DISABLED (pre-augmented file caused near-twin leakage)",
+    "feature_engineering": "Full §3.2 numeric + Panel one-hot + CategoricalBioFeaturizer (AA/CAT/EK)",
+    "dnn_training": "Domain-Adversarial (panel-invariant)",
     "cv_folds": 5,
     "seed": 42,
-    "cv_f1_mean": 0.8668,
-    "cv_f1_std": 0.0081,
-    "test_f1": 0.8980,
-    "test_recall": 0.9725,
-    "test_roc_auc": 0.8673,
-    "test_brier": 0.1283
+    "cv_f1_mean": 0.8779,
+    "cv_f1_std": 0.0062,
+    "test_f1": 0.8963,
+    "test_mcc": 0.5313,
+    "test_recall": 0.9354,
+    "test_roc_auc": 0.8485,
+    "test_brier": 0.1286,
+    "withdrawn": "Önceki 0.8980/0.9269 sayıları satır-bazlı split sızıntısı nedeniyle geri çekildi"
   },
   "artifacts": {
     "model_files": [
@@ -30,87 +35,87 @@
         "name": "xgb_model.json",
         "path": "models/xgb_model.json",
         "type": "XGBoost model",
-        "sha256": "2a805b2c2b163c87d13eff76f05e64b4e4e92e09d1498d5cd4fa4fea4c1bbbd5",
-        "size_bytes": 838434
+        "sha256": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
+        "size_bytes": 686325
       },
       {
         "name": "lgbm_model.txt",
         "path": "models/lgbm_model.txt",
         "type": "LightGBM model",
-        "sha256": "1170ebd6d8afe292c5d1283a62d93f474c4cbee9f28a7a8bb3a882c48e1fb3ae",
-        "size_bytes": 2066978
+        "sha256": "699700a2a6864c569110a3b032582ee52744bdd1920f1110ea3cd690aec33f7b",
+        "size_bytes": 1248669
       },
       {
         "name": "gnn_model.pth",
         "path": "models/gnn_model.pth",
-        "type": "VariantGATv2GNN weights (GATv2Conv, 3-block, heads=4)",
-        "sha256": "b04919382ec0b017f17b9cc54fdc36f40cde2f6c6d90234f3d78fc2fde9a1498",
-        "size_bytes": 473041
+        "type": "VariantGATv2GNN weights (GATv2Conv, 3-block)",
+        "sha256": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
+        "size_bytes": 635857
       },
       {
         "name": "dnn_model.pth",
         "path": "models/dnn_model.pth",
-        "type": "DNN weights (+SWA)",
-        "sha256": "865c4a8c94701bc3f9be59e6e5c49b51a5494ff05e1d9e60d35bb9a9d18fda12",
-        "size_bytes": 66660
+        "type": "DNN weights (+SWA, Domain-Adversarial)",
+        "sha256": "6c9957ccfc04e4993e8df8c195076e9ec9b04ea96a0b9806f0e3a2caac1c83bc",
+        "size_bytes": 229476
       },
       {
         "name": "preprocessor.pkl",
         "path": "models/preprocessor.pkl",
-        "type": "Preprocessing pipeline (imputer + scaler + SelectKBest + AutoEncoder)",
-        "sha256": "40c4c000af483d37c3e9b13a12afb78fb7b0b62b7b7f86b3a3c9c18e21c9a1b8",
-        "size_bytes": 101544
+        "type": "Preprocessing pipeline (imputer + RobustScaler + SMOTE; full §3.2 feature set)",
+        "sha256": "8a1a0027daa7c87857416fd4a9ab8c71611637f5cd81c6835d1be42c975e8b16",
+        "size_bytes": 427125
       },
       {
         "name": "calibrator.pkl",
         "path": "models/calibrator.pkl",
         "type": "Isotonic calibrator",
-        "sha256": "7c67af2bb98c65ec2deefa2af9b3a5e46b4c0a90e9de8b1e38a24c7f81c9e7a4",
-        "size_bytes": 911
+        "sha256": "445b857cdc16af6f100b77b0770aedebb2a0aae592c8be20a76ee9192cb0ff0b",
+        "size_bytes": 1015
       },
       {
         "name": "ensemble.pkl",
         "path": "models/ensemble.pkl",
         "type": "HybridEnsemble (4-model + meta-learner)",
-        "sha256": "0a55e3d262d67e3d4d3f8c4a92e0e81a4b3c89f24e7a6b1d9c0e2f5a8d7b3c6e",
-        "size_bytes": 3195093
-      },
-      {
-        "name": "autoencoder.pth",
-        "path": "models/autoencoder.pth",
-        "type": "AutoEncoder latent feature extractor",
-        "sha256": "d7e01d62c594d4ef8b3c9a2f7e0d5a4c6b8f1e3d9a7c5b2e4f6a8d0c1e3f5b7",
-        "size_bytes": 17285
+        "sha256": "3533fad312c5d897ce42465ed6da4eb78951ce62feb5dff9b5f38dbdea8cce19",
+        "size_bytes": 2612485
       },
       {
         "name": "meta_learner.pkl",
         "path": "models/meta_learner.pkl",
         "type": "Stacking meta-learner (logistic regression)",
-        "sha256": "c5e76ff154cdc6de9a3b8f2e1d0c7a5b4e8f3d2c9a6b1e4f7d0a3c6b9e2f5a8",
+        "sha256": "e7185d95a078428c648dab315f97f58a45249211bfe7274b0ea34787806a8d86",
         "size_bytes": 911
+      },
+      {
+        "name": "ood_detector.pkl",
+        "path": "models/ood_detector.pkl",
+        "type": "OOD detector (Mahalanobis/KDE)",
+        "sha256": "750ceeb6de1c0bf4f892ea5eed8609cf315ac54ba88fef7db54038aaef10abad",
+        "size_bytes": 1101747
       },
       {
         "name": "threshold.json",
         "path": "models/threshold.json",
         "type": "Global F1-optimal threshold",
-        "sha256": "75d5c5a0ad5dec4d8b3f2e9a6c4b7d1e8f0a5c2e9b6d3f0a7c4e1b8d5f2a9c6",
-        "size_bytes": 34
+        "sha256": "1b6ca2fe650bd05ad583819c72237003c3e258dd4bf8891e8ffbf2615cda686c",
+        "size_bytes": 49
       },
       {
         "name": "panel_thresholds.json",
         "path": "models/panel_thresholds.json",
         "type": "Panel-specific F1-optimal thresholds (4 panels)",
-        "sha256": "b1a654c3c3b63f68d9e2a5f8c1b4e7d0a3c6f9b2e5a8d1f4c7b0e3a6d9f2c5b",
-        "size_bytes": 187
+        "sha256": "47daecf6585da273597c1cb674737e7c88135c73285f770c993672c2b76e0f76",
+        "size_bytes": 177
       }
     ],
     "config_files": [
       {
         "name": "pdr.yaml",
         "path": "configs/pdr.yaml",
-        "description": "PDR aşaması eğitim konfigürasyonu"
+        "description": "PDR eğitim konfigürasyonu (use_categorical_bio+use_dann)"
       }
     ]
   },
-  "notes": "SHA256 karmaları 2026-05-21 tarihinde hesaplanmıştır. Modeller gerçek TEKNOFEST 2026 yarışma verisi (3802 satır, 4 panel) + Gaussian augmentation (7604 satır) üzerinde eğitilmiştir. CV F1=0.8668±0.0081, Test F1=0.8980. NDA kapsamındaki veri lokal makinede kalmıştır."
+  "notes": "SHA256 1 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8779±0.0062, Test F1=0.8963. NDA verisi lokal kaldı."
 }

@@ -1,11 +1,16 @@
 {
-  "generated_at": "2026-05-19T18:45:00.000000",
-  "models/xgb_model.json": "cf63b96f3fc93257e99dd543190f6372a349778eb0e77f65683a1ba2b5a28690",
-  "models/gnn_model.pth": "c00346d7fa879a0062b672ca53d874e1f6d946519041f93b8cf40de63567e3d7",
-  "models/dnn_model.pth": "3b1227e2acbe7835e873c9ad78f5e8c0227d0809550e64340c5a51ca4cac6e8a",
-  "models/preprocessor.pkl": "333f8d69e1e9f6ac7e95383dd1881cda08a7f978710b3f5a4155518bda5afb0f",
-  "models/calibrator.pkl": "81ca0d8ee1a95994be60b217ad55ba16383e563229c01f8d6d22d535fb0c88d4",
-  "models/ensemble_config.json": "9e2a3a747b9051e7be8c6719f888cad935e12b3e8d72278ced988a61e616e197",
-  "models/scaler.pkl": "75d5c5a0ad5dec4d66ce69406c6a4c49b31218237c7a3c565cdbbab45e189c4e",
-  "submission/teknofest/jury_predictions.csv": "8da0859124cfe0134ecd8295b042579e3f76ebed4efec571647883063a0b7a27"
+  "generated_at": "2026-06-01",
+  "_note": "Sızıntısız (group-aware) + bio + DANN modeli için. RESULTS_CANONICAL.json.",
+  "models/xgb_model.json": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
+  "models/lgbm_model.txt": "699700a2a6864c569110a3b032582ee52744bdd1920f1110ea3cd690aec33f7b",
+  "models/gnn_model.pth": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
+  "models/dnn_model.pth": "6c9957ccfc04e4993e8df8c195076e9ec9b04ea96a0b9806f0e3a2caac1c83bc",
+  "models/preprocessor.pkl": "8a1a0027daa7c87857416fd4a9ab8c71611637f5cd81c6835d1be42c975e8b16",
+  "models/calibrator.pkl": "445b857cdc16af6f100b77b0770aedebb2a0aae592c8be20a76ee9192cb0ff0b",
+  "models/ensemble.pkl": "3533fad312c5d897ce42465ed6da4eb78951ce62feb5dff9b5f38dbdea8cce19",
+  "models/meta_learner.pkl": "e7185d95a078428c648dab315f97f58a45249211bfe7274b0ea34787806a8d86",
+  "models/ood_detector.pkl": "750ceeb6de1c0bf4f892ea5eed8609cf315ac54ba88fef7db54038aaef10abad",
+  "models/threshold.json": "1b6ca2fe650bd05ad583819c72237003c3e258dd4bf8891e8ffbf2615cda686c",
+  "models/panel_thresholds.json": "47daecf6585da273597c1cb674737e7c88135c73285f770c993672c2b76e0f76",
+  "submission/teknofest/jury_predictions.csv": "ad721d59c3b29e4e658f09805d2d6b923f5b8585bbbe18ccfa0d746f5959159f"
 }
