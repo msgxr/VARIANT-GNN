@@ -31,8 +31,8 @@ repos:
       - id: no-pycache-commit
         name: '__pycache__ dizini commit edilmesin'
         language: system
-        entry: bash -c 'git diff --cached --name-only | grep -q "__pycache__" && echo "ERROR: __pycache__ commit edilmeye çalışılıyor!" && exit 1 || exit 0'
-        pass_filenames: false # Python
+        entry: "bash -c 'git diff --cached --name-only | grep -q __pycache__ && echo HATA-__pycache__-commit-edilemez && exit 1 || exit 0'"
+        pass_filenames: false
 
       - id: results-consistency
         name: 'Beyan edilen metrikler RESULTS_CANONICAL.json ile tutarlı (§7.5)'
