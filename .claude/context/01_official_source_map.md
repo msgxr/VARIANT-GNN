@@ -39,3 +39,13 @@ Durum: Birincil — tüm kural kararları bu belgeden alınır.
 2. Resmi rapor şablonları
 3. Resmi yarışma web sayfası
 4. KYS / resmi duyuru / yarışma grubu bilgilendirmesi
+
+---
+
+## ⚠️ PENDING — EYLEM GEREKLİ (eklenecek resmi kaynak)
+
+**TEKNOFEST resmi Q&A / duyuru (iddia: 2026-06-02 — "gizli test seti %20-patojenik / %80-benign; 50/50 ESKİ/geçersiz").**
+
+- **Durum: UNVERIFIED — artefakt henüz eklenmedi.** Repoda yalnızca bu iddiaya *atıf* var, kaynağın kendisi (ekran görüntüsü / arşiv URL / KYS mesajı) yok.
+- **Bağımlılık:** Bu iddia, `RESULTS_CANONICAL.json` içindeki karar eşiği **θ=0.8415**, havuzlanmış jüri-F1 **0.6042** ve **resmi 4-panel skor 0.6202**'nin tek dayanağıdır. Bkz. `07_uncertainty_log.md` U-008 ve `RESULTS_CANONICAL.provenance_unverified`.
+- **Eylem:** Q&A artefaktını edinip yukarıdaki "İkincil Kaynaklar" tablosuna Tier-4 (KYS/resmi duyuru) olarak ekleyin ve U-008'i "Çözülmüş"e taşıyın. **Edinilemezse:** %20-prior'ı resmi kural değil *modelleme varsayımı* olarak çerçeveleyin (official-source-guardian, CLAUDE.md §III.1).
