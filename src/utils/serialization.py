@@ -553,7 +553,7 @@ class ModelStore:
             logger.info("XGBoost <- %s", self._xgb_path)
 
         # --- LightGBM (optional — absent in legacy checkpoints) ---
-        lgbm_model = None
+        lgbm_model: Any = None
         if self._lgbm_path.exists():
             try:
                 import lightgbm as lgb
@@ -584,7 +584,7 @@ class ModelStore:
         ensemble = HybridEnsemble(
             xgb_model=xgb_model,
             lgbm_model=lgbm_model,
-            gnn_model=gnn_model,
+            gnn_model=cast(Any, gnn_model),
             dnn_model=dnn_model,
             weights=weights,
             device=device,

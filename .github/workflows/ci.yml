@@ -669,9 +669,13 @@ jobs:
               "Model_Version", "Inference_Timestamp",
               "OOD_Score", "OOD_Flag",
           ]
-          import sys
-          sys.path.insert(0, ".")
-          from src.inference.prediction_schema import PREDICTION_COLUMNS
+          import importlib.util, sys
+          # Doğrudan dosyadan yükle — src.inference.__init__ zincirini (pydantic/torch) baypas et.
+          _spec = importlib.util.spec_from_file_location("_pred_schema", "src/inference/prediction_schema.py")
+          _mod = importlib.util.module_from_spec(_spec)
+          sys.modules["_pred_schema"] = _mod  # @dataclass/decorator'lar için exec ÖNCESİ kaydet
+          _spec.loader.exec_module(_mod)
+          PREDICTION_COLUMNS = _mod.PREDICTION_COLUMNS
 
           if PREDICTION_COLUMNS != EXPECTED:
               print("::error::PREDICTION_COLUMNS has drifted from the expected schema!")
@@ -684,9 +688,13 @@ jobs:
       - name: Check COORDINATE_COLUMNS blocklist integrity
         run: |
           python - <<'EOF'
-          import sys
-          sys.path.insert(0, ".")
-          from src.data.leakage_firewall import COORDINATE_COLUMNS, LABEL_COLUMNS
+          import importlib.util, sys
+          # Doğrudan dosyadan yükle — src.data.__init__ zincirini (pydantic) baypas et.
+          _spec = importlib.util.spec_from_file_location("_lf", "src/data/leakage_firewall.py")
+          _mod = importlib.util.module_from_spec(_spec)
+          sys.modules["_lf"] = _mod  # @dataclass için exec ÖNCESİ kaydet
+          _spec.loader.exec_module(_mod)
+          COORDINATE_COLUMNS, LABEL_COLUMNS = _mod.COORDINATE_COLUMNS, _mod.LABEL_COLUMNS
 
           MUST_CONTAIN_COORD = {"chromosome", "chrom", "chr", "position", "pos",
                                  "rsid", "hgvs_genomic"}
