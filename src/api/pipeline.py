@@ -292,8 +292,9 @@ class InferencePipeline:
         result["Probability"]   = raw_proba[:, 1].round(4)
         result["Calibrated_Risk"] = cal_risk
         result["Confidence"]    = confidence
-        # F1-optimal threshold'u kullan (eğitimde kayıt edilen) — config sabit değeri değil
-        result["High_Risk"]     = cal_proba[:, 1] >= threshold
+        # F1-optimal threshold'u kullan (eğitimde kayıt edilen) — config sabit değeri değil.
+        # HAM olasılık kullanılır (θ HAM uzayda türetildi → Prediction ile tutarlı; calibrated DEĞİL).
+        result["High_Risk"]     = raw_proba[:, 1] >= threshold
         result["Clinical_Flag"] = clinical_flag
 
         # ── OOD Tespiti — eğitim dağılımından sapma kontrolü ─────────────────

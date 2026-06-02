@@ -205,21 +205,31 @@ def fig_04():
 
 # ── 5. ROC ────────────────────────────────────────────────────────────────────
 def fig_05():
+    from sklearn.metrics import roc_curve, roc_auc_score
+    oof_path = ROOT / "reports" / "oof_probs.npz"
     fig, ax = plt.subplots(figsize=(7.5, 6.5))
+    if not oof_path.exists():
+        print("05 SKIP — reports/oof_probs.npz bulunamadi.")
+        plt.close(fig)
+        return
+    data   = np.load(str(oof_path), allow_pickle=True)
+    y_t    = data["test_labels"].astype(int)
+    s_t    = data["test_proba"].astype(float)
+    panels = data["test_panels"].astype(str) if "test_panels" in data.files else np.array(["General"] * len(y_t))
     for p in PANEL_ORDER:
-        auc = panel_metrics[p]["roc_auc"]
-        # Gercekci ROC egri - Hill fonksiyonu
-        fpr = np.linspace(0, 1, 200)
-        k   = 3.5 + auc * 4
-        tpr = fpr**k / (fpr**k + (1-fpr)**k + 1e-9)
-        # AUC'yu gercek deger ile eslestirelim
-        tpr = np.clip(tpr / (np.trapezoid(tpr, fpr) / auc + 1e-9), 0, 1)
+        mask = (panels == p)
+        # CFTR test fold'unda negatif sinif dejenere → ROC tanimsiz; atla
+        if mask.sum() < 10 or len(np.unique(y_t[mask])) < 2:
+            print(f"  fig_05: {p} icin iki-sinifli yeterli ornek yok ({int(mask.sum())}), atlanıyor.")
+            continue
+        fpr, tpr, _ = roc_curve(y_t[mask], s_t[mask], pos_label=1)
+        auc = roc_auc_score(y_t[mask], s_t[mask])
         ax.plot(fpr, tpr, linewidth=2.5, color=C[p],
                 label=f"{PANEL_TR[p].replace(chr(10),' ')} (AUC={auc:.3f})")
     ax.plot([0,1],[0,1], "k--", linewidth=1, alpha=0.5, label="Rastgele (AUC=0.5)")
     ax.set_xlabel("Yanlis Pozitif Orani (FPR)")
     ax.set_ylabel("Dogru Pozitif Orani (TPR)")
-    ax.set_title("ROC Egrisi — Panel Bazli")
+    ax.set_title("ROC Egrisi — Panel Bazli (gercek test hold-out verisi)")
     ax.legend(fontsize=10, loc="lower right")
     ax.set_xlim(-0.01, 1.01)
     ax.set_ylim(-0.01, 1.02)
@@ -228,7 +238,7 @@ def fig_05():
     fig.tight_layout()
     fig.savefig(OUT_DIR / "05_roc_curves.png")
     plt.close(fig)
-    print("05 OK")
+    print("05 OK (gercek test verisinden)")
 
 
 # ── 6. PR ─────────────────────────────────────────────────────────────────────
