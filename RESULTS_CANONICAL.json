@@ -29,7 +29,15 @@
     "test_binary_f1_holdout_75pct": 0.833,
     "competition_jury_f1": 0.6063,
     "competition_jury_f1_std": 0.0338,
-    "test_pos_rate_official": 0.2
+    "test_pos_rate_official": 0.2,
+    "official_competition_score_4panel_avg": 0.6052,
+    "official_per_panel_f1_20pct": {
+      "CFTR": null,
+      "General": 0.6071,
+      "Hereditary_Cancer": 0.7331,
+      "PAH": 0.4755
+    },
+    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6052 (CFTR hold-out'ta n cok kucuk, tahmin edilemedi; gercek yarismada kendi seti olacak). Genel %20-F1=0.6063 ile tutarli."
   },
   "panel_test_metrics": {
     "CFTR": {
