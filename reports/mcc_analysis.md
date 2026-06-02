@@ -93,7 +93,7 @@ Yarışmanın birincil metriği **Binary F1**'dir (§7.3). Eşik, jüri §3.2 se
 varsayımıyla **balanced-OOF** üzerinde F1-optimal seçilmiştir: **θ = 0.6831** (global, canonical;
 `models/threshold.json`).
 
-- Eşiği eğitim dağılımında (~%74 pozitif) türetmek dengeli sette ~5 pp kaybettirirdi → balanced-OOF eşik
+- Eşiği eğitim dağılımında (~%74 pozitif) türetmek %20-test'te ~5 pp kaybettirirdi → balanced-OOF eşik
   bu kaybı kurtarır (A→B çapraz-doğrulandı, overfit yok — `reports/balanced_jury_f1.json`).
 - Panel-spesifik eşikler (General 0.404 · KANSER 0.3695 · PAH 0.3203 · CFTR 0.1922) **opt-in**'dir;
   varsayılan KAPALI ve jüri kararında kullanılmaz.

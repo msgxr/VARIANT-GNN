@@ -232,7 +232,7 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 ### 3.1 Genel Test Performansı
 
-**İki sayıyı ayırmak (dürüst raporlama):** Şartname §3.2 jüri/test seti **sınıf-dengelidir (50/50)**. Beklenen yarışma skoru **balanced Binary F1 = 0.8134 ± 0.0103** (θ=0.6831 balanced-OOF, 300× resample; `reports/balanced_jury_f1.json`). İç %75-pozitif hold-out'taki **0.8969** değeri modelin *ayrım gücüdür*, jüri skoru değildir. Eşiği %74-poz dağılımda türetmek dengeli sette 0.764'e düşürürdü (−5 pp); balanced-OOF eşik bu kaybı kurtarır.
+**İki sayıyı ayırmak (dürüst raporlama):** Şartname §3.2 jüri/test seti **sınıf-dengelidir (50/50)**. Beklenen yarışma skoru **balanced Binary F1 = 0.8134 ± 0.0103** (θ=0.6831 balanced-OOF, 300× resample; `reports/balanced_jury_f1.json`). İç %75-pozitif hold-out'taki **0.8969** değeri modelin *ayrım gücüdür*, jüri skoru değildir. Eşiği %74-poz dağılımda türetmek %20-test'te düşük F1'e düşürürdü (−5 pp); balanced-OOF eşik bu kaybı kurtarır.
 
 **Tablo 5: Genel Test Seti Sonuçları — Group-Aware Hold-Out %20, θ=0.6831**
 

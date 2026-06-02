@@ -136,7 +136,7 @@ Note: PSR is CLOSED (submitted 25 March 2026). This skill only analyzes gaps and
 | PSR | ~0.50 (default, pilot data) |
 | PDR | **θ=0.8514 global** (balanced-OOF, canonical); panel-specific opt-in (jüri kullanmaz) |
 
-**PDR explanation required:** Karar eşiği, jüri §3.2 setinin dengeli (%20/%80) olduğu varsayımıyla group-aware OOF üzerinde sınıf-dengeli resample ile F1-optimal türetilir (θ=0.8514). Opt-in panel eşikleri: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 (varsayılan KAPALI).
+**PDR explanation required:** Karar eşiği, jüri §3.2 setinin %20-patojenik (%20/%80) olduğu varsayımıyla group-aware OOF üzerinde sınıf-dengeli resample ile F1-optimal türetilir (θ=0.8514). Opt-in panel eşikleri: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 (varsayılan KAPALI).
 
 ---
 

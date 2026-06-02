@@ -15,7 +15,7 @@ pos_label = 1 = Patojenik
 ```
 
 - Yanlış Negatif (FN) klinik açıdan yanlış Pozitiften (FP) daha ağırdır
-- Karar eşiği, jüri §3.2 setinin dengeli (%20/%80) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8514**); precision (0.9254) ve recall (0.7574) dengelidir
+- Karar eşiği, jüri §3.2 setinin %20-patojenik (%20/%80) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8514**); precision (0.9254) ve recall (0.7574) dengelidir
 - Test seti değerlendirmesi jüri tarafından yapılır
 
 ---

@@ -601,7 +601,7 @@ Veri seti dört bağımsız panelden oluşur. **Toplam 3802 satır / 3224 tekil 
 
 </div>
 
-> OOF kalibrasyon havuzu n=3040, hold-out test n=762 (3040 + 762 = 3802). Eğitim dağılımı ~%74 pozitiftir; jüri §3.2 seti ise dengeli (%20/%80) varsayılır — eşik stratejisi bu prior'a göre ayarlanır (§17).
+> OOF kalibrasyon havuzu n=3040, hold-out test n=762 (3040 + 762 = 3802). Eğitim dağılımı ~%74 pozitiftir; jüri §3.2 seti ise %20-patojenik (%20/%80) varsayılır — eşik stratejisi bu prior'a göre ayarlanır (§17).
 >
 > **İki panel sayısını ayırmak (çelişki değil):** `configs/pdr.yaml` `panels:` bloğu, şartname §3.2'nin **nominal/beyan edilen** panel tasarımını taşır (General 1500+1500 train / 1000+1000 test … = 5400 referans hücre). Yukarıdaki tablo ise modelin **fiilen eğitildiği** `data/train_variants.csv` dosyasının gerçek bileşimidir (3802 satır / 3224 tekil varyant). Raporlanan **tüm sonuçlar** fiili 3802-satırlık veri üzerinden, group-aware bölme ile üretilmiştir.
 
@@ -790,14 +790,14 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  🎯 JÜRİ BEKLENTİSİ  =  competition_jury_f1 = 0.6063 ± 0.0103                │
-│     §3.2 dengeli (%20/%80) jüri seti · θ=0.8514 %20-patojenik-OOF · 300× resample │
+│     §3.2 %20-patojenik jüri seti · θ=0.8514 %20-patojenik-OOF · 300× resample │
 │     → GERÇEK beklenen yarışma skorumuz                                     │
 ├──────────────────────────────────────────────────────────────────────────┤
 │  📏 İÇ AYRIM GÜCÜ    =  test_binary_f1 = 0.833                            │
 │     %75-pozitif iç hold-out · jüri skoru DEĞİL                            │
 │     → modelin ham ayırt etme kapasitesi                                   │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  Eşik %74-poz dağılımda türetilseydi dengeli sette 0.764'e düşerdi (-5pp);│
+│  Eşik %74-poz dağılımda türetilseydi %20-test'te düşük F1'e düşerdi (-5pp);│
 │  %20-patojenik-OOF eşik (θ=0.8514) bu kaybı kurtarır. A→B çapraz-doğrulandı.   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
