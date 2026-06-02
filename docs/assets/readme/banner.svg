@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="VARIANT-GNN — TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="20%" stop-color="#0d2347"/>
+      <stop offset="40%" stop-color="#1d4ed8"/>
+      <stop offset="65%" stop-color="#059669"/>
+      <stop offset="85%" stop-color="#0f4c75"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#059669" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0f4c75" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" fill="url(#bg)"/>
+  <path d="M0,250 C200,210 360,300 600,255 C840,210 1000,300 1200,250 L1200,320 L0,320 Z" fill="url(#wave)"/>
+  <path d="M0,280 C220,250 380,320 600,285 C820,250 980,320 1200,285 L1200,320 L0,320 Z" fill="#0f172a" fill-opacity="0.45"/>
+  <text x="600" y="152" text-anchor="middle" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="92" font-weight="800" fill="#ffffff" letter-spacing="2">VARIANT-GNN</text>
+  <text x="600" y="206" text-anchor="middle" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="24" font-weight="600" fill="#94a3b8">TEKNOFEST 2026 — Sağlıkta Yapay Zeka Yarışması</text>
+</svg>

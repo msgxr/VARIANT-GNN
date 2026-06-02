@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="114" height="20" role="img" aria-label="CI: GitHub Actions">
+  <title>CI: GitHub Actions</title>
+  <rect width="23" height="20" fill="#555"/>
+  <rect x="23" width="91" height="20" fill="#2088ff"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="11.5" y="14.2" text-anchor="middle">CI</text>
+    <text x="68.5" y="14.2" text-anchor="middle">GitHub Actions</text>
+  </g>
+</svg>

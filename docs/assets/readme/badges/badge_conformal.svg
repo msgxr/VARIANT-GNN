@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="159" height="20" role="img" aria-label="Conformal: LAC Mondrian">
+  <title>Conformal: LAC Mondrian</title>
+  <rect width="69" height="20" fill="#555"/>
+  <rect x="69" width="90" height="20" fill="#fb923c"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="34.5" y="14.2" text-anchor="middle">Conformal</text>
+    <text x="114.0" y="14.2" text-anchor="middle">LAC Mondrian</text>
+  </g>
+</svg>

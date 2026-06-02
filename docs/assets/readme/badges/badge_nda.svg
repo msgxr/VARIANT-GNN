@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="20" role="img" aria-label="TEKNOFEST NDA: Gizli">
+  <title>TEKNOFEST NDA: Gizli</title>
+  <rect width="103" height="20" fill="#555"/>
+  <rect x="103" width="37" height="20" fill="#ef4444"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="51.5" y="14.2" text-anchor="middle">TEKNOFEST NDA</text>
+    <text x="121.5" y="14.2" text-anchor="middle">Gizli</text>
+  </g>
+</svg>

@@ -1,38 +1,38 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&height=320&color=0:0f172a,20:0d2347,40:1d4ed8,65:059669,85:0f4c75,100:0f172a&text=VARIANT-GNN&fontSize=96&fontAlignY=38&fontColor=ffffff&desc=TEKNOFEST%202026%20%E2%80%94%20Sa%C4%9Fl%C4%B1kta%20Yapay%20Zeka%20Yar%C4%B1%C5%9Fmas%C4%B1&descAlignY=63&descFontSize=24&descFontColor=94a3b8&animation=fadeIn" alt="VARIANT-GNN Banner"/>
+<img src="docs/assets/readme/banner.svg" alt="VARIANT-GNN — TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması" width="100%"/>
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;JURI+F1+(resmi+4-panel)+%3D+0.6202+%7C+ic+hold-out+0.8367;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DANN-DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
+<img src="docs/assets/readme/typing.svg" alt="Typing SVG"/>
 
 <br/><br/>
 
-[![PSR](https://img.shields.io/badge/PSR_PUANI-93.00_%2F_100-22c55e?style=for-the-badge&logo=checkmarx&logoColor=white&labelColor=052e16)](.)
-[![Juri F1](https://img.shields.io/badge/Juri_F1_resmi-0.6042±0.034-3b82f6?style=for-the-badge&logo=target&logoColor=white&labelColor=172554)](reports/competition_jury_f1.json)
-[![CV F1](https://img.shields.io/badge/CV_F1-0.8936±0.0004_(leakage--free)-0ea5e9?style=for-the-badge&logo=scikitlearn&logoColor=white&labelColor=082f49)](RESULTS_CANONICAL.json)
-[![Takim](https://img.shields.io/badge/Takim-XYRA3_%23909249-8b5cf6?style=for-the-badge&logo=groups&logoColor=white&labelColor=2e1065)](.)
-[![PDR](https://img.shields.io/badge/PDR_Teslim-29_Haziran_2026-f59e0b?style=for-the-badge&logo=calendar&logoColor=white&labelColor=431407)](.)
+[![PSR](docs/assets/readme/badges/badge_psr.svg)](.)
+[![Juri F1](docs/assets/readme/badges/badge_juri_f1.svg)](reports/competition_jury_f1.json)
+[![CV F1](docs/assets/readme/badges/badge_cv_f1.svg)](RESULTS_CANONICAL.json)
+[![Takim](docs/assets/readme/badges/badge_takim.svg)](.)
+[![PDR](docs/assets/readme/badges/badge_pdr.svg)](.)
 
 <br/>
 
-[![CI](https://github.com/msgxr/VARIANT-GNN/actions/workflows/ci.yml/badge.svg)](https://github.com/msgxr/VARIANT-GNN/actions)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](.)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.8.0-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](.)
-[![PyG](https://img.shields.io/badge/PyG-2.6.1-ff6b35?style=flat-square&logo=graphql&logoColor=white)](.)
-[![XGBoost](https://img.shields.io/badge/XGBoost-2.1.4-189ab4?style=flat-square)](.)
-[![LightGBM](https://img.shields.io/badge/LightGBM-4.6.0-2d9a27?style=flat-square)](.)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.50-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](.)
+[![CI](docs/assets/readme/badges/badge_ci.svg)](https://github.com/msgxr/VARIANT-GNN/actions)
+[![Python](docs/assets/readme/badges/badge_python.svg)](.)
+[![PyTorch](docs/assets/readme/badges/badge_pytorch.svg)](.)
+[![PyG](docs/assets/readme/badges/badge_pyg.svg)](.)
+[![XGBoost](docs/assets/readme/badges/badge_xgboost.svg)](.)
+[![LightGBM](docs/assets/readme/badges/badge_lightgbm.svg)](.)
+[![Streamlit](docs/assets/readme/badges/badge_streamlit.svg)](.)
 
 <br/>
 
-[![GATv2](https://img.shields.io/badge/GNN-GATv2Conv_x3_blok-60a5fa?style=flat-square)](src/core/gnn.py)
-[![DANN](https://img.shields.io/badge/DNN-Domain_Adversarial-a78bfa?style=flat-square)](src/models/dnn_model.py)
-[![SWA](https://img.shields.io/badge/SWA-Son_25pct_epoch-8b5cf6?style=flat-square)](src/training/swa.py)
-[![Stacking](https://img.shields.io/badge/Stacking-OOF_Wolpert-22d3ee?style=flat-square)](reports/stacking_improvement.json)
-[![Bio](https://img.shields.io/badge/Bio_Features-ACMG_aligned-16a34a?style=flat-square)](src/features/categorical_bio_features.py)
-[![Conformal](https://img.shields.io/badge/Conformal-LAC_Mondrian-fb923c?style=flat-square)](reports/conformal_coverage_report.json)
-[![NDA](https://img.shields.io/badge/TEKNOFEST_NDA-Gizli-ef4444?style=flat-square&logo=shield)](.)
+[![GATv2](docs/assets/readme/badges/badge_gnn.svg)](src/core/gnn.py)
+[![DANN](docs/assets/readme/badges/badge_dnn.svg)](src/models/dnn_model.py)
+[![SWA](docs/assets/readme/badges/badge_swa.svg)](src/training/swa.py)
+[![Stacking](docs/assets/readme/badges/badge_stacking.svg)](reports/stacking_improvement.json)
+[![Bio](docs/assets/readme/badges/badge_bio.svg)](src/features/categorical_bio_features.py)
+[![Conformal](docs/assets/readme/badges/badge_conformal.svg)](reports/conformal_coverage_report.json)
+[![NDA](docs/assets/readme/badges/badge_nda.svg)](.)
 
 </div>
 
@@ -1419,7 +1419,7 @@ flowchart LR
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&height=160&color=0:0f172a,40:1d4ed8,70:059669,100:0f172a&section=footer&text=TEKNOFEST%202026%20%7C%20VARIANT-GNN%20%7C%20XYRA3&fontSize=20&fontColor=94a3b8&fontAlignY=65&animation=fadeIn" alt="footer"/>
+<img src="docs/assets/readme/footer.svg" alt="TEKNOFEST 2026 | VARIANT-GNN | XYRA3" width="100%"/>
 
 <br/>
 
@@ -1431,7 +1431,7 @@ GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DANN-DNN  ·  OOF-Stacking  ·  �
 Tüm sayılar RESULTS_CANONICAL.json ile tutarlı · scripts/check_results_consistency.py ile zorlanır
 ```
 
-[![GitHub](https://img.shields.io/badge/GitHub-msgxr%2FVARIANT--GNN-181717?style=for-the-badge&logo=github)](https://github.com/msgxr/VARIANT-GNN)
-[![TEKNOFEST](https://img.shields.io/badge/TEKNOFEST-2026_Sanliurfa-FF6B35?style=for-the-badge)](https://teknofest.org)
+[![GitHub](docs/assets/readme/badges/badge_github.svg)](https://github.com/msgxr/VARIANT-GNN)
+[![TEKNOFEST](docs/assets/readme/badges/badge_teknofest.svg)](https://teknofest.org)
 
 </div>

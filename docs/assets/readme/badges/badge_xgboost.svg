@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="99" height="20" role="img" aria-label="XGBoost: 2.1.4">
+  <title>XGBoost: 2.1.4</title>
+  <rect width="57" height="20" fill="#555"/>
+  <rect x="57" width="42" height="20" fill="#189ab4"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="28.5" y="14.2" text-anchor="middle">XGBoost</text>
+    <text x="78.0" y="14.2" text-anchor="middle">2.1.4</text>
+  </g>
+</svg>

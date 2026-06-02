@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="106" height="20" role="img" aria-label="LightGBM: 4.6.0">
+  <title>LightGBM: 4.6.0</title>
+  <rect width="64" height="20" fill="#555"/>
+  <rect x="64" width="42" height="20" fill="#2d9a27"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="32.0" y="14.2" text-anchor="middle">LightGBM</text>
+    <text x="85.0" y="14.2" text-anchor="middle">4.6.0</text>
+  </g>
+</svg>

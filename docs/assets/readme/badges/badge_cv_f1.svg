@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="315" height="28" role="img" aria-label="CV F1: 0.8936±0.0004 (leakage-free)">
+  <title>CV F1: 0.8936±0.0004 (leakage-free)</title>
+  <rect width="62" height="28" fill="#082f49"/>
+  <rect x="62" width="253" height="28" fill="#0ea5e9"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="bold" letter-spacing="1.4">
+    <text x="30.3" y="18.7" text-anchor="middle">CV F1</text>
+    <text x="187.8" y="18.7" text-anchor="middle">0.8936±0.0004 (LEAKAGE-FREE)</text>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="20" role="img" aria-label="Bio Features: ACMG aligned">
+  <title>Bio Features: ACMG aligned</title>
+  <rect width="83" height="20" fill="#555"/>
+  <rect x="83" width="87" height="20" fill="#16a34a"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="41.5" y="14.2" text-anchor="middle">Bio Features</text>
+    <text x="126.5" y="14.2" text-anchor="middle">ACMG aligned</text>
+  </g>
+</svg>

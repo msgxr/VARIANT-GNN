@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="156" height="20" role="img" aria-label="DNN: Domain Adversarial">
+  <title>DNN: Domain Adversarial</title>
+  <rect width="34" height="20" fill="#555"/>
+  <rect x="34" width="122" height="20" fill="#a78bfa"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="17.0" y="14.2" text-anchor="middle">DNN</text>
+    <text x="95.0" y="14.2" text-anchor="middle">Domain Adversarial</text>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="75" height="20" role="img" aria-label="PyG: 2.6.1">
+  <title>PyG: 2.6.1</title>
+  <rect width="33" height="20" fill="#555"/>
+  <rect x="33" width="42" height="20" fill="#ff6b35"/>
+  <g fill="#ffffff" font-family="'DejaVu Sans',Verdana,Geneva,sans-serif" font-size="11" font-weight="normal" letter-spacing="0">
+    <text x="16.5" y="14.2" text-anchor="middle">PyG</text>
+    <text x="54.0" y="14.2" text-anchor="middle">2.6.1</text>
+  </g>
+</svg>
