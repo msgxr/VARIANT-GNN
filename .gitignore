@@ -5,12 +5,15 @@ __pycache__/
 .Python
 *.egg-info/
 dist/
+dist_wheeltest/
 build/
 .eggs/
+*.whl
 
 # Sanal Ortamlar
 venv/
 .venv/
+.verify_venv/
 env/
 ENV/
 

@@ -44,17 +44,19 @@ dev = [
     "pre-commit==3.7.1",
 ]
 
+# Konsol komutu: `variant-gnn`. Giris noktasi, editable kurulumda (pip install -e .
+# / pipx install -e .) repoya CANLI bagli olan src paketinin icindedir
+# (src/cli/entry.py). Boylece kaynak duzenlemeleri aninda yansir; kok duzeyindeki
+# main.py'yi site-packages'a kopyalayip global ad alanini kirletmekten kacinir.
 [project.scripts]
-variant-gnn = "main:main"
+variant-gnn = "src.cli.entry:main"
 
-# Paketleme: depo "src/" + "data_contracts/" duzeninde, giris noktasi ise kok
-# duzeyindeki main.py modulunu (main:main) cagirir. Hatchling'in proje adiyla
+# Paketleme: depo "src/" + "data_contracts/" duzeninde. Hatchling'in proje adiyla
 # (variant_gnn) eslesen bir klasor bulamamasi build'i metadata asamasinda
 # kiriyordu; asagidaki secim bunu cozer ve `pip install -e .` / `pipx install -e .`
 # komutlarini calisir hale getirir.
 [tool.hatch.build.targets.wheel]
 packages = ["src", "data_contracts"]
-force-include = { "main.py" = "main.py", "app.py" = "app.py" }
 
 [tool.black]
 line-length = 120

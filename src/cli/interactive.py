@@ -85,7 +85,7 @@ def run_interactive() -> int:
         print("-" * 60)
         print(MENU)
         try:
-            sec = (input("\n  Seciminiz [1]: ").strip() or "1")
+            sec = input("\n  Seciminiz [1]: ").strip() or "1"
         except (EOFError, KeyboardInterrupt):
             print("\n  Cikiliyor.")
             return 0
@@ -98,8 +98,7 @@ def run_interactive() -> int:
             if not _models_exist():
                 print("  [UYARI] Egitilmis model yok; once [2] Egitim onerilir.")
             _run(
-                [PY, "-m", "streamlit", "run", "app.py",
-                 "--server.port", "8501", "--server.address", "localhost"],
+                [PY, "-m", "streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "localhost"],
                 what="Streamlit web arayuzu  ->  http://localhost:8501  (durdur: CTRL+C)",
             )
         elif sec == "2":
@@ -107,9 +106,16 @@ def run_interactive() -> int:
                 print("  [HATA] Egitim verisi yok: data/synthetic/train_variants.csv")
             else:
                 _run(
-                    [PY, "main.py", "--mode", "train",
-                     "--config", "configs/pdr.yaml",
-                     "--data_file", "data/synthetic/train_variants.csv"],
+                    [
+                        PY,
+                        "main.py",
+                        "--mode",
+                        "train",
+                        "--config",
+                        "configs/pdr.yaml",
+                        "--data_file",
+                        "data/synthetic/train_variants.csv",
+                    ],
                     what="Model egitimi (seed=42, configs/pdr.yaml)",
                 )
         elif sec == "3":
@@ -120,15 +126,21 @@ def run_interactive() -> int:
             else:
                 (REPO_ROOT / "reports").mkdir(exist_ok=True)
                 _run(
-                    [PY, "main.py", "--mode", "predict",
-                     "--test_file", "data/samples/jury_blind_sample.csv",
-                     "--output", "reports/jury_demo_predictions.csv"],
+                    [
+                        PY,
+                        "main.py",
+                        "--mode",
+                        "predict",
+                        "--test_file",
+                        "data/samples/jury_blind_sample.csv",
+                        "--output",
+                        "reports/jury_demo_predictions.csv",
+                    ],
                     what="Juri demo tahmini  ->  reports/jury_demo_predictions.csv",
                 )
         elif sec == "4":
             _run(
-                [PY, "-m", "uvicorn", "src.api.rest_api:app",
-                 "--host", "127.0.0.1", "--port", "8000"],
+                [PY, "-m", "uvicorn", "src.api.rest_api:app", "--host", "127.0.0.1", "--port", "8000"],
                 what="REST API  ->  http://127.0.0.1:8000/docs  (durdur: CTRL+C)",
             )
         elif sec == "5":
