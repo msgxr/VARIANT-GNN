@@ -13,6 +13,17 @@ from src.utils.logging_cfg import setup_logging  # noqa: E402
 
 
 def main() -> None:
+    import sys
+
+    # Argumansiz cagri (`variant-gnn`) -> interaktif oturum (claude benzeri menu).
+    # Argumanli cagri (`variant-gnn --mode train ...`, `python main.py --mode ...`)
+    # mevcut tek-atis CLI davranisini AYNEN korur. Menu yalnizca stdlib gerektirir;
+    # bu nedenle agir bagimliliklar yuklenmeden de acilir.
+    if len(sys.argv) == 1:
+        from src.cli.interactive import run_interactive
+
+        raise SystemExit(run_interactive())
+
     args = build_parser().parse_args()
     setup_logging(log_file=args.log_file)
 

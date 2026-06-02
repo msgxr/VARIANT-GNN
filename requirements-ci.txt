@@ -27,3 +27,16 @@ imbalanced-learn==0.12.3
 shap==0.45.1
 pydantic==2.7.1
 pyyaml==6.0.1
+
+# ── Görselleştirme / açıklanabilirlik / tuning / rapor ──
+# Çekirdek src modülleri bunları MODÜL-SEVİYESİNDE import eder; pytest COLLECTION'ı
+# (src.inference/src.training/src.evaluation/src.explainability import zincirleri) bunlar
+# olmadan ImportError verir. streamlit HARİÇ (UI; yalnızca smoke testi import eder ve
+# dep yoksa SKIP eder — bkz. tests/smoke/_skip_if_optional_missing).
+matplotlib==3.8.4
+seaborn==0.13.2
+networkx==3.3
+tqdm==4.66.4
+lime==0.2.0.1
+optuna==3.6.1
+fpdf2==2.7.9
