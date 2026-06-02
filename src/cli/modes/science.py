@@ -63,21 +63,35 @@ def mode_label_quality(args, cfg):
 
         pre = build_preprocessor_from_config()
         X_proc, _ = pre.fit_resample_train(X, y)
-        model = xgb.XGBClassifier(**cfg.xgb.as_dict())
-        logging.info("Computing 5-fold OOF probabilities with XGBoost...")
-        oof_probs = cross_val_predict(
-            model, X_proc[:len(X)], y, cv=5, method="predict_proba"
+        # ConfidentLearner runs its OWN group-free 5-fold OOF internally; feed it the
+        # REAL (non-SMOTE) rows only — fit_resample_train returns originals first.
+        X_real = X_proc[:len(X)]
+        learner = ConfidentLearner(
+            noise_threshold=0.45, cv_folds=5,
+            base_estimator=xgb.XGBClassifier(**cfg.xgb.as_dict()),
         )
-        learner = ConfidentLearner(y_true=y, oof_probs=oof_probs)
-        report = learner.detect_label_errors()
+        logging.info("ConfidentLearner: %d gerçek örnek üzerinde 5-fold OOF...", len(X_real))
+        report = learner.fit(X_real, y)          # → LabelQualityReport dataclass
+        report.log()
 
         cfg.paths.create_dirs()
         out_path = cfg.paths.reports_dir / "label_quality_report.json"
+        nm = report.noise_matrix
+        payload = {
+            "n_samples": int(report.n_samples),
+            "n_flagged": int(report.n_flagged),
+            "estimated_noise_rate": float(report.estimated_noise_rate),
+            "flagged_indices": [int(i) for i in report.flagged_indices],
+            "class_noise_rates": {int(k): float(v) for k, v in report.class_noise_rates.items()},
+            "noise_matrix": nm.tolist() if hasattr(nm, "tolist") else nm,
+        }
         with open(out_path, "w") as fh:
-            json.dump(report, fh, indent=2)
-        logging.info("Label quality report → %s", out_path)
+            json.dump(payload, fh, indent=2, ensure_ascii=False)
+        logging.info("Label quality report → %s (n_flagged=%d, noise≈%.2f%%)",
+                     out_path, report.n_flagged, 100 * report.estimated_noise_rate)
     except Exception as exc:
         logging.error("Label quality analysis failed: %s", exc)
+        raise SystemExit(1)
 
 
 def mode_ablation(args, cfg):

@@ -28,6 +28,17 @@ def main() -> None:
     logging.info("TEKNOFEST 2026: NDA — competition data must not be shared.")
     logging.info("=" * 60)
 
+    # §7.5 reproducibility: seed ALL RNGs (python/numpy/torch) + determinism flags at
+    # the start of EVERY CLI mode. Previously never invoked in any CLI path, so
+    # MC-Dropout inference drifted run-to-run (could change ~199/200 jury rows).
+    from src.utils.reproducibility import setup_reproducibility
+    _det = True
+    try:
+        _det = bool(cfg.reproducibility.deterministic_torch)
+    except Exception:
+        pass
+    setup_reproducibility(cfg.seed, deterministic_torch=_det)
+
     # Lock ClinVar API during training/inference — §3.2 genomic address restriction
     from src.explainability.clinvar_api import set_inference_mode
     set_inference_mode(True)

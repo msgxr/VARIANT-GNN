@@ -150,6 +150,9 @@ class VariantGATv2GNN(nn.Module):
         """
         self.eval()
         results = []
+        # §7.5 determinism: fix the dropout-mask RNG so MC-Dropout uncertainty is
+        # reproducible run-to-run (jury re-run must yield identical probabilities).
+        torch.manual_seed(1234)
         with torch.no_grad():
             for _ in range(n_iter):
                 logits = self.forward(x, edge_index, nuc_ids, aa_ids, mc_dropout=True)

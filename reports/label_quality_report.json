@@ -1,32 +1,20 @@
 {
-  "n_train": 3041,
-  "n_flagged": 28,
-  "flagged_pct": 0.92,
-  "estimated_noise_rate": 0.0099,
-  "flagged_indices_sample": [
-    135,
-    165,
-    168,
-    191,
-    207,
-    223,
-    253,
-    283,
-    492,
-    731,
-    859,
-    977,
-    1016,
-    1090,
-    1181,
-    1325,
-    1804,
-    1902,
-    2049,
-    2247
-  ],
-  "method": "ConfidentLearner — Northcutt et al. 2021 (JAIR 70:1373)",
-  "base_estimator": "XGBClassifier (5-fold OOF)",
-  "integration_status": "Analiz tamamlandı. trainer.py'de use_label_cleaning=True flag ile clean_mask() filtresi aktif edilebilir (optional step).",
-  "note": "ClinVar 4-yıldız varyantlarda bile ~%4 yanlış etiket oranı literatürde raporlanmıştır (Benet-Pagès et al., 2023). Bu analiz eğitim setindeki potansiyel gürültülü örnekleri tespit eder."
+  "n_samples": 3802,
+  "n_flagged": 0,
+  "estimated_noise_rate": 0.0,
+  "flagged_indices": [],
+  "class_noise_rates": {
+    "0": 0.0,
+    "1": 0.0
+  },
+  "noise_matrix": [
+    [
+      0.2002402883460152,
+      0.0
+    ],
+    [
+      0.0,
+      0.7997597116539847
+    ]
+  ]
 }

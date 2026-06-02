@@ -540,7 +540,15 @@ class ModelStore:
                 lgbm_model = _LGBMBoosterWrapper(lgbm_model)
                 logger.info("LightGBM <- %s", self._lgbm_path)
             except Exception as exc:
-                logger.warning("LightGBM load failed (skipping): %s", exc)
+                # G5/§7.5: the file EXISTS, so it is a shipped 30%-weight base model.
+                # Silently dropping it (→ 3-model ensemble) reproduces WRONG numbers.
+                # Most common cause: missing OpenMP runtime.
+                raise RuntimeError(
+                    f"LightGBM model exists ({self._lgbm_path}) but failed to load: {exc}. "
+                    "Genellikle OpenMP eksik → 'brew install libomp' (mac) / "
+                    "'apt-get install libgomp1' (linux). 3-model ensemble ile sessizce "
+                    "YANLIŞ sayı üretmemek için yükleme zorunlu kılındı."
+                ) from exc
 
         # Ensemble weights from saved config (allows runtime update)
         weights = cfg.ensemble.weights
