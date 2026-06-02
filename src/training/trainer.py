@@ -443,7 +443,10 @@ class VariantTrainer:
                         X_train_all, y_train_all
                     )
                     _report = _cl.fit(_X_tmp, _y_tmp)
-                    _clean_mask = _report.clean_mask()
+                    # SMOTE orijinal satırları başta döndürür; temizlik maskesini
+                    # ORİJİNAL satır sayısına dilimle — yoksa resampled-uzunluk maske
+                    # orijinal diziye uygulanınca IndexError/yanlış satır olur (G11).
+                    _clean_mask = np.asarray(_report.clean_mask())[:len(X_train_all)]
                     _keep = np.where(_clean_mask)[0]
                     X_train_all = X_train_all[_keep]
                     y_train_all = y_train_all[_keep]

@@ -17,9 +17,9 @@ VENV := venv
 # ─── Kurulum ────────────────────────────────────────────────────────────────
 
 install:
-	$(PYTHON) -m pip install torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+	$(PYTHON) -m pip install torch==2.8.0+cpu --index-url https://download.pytorch.org/whl/cpu
 	$(PYTHON) -m pip install torch-scatter torch-sparse torch-geometric \
-		-f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+		-f https://data.pyg.org/whl/torch-2.8.0+cpu.html
 	$(PYTHON) -m pip install -r requirements.txt
 
 install-dev: install

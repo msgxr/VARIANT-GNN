@@ -84,6 +84,7 @@ def load_csv(
     target_column: Optional[str] = None,
     id_columns: Optional[List[str]] = None,
     label_mapping: Optional[dict] = None,
+    sanitize: Optional[str] = None,
 ) -> LoadedDataset:
     """
     Load a variant CSV file, validate its schema, and separate metadata
@@ -119,6 +120,23 @@ def load_csv(
 
     df = pd.read_csv(path, sep=separator, low_memory=False)
     logger.info("Loaded %d rows × %d cols from %s", len(df), df.shape[1], path)
+
+    # G13: LeakageFirewall — koordinat/gen/etiket sızıntı kolonlarını CLI yollarında
+    # da uygula (önceden yalnız ExternalValidationRunner çağırıyordu). Anonim §3.2
+    # verisinde no-op'tur; jüri yanlışlıkla koordinat/etiket kolonu eklerse bloklar.
+    # Guard'lı: sızıntı temizleme HİÇBİR koşulda yüklemeyi kıramaz.
+    if sanitize in ("train", "inference"):
+        try:
+            from src.data.competition_sanitizer import CompetitionSanitizer
+            _san = CompetitionSanitizer(reports_dir=str(get_settings().paths.reports_dir))
+            if sanitize == "inference":
+                df, _lr = _san.sanitize_inference(df)
+            else:
+                df, _lr = _san.sanitize_train(df)
+            if not _lr.is_clean:
+                logger.warning("[LeakageFirewall] %s modunda sızıntı kolonları temizlendi.", sanitize)
+        except Exception as _san_exc:
+            logger.warning("[LeakageFirewall] sanitize atlandı (non-fatal): %s", _san_exc)
 
     result = validate_dataset(
         df,
@@ -238,7 +256,7 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
     A warning is emitted for every non-exact alignment; unmatched expected
     columns are filled with NaN and a warning is logged.
     """
-    dataset = load_csv(csv_path, separator=separator)
+    dataset = load_csv(csv_path, separator=separator, sanitize="inference")
 
     # ── Determine expected feature columns ──────────────────────────────
     cfg = get_settings()

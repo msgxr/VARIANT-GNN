@@ -4,11 +4,11 @@
 
 # ── CUDA 11.8 için PyTorch ──
 --extra-index-url https://download.pytorch.org/whl/cu118
-torch==2.2.0+cu118
+torch==2.8.0+cu118
 torchvision==0.17.0+cu118
 
 # ── PyG GPU wheels ──
-# https://data.pyg.org/whl/torch-2.2.0+cu118.html
+# https://data.pyg.org/whl/torch-2.8.0+cu118.html
 torch-scatter==2.1.2
 torch-sparse==0.6.18
 torch-geometric==2.6.1
