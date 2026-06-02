@@ -2,24 +2,25 @@
 """
 scripts/build_pdr_docx.py
 =========================
-reports/PDR_VARIANT_GNN_2026.md  →  reports/PDR_VARIANT_GNN_2026.docx
+reports/PDR_VARIANT_GNN_2026.md  ->  reports/PDR_VARIANT_GNN_2026.docx
 
-TASLAK dönüştürücü. python-docx ile başlık/paragraf/tablo/madde/figür-gömme +
-TEKNOFEST format hedefi (Aptos 11pt, 1.15 satır, justified, 2.5 cm marj).
+TASLAK donusturucu. python-docx ile baslik/paragraf/tablo/madde/figur-gomme +
+TEKNOFEST format hedefi (Aptos 11pt, 1.15 satir, justified, 2.5 cm marj).
 
-UYARI: Bu bir TASLAK üretir. Resmi şablona birebir uyum, ≤10 sayfa sınırı ve
-görsel yerleşim Word'de MANUEL doğrulanmalıdır. Tablolar/figürler sayfa taşırsa
-elle ayarlanır. Aptos sistemde yoksa Word ikame font kullanır.
+UYARI: Bu bir TASLAK uretir. Resmi sablona birebir uyum, <=10 sayfa siniri ve
+gorsel yerlesim Word'de MANUEL dogrulanmalidir. Tablolar/figurler sayfa tasirsa
+elle ayarlanir. Aptos sistemde yoksa Word ikame font kullanir.
 """
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 from docx import Document
-from docx.shared import Pt, Cm, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Cm, Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parent.parent
 MD = ROOT / "reports" / "PDR_VARIANT_GNN_2026.md"
@@ -31,7 +32,7 @@ SEP_RE = re.compile(r"^\s*:?-{2,}:?\s*$")
 PNG_RE = re.compile(r"(reports/figures/[\w/]+\.png)")
 
 
-def _set_base_style(doc: Document) -> None:
+def _set_base_style(doc):
     st = doc.styles["Normal"]
     st.font.name = FONT
     st.font.size = Pt(11)
@@ -40,35 +41,38 @@ def _set_base_style(doc: Document) -> None:
     pf.space_after = Pt(6)
     pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     for sec in doc.sections:
-        sec.top_margin = sec.bottom_margin = Cm(2.5)
-        sec.left_margin = sec.right_margin = Cm(2.5)
+        sec.top_margin = Cm(2.5)
+        sec.bottom_margin = Cm(2.5)
+        sec.left_margin = Cm(2.5)
+        sec.right_margin = Cm(2.5)
 
 
-def _add_runs(par, text: str) -> None:
-    """**bold** ve `code` işaretlerini Word run'larına çevir (basit)."""
+def _add_runs(par, text):
+    """**bold** ve `code` isaretlerini Word run'larina cevir (basit)."""
     text = text.replace("`", "")
-    for i, chunk in enumerate(re.split(r"(\*\*.+?\*\*)", text)):
+    for chunk in re.split(r"(\*\*.+?\*\*)", text):
         if not chunk:
             continue
         if chunk.startswith("**") and chunk.endswith("**"):
-            r = par.add_run(chunk[2:-2]); r.bold = True
+            run = par.add_run(chunk[2:-2])
+            run.bold = True
         else:
             par.add_run(chunk)
 
 
-def _heading(doc: Document, text: str, level: int) -> None:
+def _heading(doc, text, level):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p.paragraph_format.space_before = Pt(10 if level <= 1 else 6)
     p.paragraph_format.keep_with_next = True
-    r = p.add_run(text.strip())
-    r.bold = True
-    r.font.name = FONT
-    r.font.size = Pt({0: 16, 1: 14, 2: 12, 3: 11}.get(level, 11))
-    r.font.color.rgb = RGBColor(0x1F, 0x49, 0x7D)
+    run = p.add_run(text.strip())
+    run.bold = True
+    run.font.name = FONT
+    run.font.size = Pt({0: 16, 1: 14, 2: 12, 3: 11}.get(level, 11))
+    run.font.color.rgb = RGBColor(0x1F, 0x49, 0x7D)
 
 
-def _table(doc: Document, rows: list[list[str]]) -> None:
+def _table(doc, rows):
     if not rows:
         return
     ncol = max(len(r) for r in rows)
@@ -79,9 +83,8 @@ def _table(doc: Document, rows: list[list[str]]) -> None:
         cells = t.add_row().cells
         for ci in range(ncol):
             txt = row[ci] if ci < len(row) else ""
-            cell = cells[ci]
-            cell.paragraphs[0].text = ""
-            par = cell.paragraphs[0]
+            par = cells[ci].paragraphs[0]
+            par.text = ""
             par.alignment = WD_ALIGN_PARAGRAPH.CENTER
             _add_runs(par, txt.strip())
             for run in par.runs:
@@ -90,8 +93,8 @@ def _table(doc: Document, rows: list[list[str]]) -> None:
                     run.bold = True
 
 
-def _figure(doc: Document, path_str: str, caption: str) -> bool:
-    img = (FIG_DIR / path_str)
+def _figure(doc, path_str, caption):
+    img = FIG_DIR / path_str
     if not img.exists():
         return False
     try:
@@ -100,15 +103,16 @@ def _figure(doc: Document, path_str: str, caption: str) -> bool:
         if caption:
             cap = doc.add_paragraph()
             cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            r = cap.add_run(caption.strip())
-            r.italic = True; r.font.size = Pt(9)
+            run = cap.add_run(caption.strip())
+            run.italic = True
+            run.font.size = Pt(9)
         return True
-    except Exception as e:  # noqa: BLE001
-        print(f"  figür gömülemedi ({path_str}): {e}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"  figur gomulemedi ({path_str}): {exc}")
         return False
 
 
-def _split_row(line: str) -> list[str]:
+def _split_row(line):
     s = line.strip()
     if s.startswith("|"):
         s = s[1:]
@@ -117,10 +121,9 @@ def _split_row(line: str) -> list[str]:
     return [c.strip() for c in s.split("|")]
 
 
-def main() -> int:
-    import sys
+def main():
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")  # Windows cp1254 stdout → utf-8
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows cp1254 stdout -> utf-8
     lines = MD.read_text(encoding="utf-8").splitlines()
     doc = Document()
     _set_base_style(doc)
@@ -128,61 +131,70 @@ def main() -> int:
     i, n = 0, len(lines)
     n_tab = n_fig = 0
     while i < n:
-        line = lines[i]
-        stripped = line.strip()
+        stripped = lines[i].strip()
 
-        # Tablo bloğu
+        # Tablo blogu
         if stripped.startswith("|") and "|" in stripped[1:]:
             block = []
             while i < n and lines[i].strip().startswith("|"):
-                block.append(lines[i]); i += 1
+                block.append(lines[i])
+                i += 1
             rows = []
             for bl in block:
                 cells = _split_row(bl)
                 if all(SEP_RE.match(c) or c == "" for c in cells):
-                    continue  # ayraç satırı
+                    continue  # ayrac satiri
                 rows.append(cells)
-            _table(doc, rows); n_tab += 1
+            _table(doc, rows)
+            n_tab += 1
             continue
 
-        # Başlık
+        # Baslik
         m = re.match(r"^(#{1,4})\s+(.*)", stripped)
         if m:
-            _heading(doc, m.group(2), len(m.group(1)) - 1); i += 1; continue
+            _heading(doc, m.group(2), len(m.group(1)) - 1)
+            i += 1
+            continue
 
-        # Yatay çizgi
+        # Yatay cizgi
         if stripped in ("---", "***", "___"):
-            i += 1; continue
+            i += 1
+            continue
 
-        # Figür (png yolu içeren satır)
+        # Figur (png yolu iceren satir)
         png = PNG_RE.search(stripped)
         if png:
             caption = re.sub(r"\*|`", "", stripped)
             if _figure(doc, png.group(1), caption):
                 n_fig += 1
             else:
-                p = doc.add_paragraph(); _add_runs(p, stripped)
-            i += 1; continue
+                _add_runs(doc.add_paragraph(), stripped)
+            i += 1
+            continue
 
         # Madde
         if re.match(r"^[-*]\s+", stripped):
-            p = doc.add_paragraph(style="List Bullet")
-            _add_runs(p, re.sub(r"^[-*]\s+", "", stripped)); i += 1; continue
+            _add_runs(doc.add_paragraph(style="List Bullet"), re.sub(r"^[-*]\s+", "", stripped))
+            i += 1
+            continue
         if re.match(r"^\d+\.\s+", stripped):
-            p = doc.add_paragraph(style="List Number")
-            _add_runs(p, re.sub(r"^\d+\.\s+", "", stripped)); i += 1; continue
+            _add_runs(doc.add_paragraph(style="List Number"), re.sub(r"^\d+\.\s+", "", stripped))
+            i += 1
+            continue
 
-        # Boş satır
+        # Bos satir
         if not stripped:
-            i += 1; continue
+            i += 1
+            continue
 
         # Normal paragraf
-        p = doc.add_paragraph(); _add_runs(p, stripped); i += 1
+        _add_runs(doc.add_paragraph(), stripped)
+        i += 1
 
     doc.save(str(OUT))
-    print(f"OK → {OUT}")
-    print(f"   {n_tab} tablo, {n_fig} figür gömüldü.")
-    print("   ⚠️ TASLAK: Aptos/marj/≤10-sayfa Word'de doğrulanmalı; tablo/figür taşması elle ayarlanır.")
+    print(f"OK -> {OUT}")
+    print(f"   {n_tab} tablo, {n_fig} figur gomuldu.")
+    print("   UYARI TASLAK: Aptos/marj/<=10-sayfa Word'de dogrulanmali; tablo/figur tasmasi elle ayarlanir.")
     return 0
 
 
