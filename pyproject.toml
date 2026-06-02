@@ -31,7 +31,7 @@ dependencies = [
     "streamlit==1.35.0",
     "pydantic==2.7.1",
     "pyyaml==6.0.1",
-    "fpdf2==2.7.9",
+    "fpdf2==2.8.7",
 ]
 
 [project.optional-dependencies]
