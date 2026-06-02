@@ -299,6 +299,48 @@ def mode_train(args, cfg):
         except Exception as _offexc:
             logging.warning("Resmi per-panel skor atlandı: %s", _offexc)
 
+        # PANEL-BAZLI EŞİK denemesi: resmi skor panel-ORTALAMA olduğundan her panel kendi
+        # %20-θ'sını CAL'de türetip kendi test'inde uygular → zayıf paneli (PAH) kurtarıp
+        # ortalamayı global-tek-θ'dan yükseltebilir mi? (rakiplere karşı 2. edge adayı)
+        try:
+            _calp = ds.metadata["Panel"].values[cal_indices] if len(ds.metadata) == len(X) else np.array([])
+            if len(_calp) == len(y_cal):
+                _rc = raw_cal_proba[:, 1]; _ppth = {}; _ppf1 = {}
+                for _pn in np.unique(test_panels):
+                    _cm = (_calp == _pn); _ycal_p = y_cal[_cm]; _rcal_p = _rc[_cm]
+                    _cpo = np.where(_ycal_p == 1)[0]; _cne = np.where(_ycal_p == 0)[0]
+                    if len(_cpo) < 3 or len(_cne) < 3:
+                        _ppth[str(_pn)] = None; _ppf1[str(_pn)] = None; continue
+                    _cnp = max(1, int(round(len(_cne) * 0.25))); _tl = []
+                    for _s in range(25):
+                        _r = np.random.RandomState(cfg.seed + _s)
+                        _ix = np.concatenate([_r.choice(_cpo, min(_cnp, len(_cpo)), replace=False), _cne])
+                        _t, _ = find_best_threshold(_ycal_p[_ix], _rcal_p[_ix], metric="f1"); _tl.append(_t)
+                    _pth = float(np.median(_tl)); _ppth[str(_pn)] = round(_pth, 4)
+                    _tm = (test_panels == _pn); _yp = y_test[_tm]; _pr = raw_tst_proba[_tm, 1]
+                    _po = np.where(_yp == 1)[0]; _ne = np.where(_yp == 0)[0]
+                    if len(_po) == 0 or len(_ne) == 0:
+                        _ppf1[str(_pn)] = None; continue
+                    _np20 = max(1, int(round(len(_ne) * 0.25))); _fs = []
+                    for _s in range(300):
+                        _r = np.random.RandomState(_s)
+                        _ix = np.concatenate([_r.choice(_po, min(_np20, len(_po)), replace=False), _ne])
+                        _yy = _yp[_ix]; _yh = (_pr[_ix] >= _pth).astype(int)
+                        _tp = int(((_yh == 1) & (_yy == 1)).sum()); _fp = int(((_yh == 1) & (_yy == 0)).sum()); _fn = int(((_yh == 0) & (_yy == 1)).sum())
+                        _fs.append(2 * _tp / (2 * _tp + _fp + _fn) if (2 * _tp + _fp + _fn) else 0.0)
+                    _ppf1[str(_pn)] = round(float(np.mean(_fs)), 4)
+                _vv = [v for v in _ppf1.values() if v is not None]
+                _pta = round(float(np.mean(_vv)), 4) if _vv else None
+                logging.info("PANEL-BAZLI θ resmi skor = %s (global-θ: %s) | θ=%s | F1=%s", _pta, _official, _ppth, _ppf1)
+                if _cjp.exists():
+                    _cj = json.load(open(_cjp, encoding="utf-8"))
+                    _cj["per_panel_threshold_score"] = _pta
+                    _cj["per_panel_thresholds_20pct"] = _ppth
+                    _cj["per_panel_threshold_f1"] = _ppf1
+                    json.dump(_cj, open(_cjp, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        except Exception as _ppexc:
+            logging.warning("Panel-bazlı θ denemesi atlandı: %s", _ppexc)
+
         cal_panels = np.array([])
         if len(ds.metadata) == len(X):
             # Reuse the exact group-aware calibration indices computed above.

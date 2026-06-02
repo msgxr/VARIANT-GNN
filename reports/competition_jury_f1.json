@@ -12,5 +12,18 @@
     "PAH": 0.4755
   },
   "official_competition_score": 0.6052,
-  "_official_note": "TEKNOFEST RESMİ skorlama: her panel %20-patojenik test'inde ayrı F1, sonra 4-panel ORTALAMASI. CFTR küçük-n → gürültülü."
+  "_official_note": "TEKNOFEST RESMİ skorlama: her panel %20-patojenik test'inde ayrı F1, sonra 4-panel ORTALAMASI. CFTR küçük-n → gürültülü.",
+  "per_panel_threshold_score": 0.5407,
+  "per_panel_thresholds_20pct": {
+    "CFTR": 0.1981,
+    "General": 0.7524,
+    "Hereditary_Cancer": 0.3664,
+    "PAH": 0.5346
+  },
+  "per_panel_threshold_f1": {
+    "CFTR": null,
+    "General": 0.6059,
+    "Hereditary_Cancer": 0.5714,
+    "PAH": 0.4448
+  }
 }
