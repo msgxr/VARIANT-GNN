@@ -59,7 +59,7 @@
 > yaratıyordu (`reports/leakage_quantification.json`). Eğitim 3802 orijinal örnek üzerinde,
 > `Variant_ID`'ye göre **group-aware** bölme + sadece eğitim fold'unda SMOTE ile yapılır.
 
-### Test Veri Setleri (§3.2)
+### Test Veri Setleri (§3.2 — şartname-nominal tasarım)
 
 | Panel | Patojenik | Benign | Toplam |
 |-------|-----------|--------|--------|
@@ -68,8 +68,11 @@
 | PAH | 100 | 100 | 200 |
 | CFTR | 30 | 30 | 60 |
 
-> **Not:** Test seti metrikleri yukarıdaki tabloda gösterilmektedir. Tüm değerler
-> gerçek TEKNOFEST 2026 yarışma verisi üzerinde hesaplanmıştır (20 Mayıs 2026).
+> **Not (çelişki değil):** Yukarıdaki tablo şartname §3.2'nin **nominal/beyan edilen** test
+> tasarımıdır (jüri günü gelecek dengeli set). Raporlanan tüm metrikler ise fiili 3802-satırlık
+> `data/train_variants.csv` üzerinden **group-aware %20 hold-out** ile hesaplanmıştır
+> (gerçek test n=762: General 582 · KANSER 86 · PAH 76 · CFTR 18). Jüri kör test setini
+> sağladığında `predict.py` ile tahmin üretilir.
 
 ### Veri Kaynakları (Şartname §10)
 
@@ -105,22 +108,24 @@
 > edilir. Ek olarak **LogisticRegression meta-learner** stacking
 > (`fit_meta_learner`) etkindir.
 
-### Cutting-Edge Teknikler (§7.2 generalization için)
+### Genelleme Teknikleri (§7.2)
 
-- **Stochastic Weight Averaging (SWA)** — Izmailov 2018, ICLR
-- **Sharpness-Aware Minimization (SAM)** — Foret 2021, ICLR
-- **Snapshot Ensemble** — Huang 2017, ICLR
-- **Tabular Mixup** — Zhang 2018, ICLR
-- **Domain Adversarial Training (DANN)** — Ganin 2015, ICML
-- **Conformal Prediction** — Vovk 2005, Angelopoulos 2021
-- **Confident Learning** — Northcutt 2021, JAIR
+**Shipped pipeline'da aktif (canonical model):**
+- **Stochastic Weight Averaging (SWA)** — Izmailov 2018, UAI (`src/training/swa.py`)
+- **Domain Adversarial Training (DANN)** — Ganin 2016, JMLR (`configs/pdr.yaml: use_dann=true`; LOPO +2.17pp)
+- **OOF-Stacking** — Wolpert 1992 (`models/meta_learner.pkl`)
+- **Conformal Prediction (LAC/Mondrian)** — Angelopoulos & Bates 2021 (`reports/conformal_coverage_report.json`)
+- **Confident Learning** — Northcutt 2021, JAIR (`--mode label_quality`)
+
+**Repoda mevcut / deneysel (varsayılan kapalı, ablasyon için):**
+- Sharpness-Aware Minimization (SAM) · Snapshot Ensemble · Tabular Mixup
 
 ### Destek Katmanları
 
 | Bileşen | Modül | Amaç |
 |---------|-------|------|
 | Kalibrasyon | `EnsembleCalibrator` (Isotonic) | Brier + ECE optimize |
-| Belirsizlik (Bayesian) | MC Dropout (30 pass) | Epistemic uncertainty |
+| Belirsizlik (Bayesian) | MC Dropout (10 pass) | Epistemic uncertainty |
 | Belirsizlik (frequentist) | Conformal Prediction | Provable coverage |
 | Açıklanabilirlik | SHAP + LIME + GNNExplainer | Per-tahmin katkılar |
 | Klinik Yorumlama | ACMG/AMP 2015 Mapper | Standart genetik kriter |
@@ -170,10 +175,10 @@
 
 | Panel | Binary F1 | MCC | PR-AUC |
 |-------|-----------|-----|--------|
-| MASTER (General) | 0.8865 | 0.5410 | 0.9102 |
-| KANSER (Hereditary_Cancer) | 0.944 | 0.7753 | 0.9393 |
-| PAH | 0.9077 | 0.4215 | 0.8843 |
-| CFTR | 0.9412 | — (küçük n) | 1.0000 |
+| MASTER (General) | 0.8865 | 0.5732 | 0.9102 |
+| KANSER (Hereditary_Cancer) | 0.944 | 0.7985 | 0.9393 |
+| PAH | 0.9077 | 0.3900 | 0.8843 |
+| CFTR | 0.9412 | — (küçük n, tanımsız) | 1.0000 |
 
 > **Not:** CFTR test n çok küçük (büyük çoğunluk patojenik) → MCC tanımsız/0; F1 ve PR-AUC
 > daha anlamlı. Tüm sayılar `RESULTS_CANONICAL.json`'dan üretilir.
@@ -278,8 +283,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 
 | Sınırlılık | Açıklama |
 |---|---|
-| **CFTR örneklem küçüklüğü (eğitim)** | 111 eğitim örneği ile istatistiksel güç sınırlıdır; bağımsız kohortlarda doğrulama gereklidir |
-| **CFTR panel az örnekli** | 140 eğitim örneği; panel-genelleme riski yüksek, dikkatli yorumlanmalı |
+| **CFTR örneklem küçüklüğü** | Toplam 111 örnek (test hold-out n=18); istatistiksel güç sınırlı, MCC tanımsız → F1/precision daha anlamlı; bağımsız kohortlarda doğrulama gereklidir |
 | **VUS desteği yok** | "Variant of Uncertain Significance" sınıflandırması kapsam dışıdır |
 | **Bağımsız klinik validasyon yok** | Harici klinik kohort üzerinde doğrulanmamıştır |
 | **Genomik koordinat bağımsız** | Chr/Pos gizlendiğinden uzak konumdaki varyantlar model tarafından ayrıştırılamaz |
@@ -296,4 +300,5 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
-> değişiklikleriyle birlikte güncellenir. Son güncelleme: 22 Mayıs 2026.
+> değişiklikleriyle birlikte güncellenir. Son güncelleme: 2 Haziran 2026
+> (sızıntısız group-aware retrain; tüm sayılar `RESULTS_CANONICAL.json` ile tutarlı).

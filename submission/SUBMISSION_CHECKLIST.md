@@ -1,8 +1,8 @@
 # Teslim Kontrol Listesi — VARIANT-GNN
 
 **PDR Teslim Tarihi:** 29 Haziran 2026  
-**Son Güncelleme:** 22 Mayıs 2026  
-**Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle eğitilmiş (20 Mayıs 2026)
+**Son Güncelleme:** 2 Haziran 2026  
+**Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle sızıntısız (group-aware) eğitilmiş (2 Haziran 2026)
 
 ---
 
@@ -14,7 +14,7 @@
 | Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `train_log.txt`, `reports/cv_report.json` |
 | Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8969, MCC=0.5863 |
 | train_log.txt gerçek veri eğitimini gösteriyor | ✅ Tamamlandı | 48 KB log, 5-fold CV + test metrikleri |
-| Gaussian augmentation uygulandı (3802 → 7604) | ✅ Tamamlandı | `scripts/augment_train_data.py` |
+| Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
 
 ---
 
@@ -46,7 +46,7 @@
 | `reports/ablation_report.json` | ✅ Tamamlandı | 8 ablasyon konfigürasyonu, F1 etkileri |
 | `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5863`, `test_pr_auc=0.9114` |
 | `reports/cross_panel_eval.json` | ✅ Tamamlandı | LOPO cross-validation (domain shift kanıtı) |
-| `reports/seed_stability.json` | ✅ Tamamlandı | 5 seed, inter-seed std=±0.0013 |
+| `reports/seed_stability.json` | ✅ Tamamlandı | 5 seed (42/123/456/789/2026), CV F1=0.8738 ± 0.0034 |
 | Model ağırlıkları `models/` altında | ✅ Tamamlandı | xgb, lgbm, gnn, dnn, ensemble, preprocessor |
 
 ---
@@ -61,7 +61,7 @@
 | LightGBM feature names warning temizlendi | ✅ Tamamlandı | `_to_lgbm_frame()` helper |
 | DataFrame fragmented warning temizlendi | ✅ Tamamlandı | ColumnAligner tek seferde DataFrame |
 | sklearn deprecation warning suppress | ✅ Tamamlandı | `warnings.filterwarnings()` |
-| tests/unit/ testler mevcut | ✅ Tamamlandı | 278/278 test geçiyor (22 Mayıs 2026) |
+| tests/unit/ testler mevcut | ✅ Tamamlandı | 444/444 test geçiyor (2 Haziran 2026) |
 | prediction_schema OOD_Score/OOD_Flag | ✅ Tamamlandı | PREDICTION_COLUMNS güncellendi; build_prediction_frame destekliyor |
 | models/threshold.json | ✅ Tamamlandı | θ=0.6831 (global F1-optimal) |
 | models/panel_thresholds.json | ✅ Tamamlandı | 4 panel eşik değerleri |
@@ -97,7 +97,7 @@
 |---|---|---|
 | `seed=42` tüm bileşenlerde aktif | ✅ Tamamlandı | `configs/pdr.yaml`, `src/utils/seeds.py` |
 | `requirements.txt` sabitlenmiş versiyonlar | ✅ Tamamlandı | Tüm paketler `==X.Y.Z` pinned |
-| 5-seed kararlılık testi geçildi | ✅ Tamamlandı | std=±0.0013 (deterministik düzey) |
+| 5-seed kararlılık testi geçildi | ✅ Tamamlandı | CV F1=0.8738 ± 0.0034 (tohum-kararlı) |
 | Docker ile ortam yeniden oluşturulabilir | ✅ Tamamlandı | `Dockerfile` mevcut |
 | Eğitim tek komutla çalışır | ✅ Tamamlandı | `python main.py --mode train --config configs/pdr.yaml` |
 | Predict tek komutla çalışır | ✅ Tamamlandı | `python submission/predict.py --input jury.csv` |

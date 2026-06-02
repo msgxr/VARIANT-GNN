@@ -43,7 +43,7 @@ hesaplanır ve raporlanır.
 python main.py --mode crossval --data_file data/train_variants.csv
 ```
 
-- **Yöntem:** Stratified K-Fold (`k=5`, sabit seed)
+- **Yöntem:** **StratifiedGroupKFold** (`k=5`, sabit seed, `Variant_ID`'ye göre **group-aware** — aynı varyant fold'lar arasında sızmaz)
 - **Birincil metrik:** Binary F1 (Pathogenic, §7.3)
 - **Tamamlayıcı:** Macro F1, ROC-AUC, MCC, Brier, ECE
 - **Çıktı:** `reports/cv_report.json`
@@ -52,7 +52,7 @@ python main.py --mode crossval --data_file data/train_variants.csv
 
 ```bash
 python main.py --mode train --data_file data/train_variants.csv
-# → train_test_split (test_size=0.20, stratified) + tüm metrikler
+# → GROUP-AWARE GroupShuffleSplit (test_size=0.20, Variant_ID) + tüm metrikler
 ```
 
 - **Çıktı:** `reports/cv_report.json` `test_metrics` alanı

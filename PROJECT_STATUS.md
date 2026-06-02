@@ -1,6 +1,6 @@
 # Proje Durumu — VARIANT-GNN
 
-**Güncelleme tarihi:** 24 Mayıs 2026
+**Güncelleme tarihi:** 2 Haziran 2026
 
 ## Mevcut Aşama
 
@@ -32,14 +32,14 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | **Panel değerlendirme** | ✅ Çalışıyor | General, Hereditary Cancer, PAH, CFTR |
 | **External validation** | ✅ Çalışıyor | `--mode external_val` |
 | **Adversarial validation** | ✅ Çalışıyor | `--mode adversarial_val`, AUC≈0.50 (tüm paneller) |
-| **Kalibrasyon** | ✅ Çalışıyor | İsotonik Regresyon, Brier=0.1283, ECE=0.0788 |
+| **Kalibrasyon** | ✅ Çalışıyor | İsotonik Regresyon, Brier=0.1197, ECE=0.0755 |
 | **MC Dropout belirsizlik** | ✅ Çalışıyor | 10 forward pass |
 | **Ablation analizi** | ✅ Tamamlandı | `reports/ablation_report.json`, 8 konfigürasyon |
 | **Submission artifact'ları** | ✅ Tamamlandı | `submission/teknofest/`: manifest, checksums, predict.py |
 | **Streamlit UI** | ✅ Çalışıyor | `streamlit run app.py` |
 | **CI pipeline** | ✅ Çalışıyor | GitHub Actions: lint, typecheck, test, security |
 | **Docker** | ✅ Mevcut | CPU ve GPU destekli |
-| **Test altyapısı** | ✅ 278/278 test | Smoke, unit, integration testler (22 Mayıs 2026) |
+| **Test altyapısı** | ✅ 444/444 test | Smoke, unit, integration testler (2 Haziran 2026) |
 | **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, GLOBAL cal-türevli eşik θ=0.6831 (canonical; panel-spesifik test'te daha kötü, opt-in) |
 | **PDR belge hataları** | ✅ Tümü kapatıldı | BUG-01..12 CLOSED (24 Mayıs 2026) |
 | **Bağımsız klinik validasyon** | ❌ Kapsam dışı | Araştırma prototipi; kasıtlı kapsam dışı |
@@ -55,7 +55,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 
 ## Bilinen Sınırlamalar
 
-- MASTER paneli MCC=0.507: sınıf dengesizliği (2.75:1), normal ve PDR §4.2'de açıklandı
+- MASTER (General) paneli MCC=0.5732: sınıf dengesizliği (2.75:1), normal ve PDR §4.2'de açıklandı
 - Klinik validasyon kapsamı dışındadır; bu sistem klinik tanı amacıyla kullanılamaz
 - VUS (Önemi Belirsiz Varyant) desteği bulunmamaktadır
 - `jury_predictions.csv` sentetik placeholder — gerçek jüri verisiyle `predict.py` yeniden çalıştırılmalı

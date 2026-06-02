@@ -9,7 +9,7 @@
 | **Veri türü** | Missense genetik varyant anotasyon profilleri |
 | **Etiket** | Patojenik (1) / Benign (0) |
 | **Mevcut veri durumu** | ✅ Gerçek TEKNOFEST 2026 yarışma verisi (14 Mayıs 2026 alındı) |
-| **Yarışma verisi durumu** | ✅ Model 20 Mayıs 2026'da gerçek veriyle yeniden eğitildi — Test F1 = 0.8969 |
+| **Yarışma verisi durumu** | ✅ Model 2 Haziran 2026'da sızıntısız (group-aware) protokolle yeniden eğitildi — CV F1 = 0.8936 ± 0.0004, Test F1 = 0.8969 |
 | **Gizlilik** | KVKK/GDPR ve TEKNOFEST NDA bağlamında; genomik adres bilgileri gizlenmiş, ham hasta verisi içermez |
 | **Format** | CSV (nümerik özellikler + isteğe bağlı sekans bağlamı) |
 
@@ -45,12 +45,15 @@
 
 ## Veri Durumu
 
-> ✅ **Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alındı.** Model 20 Mayıs 2026'da bu veriyle yeniden eğitildi.
+> ✅ **Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alındı.** Model 2 Haziran 2026'da bu veriyle **sızıntısız (group-aware, Variant_ID)** protokolle yeniden eğitildi.
 >
 > Eski sentetik geliştirme verisi `data/synthetic/` altında arşivlenmiştir.
 > Gerçek veri `data/raw/` klasöründe TEKNOFEST NDA kapsamında lokal olarak tutulmaktadır (GitHub'a yüklenmez).
 >
-> **Kolon yapısı:** 354 kolon — Variant_ID, Panel, AL_1..AL_351 (anonim sayısal özellikler, §3.2), CAT_1..6, EK_1..9, AA_1..2, Label.
+> **Kolon yapısı:** Kimlik/etiket dışı **343 anonim öznitelik kolonu** (`reports/cv_report.json` →
+> `anonymous_columns: 343`). Kolon aileleri: `Variant_ID`, `Panel`, `AL_*` (anonim sayısal, §3.2),
+> `CAT_1..6` (popülasyon/bölge/genotip), `EK_*` (in-silico [0,1] skorları), `AA_1..2` (amino asit
+> değişimi), `Label`. Bu ailelerden `CategoricalBioFeaturizer` 22 ek biyolojik öznitelik türetir (§9 README).
 > Genomik adres (chr/pos) mevcut değil, şartname gereği gizlenmiş.
 
 ## Etiket Kaynakları

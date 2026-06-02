@@ -1,135 +1,122 @@
-# MCC Düşüklüğü Analizi — PDR Jüri Hazırlığı
+# MCC Analizi — PDR Jüri Hazırlığı (CANONICAL)
 
-**Tarih:** 2026-05-19  
+**Tarih:** 2026-06-02  
 **Hazırlayan:** XYRA3 (#909249)  
-**Kaynak:** `reports/cv_report.json`, `reports/cross_panel_eval.json`
+**Kaynak:** `RESULTS_CANONICAL.json`, `reports/cv_report.json`  
+**Eşik:** GLOBAL **θ = 0.6831** (balanced-OOF, canonical). Tüm sayılar bu eşikte hesaplanır.
+
+> ⚠️ **Sürüm notu:** Bu belge 2 Haziran 2026 **sızıntısız (group-aware)** retrain'e göre yeniden
+> yazılmıştır. Önceki sürümdeki düşük eşik (0.01–0.28) + yüksek recall (~0.97) anlatısı **geçersizdir**;
+> o sayılar satır-bazlı split sızıntısıyla şişikti (`reports/leakage_quantification.json`).
 
 ---
 
-## 1. Genel Tablo
+## 1. Genel Tablo (test hold-out, θ=0.6831)
 
 | Panel | Binary F1 | MCC | Precision | Recall | PR-AUC |
 |:------|----------:|----:|----------:|-------:|-------:|
-| **General** | 0.8872 | 0.5070 | 0.8189 | 0.9679 | 0.9181 |
-| **Hereditary_Cancer** | 0.8996 | 0.6630 | 0.8235 | 0.9912 | 0.9524 |
-| **PAH** | 0.9556 | 0.5562 | 0.9333 | 0.9790 | 0.9760 |
-| **CFTR** | 0.9524 | 0.6742 | 0.9091 | 1.0000 | 0.9222 |
-| **Genel Ortalama (test)** | 0.8984 | 0.5378 | 0.8347 | 0.9725 | 0.9292 |
+| **General (MASTER)** | 0.8865 | 0.5732 | 0.8960 | 0.8773 | 0.9102 |
+| **Hereditary_Cancer (KANSER)** | 0.9440 | **0.7985** | 0.9219 | 0.9672 | 0.9393 |
+| **PAH** | 0.9077 | 0.3900 | 0.8676 | 0.9516 | 0.8843 |
+| **CFTR** | 0.9412 | — (tanımsız) | 1.0000 | 0.8889 | 1.0000 |
+| **Genel (tüm test)** | **0.8969** | **0.5863** | 0.8984 | 0.8953 | 0.9114 |
 
 ---
 
-## 2. Neden F1 Yüksek ama MCC Düşük?
+## 2. Neden F1 Yüksek ama MCC Orta?
 
 ### Matematiksel Açıklama
 
-MCC formülü dört konfüzyon matrisi bileşenini (TP, TN, FP, FN) dengeli biçimde kullanır:
-
 ```
-MCC = (TP × TN − FP × FN) / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN))
-```
-
-Binary F1 yalnızca **Patojenik (pozitif) sınıfı** üzerinden hesaplanır:
-```
-F1 = 2×TP / (2×TP + FP + FN)
+MCC = (TP·TN − FP·FN) / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN))     ← dört hücreyi dengeli kullanır
+F1  = 2·TP / (2·TP + FP + FN)                                    ← yalnızca Patojenik (pozitif) sınıf
 ```
 
-**Temel Fark:**  
-- F1 → Benign sınıfındaki hataları görmezden gelir  
-- MCC → Her iki sınıftaki hataları eşit ağırlıkta değerlendirir
+**Temel fark:** F1 Benign sınıfındaki hataları görmezden gelir; MCC her iki sınıfı eşit ağırlıkta
+değerlendirir. Test hold-out'u **~%75 pozitif** (dengesiz) olduğundan, MCC bu dengesizliğe ve azınlık
+(Benign) sınıfındaki her hataya F1'den çok daha duyarlıdır. Bu, modelin "zayıf" olduğu anlamına gelmez —
+metrik tanımlarının yapısal farkıdır.
 
-Modelimiz **Recall odaklı** optimize edilmiştir (eşik=0.01–0.28, düşük). Bu sayede:
-- TP yüksek → Patojenik varyantların büyük çoğunluğu yakalanır (Recall ≈ 0.97–1.00)
-- FP yüksek → Benign varyantlar yanlışlıkla Patojenik olarak etiketlenir
-- TN düşük → MCC paydasını olumsuz etkiler
+> **Önemli:** θ=0.6831 **yüksek** bir eşiktir (önceki sürümdeki 0.01–0.28 değil). Bu eşik precision'ı
+> yükseltir (0.8984) ve recall'ı dengeler (0.8953); jüri §3.2 dengeli seti için balanced-OOF üzerinde
+> türetilmiştir.
 
 ---
 
-## 3. Panel Bazlı Detay Analizi
+## 3. Panel Bazlı Detay (canonical)
 
-### General Panel (MCC=0.507)
-- **Boyut:** 2931 örnek (N=2149 Patojenik, N=782 Benign)
-- **Sorun:** Yüksek sınıf dengesizliği (Pat/Ben ≈ 2.75:1)
-- **Gözlem:** Recall=0.968 → model Benign'lerin %21.8'ini Patojenik olarak etiketliyor (FP=312/782=39.9%)
-- **Çözüm:** PAH/CFTR panelleri için daha yüksek karar eşiği kullanılabilir; General panel dengeli değil
+### Hereditary_Cancer / KANSER (MCC = 0.7985 — EN İYİ)
+- **Boyut:** 388 örnek (Pat=268, Ben=120; oran 2.23:1 — en dengeli panel).
+- **Gözlem:** Hem precision (0.9219) hem recall (0.9672) yüksek → dengeli MCC. ROC-AUC=0.9161 ile en iyi ayrım.
 
-### Hereditary_Cancer Panel (MCC=0.663 — İYİ)
-- **Boyut:** 388 örnek (Pat=268, Ben=120)
-- **Gözlem:** En dengeli MCC değeri; sınıf oranı uygun (2.23:1)
-- **Eşik:** 0.2809 — daha seçici karar sınırı kullanılmış
+### General / MASTER (MCC = 0.5732)
+- **Boyut:** 2931 örnek (Pat=2149, Ben=782; oran **2.75:1** — en dengesiz büyük panel).
+- **Gözlem:** F1=0.8865 güçlü; MCC=0.5732 sınıf dengesizliğinin yapısal baskısını yansıtır (Benign azınlıkta).
+- **Bağlam:** En geniş ve en heterojen panel; çoğu test örneği burada → genel MCC'yi (0.5863) bu panel domine eder.
 
-### PAH Panel (MCC=0.556)
-- **Boyut:** 372 örnek (Pat=310, Ben=62)
-- **Sorun:** Benign örnek sayısı çok düşük (n=62, sadece %16.7)
-- **Gözlem:** Confusion matrix → FP=119/62 → model 62 Benign varyantın 119'unu yanlış sınıflandırıyor (imkansız görünüyor; bu çapraz panel değerlendirmesinden)
-- **Eşik:** 0.138 — çok düşük → çok fazla pozitif tahmin
-- **Kök Neden:** Çok düşük eşik (0.138) + düşük Benign örnek sayısı → False Positive patlaması
+### PAH (MCC = 0.3900 — en düşük)
+- **Boyut:** 372 örnek (Pat=310, Ben=**62**; oran 5.0:1 — Benign çok az).
+- **Gözlem:** F1=0.9077 ve recall=0.9516 yüksek, ama Benign örnek sayısı çok düşük olduğundan birkaç FP
+  bile MCC'yi sertçe düşürür (TN tabanı küçük). ROC-AUC=0.7051 ile en düşük ayrım — küçük-n etkisi.
 
-### CFTR Panel (MCC=0.674 — İYİ)
-- **Boyut:** 111 örnek (Pat=90, Ben=21)
-- **Gözlem:** F1=0.952, Recall=1.0 → tüm Patojenik varyantlar yakalandı; MCC makul
-- **Eşik:** 0.108 — en düşük eşik; CFTR hastalıkta kaçırmak maliyetli, bu kabul edilebilir
+### CFTR (MCC = — tanımsız)
+- **Boyut:** 111 örnek; **test hold-out n=18** (çok küçük, büyük çoğunluk pozitif).
+- **Gözlem:** F1=0.9412, Precision=1.0 (hiç FP yok), Recall=0.8889. Ancak test fold'unda negatif sınıf
+  dejenere olduğundan **MCC ve ROC-AUC tanımsızdır** (cv_report → `roc_auc: NaN`, `mcc: 0.0`). Bu
+  "sıfır korelasyon" değil, **küçük-n dejenerasyonudur**. CFTR için anlamlı metrikler F1/precision/recall'dır.
 
 ---
 
-## 4. PSR'deki MCC=0.89 ile Karşılaştırma
+## 4. PSR Pilot (MCC=0.892) ile Karşılaştırma
 
 | Veri Seti | MCC | Açıklama |
 |:----------|----:|:---------|
-| **Pilot/Sentetik (PSR)** | 0.892 | ClinVar 3–4 yıldız, dengeli, temiz etiketler |
-| **Yarışma Verisi (gerçek)** | 0.538 | Daha geniş veri, sınıf dengesizliği, gürültülü etiketler |
+| **Pilot/Sentetik (PSR)** | 0.892 | ClinVar 3–4 yıldız Expert Panel, dengeli, temiz etiketler |
+| **Yarışma Verisi (gerçek, canonical)** | **0.5863** | Daha geniş spektrum, sınıf dengesizliği, group-aware (sızıntısız) değerlendirme |
 
-**Neden Fark Bu Kadar Büyük?**
+**Neden fark bu kadar büyük?**
 
-1. **Veri kalitesi:** Pilot veri ClinVar "Expert Reviewed" (3-4 yıldız) — hemen hemen saf. Yarışma verisi geniş spektrum → belirsiz varyantlar dahil
-2. **Sınıf dengesizliği:** General panel'de Patojenik:Benign ≈ 2.75:1; pilot veride ~1:1
-3. **Karar eşiği:** Optimize edilmiş düşük eşik (0.01) → yüksek recall ama düşük precision/TN
-4. **Domain shift:** 4 farklı panel → farklı özellik dağılımları; model tüm panellere genelleme yapmak zorunda
+1. **Veri kalitesi:** Pilot veri ClinVar "Expert Reviewed" (3-4★) — neredeyse saf, ayrımı kolay. Gerçek
+   yarışma verisi klinik olarak belirsiz varyantları da içerir → daha zor sınır.
+2. **Sınıf dengesizliği:** General'de Pat:Ben ≈ 2.75:1; pilotta ~1:1.
+3. **Sızıntısız değerlendirme:** Group-aware split, eski satır-bazlı split'in yarattığı **+3.71 pp** yapay
+   şişmeyi kaldırır (`reports/leakage_quantification.json`). Yani 0.5863 *dürüst* değerdir.
+4. **Domain shift:** 4 farklı panel → farklı özellik dağılımları; model hepsine genelleşmek zorunda.
 
----
-
-## 5. Karar Eşiği Seçimi Gerekçesi
-
-Yarışmanın birincil metriği **Binary F1**'dir (§7.3). İkincil metrik yoktur.
-
-**Eşik Optimizasyonu Stratejisi:**
-- Validation setinde F1 maksimize edecek eşik seçildi
-- Bu strateji kaçınılmaz olarak Recall'u tercih eder (özellikle dengesiz veri)
-- Klinik açıdan da gerekli: Patojenik bir varyantı kaçırmak (FN) → yanlış Patojenik demekten (FP) daha riskli
-
-**Panel Eşikleri:**
-
-| Panel | Optimal Eşik | Strateji |
-|:------|------------:|:---------|
-| General | 0.2415 | Dengeli F1 |
-| Hereditary_Cancer | 0.2809 | Daha seçici |
-| PAH | 0.1380 | Yüksek sensitivity |
-| CFTR | 0.1085 | Maksimum recall |
+Bu fark **model başarısızlığı değil**, dağılım farkıdır — PDR §4.2'de açıklanır.
 
 ---
 
-## 6. Jüri Sorusu: "MCC Neden Düşük?" — Hazır Cevap
+## 5. Karar Eşiği Gerekçesi
 
-> **MCC değeri, modelimizin klinik önceliğini yansıtmaktadır.**
->
-> Yarışmanın birincil metriği Binary F1 (§7.3) olduğundan, karar eşiklerimizi
-> F1 maksimize edecek şekilde optimize ettik. Bu strateji Recall'u yüksek
-> tutarak FN'leri minimize eder — klinik açıdan Patojenik bir varyantı
-> kaçırmak, Benign'i yanlış Patojenik saymaktan daha ciddi bir hatadır.
->
-> MCC tüm sınıfları dengeli değerlendirdiğinden, düşük karar eşiği + sınıf
-> dengesizliği kombinasyonu MCC'yi baskılar. PAH panelinde (n_benign=62)
-> bu etki en belirgindir.
->
-> **Eğer MCC'yi optimize etseydik:** Precision artardı, Recall düşerdi,
-> Binary F1 ≈ 0.85 civarında kalırdı — fakat daha fazla Patojenik varyant
-> kaçırılırdı. Yarışma puanlama kriteri ve klinik etik açısından mevcut
-> strateji tercih edilmiştir.
+Yarışmanın birincil metriği **Binary F1**'dir (§7.3). Eşik, jüri §3.2 setinin **dengeli (50/50)** olduğu
+varsayımıyla **balanced-OOF** üzerinde F1-optimal seçilmiştir: **θ = 0.6831** (global, canonical;
+`models/threshold.json`).
+
+- Eşiği eğitim dağılımında (~%74 pozitif) türetmek dengeli sette ~5 pp kaybettirirdi → balanced-OOF eşik
+  bu kaybı kurtarır (A→B çapraz-doğrulandı, overfit yok — `reports/balanced_jury_f1.json`).
+- Panel-spesifik eşikler (General 0.404 · KANSER 0.3695 · PAH 0.3203 · CFTR 0.1922) **opt-in**'dir;
+  varsayılan KAPALI ve jüri kararında kullanılmaz.
 
 ---
 
-## 7. İyileştirme Önerileri (PDR Sonrası)
+## 6. Jüri Sorusu: "MCC Neden Daha Düşük?" — Hazır Cevap
 
-1. **Panel-spesifik eşik kalibrasyonu:** Her panel için ayrı MCC-optimized eşik testi
-2. **Conformal prediction:** Belirsizlik skoru ile abstension → düşük güvenli tahminleri işaretleme
-3. **Sınıf ağırlıkları:** Benign sınıfı ağırlığını artırarak MCC–F1 dengesi kurma
-4. **Ensemble yeniden ağırlıklandırma:** PAH paneli için düşük FP toleranslı ağırlık profili
+> **MCC, dengesiz test dağılımı ve metrik tanımının doğal sonucudur — model zayıflığı değil.**
+>
+> Yarışmanın birincil metriği Binary F1'dir (§7.3); MCC ikincildir. F1 yalnızca Patojenik sınıfı
+> değerlendirirken MCC her iki sınıfı dengeli ölçer. Test hold-out'umuz ~%75 pozitiftir; bu dengesizlik
+> ve küçük paneller (PAH'ta yalnızca 62 Benign, CFTR'de n=18) MCC'yi yapısal olarak baskılar — nitekim
+> dengeli panel olan KANSER'de MCC=0.7985 ile yüksektir.
+>
+> Üstelik 0.5863 değeri **sızıntısız (group-aware)** değerlendirmeden gelir; eski satır-bazlı split'in
+> yarattığı +3.71 pp yapay şişme kaldırılmıştır. Yani bu, savunulabilir ve dürüst bir değerdir.
+
+---
+
+## 7. İyileştirme Önerileri (PDR sonrası)
+
+1. **Panel-farkında özellik seçimi:** Küçük panellerde (PAH/CFTR) boyutluluğu azaltarak MCC kararlılığı.
+2. **Conformal abstention:** Düşük güvenli/OOD tahminleri işaretleme (zaten LAC/Mondrian mevcut, §20.4 README).
+3. **Sınıf-ağırlık ince ayarı:** Benign sınıfı ağırlığını artırarak MCC–F1 dengesini kontrol etme.
+4. **Daha fazla Benign örneği:** PAH/CFTR için dengeli kohort → MCC tahmin kararlılığı artar.
