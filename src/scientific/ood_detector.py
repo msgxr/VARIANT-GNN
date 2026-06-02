@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 
 import numpy as np
 
@@ -191,7 +191,7 @@ class OODDetector:
         diff = X - self._mean[: X.shape[1]]
         diff = np.nan_to_num(diff, nan=0.0)
         cov_inv = self._cov_inv[: X.shape[1], : X.shape[1]]
-        return np.sqrt(np.einsum("ij,jk,ik->i", diff, cov_inv, diff))
+        return cast("np.ndarray", np.sqrt(np.einsum("ij,jk,ik->i", diff, cov_inv, diff)))
 
     # ── Drift İstatistikleri ─────────────────────────────────────────────────
     def drift_report(self, X_new: np.ndarray, feature_names: Optional[List[str]] = None) -> dict:
@@ -201,6 +201,7 @@ class OODDetector:
         """
         if not self._fitted:
             raise RuntimeError("fit() çağrılmadı.")
+        assert self._mean is not None and self._std is not None
         X = np.asarray(X_new, dtype=float)
         F = min(X.shape[1], len(self._mean))
         names = (feature_names or [f"feat_{i}" for i in range(F)])[:F]
@@ -238,4 +239,4 @@ class OODDetector:
 
         det = joblib.load(str(path))
         logger.info("OODDetector ← %s", path)
-        return det
+        return cast("OODDetector", det)

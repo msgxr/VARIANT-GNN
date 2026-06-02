@@ -38,7 +38,7 @@ import subprocess
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +63,9 @@ def _sha256_string(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
-def _git_info() -> Dict[str, Optional[str]]:
+def _git_info() -> Dict[str, Optional[str | bool]]:
     """Capture current git state (commit, branch, dirty)."""
-    info: Dict[str, Optional[str]] = {
+    info: Dict[str, Optional[str | bool]] = {
         "commit": None,
         "branch": None,
         "is_dirty": None,
@@ -202,7 +202,7 @@ class ReproducibilityManifest:
     package_versions: Dict[str, str] = field(default_factory=dict)
 
     # Code state
-    git: Dict[str, Optional[str]] = field(default_factory=dict)
+    git: Dict[str, Optional[str | bool]] = field(default_factory=dict)
 
     # Data state
     train_data: Dict[str, Any] = field(default_factory=dict)
@@ -327,7 +327,7 @@ class ManifestBuilder:
             from dataclasses import is_dataclass
 
             if is_dataclass(settings_obj):
-                self.manifest.settings_dump = _asdict(settings_obj)
+                self.manifest.settings_dump = _asdict(cast("Any", settings_obj))
             else:
                 # Fallback: collect __dict__
                 self.manifest.settings_dump = {k: str(v) for k, v in vars(settings_obj).items()}

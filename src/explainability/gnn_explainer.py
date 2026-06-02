@@ -7,7 +7,7 @@ torch_geometric.explain is unavailable or incompatible.
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Any, Optional, cast
 
 import torch
 
@@ -32,7 +32,7 @@ class GNNExplainerWrapper:
     device : torch.device for inference.
     """
 
-    def __init__(self, model, device: Optional[torch.device] = None) -> None:
+    def __init__(self, model: Any, device: Optional[torch.device] = None) -> None:
         self._model = model
         self._device = device or torch.device("cpu")
         self._explainer = None
@@ -56,7 +56,7 @@ class GNNExplainerWrapper:
                 logger.warning("GNNExplainer init failed: %s", exc)
 
     # ------------------------------------------------------------------
-    def explain(self, data) -> Optional[object]:
+    def explain(self, data: Any) -> Optional[object]:
         """
         Produce an explanation for a single graph Data object.
 
@@ -71,7 +71,7 @@ class GNNExplainerWrapper:
                 edge_index=data.edge_index,
                 batch=data.batch,
             )
-            return explanation
+            return cast("object | None", explanation)
         except Exception as exc:
             logger.warning("GNNExplainer.explain failed: %s", exc)
             return None

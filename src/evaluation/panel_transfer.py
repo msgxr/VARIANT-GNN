@@ -36,7 +36,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from sklearn.metrics import f1_score
@@ -189,7 +189,7 @@ class CrossPanelEvaluator:
 
     # ------------------------------------------------------------------
 
-    def _make_estimator(self):
+    def _make_estimator(self) -> Any:
         """Lightweight hızlı panel başına model (tam pipeline değil)."""
         try:
             import xgboost as xgb

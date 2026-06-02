@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -266,7 +266,7 @@ def validate_config_dict(raw: Dict[str, Any]) -> ConfigSchema:
         raise ConfigValidationError(f"Beklenen dict; gelen tip={type(raw).__name__} (içerik: {raw!r})")
 
     try:
-        return ConfigSchema.model_validate(raw)
+        return cast(ConfigSchema, ConfigSchema.model_validate(raw))
     except ValidationError as exc:
         raise ConfigValidationError(_format_pydantic_error(exc)) from exc
 

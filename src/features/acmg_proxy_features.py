@@ -36,7 +36,7 @@ Kullanım:
 from __future__ import annotations
 
 import logging
-from typing import List
+from typing import List, cast
 
 import numpy as np
 import pandas as pd
@@ -154,7 +154,7 @@ class ACMGProxyFeatures:
         """
         df = pd.DataFrame(X, columns=feature_names)
         out_df = self.transform(df)
-        return out_df[feature_names + self.FEATURE_NAMES].values
+        return cast(np.ndarray, out_df[feature_names + self.FEATURE_NAMES].values)
 
     # ── PP3: In-silico patojenisite desteği ────────────────────────────────
 

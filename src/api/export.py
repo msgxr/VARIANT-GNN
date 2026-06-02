@@ -97,7 +97,7 @@ def export_predictions(
     output_dir: str | Path,
     prefix: str = "predictions",
     submission_path: str | Path | None = None,
-) -> dict[str, Path]:
+) -> dict[str, Path | None]:
     """
     TEKNOFEST 2026 jüri uyumlu tahmin exportu.
 

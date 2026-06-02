@@ -43,7 +43,7 @@ TEKNOFEST 2026 motivasyonu:
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -66,12 +66,12 @@ class _GradientReversalFunction(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, x: torch.Tensor, lambda_: float) -> torch.Tensor:
+    def forward(ctx: Any, x: torch.Tensor, lambda_: float) -> torch.Tensor:
         ctx.lambda_ = lambda_
         return x.view_as(x)
 
     @staticmethod
-    def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         return grad_output.neg() * ctx.lambda_, None
 
 

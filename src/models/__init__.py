@@ -13,6 +13,7 @@ Canonical locations:
 from __future__ import annotations
 
 from importlib import import_module
+from typing import Any
 
 __all__ = [
     "VariantDNN",
@@ -23,7 +24,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "VariantDNN":
         return import_module("src.models.dnn_model").VariantDNN
     if name == "HybridEnsemble":

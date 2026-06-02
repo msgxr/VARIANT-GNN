@@ -1,4 +1,6 @@
 # src/data/schema.py
+from typing import Any
+
 import pandas as pd
 
 REQUIRED_COLUMNS = [
@@ -42,7 +44,7 @@ def validate_input_dataframe(df: pd.DataFrame) -> dict:
     Giriş CSV'sini şemaya göre doğrular.
     Returns: {'valid': bool, 'missing_cols': list, 'extra_cols': list, 'warnings': list}
     """
-    results = {"valid": True, "missing_cols": [], "extra_cols": [], "warnings": []}
+    results: dict[str, Any] = {"valid": True, "missing_cols": [], "extra_cols": [], "warnings": []}
 
     df_cols = set(df.columns)
     req_cols = set(REQUIRED_COLUMNS)

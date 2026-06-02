@@ -22,7 +22,7 @@ import platform
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 from src.utils.fingerprinting import file_fingerprint
 
@@ -149,4 +149,4 @@ def load_manifest(model_dir: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(f"manifest.json not found in {model_dir}")
     with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
+        return cast(dict, json.load(fh))

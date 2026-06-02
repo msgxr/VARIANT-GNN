@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, cast
 
 import numpy as np
 
@@ -90,7 +90,7 @@ class LIMEExplainer:
                 os.makedirs(os.path.dirname(output_html) or ".", exist_ok=True)
                 exp.save_to_file(output_html)
                 logger.info("LIME explanation saved → %s", output_html)
-            return exp
+            return cast(Optional[object], exp)
         except Exception as exc:
             logger.warning("LIME explain_instance failed: %s", exc)
             return None

@@ -11,7 +11,7 @@ class FHIRParser:
         self.data = json_data
 
     @classmethod
-    def from_file(cls, filepath: str):
+    def from_file(cls, filepath: str) -> "FHIRParser":
         with open(filepath, "r") as f:
             data = json.load(f)
         return cls(data)

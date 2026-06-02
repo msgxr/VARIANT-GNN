@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, cast
 
 import matplotlib
 
@@ -36,7 +36,7 @@ class SHAPExplainer:
 
     def __init__(
         self,
-        xgb_model,
+        xgb_model: Any,
         feature_names: Optional[List[str]] = None,
         training_data: Optional[np.ndarray] = None,
     ) -> None:
@@ -64,7 +64,7 @@ class SHAPExplainer:
         if self._explainer is None:
             return None
         try:
-            return self._explainer.shap_values(x)
+            return cast("np.ndarray | None", self._explainer.shap_values(x))
         except Exception as exc:
             logger.warning("SHAP explain_instance failed: %s", exc)
             return None

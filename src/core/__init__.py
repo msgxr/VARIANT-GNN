@@ -1,11 +1,12 @@
 """Core package exports with lazy loading to avoid import cycles."""
 
 from importlib import import_module
+from typing import Any
 
 __all__ = ["VariantGATv2GNN", "VariantDNN", "HybridEnsemble"]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "VariantDNN":
         return import_module("src.models.dnn_model").VariantDNN
     if name == "VariantGATv2GNN":

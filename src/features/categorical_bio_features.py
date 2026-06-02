@@ -88,7 +88,7 @@ def get_grantham_score(ref: str, alt: str) -> float:
     c1, p1, v1 = _GRANTHAM_CPV[r]
     c2, p2, v2 = _GRANTHAM_CPV[a]
     raw = (_GRANTHAM_ALPHA * (c1 - c2) ** 2 + _GRANTHAM_BETA * (p1 - p2) ** 2 + _GRANTHAM_GAMMA * (v1 - v2) ** 2) ** 0.5
-    return raw * _GRANTHAM_SCALE
+    return float(raw * _GRANTHAM_SCALE)
 
 
 GRANTHAM_PROPS = _GRANTHAM_CPV  # geriye dönük alias

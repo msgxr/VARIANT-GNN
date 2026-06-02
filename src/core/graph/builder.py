@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -407,7 +407,7 @@ class SampleKNNGraphBuilder:
 # ---------------------------------------------------------------------------
 
 
-def get_graph_builder(strategy: str = "sample_knn", **kwargs) -> "GraphBuilder | SampleKNNGraphBuilder":
+def get_graph_builder(strategy: str = "sample_knn", **kwargs: Any) -> "GraphBuilder | SampleKNNGraphBuilder":
     """
     Strateji adına göre bir GraphBuilder örneği döndür.
 

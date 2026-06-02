@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -64,11 +64,11 @@ def _build_gnn_loader(
 
 
 def _build_safe_sequence_tensors(
-    gnn_model,
+    gnn_model: Any,
     n_samples: int,
-    nuc_sequences,
-    aa_sequences,
-):
+    nuc_sequences: Any,
+    aa_sequences: Any,
+) -> Tuple[Any, Any]:
     """
     TD-006 fail-safe: multimodal GNN için sekans tensörlerini güvenle üret.
 
@@ -348,6 +348,7 @@ class InferencePipeline:
         cfg = self.cfg
         if self._ensemble is None or self._preprocessor is None:
             raise RuntimeError("Pipeline must be loaded first.")
+        assert self._preprocessor._imputer is not None
 
         # ── Panel one-hot encoding ──
         KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]

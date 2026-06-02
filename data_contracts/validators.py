@@ -13,7 +13,7 @@ class PredictInput(BaseModel):
     
     @field_validator('variants')
     @classmethod
-    def check_cols(cls, v):
+    def check_cols(cls, v: List[dict]) -> List[dict]:
         if not v:
             raise ValueError("Varyant listesi boş olamaz.")
         return v
@@ -27,7 +27,7 @@ class SubmissionOutput(BaseModel):
     uncertainty_score: float = Field(..., ge=0.0, le=1.0)
     expert_review_flag: bool
 
-def validate_dataframe(df: pd.DataFrame, model_class: type[BaseModel]):
+def validate_dataframe(df: pd.DataFrame, model_class: type[BaseModel]) -> None:
     """Helper to validate a pandas DataFrame against a Pydantic model."""
     try:
         data = df.to_dict(orient="records")

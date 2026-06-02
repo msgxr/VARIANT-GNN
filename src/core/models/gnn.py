@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import torch.nn as nn
 
 from src.core.gnn import VariantGATv2GNN
@@ -29,7 +31,7 @@ class FeatureGNN(nn.Module):
             dropout=dropout,
         )
 
-    def forward(self, x, edge_index, *args, **kwargs):
+    def forward(self, x: Any, edge_index: Any, *args: Any, **kwargs: Any) -> Any:
         return self.model(x, edge_index, *args, **kwargs)
 
 

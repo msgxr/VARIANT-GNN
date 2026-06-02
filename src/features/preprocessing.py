@@ -11,7 +11,7 @@ Graph edge information is derived from training-fold correlation only.
 from __future__ import annotations
 
 import logging
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, cast
 
 import numpy as np
 import torch
@@ -35,10 +35,9 @@ def _compute_signatures(ref_df: "object") -> dict:
     import pandas as _pd
 
     sigs: dict = {}
-    if not isinstance(ref_df, _pd.DataFrame):
-        ref_df = _pd.DataFrame(ref_df)
-    for col in ref_df.columns:
-        series = _pd.to_numeric(ref_df[col], errors="coerce")
+    df: Any = ref_df if isinstance(ref_df, _pd.DataFrame) else _pd.DataFrame(ref_df)
+    for col in df.columns:
+        series = _pd.to_numeric(df[col], errors="coerce")
         if series.notna().sum() < 3:
             continue
         q1, q3 = series.quantile(0.25), series.quantile(0.75)
@@ -104,7 +103,9 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
         # PerformanceWarning when iterating over hundreds of columns.
         n = len(X)
         nan_template = np.full(n, np.nan)
-        col_data = {col: (X[col].values if col in X.columns else nan_template.copy()) for col in self.target_columns}
+        col_data = {
+            col: (X[col].values if col in X.columns else nan_template.copy()) for col in (self.target_columns or [])
+        }
         out_df = pd.DataFrame(col_data, index=X.index)
 
         # 3: Coerce any object columns to numeric in one vectorised pass.
@@ -136,9 +137,9 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
                     col_medians = np.where(np.isnan(col_medians), 0.0, col_medians)
                     for i in range(arr.shape[1]):
                         arr[mask[:, i], i] = col_medians[i]
-            return arr
+            return cast(np.ndarray, arr)
 
-        return out_df.values
+        return cast(np.ndarray, out_df.values)
 
 
 class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
@@ -248,7 +249,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
     def __setstate__(self, state: dict) -> None:
         """Eski pickle'lardan yükleme sırasında eksik attribute'ları güvenli doldur."""
-        _defaults = {
+        _defaults: dict = {
             "use_bio_scoring": False,
             "_bio_transformer": None,
             "_aligner": ColumnAligner(),  # KRİTİK: yeni eklendi
@@ -396,7 +397,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # 4b. Eksiklik göstergelerini ekle (0pre'de ham X'ten yakalandı; SMOTE ÖNCESİ
         # eklenir ki sentetik satırlar için de interpolasyona girsin).
         if getattr(self, "_miss_indicators_train", None) is not None and len(self._miss_cols) > 0:
-            X_scaled = np.hstack([X_scaled, self._miss_indicators_train])
+            X_scaled = np.hstack([X_scaled, cast(np.ndarray, self._miss_indicators_train)])
             logger.info("Missing-indicator: +%d özellik (eksiklik deseni, §3.2 'missing≠0').", len(self._miss_cols))
 
         # 5. Biological Enrichment (impute+scale sonrası, SMOTE öncesi)
@@ -509,7 +510,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self.use_autoencoder and self._autoenc is not None:
             X_scaled = self._autoenc.transform(X_scaled)
 
-        return X_scaled
+        return cast(np.ndarray, X_scaled)
 
     def _fit_feature_selection(self, X: np.ndarray, y: Optional[np.ndarray]) -> np.ndarray:
         self._var_selector = VarianceThreshold(threshold=0.01)
@@ -524,7 +525,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         else:
             self._kb_selector = None
 
-        return X_var
+        return cast(np.ndarray, X_var)
 
     def _build_graph(self, X_scaled: np.ndarray) -> None:
         """Build feature-correlation graph from TRAINING data only."""

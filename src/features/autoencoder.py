@@ -8,7 +8,7 @@ inside fold preprocessing without data leakage.
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 import numpy as np
 import torch
@@ -144,7 +144,7 @@ class AutoEncoderTransformer(BaseEstimator, TransformerMixin):
         """Return state dict for serialisation."""
         if self._net is None:
             raise RuntimeError("Not fitted.")
-        return self._net.state_dict()
+        return cast(dict, self._net.state_dict())
 
     def load_encoder_state(self, state_dict: dict, input_dim: int) -> None:
         """Restore from saved state dict."""

@@ -14,6 +14,7 @@ Clinical_Flag is produced as a separate, audit-friendly column.
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import numpy as np
 
@@ -39,7 +40,7 @@ def _binary_entropy(p: np.ndarray) -> np.ndarray:
     """Shannon entropy of a Bernoulli(p) distribution, in bits."""
     p = np.clip(p, 1e-10, 1 - 1e-10)
     q = 1.0 - p
-    return -(p * np.log2(p) + q * np.log2(q))
+    return cast(np.ndarray, -(p * np.log2(p) + q * np.log2(q)))
 
 
 class TriageEngine:

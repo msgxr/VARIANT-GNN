@@ -23,7 +23,8 @@ import copy
 import logging
 from contextlib import nullcontext
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from pathlib import Path
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -95,7 +96,7 @@ class WeightedBCELoss(nn.Module):
         return F.cross_entropy(logits, targets, weight=self.weight)
 
 
-def _to_lgbm_frame(X):
+def _to_lgbm_frame(X: Any) -> Any:
     """Wrap numpy → DataFrame with stable column names so LightGBM fit/predict
     stay consistent and sklearn does not raise the 'feature names' UserWarning."""
     if isinstance(X, np.ndarray):
@@ -136,7 +137,7 @@ def _build_sample_graph(
     X: np.ndarray,
     y: Optional[np.ndarray],
     knn_k: int = 5,
-):
+) -> Any:
     """Build a cosine kNN sample graph; returns a single PyG Data object."""
     return preprocessor.build_sample_graph(X, y, k=knn_k)
 
@@ -159,7 +160,7 @@ def _tokenize_sequences(
 
 def _gatv2_epoch(
     model: VariantGATv2GNN,
-    data,
+    data: Any,
     optimizer: torch.optim.Optimizer,
     criterion: WeightedBCELoss,
     device: torch.device,
@@ -174,12 +175,12 @@ def _gatv2_epoch(
     loss = criterion(logits, data.y)
     loss.backward()
     optimizer.step()
-    return loss.item()
+    return float(loss.item())
 
 
 def _gatv2_eval(
     model: VariantGATv2GNN,
-    data,
+    data: Any,
     device: torch.device,
     nuc_ids: Optional[torch.Tensor] = None,
     aa_ids: Optional[torch.Tensor] = None,
@@ -347,7 +348,7 @@ class VariantTrainer:
         device: Optional[torch.device] = None,
         config_path: Optional[str] = None,
     ) -> None:
-        self.cfg = get_settings(config_path)
+        self.cfg = get_settings(Path(config_path) if config_path is not None else None)
         self.device = device or (
             torch.device("cuda") if torch.cuda.is_available() and self.cfg.device != "cpu" else torch.device("cpu")
         )
@@ -975,6 +976,7 @@ class VariantTrainer:
 
             if val_graph is not None:
                 preds, _ = _gatv2_eval(model, val_graph, self.device, nuc_ids=nuc_val_t, aa_ids=aa_val_t)
+                assert y_val is not None
                 val_f1 = float(f1_score(y_val, preds[: len(y_val)], average="binary", pos_label=1, zero_division=0))
                 epoch_entry["val_f1"] = round(val_f1, 4)
 
@@ -1124,8 +1126,8 @@ class VariantTrainer:
 
             if val_loader is not None:
                 preds, _ = _dnn_eval(model, val_loader, self.device)
-                y_val = [batch[1].numpy() for batch in val_loader]
-                y_val = np.concatenate(y_val)
+                y_val_parts = [batch[1].numpy() for batch in val_loader]
+                y_val = np.concatenate(y_val_parts)
                 val_f1 = float(f1_score(y_val, preds[: len(y_val)], average="binary", pos_label=1, zero_division=0))
                 if val_f1 > best_f1:
                     best_f1 = val_f1

@@ -1,3 +1,5 @@
+from typing import Any
+
 from .artifact_loader import ArtifactLoader
 from .external_validation_runner import ExternalValidationRunner
 from .prediction_schema import (
@@ -8,7 +10,7 @@ from .prediction_schema import (
 from .triage import ALL_FLAGS, TriageEngine
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "InferencePipeline":
         from src.api.pipeline import InferencePipeline  # lazy — döngüsel import önlenir
 

@@ -33,7 +33,7 @@ Kullanım:
 from __future__ import annotations
 
 import logging
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, cast
 
 import numpy as np
 
@@ -121,7 +121,7 @@ class RankAggregator:
         log_sum = np.zeros_like(probas[0], dtype=float)
         for i, p in enumerate(probas):
             log_sum += w[i] * np.log(np.clip(p, 1e-9, 1 - 1e-9))
-        return np.exp(log_sum)
+        return cast(np.ndarray, np.exp(log_sum))
 
     # ── Yardımcılar ──────────────────────────────────────────────────────────
 
@@ -137,7 +137,7 @@ class RankAggregator:
         mn, mx = x.min(), x.max()
         if mx - mn < 1e-12:
             return np.full_like(x, 0.5)
-        return (x - mn) / (mx - mn)
+        return cast(np.ndarray, (x - mn) / (mx - mn))
 
     def compare_with_weighted_avg(
         self,

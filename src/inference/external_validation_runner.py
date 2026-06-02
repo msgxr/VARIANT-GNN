@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -105,7 +105,7 @@ class ExternalValidationRunner:
             # Best-effort: use numeric columns only
             numeric_df = feat_df.select_dtypes(include="number")
             logger.warning("No feature_names.json found; using %d numeric columns.", numeric_df.shape[1])
-            return numeric_df.values.astype(float)
+            return cast(np.ndarray, numeric_df.values.astype(float))
 
         aligner = ColumnAligner(expected_columns=self._feature_names)
         aligned_df, report = aligner.apply(feat_df)
@@ -114,7 +114,7 @@ class ExternalValidationRunner:
 
         # Fill missing with 0 (safe default; imputer handles downstream)
         aligned_df = aligned_df.fillna(0.0)
-        return aligned_df.values.astype(float)
+        return cast(np.ndarray, aligned_df.values.astype(float))
 
     # ------------------------------------------------------------------
     def run(

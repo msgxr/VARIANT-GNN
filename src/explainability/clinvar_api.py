@@ -25,6 +25,7 @@ tarafından ihlal EDİLMEMEKTEDİR.
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import requests
 
@@ -69,7 +70,7 @@ def _clinvar_search(term: str, retmax: int = 1) -> list[str]:
         timeout=8,
     )
     resp.raise_for_status()
-    return resp.json().get("esearchresult", {}).get("idlist", [])
+    return cast("list[str]", resp.json().get("esearchresult", {}).get("idlist", []))
 
 
 def _clinvar_summary(uid: str) -> dict:
@@ -81,7 +82,7 @@ def _clinvar_summary(uid: str) -> dict:
     )
     resp.raise_for_status()
     result = resp.json().get("result", {})
-    return result.get(uid, {})
+    return cast("dict", result.get(uid, {}))
 
 
 def fetch_clinvar_info(query: str) -> dict:

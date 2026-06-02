@@ -125,6 +125,7 @@ def plot_calibration(
     plt.plot([0, 1], [0, 1], "k--", lw=0.8, label="Perfect calibration")
 
     if report.calibration_fraction_pos is not None and len(report.calibration_fraction_pos) > 0:
+        assert report.calibration_mean_pred is not None
         plt.plot(
             report.calibration_mean_pred,
             report.calibration_fraction_pos,
@@ -134,6 +135,7 @@ def plot_calibration(
         )
 
     if cal_frac_pos is not None and len(cal_frac_pos) > 0:
+        assert cal_mean_pred is not None
         plt.plot(
             cal_mean_pred,
             cal_frac_pos,

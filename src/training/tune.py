@@ -7,7 +7,7 @@ Preprocessing runs inside each Optuna trial to avoid leakage.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import numpy as np
 import optuna
@@ -95,4 +95,4 @@ class ModelTuner:
         )
         best = study.best_params
         logger.info("Best Optuna trial | F1=%.4f | params=%s", study.best_value, best)
-        return best
+        return cast(Dict[str, Any], best)

@@ -25,7 +25,7 @@ Panel bazlı eşik: Her panel (General / Hereditary_Cancer / PAH / CFTR) için
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, cast
 
 import numpy as np
 import torch
@@ -55,10 +55,10 @@ def _dnn_predict_proba(
     model.eval()
     with torch.no_grad():
         logits = model(torch.FloatTensor(X).to(device))
-        return F.softmax(logits, dim=1).cpu().numpy()
+        return cast(np.ndarray, F.softmax(logits, dim=1).cpu().numpy())
 
 
-def _build_knn_graph(X_scaled: np.ndarray, knn_k: int):
+def _build_knn_graph(X_scaled: np.ndarray, knn_k: int) -> Any:
     """X_scaled üzerinde k-NN örnek grafiği kurar (PyG Data nesnesi)."""
     from src.core.graph.builder import SampleKNNGraphBuilder
 
@@ -199,6 +199,7 @@ class HybridEnsemble:
         knn_k = getattr(cfg.gnn, "knn_k", 10)
         data = _build_knn_graph(X_scaled, knn_k)
 
+        assert self.gnn is not None
         model = self.gnn.to(self.device)
         model.eval()
         data = data.to(self.device)
@@ -212,7 +213,7 @@ class HybridEnsemble:
             logits = model(data.x, data.edge_index, **kwargs)
             probs = F.softmax(logits, dim=1).cpu().numpy()
 
-        return probs
+        return cast(np.ndarray, probs)
 
     # ------------------------------------------------------------------
     # Birleştirme
@@ -243,7 +244,7 @@ class HybridEnsemble:
                 try:
                     meta_X = np.column_stack(cols)  # (N, n_models)
                     meta_proba = self.meta_learner.predict_proba(meta_X)  # (N, 2)
-                    return meta_proba
+                    return cast(np.ndarray, meta_proba)
                 except Exception as exc:
                     logger.warning("Meta-öğrenici tahmin başarısız (%s) — ağırlıklı ortalamaya geçildi.", exc)
 
@@ -274,7 +275,7 @@ class HybridEnsemble:
                 active_names,
             )
 
-        return sum((w / total_w) * p for p, w in available)
+        return cast(np.ndarray, sum((w / total_w) * p for p, w in available))
 
     # ------------------------------------------------------------------
     # Tahmin API'si
@@ -456,12 +457,14 @@ class HybridEnsemble:
             except Exception:
                 thr = 0.5
             preds = (blended[:, 1] >= thr).astype(int)
-            return -f1_score(
-                y_val,
-                preds,
-                average="binary",
-                pos_label=1,
-                zero_division=0,
+            return -float(
+                f1_score(
+                    y_val,
+                    preds,
+                    average="binary",
+                    pos_label=1,
+                    zero_division=0,
+                )
             )
 
         x0 = np.array([self.weights[i] for i in avail_idx])

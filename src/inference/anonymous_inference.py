@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -163,7 +163,7 @@ def detect_panel_column(df: pd.DataFrame) -> Optional[str]:
         match_count = sum(1 for v in unique if v in KNOWN_PANEL_VALUES)
         if match_count / len(unique) >= 0.60:
             logger.info("Panel column auto-detect: '%s' (%d/%d values match)", col, match_count, len(unique))
-            return col
+            return cast(Optional[str], col)
     return None
 
 
@@ -430,7 +430,7 @@ class AnonymousDataAdapter:
 
 def predict_anonymous_csv(
     csv_path: str | Path,
-    pipeline,  # InferencePipeline (loaded)
+    pipeline: Any,  # InferencePipeline (loaded)
     output_csv: Optional[str | Path] = None,
 ) -> pd.DataFrame:
     """

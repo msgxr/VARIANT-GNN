@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -78,8 +78,8 @@ class TTAPredictor:
 
     def predict(
         self,
-        ensemble,
-        preprocessor,
+        ensemble: Any,
+        preprocessor: Any,
         X: np.ndarray,
         feature_stds: Optional[np.ndarray] = None,
         nuc_seqs: Optional[list] = None,
@@ -168,8 +168,8 @@ class TTAPredictor:
 
     def predict_with_threshold(
         self,
-        ensemble,
-        preprocessor,
+        ensemble: Any,
+        preprocessor: Any,
         X: np.ndarray,
         threshold: Optional[float] = None,
         feature_stds: Optional[np.ndarray] = None,
@@ -184,8 +184,8 @@ class TTAPredictor:
 
 
 def tta_predict_dataframe(
-    ensemble,
-    preprocessor,
+    ensemble: Any,
+    preprocessor: Any,
     df: pd.DataFrame,
     feature_columns: list,
     n_augmentations: int = 10,

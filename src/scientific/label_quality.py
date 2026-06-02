@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import f1_score
@@ -193,7 +193,7 @@ class ConfidentLearner:
         self,
         noise_threshold: float = 0.45,
         cv_folds: int = 5,
-        base_estimator=None,
+        base_estimator: Any = None,
     ) -> None:
         self.noise_threshold = noise_threshold
         self.cv_folds = cv_folds
@@ -234,7 +234,7 @@ class ConfidentLearner:
 
         return prob_matrix
 
-    def _make_estimator(self):
+    def _make_estimator(self) -> Any:
         """Return a fresh copy of the base estimator."""
         if self._base_estimator is not None:
             from sklearn.base import clone

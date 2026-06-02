@@ -130,7 +130,7 @@ def load_csv(
         try:
             from src.data.competition_sanitizer import CompetitionSanitizer
 
-            _san = CompetitionSanitizer(reports_dir=str(get_settings().paths.reports_dir))
+            _san = CompetitionSanitizer(reports_dir=Path(str(get_settings().paths.reports_dir)))
             if sanitize == "inference":
                 df, _lr = _san.sanitize_inference(df)
             else:

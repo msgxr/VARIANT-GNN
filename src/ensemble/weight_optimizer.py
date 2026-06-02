@@ -9,6 +9,7 @@ held-out validation set.  The blind/test set is NEVER touched here.
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import numpy as np
 from scipy.optimize import minimize
@@ -32,7 +33,7 @@ def _f1_score_binary(y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 
 def _softmax(x: np.ndarray) -> np.ndarray:
     """Numerically stable softmax to ensure weights sum to 1 and are positive."""
     e = np.exp(x - x.max())
-    return e / e.sum()
+    return cast(np.ndarray, e / e.sum())
 
 
 def optimize_weights(

@@ -277,4 +277,4 @@ def get_grantham_score(ref: str, alt: str) -> float:
     alpha, beta, gamma = 1.833, 0.1018, 0.00039
 
     d = (alpha * (p1[0] - p2[0]) ** 2 + beta * (p1[1] - p2[1]) ** 2 + gamma * (p1[2] - p2[2]) ** 2) ** 0.5
-    return d
+    return float(d)

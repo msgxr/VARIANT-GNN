@@ -23,7 +23,7 @@ import json
 import logging
 import pickle
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class ArtifactLoader:
         path = self.model_dir / "feature_names.json"
         if path.exists():
             with open(path, encoding="utf-8") as fh:
-                return json.load(fh)
+                return cast(Optional[list[str]], json.load(fh))
         # XGB booster fallback
         try:
             from src.utils.serialization import ModelStore

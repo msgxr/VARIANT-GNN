@@ -15,7 +15,7 @@ Usage pattern:
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 from sklearn.calibration import calibration_curve
@@ -43,7 +43,7 @@ class EnsembleCalibrator:
         if method not in ("isotonic", "sigmoid"):
             raise ValueError(f"Unknown calibration method: {method!r}. Use 'isotonic' or 'sigmoid'.")
         self.method = method
-        self._calibrator = None
+        self._calibrator: Any = None
         self._is_fitted = False
 
     # ------------------------------------------------------------------

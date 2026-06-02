@@ -6,7 +6,7 @@ import pandas as pd
 class BenchmarkReporter:
     """Akademik standartlarda karşılaştırmalı performans raporları sunar."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Literatürdeki popüler araçların (State-of-the-art) yaklaşık performans metrikleri
         # Kaynak: Literatür taraması (ClinVar/gnomAD benchmark çalışmaları)
         self.sota_benchmarks = {

@@ -10,21 +10,21 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 
 def _utf8_stdout() -> io.TextIOWrapper | io.TextIOBase:
     """UTF-8 stream over stdout — safe on Windows Turkish locale (cp1254)."""
     # Streamlit overrides stdout; re-wrapping it causes "I/O operation on closed file"
     if "streamlit" in sys.modules:
-        return sys.stdout
+        return cast("io.TextIOWrapper | io.TextIOBase", sys.stdout)
 
     try:
         if hasattr(sys.stdout, "buffer"):
             return io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
     except (AttributeError, io.UnsupportedOperation):
         pass
-    return sys.stdout
+    return cast("io.TextIOWrapper | io.TextIOBase", sys.stdout)
 
 
 def setup_logging(
