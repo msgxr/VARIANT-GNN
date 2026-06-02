@@ -4,7 +4,7 @@
 **Project:** VARIANT-GNN | **Team:** XYRA3 | **ID:** 909249  
 **Competition:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
 **PDR Deadline:** 29.06.2026, 17:00 | **Final:** Ağustos–Eylül 2026, Şanlıurfa  
-**Last Updated:** 2026-05-24
+**Last Updated:** 2026-06-02 (sızıntısız retrain; tüm sayılar RESULTS_CANONICAL.json)
 
 ---
 
@@ -26,36 +26,46 @@ XGBoost (30%) + LightGBM (30%) + VariantGATv2GNN/GATv2Conv (25%) + DNN (15%)
 
 ### Pipeline (All preprocessing fit on TRAIN FOLD only — leakage-safe)
 ```
-Raw features → Median Imputation → RobustScaler → SelectKBest(k=35)
-→ AutoEncoder(43→16) → SMOTE(train only) → Cosine k-NN Graph(k=10)
+Raw → ColumnAligner → CategoricalBioFeaturizer (ACMG bio) → Median Imputation
+→ RobustScaler → SMOTE(train only) → Cosine k-NN Graph(k=10)
+(SelectKBest(35)+AutoEncoder REMOVED — cost ~5.3pp; full 343 features kept)
+→ OOF-stacking meta-learner (Wolpert)
 ```
 
 ### Evaluation
 ```
-Split: 80/20 hold-out + Stratified 5-Fold CV | random_state=42
-Calibration: 15% held-out from training data
+Split: GROUP-AWARE 80/20 hold-out by Variant_ID + StratifiedGroupKFold 5-Fold | random_state=42
+Leakage guard: 0 variants straddle train/test
+Calibration: 15% held-out from training data (isotonic)
 Training: python main.py --mode train --config configs/pdr.yaml
-Prediction: python submission/predict.py --input <file>
+Prediction: python main.py --mode predict --test_file <file>
 ```
 
 ---
 
-## 3. VERIFIED PERFORMANCE (Real Competition Data — 2026-05-20)
+## 3. VERIFIED PERFORMANCE (Real Competition Data — 2026-06-02, canonical: RESULTS_CANONICAL.json)
 
 ### Overall
-| CV F1 | Test F1 | MCC | PR-AUC | ROC-AUC | Recall | Threshold |
-|---|---|---|---|---|---|---|
-| 0.8779 ± 0.0062 | **0.8969** | 0.5863 | 0.9294 | 0.8673 | 0.9725 | 0.241 |
+⭐ **Jüri beklentisi (dengeli §3.2) = balanced Binary F1 = 0.8134 ± 0.0103.** İç ayrım gücü aşağıda:
 
-### Panel Results
-| Panel | Data Column | F1 | MCC | Threshold |
-|---|---|---|---|---|
-| MASTER | General | 0.8872 | 0.507 | 0.241 |
-| KANSER | Hereditary_Cancer | 0.8960 | 0.649 | 0.281 |
-| PAH | PAH | 0.9556 | 0.556 | 0.138 |
-| CFTR | CFTR | 0.9524 | 0.674 | 0.108 |
+| CV F1 (OOF-stacking) | Test F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall | Threshold |
+|---|---|---|---|---|---|---|---|
+| 0.8936 ± 0.0004 | **0.8969** | 0.5863 | 0.9114 | 0.8398 | 0.8984 | 0.8953 | **0.6831 (global)** |
 
-**PSR Pilot (ClinVar EP — NOT competition data):** MCC=0.892, F1=~0.945. Drop explained in PDR §4.2.
+*(fold-CV bileşeni: 0.8779 ± 0.0062). ECE=0.0755, Brier=0.1197.*
+
+### Panel Results (test, global θ=0.6831)
+| Panel | Data Column | F1 | MCC |
+|---|---|---|---|
+| MASTER | General | 0.8865 | 0.5732 |
+| KANSER | Hereditary_Cancer | 0.944 | 0.7985 |
+| PAH | PAH | 0.9077 | 0.39 |
+| CFTR | CFTR | 0.9412 | — (n=18, tanımsız) |
+
+Panel eşikleri (opt-in, jüri kullanmaz): General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922.
+
+**WITHDRAWN:** Önceki 0.8980/0.9269, MCC 0.5356, θ=0.241 leakage-şişikti — geri çekildi (reports/leakage_quantification.json).
+**PSR Pilot (ClinVar EP — NOT competition data):** MCC=0.892, F1=~0.945 → gerçek MCC=0.5863. Drop explained in PDR §4.2.
 
 ---
 
@@ -95,7 +105,7 @@ Prediction: python submission/predict.py --input <file>
 | BUG-01 | §1.2 | REVEL citation [3]→[2] | ✅ CLOSED | 2026-05-24 |
 | BUG-02 | §1.2 | EVE citation [5]→[9] | ✅ CLOSED | 2026-05-24 |
 | BUG-03 | §1.2 | GATv2 citation [7]→[8] | ✅ CLOSED | 2026-05-24 |
-| BUG-04 | §3.2 | θ=0.01 → θ=0.6831 | ✅ CLOSED | 2026-05-24 |
+| BUG-04 | §3.2 | θ=0.01 → θ=**0.6831** (0.241 sonradan supersede) | ✅ CLOSED | 2026-06-02 |
 | BUG-05 | §3.1 | Figure paths dead | ✅ CLOSED | 2026-05-24 |
 | BUG-06 | §3.1 | Şekil 2-5 path refs | ✅ CLOSED | 2026-05-24 |
 | BUG-07 | Header | Date 15 Mayıs → 20 Mayıs | ✅ CLOSED | 2026-05-24 |
@@ -107,7 +117,7 @@ Prediction: python submission/predict.py --input <file>
 
 **All known bugs closed as of 2026-05-24. PDR ready for final review.**
 
-> **NOTE — jury_predictions.csv:** `submission/teknofest/jury_predictions.csv` is synthetic placeholder (VAR_T IDs, all-label-1 output). Real submission file must be regenerated via `python submission/predict.py --input <AL_test.csv>` when jury provides actual blind test data. The prediction pipeline is correct — it reads `models/threshold.json` (θ=0.6831).
+> **NOTE — jury_predictions.csv:** Sentetik placeholder dosyası **silindi** (2026-06-02 pull). Gerçek submission, jüri kör test verisini sağladığında `python main.py --mode predict --test_file <AL_test.csv>` ile üretilir. Tahmin pipeline'ı `models/threshold.json` (global **θ=0.6831**, canonical) okur.
 
 ---
 
@@ -175,7 +185,7 @@ Prediction: python submission/predict.py --input <file>
 
 ```
 Competition rule → Şartname §X.X or official template
-Model result → reports/cv_report.json (2026-05-20)
+Model result → RESULTS_CANONICAL.json → reports/cv_report.json (2026-06-02)
 Code architecture → src/core/gnn.py, src/core/pipeline.py
 PSR data → .claude/skills/psr-editor/SKILL.md (hakem breakdown)
 PDR format → .claude/skills/report-template-checker/SKILL.md

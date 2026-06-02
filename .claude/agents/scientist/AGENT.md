@@ -34,15 +34,15 @@ Activate when:
 
 ### Issue 1: PSR vs Competition Data Discrepancy
 PSR pilot: MCC=0.892, F1=0.945 (ClinVar Expert Panel — clean, curated)  
-Competition actual: MCC=0.406, F1=0.8706 (broader, noisier variants)  
+Competition actual (canonical): MCC=0.5863, F1=0.8969 (broader variants + sızıntısız group-aware eval)  
 **This gap MUST be explained scientifically in PDR. It is not a failure — it reflects data difficulty.**  
 Acceptable explanation: "Pilot data consisted exclusively of high-confidence ClinVar Expert Panel variants (3-4★), while competition data includes harder boundary-region variants with greater ambiguity."
 
-### Issue 2: PAH and CFTR MCC Crisis
-PAH MCC=0.556, CFTR MCC=0.674 — acceptable given panel sizes  
-Binary F1: PAH=0.9556, CFTR=0.9524 — high sensitivity confirmed  
-Panel-specific thresholds (PAH=0.138, CFTR=0.108) optimized for binary F1  
-**MASTER MCC=0.507: MASTER panel has 2.75:1 imbalance — documented in PDR §4.2**
+### Issue 2: PAH and CFTR MCC (küçük-n)
+PAH MCC=0.39 (n_benign=62), CFTR MCC tanımsız (test n=18, dejenere) — küçük-n etkisi, model başarısızlığı değil  
+Binary F1: PAH=0.9077, CFTR=0.9412 — yüksek  
+Karar: GLOBAL θ=0.6831 (canonical); panel eşikleri opt-in  
+**MASTER (General) MCC=0.5732: 2.75:1 imbalance — documented in PDR §4.2**
 
 ### Issue 3: GNN Architecture Name Inconsistency
 PSR: "VariantSAGEGNN / GraphSAGE"  
@@ -113,7 +113,7 @@ When reviewing experimental results:
 - Is F1 computed with `average='binary'`?
 - Are precision and recall both reported?
 - Is confusion matrix present?
-- Is threshold selection justified (global=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108)?
+- Is threshold selection justified (GLOBAL θ=0.6831 balanced-OOF, canonical; panel thresholds opt-in)?
 
 ### Step 2: Panel Analysis
 - Are all 4 panels analyzed separately?

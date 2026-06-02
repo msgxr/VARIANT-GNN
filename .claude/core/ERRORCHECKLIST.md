@@ -25,7 +25,7 @@
 - [ ] Accuracy tek başına ana metrik olarak sunulmadı
 - [ ] MCC ve PR-AUC destekleyici metrik olarak mevcut
 - [ ] Her panel için ayrı F1 skoru raporlandı
-- [ ] Panel eşik değerleri doğru: General=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108
+- [ ] GLOBAL karar eşiği θ=0.6831 (canonical, models/threshold.json); panel eşikleri opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
 - [ ] Eşik değerleri uygulandıktan SONRA metrik hesaplandı
 
 **FAIL tetikleyici:** Yanlış F1 formülü, Accuracy birincil, eksik panel metriği
@@ -107,8 +107,8 @@
 - [ ] environment.yml eksiksiz
 - [ ] Eğitim tek komutla: `python main.py --mode train --config configs/pdr.yaml`
 - [ ] Tahmin tek komutla: `python submission/predict.py --input <dosya>`
-- [ ] 5-seed stabilite std=±0.0013 belgelenmiş
-- [ ] Model artifact'ları mevcut (Şeyma'nın makinesi — jüri öncesi doğrula)
+- [ ] 5-seed stabilite CV F1=0.8738±0.0034 belgelenmiş
+- [ ] Model artifact'ları repoda mevcut (<7MB, REPRODUCE.md — jüri veri olmadan tahmin üretebilir)
 
 **FAIL tetikleyici:** Non-deterministik çalışma, eksik requirements, çoklu adım gerektiren çalıştırma
 

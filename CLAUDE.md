@@ -47,7 +47,7 @@ These rules apply in every session without exception:
 
 8. **Reproducibility red line.** Every implementation decision is evaluated against: "Can a jury member reproduce this from scratch?" Seed, environment, single-command execution are non-negotiable.
 
-9. **Scientific integrity over convenience.** Do not soften critical findings. Do not suppress inconvenient results. PSR vs actual result gap (MCC 0.892→0.406) must be explained, not hidden.
+9. **Scientific integrity over convenience.** Do not soften critical findings. Do not suppress inconvenient results. PSR vs actual result gap (MCC 0.892→0.5863, canonical) must be explained, not hidden.
 
 10. **Clinical ethics enforced.** Never write or suggest language implying the model makes clinical diagnoses, recommends treatment, or replaces physician judgment.
 

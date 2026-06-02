@@ -105,14 +105,14 @@ Rejection: Lise/EKG templates, 2024 templates, third-party PDR guides, blog summ
 | BUG-01 | §1.2 Kaynakça | REVEL citation is [3] | Should be **[2]** | ❌ Open |
 | BUG-02 | §1.2 Kaynakça | EVE citation is [5] | Should be **[9]** | ❌ Open |
 | BUG-03 | §1.2 Kaynakça | GATv2 citation is [7] | Should be **[8]** | ❌ Open |
-| BUG-04 | §3.2 Threshold | θ = 0.01 written in text | θ = **0.241** correct | ❌ Open |
-| BUG-05 | §3.1 Figure paths | `reports/roc_curves.png` | `reports/figures/pdr/05_roc_curves.png` | ❌ Open |
-| BUG-06 | §3.1 Şekil 2-5 | All figure paths dead | Verify each path under `reports/figures/pdr/` | ❌ Open |
-| BUG-07 | Header/Cover | Training date: 15 Mayıs | **20 Mayıs 2026** | ❌ Open |
-| BUG-08 | §4.2 equivalent | MCC discrepancy PSR vs PDR | Explicit comparison table + explanation required | ❌ Open |
-| BUG-09 | Yöntem §2 | PSR says SAGEConv | PDR must say **GATv2Conv / VariantGATv2GNN** | ❌ Open |
+| BUG-04 | §3.2 Threshold | θ = 0.01 written in text | θ = **0.6831** (canonical; 0.241 superseded) | ✅ Closed |
+| BUG-05 | §3.1 Figure paths | `reports/roc_curves.png` | `reports/figures/pdr/05_roc_curves.png` | ✅ Closed |
+| BUG-06 | §3.1 Şekil 2-5 | All figure paths dead | Verify each path under `reports/figures/pdr/` | ✅ Closed |
+| BUG-07 | Header/Cover | Training date | **2 Haziran 2026** (sızıntısız retrain) | ✅ Closed |
+| BUG-08 | §4.2 equivalent | MCC discrepancy PSR vs PDR | Comparison table (0.892→0.5863) present | ✅ Closed |
+| BUG-09 | Yöntem §2 | PSR says SAGEConv | PDR says **GATv2Conv / VariantGATv2GNN** | ✅ Closed |
 
-**All 9 bugs must be CLOSED before PDR submission. Any open bug = NO-GO.**
+**Tüm BUG'lar kapalı (2026-06-02). Yeni NO-GO koşulu: herhangi bir geri çekilmiş sayı (0.8980/0.9269/0.5356/θ=0.241) PDR'de güncel iddia olarak görünürse → `scripts/check_results_consistency.py` FAIL.**
 
 ---
 
@@ -163,17 +163,17 @@ For each bug:
 
 ### Step 5 — Panel Completeness Check
 ```
-□ MASTER: F1=0.8872, MCC=0.507, PR-AUC=? — all reported?
-□ KANSER: F1=0.8960, MCC=0.649, PR-AUC=? — all reported?
-□ PAH: F1=0.9556, MCC=0.556, PR-AUC=? — all reported?
-□ CFTR: F1=0.9524, MCC=0.674, PR-AUC=? — all reported?
-□ Panel-specific thresholds: General=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108
+□ MASTER: F1=0.8865, MCC=0.5732, PR-AUC=0.9102 — all reported?
+□ KANSER: F1=0.944, MCC=0.7985, PR-AUC=0.9393 — all reported?
+□ PAH: F1=0.9077, MCC=0.39, PR-AUC=0.8843 — all reported?
+□ CFTR: F1=0.9412, MCC=— (n=18 tanımsız), PR-AUC=1.0 — all reported?
+□ Global θ=0.6831 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
 ```
 
 ### Step 6 — PSR Bridge Check
 ```
 □ GATv2Conv name: correct in PDR throughout? (no SAGEConv anywhere)
-□ MCC discrepancy (pilot 0.892 vs real 0.536): explained with comparison table?
+□ MCC discrepancy (pilot 0.892 vs real 0.5863): explained with comparison table?
 □ §4.4 Explainability gap: SHAP waterfall + GNNExplainer present?
 □ §4.5 Technical Evolution gap: experiment log + ablation present?
 □ §5.1 Architecture: 5×4 model comparison table present?

@@ -50,36 +50,41 @@ Monitor official announcements for any metric change before PDR submission.
 
 ---
 
-## Verified Model Performance (Real Competition Data — 2026-05-20)
+## Verified Model Performance (Real Competition Data — 2026-06-02, CANONICAL: RESULTS_CANONICAL.json)
 
 ### Overall Test Set
 
+⭐ **Jüri beklentisi (dengeli §3.2) = balanced Binary F1 = 0.8134 ± 0.0103.** Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür (jüri skoru değil).
+
 | Metric | Value | Status |
 |---|---|---|
-| CV F1 (5-fold mean) | **0.8779 ± 0.0062** | Primary declared metric |
-| CV std (5 seeds) | ±0.0013 | Stability confirmed |
-| Test F1 (hold-out) | **0.8969** | Final evaluation |
-| MCC | **0.5863** | Overall |
-| PR-AUC | **0.9294** | |
-| ROC-AUC | **0.8673** | |
-| Recall | **0.9725** | High sensitivity (Patojenik-first) |
-| Global threshold | **0.241** | Calibration-set optimized |
+| CV F1 (OOF-stacking nested) | **0.8936 ± 0.0004** | Primary declared metric |
+| CV F1 (fold-CV component) | 0.8779 ± 0.0062 | Auxiliary |
+| CV std (5 seeds) | ±0.0034 | Stability confirmed (0.8738 mean) |
+| Test F1 (hold-out) | **0.8969** | Internal discrimination |
+| MCC | **0.5863** | Overall (P/R ile tutarlı) |
+| PR-AUC | **0.9114** | |
+| ROC-AUC | **0.8398** | |
+| Precision / Recall | **0.8984 / 0.8953** | Balanced |
+| Brier / ECE | **0.1197 / 0.0755** | |
+| Global threshold | **0.6831** | balanced-OOF F1-optimal (canonical) |
 
-### Panel-Specific Results (Test Set)
+> ⚠️ WITHDRAWN: 0.8980/0.9269, MCC 0.5356, θ=0.241 were leakage-inflated → retracted (reports/leakage_quantification.json).
 
-| Panel | Label in Data | F1 | MCC | PR-AUC | Threshold | Risk Notes |
+### Panel-Specific Results (Test Set, global θ=0.6831)
+
+| Panel | Label in Data | F1 | MCC | PR-AUC | Opt-in θ | Risk Notes |
 |---|---|---|---|---|---|---|
-| MASTER | General | **0.8872** | 0.507 | — | 0.241 | Class imbalance 2.75:1 |
-| KANSER | Hereditary_Cancer | **0.8960** | 0.649 | — | 0.281 | Low N, overfitting risk |
-| PAH | PAH | **0.9556** | 0.556 | — | 0.138 | Single-gene clustering |
-| CFTR | CFTR | **0.9524** | 0.674 | — | 0.108 | Smallest (70 train, 30 test) |
+| MASTER | General | **0.8865** | 0.5732 | 0.9102 | 0.404 | Class imbalance 2.75:1 |
+| KANSER | Hereditary_Cancer | **0.944** | 0.7985 | 0.9393 | 0.3695 | En dengeli, en iyi MCC |
+| PAH | PAH | **0.9077** | 0.39 | 0.8843 | 0.3203 | n_benign=62 → MCC küçük-n etkisi |
+| CFTR | CFTR | **0.9412** | — | 1.0 | 0.1922 | n=18 test → MCC/ROC tanımsız |
 
-**⚠️ If any claimed metric value differs from this table → READ SOURCE FILE FIRST before proceeding.**  
-Source: `reports/cv_report.json` (produced 2026-05-20, Şeyma's machine)
+**⚠️ If any claimed metric value differs from this table → READ RESULTS_CANONICAL.json FIRST before proceeding.**  
+Source: `reports/cv_report.json` → `RESULTS_CANONICAL.json` (2026-06-02). Panel eşikleri opt-in; jüri global θ=0.6831 kullanır.
 
 ### CFTR Sensitivity Warning
-With 30 test samples, 1 prediction error = **~3.3% F1 change**.  
-Threshold 0.108 is very aggressive — any code change touching threshold must re-verify CFTR F1.
+Test hold-out n=18 → 1 prediction error = large F1 swing; MCC/ROC-AUC tanımsız (degenerate). F1/precision/recall anlamlıdır.
 
 ---
 
@@ -118,11 +123,12 @@ WRONG (any of these = leakage):
 
 | Component | File | Expected Fit Point |
 |---|---|---|
-| `RobustScaler` | `src/core/pipeline.py` | Inside CV fold, train fold only |
-| `SimpleImputer` (median) | `src/core/pipeline.py` | Inside CV fold, train fold only |
-| `SelectKBest` (k=35) | `src/core/pipeline.py` | Inside CV fold, train fold only |
-| `AutoEncoder` (43→16) | `src/core/pipeline.py` or `gnn.py` | Inside CV fold, train fold only |
-| `SMOTE` | `src/core/pipeline.py` | Inside CV fold, AFTER split |
+| `ColumnAligner` | `src/data/column_aligner.py` | Train schema reference |
+| `CategoricalBioFeaturizer` | `src/features/categorical_bio_features.py` | Stateless (deterministic, leakage-free) |
+| `RobustScaler` | `src/features/preprocessing.py` | Inside CV fold, train fold only |
+| `SimpleImputer` (median) | `src/features/preprocessing.py` | Inside CV fold, train fold only |
+| `SMOTE` | `src/features/preprocessing.py` | Inside CV fold, AFTER split, train only |
+| ~~SelectKBest / AutoEncoder~~ | — | **REMOVED** (cost ~5.3pp; full 343 features kept) |
 
 ### Calibration Set Rule
 
@@ -241,12 +247,16 @@ git ls-files | grep -E "\.(csv|tsv|vcf|xlsx)$"
 
 ## Panel Data Reference
 
-| Panel | Train (Pat/Ben) | Test (Pat/Ben) | Risk Level |
+**Fiili veri (data/train_variants.csv, 3802 satır / 3224 tekil varyant):**
+
+| Panel | Toplam (Pat/Ben) | Test hold-out (n) | Risk Level |
 |---|---|---|---|
-| MASTER / General | 1500 / 1500 | 1000 / 1000 | Low — balanced, large |
-| KANSER / Hereditary_Cancer | 200 / 200 | 100 / 100 | Medium — small N, gene-specific |
-| PAH | 200 / 200 | 100 / 100 | Medium — single-gene clustering |
-| CFTR | 70 / 70 | 30 / 30 | HIGH — 1 error = 3.3% F1 impact |
+| MASTER / General | 2931 (2149/782) | 582 | Class imbalance 2.75:1 |
+| KANSER / Hereditary_Cancer | 388 (268/120) | 86 | Medium — small N |
+| PAH | 372 (310/62) | 76 | n_benign=62 → MCC küçük-n |
+| CFTR | 111 (90/21) | 18 | HIGH — MCC/ROC tanımsız |
+
+*(Şartname-nominal tasarım: General 3000/2000, KANSER 400/200, PAH 400/200, CFTR 140/60 — fiili veriyle karıştırma.)*
 
 ---
 
@@ -258,8 +268,8 @@ git ls-files | grep -E "\.(csv|tsv|vcf|xlsx)$"
 □ All 4 panels reported separately?
 □ Scaler fit on train fold only?
 □ Imputer fit on train fold only?
-□ SelectKBest fit on train fold only?
-□ AutoEncoder fit on train fold only?
+□ CategoricalBioFeaturizer deterministic (no test fit)?
+□ Group-aware split (Variant_ID) — 0 straddle?
 □ SMOTE after split, inside CV loop only?
 □ Calibration set sourced from training data only?
 □ Test labels not in training?

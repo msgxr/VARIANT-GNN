@@ -1,7 +1,7 @@
 # 05_data_and_metric_rules.md — Veri ve Metrik Kuralları
 
 **Kaynak:** TEKNOFEST 2026 Şartnamesi (Türkçe v4)  
-**Versiyon:** 2026-05-24
+**Versiyon:** 2026-06-02 (canonical: RESULTS_CANONICAL.json)
 
 ---
 
@@ -15,7 +15,7 @@ pos_label = 1 = Patojenik
 ```
 
 - Yanlış Negatif (FN) klinik açıdan yanlış Pozitiften (FP) daha ağırdır
-- Bu nedenle düşük eşik stratejisi → yüksek Recall tercih edildi
+- Karar eşiği, jüri §3.2 setinin dengeli (50/50) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.6831**); precision (0.8984) ve recall (0.8953) dengelidir
 - Test seti değerlendirmesi jüri tarafından yapılır
 
 ---
@@ -32,26 +32,33 @@ pos_label = 1 = Patojenik
 
 ---
 
-## Mevcut Model Sonuçları (Gerçek Yarışma Verisi — 2026-05-20)
+## Mevcut Model Sonuçları (Gerçek Yarışma Verisi — 2026-06-02, canonical)
+
+⭐ **Jüri beklentisi (dengeli §3.2):** balanced Binary F1 = **0.8134 ± 0.0103** (θ=0.6831). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
 
 | Metrik | Değer |
 |---|---|
-| CV F1 (5-fold) | 0.8779 ± 0.0062 |
+| CV F1 (OOF-stacking nested) | 0.8936 ± 0.0004 |
+| CV F1 (fold-CV bileşeni) | 0.8779 ± 0.0062 |
 | Test F1 | 0.8969 |
 | MCC | 0.5863 |
-| PR-AUC | 0.9294 |
-| ROC-AUC | 0.8673 |
-| Recall | 0.9725 |
-| Precision | 0.8341 |
+| PR-AUC | 0.9114 |
+| ROC-AUC | 0.8398 |
+| Recall | 0.8953 |
+| Precision | 0.8984 |
+| Brier / ECE | 0.1197 / 0.0755 |
+| Global eşik θ | 0.6831 |
 
-### Panel Sonuçları
+> ⚠️ Önceki 0.8980/0.9269, MCC 0.5356, θ=0.241 leakage-şişikti — geri çekildi (reports/leakage_quantification.json).
 
-| Panel | F1 | MCC | Eşik |
+### Panel Sonuçları (test, global θ=0.6831)
+
+| Panel | F1 | MCC | Opt-in eşik (jüri kullanmaz) |
 |---|---|---|---|
-| MASTER (General) | 0.8872 | 0.507 | 0.241 |
-| KANSER (Hereditary_Cancer) | 0.8960 | 0.649 | 0.281 |
-| PAH | 0.9556 | 0.556 | 0.138 |
-| CFTR | 0.9524 | 0.674 | 0.108 |
+| MASTER (General) | 0.8865 | 0.5732 | 0.404 |
+| KANSER (Hereditary_Cancer) | 0.944 | 0.7985 | 0.3695 |
+| PAH | 0.9077 | 0.39 | 0.3203 |
+| CFTR | 0.9412 | — (n=18, tanımsız) | 0.1922 |
 
 ---
 
@@ -62,7 +69,8 @@ pos_label = 1 = Patojenik
 | Kaynak | TEKNOFEST 2026 resmi yarışma verisi (T.C. Sağlık Bakanlığı) |
 | Toplam örnek | 3.802 |
 | Panel dağılımı | MASTER 2.931, KANSER 388, PAH 372, CFTR 111 |
-| Split | %80 eğitim / %20 hold-out test, random_state=42 |
+| Split | GROUP-AWARE %80/%20 (Variant_ID) + StratifiedGroupKFold 5-fold, random_state=42 (0 straddle) |
+| Tekil varyant | 3.224 (3.802 satır) |
 | Etiketler | Patojenik(1), Benign(0) — VUS dışlandı |
 | Kolon formatı | 343 anonim kolon (AL_x, EK_x önekli) |
 | Sınıf dengesi (MASTER) | ~2.75:1 Patojenik/Benign |
@@ -83,8 +91,8 @@ pos_label = 1 = Patojenik
 PSR aşamasında ClinVar pilot verisi kullanıldı (temiz etiket, 1:1 denge).  
 Gerçek yarışma verisi farklı → PDR §4.2'de açıklandı.
 
-| Metrik | PSR Pilot | Gerçek Veri | Fark |
+| Metrik | PSR Pilot | Gerçek Veri (canonical) | Fark |
 |---|---|---|---|
-| F1 | 0.945 | 0.8969 | -0.047 |
-| MCC | 0.892 | 0.5863 | -0.356 |
-| ROC-AUC | 0.976 | 0.8673 | -0.109 |
+| F1 | 0.945 | 0.8969 | -0.048 |
+| MCC | 0.892 | 0.5863 | -0.306 |
+| ROC-AUC | 0.976 | 0.8398 | -0.136 |

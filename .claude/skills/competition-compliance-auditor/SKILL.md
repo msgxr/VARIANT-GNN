@@ -36,12 +36,14 @@ Unverifiable items: mark UNVERIFIED, never assume
 - [ ] F1 = TP / (TP + 0.5×FP + 0.5×FN) — formula correct
 - [ ] Accuracy NOT presented as the main success metric
 - [ ] Each panel has its own F1 score
-- [ ] Panel thresholds: General=0.241, KANSER=0.281, PAH=0.138, CFTR=0.108
+- [ ] Global decision threshold θ=0.6831 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
 
-**Current verified values:**
+**Current verified values (CANONICAL: RESULTS_CANONICAL.json):**
 ```
-Test F1=0.8969 | CV F1=0.8779±0.0062 | MCC=0.5863 | PR-AUC=0.9294
-MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
+Jüri beklentisi (dengeli §3.2): balanced F1=0.8134±0.0103
+İç hold-out: Test F1=0.8969 | CV F1=0.8936±0.0004 | MCC=0.5863 | PR-AUC=0.9114 | θ=0.6831
+Panel F1: MASTER 0.8865 | KANSER 0.944 | PAH 0.9077 | CFTR 0.9412
+WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 ```
 
 **FAIL if:** F1 formula wrong, accuracy as primary, panel results missing.
@@ -51,12 +53,12 @@ MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
 ## Domain C — Data Integrity & Leakage
 
 **Check:**
-- [ ] Scaler fit only on training fold — never on full dataset
-- [ ] Imputer fit only on training fold
-- [ ] SelectKBest fit only on training fold
-- [ ] AutoEncoder fit only on training fold
+- [ ] GROUP-AWARE split by Variant_ID — 0 variants straddle train/test (leakage guard PASSED)
+- [ ] Scaler / Imputer fit only on training fold — never on full dataset
+- [ ] CategoricalBioFeaturizer deterministic (no test fit); SelectKBest/AutoEncoder REMOVED
 - [ ] SMOTE applied only inside training fold (not on validation/test)
 - [ ] Calibration set is a held-out 15% of training — no test contamination
+- [ ] Augmentation DISABLED (near-twin leakage)
 - [ ] Adversarial validation ROC-AUC ≈ 0.50 (confirms no distribution leakage)
 - [ ] Competition data NOT committed to repo
 
@@ -74,8 +76,8 @@ MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
 - [ ] environment.yml complete
 - [ ] Training: single command → `python main.py --mode train --config configs/pdr.yaml`
 - [ ] Prediction: single command → `python submission/predict.py --input <file>`
-- [ ] 5-seed stability std=±0.0013 documented
-- [ ] Model artifacts available (Şeyma's machine — confirm before jury)
+- [ ] 5-seed stability CV F1=0.8738±0.0034 documented
+- [ ] Model artifacts in repo (<7MB, REPRODUCE.md) — jüri veri olmadan tahmin üretebilir
 
 **FAIL if:** Non-deterministic run, missing requirements, no single-command entry point.
 
@@ -87,18 +89,19 @@ MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
 - [ ] PDR uses official 2026 Üniversite template
 - [ ] All 5 sections present: Giriş(10) / Yöntem(25) / Bulgular(30) / Sonuç(25) / Kaynakça(10)
 - [ ] Ethics declaration present
-- [ ] PSR→PDR discrepancy explained (§4.2 — MCC 0.892→0.536)
+- [ ] PSR→PDR discrepancy explained (§4.2 — MCC 0.892→0.5863)
 - [ ] GATv2Conv vs SAGEConv correction documented
+- [ ] PDR numbers match RESULTS_CANONICAL.json (no withdrawn 0.8980/θ=0.241)
 
-**Known PDR Issues (fix before submission):**
+**Known PDR Issues — STATUS (2026-06-02):**
 ```
-§1.2 references wrong: REVEL[3]→[2], EVE[5]→[9], GATv2[7]→[8]
-§3.2 threshold wrong: θ=0.01 → θ=0.6831
-§3.1 figure paths dead: reports/roc_curves.png → reports/figures/pdr/05_roc_curves.png
-Header date inconsistent: 15 Mayıs vs 20 Mayıs training date
+✅ §1.2 references fixed: REVEL[2], EVE[9], GATv2[8]
+✅ §3.2 threshold: θ=0.6831 (canonical; 0.241 superseded)
+✅ §3.1 figure paths: reports/figures/pdr/*
+✅ All §3 tables aligned to canonical; balanced jüri F1=0.8134 framing added
 ```
 
-**FAIL if:** Any PDR known issue unfixed at submission time.
+**FAIL if:** Any withdrawn number (0.8980/0.9269/0.5356/θ=0.241) reappears as current claim → run scripts/check_results_consistency.py.
 
 ---
 

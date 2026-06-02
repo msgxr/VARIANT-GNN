@@ -65,7 +65,7 @@ HARD STOP 10: requirements.txt broken
 
 ```
 SOFT STOP 1: MCC gap unexplained
-- PSR MCC 0.892 vs actual 0.406 not addressed in PDR
+- PSR MCC 0.892 vs actual 0.5863 not addressed in PDR
 - Risk: Jury question without answer
 
 SOFT STOP 2: GNN name still inconsistent

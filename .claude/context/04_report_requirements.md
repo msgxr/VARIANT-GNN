@@ -44,18 +44,19 @@
 - Panel bazlı sonuçlar ayrı raporlanmalı (MASTER / KANSER / PAH / CFTR)
 - PSR → PDR teknik evrim açıklanmalı (7 yenilik tablosu mevcut)
 - GATv2Conv / SAGEConv tutarsızlığı düzeltildi (PDR §2.2'de açıklandı)
-- PSR pilot sonuçları (MCC=0.892) ile gerçek veri sonuçları (MCC=0.536) farkı §4.2'de açıklandı
+- PSR pilot sonuçları (MCC=0.892) ile gerçek veri sonuçları (MCC=0.5863, canonical) farkı §4.2'de açıklandı
 - Etik beyan mevcut
 
-### Mevcut PDR Durumu
+### Mevcut PDR Durumu (2026-06-02 — canonical'a hizalandı)
 
 | Alan | Durum |
 |---|---|
 | Dosya | reports/PDR_VARIANT_GNN_2026.md |
-| Kaynakça numaraları | YANLIŞ — §1.2 atıfları kaynakçayla uyuşmuyor |
-| §3.2 eşik değeri | YANLIŞ — θ=0.01 yazıyor, olması gereken θ=0.6831 |
-| Figür yolları | YANLIŞ — reports/roc_curves.png yok, reports/figures/pdr/05_roc_curves.png |
-| Rapor tarihi | TUTARSIZ — 15 Mayıs yazıyor, model 20 Mayıs eğitildi |
+| Sayılar | ✅ RESULTS_CANONICAL.json ile tutarlı (check_results_consistency.py 5/5 PASS) |
+| Kaynakça numaraları | ✅ Düzeltildi (REVEL[2], EVE[9], GATv2[8]) |
+| §3.2 eşik değeri | ✅ GLOBAL θ=0.6831 (canonical; 0.241 supersede) |
+| Figür yolları | ✅ reports/figures/pdr/* |
+| Rapor tarihi | ✅ 2 Haziran 2026 (sızıntısız retrain) |
 
 ---
 

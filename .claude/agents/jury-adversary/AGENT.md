@@ -37,9 +37,9 @@ Activate when:
 - TEKNOFEST evaluation committee: Will verify specification compliance
 
 **What does the jury care most about?**
-1. Can the code reproduce the declared F1=0.8706?
+1. Can the code reproduce the declared F1=0.8969 (and balanced jüri F1=0.8134)?
 2. Is the GNN actually contributing or is XGBoost sufficient?
-3. How is the MCC gap (PSR 0.892 → actual 0.406) explained?
+3. How is the MCC gap (PSR 0.892 → actual 0.5863) explained?
 4. Is data leakage truly prevented?
 5. Are anonymous column groupings scientifically defensible?
 6. Is the methodology reproducible by an independent researcher?
@@ -47,13 +47,13 @@ Activate when:
 ## Attack-and-Defense Matrix
 
 ### Attack Zone 1: Result Credibility
-**Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.406. Which results should we trust, and why?"
+**Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.5863. Which results should we trust, and why?"
 
 **Required defense:**
-"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), which represent the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants. The MCC drop from 0.892 to 0.536 reflects this distributional difference, not model failure. Our F1=0.8969 is consistent across 5-fold CV (0.8779±0.0062), confirming stable generalization."
+"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants, and our evaluation is now sızıntısız (group-aware by Variant_ID) — the earlier inflated numbers were withdrawn. The MCC of 0.5863 reflects this distributional difference + honest evaluation, not model failure. Our F1=0.8969 is consistent with OOF-stacking CV (0.8936±0.0004), confirming stable generalization."
 
-**Jury follow-up:** "But why does your F1 stay high while MCC drops so dramatically?"
-**Defense:** "MCC is sensitive to class imbalance across both classes simultaneously. Our threshold (0.241 global) is optimized for binary F1, balancing recall and precision. MASTER panel has 2.75:1 class imbalance — MCC=0.507 reflects this structural challenge, not model failure. All panel-specific thresholds are further optimized: KANSER=0.281, PAH=0.138, CFTR=0.108."
+**Jury follow-up:** "But why does your F1 stay high while MCC is more moderate?"
+**Defense:** "MCC weighs both classes equally while F1 targets the positive class. Our global threshold θ=0.6831 (balanced-OOF) yields balanced precision (0.8984) and recall (0.8953). MASTER (General) panel has 2.75:1 imbalance — MCC=0.5732 reflects this structural challenge; the balanced KANSER panel reaches MCC=0.7985. Panel thresholds are opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922) — the jury decision uses the single global θ."
 
 ---
 
@@ -61,7 +61,7 @@ Activate when:
 **Jury attack:** "PAH and CFTR MCC values — are they reliable? How do you explain them?"
 
 **Required defense:**
-"PAH MCC=0.556 and CFTR MCC=0.674 reflect panel-specific threshold optimization. Panel-specific thresholds (PAH=0.138, CFTR=0.108) were calibrated to maximize binary F1 on the calibration set. CFTR has only 30 test samples — 1 prediction error equals 3.3% F1 change, so results should be interpreted with that statistical context. Both panels achieved F1≥0.95, demonstrating strong sensitivity. Known limitations are documented in PDR §4.2."
+"PAH MCC=0.39 reflects its tiny benign set (n=62) — a few false positives sharply depress MCC (small-n effect), while F1=0.9077 and recall=0.9516 stay strong. CFTR's MCC is undefined (test n=18, degenerate negative class, ROC-AUC=NaN); its meaningful metrics are F1=0.9412 and precision=1.000. The jury decision uses the single global threshold θ=0.6831 (canonical); panel thresholds are opt-in. Known limitations are documented in PDR §4.2."
 
 ---
 
@@ -135,7 +135,7 @@ For every deliverable, run this attack sequence:
 
 2. METRIC ATTACK  
    - "Show me the F1 calculation code"
-   - "Why threshold 0.241 specifically?"
+   - "Why global threshold 0.6831 specifically? (balanced-OOF)"
    - "What's your CFTR F1 confidence interval?"
 
 3. ARCHITECTURE ATTACK
