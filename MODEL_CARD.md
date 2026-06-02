@@ -222,7 +222,7 @@ python main.py --mode train --config configs/pdr.yaml
 
 # 4. Jüri inference
 python submission/predict.py \
-    --input data/test_variants_blind.csv \
+    --input <jury_test.csv> \
     --model_dir models \
     --output submission/predictions.csv \
     --config configs/pdr.yaml

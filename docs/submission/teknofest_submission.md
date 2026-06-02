@@ -54,7 +54,7 @@ VAR_002,0,Benign,0.1245,12.45
 
 Üretmek için:
 ```bash
-python main.py --mode predict --test_file data/test_variants_blind.csv
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
 # Çıktı: reports/predictions.csv
 ```
 
@@ -90,7 +90,7 @@ make install
 python main.py --mode train --data_file data/train_variants.csv
 
 # 3. Tahmin üret
-python main.py --mode predict --test_file data/test_variants_blind.csv
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
 
 # 4. Değerlendirme raporunu oluştur
 python main.py --mode eval --data_file data/test_variants.csv

@@ -37,7 +37,8 @@
       "Hereditary_Cancer": 0.7331,
       "PAH": 0.4755
     },
-    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6052 (CFTR hold-out'ta n cok kucuk, tahmin edilemedi; gercek yarismada kendi seti olacak). Genel %20-F1=0.6063 ile tutarli."
+    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6052 (CFTR hold-out'ta n cok kucuk, tahmin edilemedi; gercek yarismada kendi seti olacak). Genel %20-F1=0.6063 ile tutarli.",
+    "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json)."
   },
   "panel_test_metrics": {
     "CFTR": {

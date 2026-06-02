@@ -1053,7 +1053,7 @@ Jüri, repoyu klonlayıp beyan edilen sonuçları yeniden üretebilir. Detaylar:
 
 ```bash
 # 1) Tahmin (eğitilmiş modellerle — veri gerektirmez; modeller repoda dahil <7MB)
-python main.py --mode predict --test_file <jury_test.csv>
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
 # → reports/predictions_full.csv ; global θ=0.8514 otomatik uygulanır
 
 # 2) Sıfırdan eğitim (NDA verisine sahip olanlar)
@@ -1179,7 +1179,7 @@ python main.py --mode train \
     --data_file data/train_variants.csv
 
 # ── Jüri Tahmini (§7.5 — Tekrarlanabilirlik) ─────────────────────────
-python main.py --mode predict --test_file data/blind_test.csv
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
 
 # ── Açıklanabilirlik ──────────────────────────────────────────────────
 python main.py --mode explain --data_file data/train_variants.csv

@@ -35,7 +35,7 @@ Eğitilmiş model ağırlıkları repoda **dahildir** (`models/*.pkl|*.pth|*.jso
 Jüri kendi test CSV'si ile tahmin üretebilir:
 
 ```bash
-python main.py --mode predict --test_file <jury_test.csv>
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
 # Çıktı: reports/predictions_full.csv (panel-aware eşik otomatik uygulanır)
 ```
 

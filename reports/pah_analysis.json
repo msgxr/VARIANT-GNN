@@ -1,0 +1,25 @@
+{
+  "_purpose": "PAH zayıf panel analizi — yükseltilebilir mi? (TEKNOFEST kullanıcı sorusu)",
+  "method": "OOF (503 PAH satırı, hold-out'taki 76'dan sağlam) per-model + tree-blend vs full-stack AUC; ayrıca per-panel model, sentetik benign, per-panel ağırlık testleri.",
+  "pah_auc_robust_oof": 0.789,
+  "pah_auc_holdout_noisy": 0.7,
+  "note_holdout": "cv_report'taki 0.70 küçük-örneklem (76 satır) gürültüsü; sağlam değer 0.789.",
+  "per_model_pah_auc": {
+    "XGB": 0.789,
+    "LGBM": 0.782,
+    "GNN": 0.597,
+    "DNN": 0.423
+  },
+  "tree_blend_vs_full_stack_pah": {
+    "tree_blend": 0.791,
+    "full_stack": 0.789,
+    "delta": 0.002
+  },
+  "levers_tested": {
+    "per_panel_model": "daha kötü (-15pp)",
+    "synthetic_benign": "6-seed gürültü",
+    "per_panel_weight": "fark yok",
+    "tree_only_for_pah": "fark yok (0.002)"
+  },
+  "conclusion": "PAH AUC=0.789, anonim-veri tavanında. DNN PAH'ta zararlı (0.42) ama stacking onu zaten görmezden geliyor (full-stack=tree-blend). 4 kaldıraç denendi, hiçbiri yükseltmedi. PAH gerçek zayıf panel AMA korkulan 0.70 değil 0.79, ve tavanda. Dürüstçe belgelenir."
+}
