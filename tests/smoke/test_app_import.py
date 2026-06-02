@@ -15,6 +15,18 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# requirements-ci.txt KASITLI minimaldir (streamlit ayrı requirements-streamlit.txt'te).
+# Bu opsiyonel viz/UI/tuning bağımlılıkları CI'da yoksa import smoke testi SKIP eder
+# (gerçek import breakage'da yine FAIL eder).
+_OPTIONAL_DEPS = {"matplotlib", "optuna", "streamlit", "plotly", "altair", "seaborn", "fpdf", "fpdf2"}
+
+
+def _skip_if_optional_missing(exc: ModuleNotFoundError) -> None:
+    name = (getattr(exc, "name", "") or "").split(".")[0]
+    if name in _OPTIONAL_DEPS:
+        pytest.skip(f"opsiyonel bağımlılık CI'da kurulu değil: {name}")
+    raise exc
+
 
 class TestAppCompile:
     def test_app_py_compiles(self):
@@ -66,14 +78,20 @@ class TestAppImportPaths:
     def test_ui_module_importable(self, module):
         import importlib
 
-        mod = importlib.import_module(module)
+        try:
+            mod = importlib.import_module(module)
+        except ModuleNotFoundError as exc:
+            _skip_if_optional_missing(exc)
         assert mod is not None
 
 
 class TestPipelineFallback:
     def test_inference_pipeline_init_without_artifacts(self):
         """InferencePipeline.__init__ must not raise even if model files are absent."""
-        from src.api.pipeline import InferencePipeline
+        try:
+            from src.api.pipeline import InferencePipeline
+        except ModuleNotFoundError as exc:
+            _skip_if_optional_missing(exc)
 
         pipeline = InferencePipeline()
         assert pipeline is not None
