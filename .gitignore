@@ -200,3 +200,4 @@ build_notebook.py
 !reports/threshold_deep.json
 !reports/balanced_jury_f1.json
 !reports/competition_jury_f1.json
+!reports/panel_model_comparison.json

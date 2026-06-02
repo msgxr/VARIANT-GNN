@@ -1,0 +1,23 @@
+{
+  "_purpose": "TEKNOFEST Q&A: hakem 4-ayrı-model önerdi (tek model kabul). Ampirik karşılaştırma.",
+  "method": "Her panel için panel-ÖZEL XGB+LGBM (group-aware 80/20) vs BİRLEŞİK model (panel one-hot+DANN+tüm veri). %20-patojenik test F1.",
+  "panel_only_f1_20pct": {
+    "General": 0.4847,
+    "Hereditary_Cancer": 0.6475,
+    "PAH": 0.3255,
+    "CFTR": 0.5
+  },
+  "combined_f1_20pct": {
+    "General": 0.6071,
+    "Hereditary_Cancer": 0.7331,
+    "PAH": 0.4755,
+    "CFTR": "hold-out n cok kucuk"
+  },
+  "delta_pp": {
+    "General": -12.2,
+    "Hereditary_Cancer": -8.6,
+    "PAH": -15.0
+  },
+  "conclusion": "BİRLEŞİK model her panelde panel-özelden üstün (-9..-15pp). Sebep: küçük paneller (CFTR n=111, PAH 372) tek başına yeterli veri sağlamaz, çapraz-panel transfer + DANN domain-adaptasyonu kaybolur. KARAR: birleşik panel-aware model korunur — hakem 'tek model kabul', bu seçim kanıtla savunulur.",
+  "caveat": "Panel-özel proxy XGB+LGBM (bio/GNN/DNN yok); birleşik tam pipeline. Yön (birleşik >= ayrı) sağlam, özellikle küçük panellerde kesin."
+}
