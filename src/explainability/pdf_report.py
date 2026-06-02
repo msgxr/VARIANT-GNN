@@ -99,7 +99,7 @@ def _safe_text_latin1(text: str) -> str:
     return text
 
 
-class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
+class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):  # type: ignore[misc]
     """FPDF2 tabanlı klinik rapor sınıfı.
 
     DejaVuSans TTF mevcut ise Türkçe karakterler tam olarak gösterilir.
@@ -145,7 +145,7 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
             return _safe_text(text)  # Türkçe karakterleri koru
         return _safe_text_latin1(text)  # Türkçe → ASCII fallback
 
-    def header(self):
+    def header(self) -> None:
         self._init_fonts()
         self.set_fill_color(*self.HEADER_BG)
         self.rect(0, 0, 210, 28, "F")
@@ -165,7 +165,7 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
         self.set_text_color(*self.TEXT_COL)
         self.ln(4)
 
-    def footer(self):
+    def footer(self) -> None:
         self.set_y(-14)
         self._set_font("I", 8)
         self.set_text_color(120, 120, 120)
@@ -176,7 +176,7 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
             align="C",
         )
 
-    def section_title(self, title: str):
+    def section_title(self, title: str) -> None:
         self.set_fill_color(235, 245, 255)
         self._set_font("B", 11)
         self.set_text_color(*self.HEADER_BG)
@@ -184,7 +184,7 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
         self.set_text_color(*self.TEXT_COL)
         self.ln(1)
 
-    def kv_row(self, key: str, value: str, bold_val: bool = False):
+    def kv_row(self, key: str, value: str, bold_val: bool = False) -> None:
         key_w = 55
         self._set_font("B", 9)
         self.cell(key_w, 6, self._txt(key) + ":", new_x="RIGHT", new_y="TOP")
@@ -193,12 +193,12 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):
         val_w = self.epw - key_w
         self.multi_cell(val_w, 6, self._txt(str(value)))
 
-    def body_text(self, text: str):
+    def body_text(self, text: str) -> None:
         self._set_font("", 9)
         self.multi_cell(0, 5.5, self._txt(text))
         self.ln(1)
 
-    def risk_badge(self, risk_score: float, zone_label: str):
+    def risk_badge(self, risk_score: float, zone_label: str) -> None:
         """Üstte büyük risk skoru rozeti."""
         if risk_score >= 75:
             r, g, b = (220, 38, 38)

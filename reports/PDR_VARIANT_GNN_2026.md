@@ -133,27 +133,14 @@ F1 patojenik-odaklıdır (pos_label=1); test'te patojenik azınlık olduğundan 
 
 > ¹ %20-prior ekip beyanı olup resmi Q&A'ya dayandırılır ancak repoda doğrulanabilir resmi artefakt henüz yoktur — **UNVERIFIED** (belirsizlik günlüğü U-008). Artefakt eklenene kadar %20-prior ve 4-panel-ortalama skorlaması modelleme varsayımı olarak işaretlidir.
 
-**Tablo 4: Genel Test Sonuçları — Group-Aware Hold-Out, θ=0,8415**
-
-| Metrik | Değer | Açıklama |
-|:-------|:-----:|:---------|
-| 🎯 **Resmi jüri skoru (4-panel %20-F1 ort.)** | **0,6202** | HEADLINE — beklenen yarışma skoru |
-| Havuzlanmış jüri-F1 tahmini | 0,6042 ± 0,0324 | 300× %20-resample |
-| **Binary F1 (iç hold-out, §7.3)** | **0,8367** | pos_label=1; %75-poz iç ayrım gücü |
-| MCC | 0,5112 | precision/recall ile birebir tutarlı |
-| PR-AUC / ROC-AUC | 0,9267 / 0,8538 | eşik-bağımsız ayırt edicilik |
-| Precision / Recall | 0,9241 / 0,7644 | patojenik hassasiyet/duyarlılık |
-| Brier / ECE | 0,1115 / 0,0291 | kalibrasyon kalitesi/sapması |
-| CV F1 (OOF-stacking / fold) | 0,8936 ± 0,0004 / 0,8812 ± 0,0113 | üretim / bileşen |
-
-Kendiyle-tutarlılık: 2·0,9241·0,7644/(0,9241+0,7644)=0,8367. θ=0,8415 ve canonical precision/recall ile iç hold-out (N=762, ~%75-poz) yaklaşık dağılımı: **TP≈436, FN≈135, FP≈36, TN≈155**. Yüksek eşik precision'ı 0,9241'e çıkarıp FP'yi ~36'ya sınırlar; bedeli recall'ın 0,7644'e düşmesi (kaçırılan patojenik); bu örnekler MC Dropout'ta yüksek-σ ile işaretlenir.
+**İç hold-out metrikleri (θ=0,8415, §7.3, pos_label=1):** Test F1=**0,8367**, MCC=0,5112, precision=0,9241, recall=0,7644, PR-AUC=0,9267, ROC-AUC=0,8538, Brier=0,1115, ECE=0,0291; üretim CV F1=0,8936±0,0004 (OOF-stacking) / 0,8812±0,0113 (fold). Kendiyle-tutarlılık: 2·0,9241·0,7644/(0,9241+0,7644)=0,8367. Canonical precision/recall ile iç hold-out (N=762, ~%75-poz) yaklaşık dağılımı **TP≈436, FN≈135, FP≈36, TN≈155**: yüksek eşik precision'ı 0,9241'e çıkarıp FP'yi ~36'ya sınırlar; bedeli recall'ın 0,7644'e düşmesi (kaçırılan patojenik), bu örnekler MC Dropout'ta yüksek-σ ile işaretlenir.
 
 **Şekil 1:** PR Eğrisi (Genel) — *reports/figures/pdr/06_pr_curves.png*
 **Şekil 2:** Confusion Matrix (panel) — *reports/figures/pdr/04_confusion_matrix_panel.png*
 
 ### 3.2 Panel Bazlı Sonuçlar
 
-**Tablo 5: Panel Bazlı Performans — Hold-Out Test (θ=0,8415)**
+**Tablo 4: Panel Bazlı Performans — Hold-Out Test (θ=0,8415)**
 
 | Panel | F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall |
 |:------|:--:|:---:|:------:|:-------:|:---------:|:------:|
@@ -171,7 +158,7 @@ Kendiyle-tutarlılık: 2·0,9241·0,7644/(0,9241+0,7644)=0,8367. θ=0,8415 ve ca
 
 Karar eşiği group-aware **held-out kalibrasyon setinde** resmi prior'a (%20-patojenik) **F1-optimal**, **HAM olasılıkta** türetilir (**θ=0,8415 global, canonical**); türetim ile çıkarım aynı dağılım/uzayda olduğundan **derivation==inference** garantilidir (üreten: `src/cli/modes/train.py`, threshold_source=calibration_set). Eşiği %74-poz/50-50'de türetmek %20-prior sette F1 kaybettirir.
 
-**Tablo 6: Karar Eşiği — Global (CANONICAL) ve Opt-In Panel Eşikleri**
+**Tablo 5: Karar Eşiği — Global (CANONICAL) ve Opt-In Panel Eşikleri**
 
 | Eşik | θ | Kapsam | Recall | MCC | Not |
 |:-----|:-:|:-------|:------:|:---:|:----|
@@ -191,13 +178,13 @@ Tam ensemble (Test F1=0,8367, CV F1=0,8936) referansında bileşen katkıları (
 
 ### 4.1 Ana Bulgular ve Yorum
 
-VARIANT-GNN, dört panelde missense varyant patojenite sınıflandırması için **sızıntısız** ve dürüst sonuçlar elde etmiştir. Beklenen resmi yarışma skoru %20-patojenik prior'da **4-panel F1 ortalaması = 0,6202** (havuzlanmış 0,6042±0,0324); iç ayrım gücü Test F1=0,8367, PR-AUC=0,9267, ROC-AUC=0,8538. F1'in patojenik-azınlık test'inde ~0,60 olması metrik tanımının (pos_label=1) doğal sonucudur. Üretim CV F1=0,8936±0,0004 (OOF-stacking) ve 5-seed kararlılığı (0,8738±0,0034) tekrar üretilebilirliği doğrular. PR-AUC tüm panellerde yüksektir (KANSER 0,9743, CFTR 1,0, MASTER 0,9271, PAH 0,8908) → karar eşiğinden bağımsız güçlü ayrım.
+VARIANT-GNN dört panelde **sızıntısız** ve dürüst sonuçlar üretmiştir (ayrıntı §3): resmi beklenti %20-prior'da 4-panel F1 ortalaması=**0,6202** (havuzlanmış 0,6042±0,0324), iç ayrım gücü Test F1=0,8367. F1'in patojenik-azınlık test'inde ~0,60 olması metrik tanımının (pos_label=1) doğal sonucudur. Üretim CV F1=0,8936±0,0004 ve 5-seed kararlılığı (0,8738±0,0034) tekrar üretilebilirliği; tüm panellerde yüksek PR-AUC (KANSER 0,9743 … PAH 0,8908) eşik-bağımsız güçlü ayrımı doğrular.
 
 ### 4.2 PSR ile Karşılaştırma ve Tutarsızlık Açıklaması
 
 PDR gerçek-veri sonuçları PSR pilot sonuçlarından belirgin farklıdır; bu fark öngörülmüş ve bilimsel açıdan tutarlıdır.
 
-**Tablo 7: PSR Pilot vs Gerçek Yarışma Verisi (canonical)**
+**Tablo 6: PSR Pilot vs Gerçek Yarışma Verisi (canonical)**
 
 | Metrik | PSR Pilot | Gerçek (canonical) | Fark | Açıklama |
 |:-------|:---------:|:------------------:|:----:|:---------|

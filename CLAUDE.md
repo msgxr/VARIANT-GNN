@@ -55,6 +55,8 @@ These rules apply in every session without exception:
 
 12. **Self-audit before reporting.** Before any final output, Claude internally asks: "Would a jury member, academic reviewer, and technical auditor all accept this?" If any would not, revise.
 
+13. **Numerical claims are PROVEN by measurement, never by assumption.** Her sayısal iddia — sayfa sayısı, metrik, oran, satır/sütun sayısı, toplam — fiili bir araç ölçümü veya hesaplamayla KANITLANIR; göz kararı tahmin veya doğrulanmamış aritmetik kısayolla (örn. "toplam − 2") asla. Used method must be stated (e.g., "Word COM ComputeStatistics ile ölçüldü", "check_results_consistency.py PASS"). A computed shortcut is acceptable only after it has itself been verified against a direct measurement. Page-count, panel-metric, ve ratio iddialarında bu kural istisnasızdır.
+
 ---
 
 ## IV. TASK PROCESSING PROTOCOL

@@ -7,7 +7,7 @@ Preprocessor'dan gelen edge_index ve feature matrisini kullanır.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 if TYPE_CHECKING:
     import torch
@@ -59,7 +59,7 @@ def _build_graph(
 
 
 def plot_variant_graph(
-    edge_index,
+    edge_index: Any,
     node_features: np.ndarray,
     feature_names: List[str],
     risk_scores: Optional[np.ndarray] = None,
@@ -101,10 +101,10 @@ def plot_variant_graph(
             degree[d] += 1
 
     # Top-N düğüm seçimi (highlight_node her zaman dahil)
-    top_idx = set(np.argsort(degree)[::-1][:top_n_nodes].tolist())
+    top_idx_set = set(np.argsort(degree)[::-1][:top_n_nodes].tolist())
     if highlight_node is not None and highlight_node < n_nodes:
-        top_idx.add(highlight_node)
-    top_idx = sorted(top_idx)
+        top_idx_set.add(highlight_node)
+    top_idx = sorted(top_idx_set)
 
     # Yeniden indeksle
     idx_map = {old: new for new, old in enumerate(top_idx)}
@@ -135,7 +135,7 @@ def plot_variant_graph(
         pos = nx.circular_layout(G)
 
     # Düğüm renkleri — risk skoruna göre
-    node_colors = []
+    node_colors: list[Any] = []
     new_hl = idx_map.get(highlight_node, -1) if highlight_node is not None else -1
 
     # Her düğüm için ortalama özellik değerini normalize et (renk için)
