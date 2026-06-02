@@ -41,19 +41,22 @@ def fail(msg: str) -> None:
 
 
 def main() -> int:
+    # Windows stdout varsayılanı (cp1254) θ/Türkçe karakterlerde patlar; UTF-8'e sabitle.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     errors = 0
     canon_path = ROOT / "RESULTS_CANONICAL.json"
     cv_path = ROOT / "reports" / "cv_report.json"
     if not canon_path.exists():
         print("❌ RESULTS_CANONICAL.json missing — run after a training run.")
         return 1
-    canon = json.loads(canon_path.read_text())
+    canon = json.loads(canon_path.read_text(encoding="utf-8"))
     h = canon["headline"]
 
     # 1. canonical == cv_report
     print("1. RESULTS_CANONICAL.json vs reports/cv_report.json")
     if cv_path.exists():
-        tm = json.loads(cv_path.read_text())["test_metrics"]
+        tm = json.loads(cv_path.read_text(encoding="utf-8"))["test_metrics"]
         for key, cvkey in [("test_binary_f1", "binary_f1"), ("test_mcc", "mcc"),
                            ("test_precision", "precision"), ("test_recall", "recall")]:
             if abs(h[key] - round(tm[cvkey], 4)) > TOL:
@@ -77,7 +80,7 @@ def main() -> int:
         p = ROOT / doc
         if not p.exists():
             continue
-        text = p.read_text()
+        text = p.read_text(encoding="utf-8")
         for bad in WITHDRAWN:
             # allow it only on lines that explicitly withdraw/supersede it
             for ln in text.splitlines():
@@ -93,7 +96,8 @@ def main() -> int:
     # 4. synthetic-proxy language
     print("4. No 'sentetik/synthetic proxy' in jury-visible reports")
     for p in (ROOT / "reports").glob("*.json"):
-        if "sentetik proxy" in p.read_text().lower() or "synthetic proxy" in p.read_text().lower():
+        rtext = p.read_text(encoding="utf-8").lower()
+        if "sentetik proxy" in rtext or "synthetic proxy" in rtext:
             fail(f"{p.name}: contains synthetic-proxy language")
             errors += 1
     if errors == 0:
@@ -104,13 +108,13 @@ def main() -> int:
     thr_path = ROOT / "models" / "threshold.json"
     gthr = canon.get("global_threshold")
     if thr_path.exists() and gthr is not None:
-        shipped = json.loads(thr_path.read_text()).get("classification_threshold")
+        shipped = json.loads(thr_path.read_text(encoding="utf-8")).get("classification_threshold")
         if shipped is None or abs(shipped - gthr) > 1e-3:
             fail(f"shipped threshold {shipped} != canonical global_threshold {gthr}")
             errors += 1
     # no rival global-threshold value asserted in canonical free-text (panel block exempt)
     rivals = ["0.3367", "0.3104", "0.2562", "0.4456", "θ=0.241"]
-    canon_txt = canon_path.read_text()
+    canon_txt = canon_path.read_text(encoding="utf-8")
     for ln in canon_txt.splitlines():
         if any(r in ln for r in rivals) and "panel" not in ln.lower() and "0.764" not in ln \
                 and not re.search(r"önceki|geçersiz|withdraw|supersed|geri çek|eski", ln, re.I):
