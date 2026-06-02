@@ -383,7 +383,7 @@ jobs:
               PREDICTION_COLUMNS, build_prediction_frame, validate_prediction_frame
           )
 
-          assert len(PREDICTION_COLUMNS) == 10, f"Expected 10 columns, got {len(PREDICTION_COLUMNS)}"
+          assert len(PREDICTION_COLUMNS) == 12, f"Expected 12 columns (10 standart + OOD_Score/OOD_Flag), got {len(PREDICTION_COLUMNS)}"
 
           n = 50
           rng = np.random.default_rng(42)
@@ -667,6 +667,7 @@ jobs:
               "Pathogenic_Probability", "Benign_Probability",
               "Calibrated_Risk", "Uncertainty", "Clinical_Flag",
               "Model_Version", "Inference_Timestamp",
+              "OOD_Score", "OOD_Flag",
           ]
           import sys
           sys.path.insert(0, ".")

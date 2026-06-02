@@ -40,7 +40,7 @@ def _set_base_style(doc):
     st.font.size = Pt(12)
     pf = st.paragraph_format
     pf.line_spacing = 1.15
-    pf.space_after = Pt(4)
+    pf.space_after = Pt(3)
     pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     for sec in doc.sections:
         sec.top_margin = Cm(2.8)
@@ -100,7 +100,7 @@ def _figure(doc, path_str, caption):
     if not img.exists():
         return False
     try:
-        doc.add_picture(str(img), width=Inches(4.5))
+        doc.add_picture(str(img), width=Inches(3.5))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         if caption:
             cap = doc.add_paragraph()
@@ -155,6 +155,12 @@ def main():
         m = re.match(r"^(#{1,4})\s+(.*)", stripped)
         if m:
             _heading(doc, m.group(2), len(m.group(1)) - 1)
+            i += 1
+            continue
+
+        # Sayfa sonu (kapak/icindekiler muafiyeti icin)
+        if stripped == "[[PAGEBREAK]]":
+            doc.add_page_break()
             i += 1
             continue
 

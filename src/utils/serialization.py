@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, cast
 
 import joblib
 import torch
@@ -30,7 +30,7 @@ def _build_legacy_sage_gnn(
     dropout: float = 0.3,
     use_multimodal: bool = False,
     seq_enc_dim: int = 32,
-):
+) -> "torch.nn.Module":
     """
     Orijinal SAGEConv mimarisini (SAGEConv + PyGBatchNorm + tek Linear)
     yeniden üretir. Yalnızca bu mimariye ait eski checkpoint'leri yüklemek
@@ -42,14 +42,14 @@ def _build_legacy_sage_gnn(
     from torch_geometric.nn import SAGEConv as _SAGEConv
 
     class _SBlock(_nn.Module):
-        def __init__(self, in_c, out_c, drop=0.3):
+        def __init__(self, in_c: int, out_c: int, drop: float = 0.3) -> None:
             super().__init__()
             self.conv = _SAGEConv(in_c, out_c)
             self.bn = _PyGBN(out_c)
             self.dropout = _nn.Dropout(p=drop)
             self.skip = _nn.Linear(in_c, out_c, bias=False) if in_c != out_c else _nn.Identity()
 
-        def forward(self, x, edge_index):
+        def forward(self, x: Any, edge_index: Any) -> Any:
             res = self.skip(x)
             out = self.conv(x, edge_index)
             out = self.bn(out)
@@ -58,13 +58,13 @@ def _build_legacy_sage_gnn(
             return out + res
 
     class _LegacySAGEGNN(_nn.Module):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__()
             self.use_multimodal = use_multimodal
             if use_multimodal:
                 from src.features.multimodal_encoder import SequenceEncoder as _SE
 
-                self.seq_encoder = _SE(cnn_channels=seq_enc_dim // 2)
+                self.seq_encoder: Any = _SE(cnn_channels=seq_enc_dim // 2)
                 in_ch = numeric_dim + self.seq_encoder.output_dim
             else:
                 self.seq_encoder = None
@@ -75,7 +75,7 @@ def _build_legacy_sage_gnn(
             self.block3 = _SBlock(hidden_dim, hidden_dim, dropout)
             self.classifier = _nn.Linear(hidden_dim, num_classes)
 
-        def forward(self, x, edge_index, nuc_ids=None, aa_ids=None, **kw):
+        def forward(self, x: Any, edge_index: Any, nuc_ids: Any = None, aa_ids: Any = None, **kw: Any) -> Any:
             if self.use_multimodal and self.seq_encoder is not None:
                 if nuc_ids is not None and aa_ids is not None:
                     seq = self.seq_encoder(nuc_ids, aa_ids)
@@ -100,13 +100,13 @@ class _LGBMBoosterWrapper:
     Used only when loading checkpoints saved via ``Booster.save_model``.
     """
 
-    def __init__(self, booster) -> None:
+    def __init__(self, booster: Any) -> None:
         import numpy as _np
 
         self._booster = booster
         self._np = _np
 
-    def predict_proba(self, X) -> "numpy.ndarray":  # noqa: F821
+    def predict_proba(self, X: Any) -> Any:
         import numpy as _np
         import pandas as _pd
 
@@ -122,11 +122,11 @@ def _safe_torch_load(path: Path, device: torch.device) -> dict:
     """Load a PyTorch state dict safely."""
     try:
         # weights_only=True prevents arbitrary code execution (CVE-safe)
-        return torch.load(str(path), map_location=device, weights_only=True)
+        return cast(dict, torch.load(str(path), map_location=device, weights_only=True))
     except TypeError:
         # PyTorch < 2.0 does not support weights_only
         logger.warning("weights_only not supported; falling back to legacy load.")
-        return torch.load(str(path), map_location=device)  # nosec B614
+        return cast(dict, torch.load(str(path), map_location=device))  # nosec B614
 
 
 def _sha256(path: Path) -> str:
@@ -207,9 +207,9 @@ class ModelStore:
 
     def save_all(
         self,
-        preprocessor,
-        ensemble,
-        calibrator=None,
+        preprocessor: Any,
+        ensemble: Any,
+        calibrator: Any = None,
     ) -> None:
         """Persist all artefacts.  ``ensemble`` is a ``HybridEnsemble``."""
         import json
@@ -267,12 +267,12 @@ class ModelStore:
 
         logger.info("All artefacts saved with metadata.json -> %s", self.model_dir)
 
-    def _save_xgb(self, model) -> None:
+    def _save_xgb(self, model: Any) -> None:
         if model is not None:
             model.save_model(str(self._xgb_path))
             logger.info("XGBoost -> %s", self._xgb_path)
 
-    def _save_lgbm(self, model) -> None:
+    def _save_lgbm(self, model: Any) -> None:
         if model is not None:
             try:
                 model.booster_.save_model(str(self._lgbm_path))
@@ -280,13 +280,13 @@ class ModelStore:
             except Exception as exc:
                 logger.warning("LightGBM save failed: %s", exc)
 
-    def _save_meta_learner(self, ensemble) -> None:
+    def _save_meta_learner(self, ensemble: Any) -> None:
         ml = getattr(ensemble, "meta_learner", None)
         if ml is not None:
             joblib.dump(ml, str(self._meta_learner_path))
             logger.info("MetaLearner -> %s", self._meta_learner_path)
 
-    def _save_gnn(self, model) -> None:
+    def _save_gnn(self, model: Any) -> None:
         if model is None:
             return
         torch.save(model.state_dict(), str(self._gnn_path))
@@ -313,12 +313,12 @@ class ModelStore:
             _json.dump(arch, _fh)
         logger.info("GNN -> %s  (arch=%s)", self._gnn_path, arch["type"])
 
-    def _save_dnn(self, model) -> None:
+    def _save_dnn(self, model: Any) -> None:
         if model is not None:
             torch.save(model.state_dict(), str(self._dnn_path))
             logger.info("DNN -> %s", self._dnn_path)
 
-    def _save_autoencoder(self, preprocessor) -> None:
+    def _save_autoencoder(self, preprocessor: Any) -> None:
         if (
             hasattr(preprocessor, "_autoenc")
             and preprocessor._autoenc is not None
@@ -327,18 +327,18 @@ class ModelStore:
             torch.save(preprocessor._autoenc._net.state_dict(), str(self._autoenc_path))
             logger.info("AutoEncoder -> %s", self._autoenc_path)
 
-    def _save_preprocessor(self, preprocessor) -> None:
+    def _save_preprocessor(self, preprocessor: Any) -> None:
         joblib.dump(preprocessor, str(self._preprocessor_path))
         logger.info("Preprocessor -> %s", self._preprocessor_path)
 
-    def _save_ensemble_cfg(self, ensemble) -> None:
+    def _save_ensemble_cfg(self, ensemble: Any) -> None:
         import json
 
         cfg = {"weights": ensemble.weights}
         with open(self._ensemble_cfg_path, "w") as fh:
             json.dump(cfg, fh)
 
-    def _save_calibrator(self, calibrator) -> None:
+    def _save_calibrator(self, calibrator: Any) -> None:
         joblib.dump(calibrator, str(self._calibrator_path))
         logger.info("Calibrator -> %s", self._calibrator_path)
 
@@ -417,13 +417,13 @@ class ModelStore:
     # Lightweight individual loaders (used by ColumnAligner setup)
     # ------------------------------------------------------------------
 
-    def load_preprocessor(self):
+    def load_preprocessor(self) -> Any:
         """Load only the preprocessor (no model weights). Raises if missing."""
         if not self._preprocessor_path.exists():
             raise FileNotFoundError(f"Preprocessor not found: {self._preprocessor_path}")
         return joblib.load(str(self._preprocessor_path))
 
-    def load_xgb(self):
+    def load_xgb(self) -> Any:
         """Load only the XGBoost model (booster feature names included)."""
         if not self._xgb_path.exists():
             raise FileNotFoundError(f"XGBoost model not found: {self._xgb_path}")
