@@ -1,15 +1,15 @@
 {
   "generated_at": "2026-06-01",
   "_note": "OOF-stacking modeli. jury_predictions.csv KALDIRILDI (stale, tüm-etiket=1 bozuk orphan; gerçek deliverable = submission/predict.py). Eşik dengeli-cal türevli (§3.2 50/50 jüri prior).",
-  "models/xgb_model.json": "898d026255d88a6dc41829f449c45f2b1851fc81c953dd286e11922ad7bb69a8",
-  "models/lgbm_model.txt": "699700a2a6864c569110a3b032582ee52744bdd1920f1110ea3cd690aec33f7b",
-  "models/gnn_model.pth": "8444d968ded1456935db411f17443c62e19e5357c6541e265c8f8fd898cd57bd",
-  "models/dnn_model.pth": "6c9957ccfc04e4993e8df8c195076e9ec9b04ea96a0b9806f0e3a2caac1c83bc",
-  "models/preprocessor.pkl": "8b0cd53effd757f6911cfdd49a0c13be25df64989fb313d9695af4d8d23d4a46",
-  "models/calibrator.pkl": "77f0a741c8c2c8380712fa708610906756eeb98d6d071c8ebd9b7442c2c4e20c",
-  "models/ensemble.pkl": "0fef7d654483b690477a62a5f698b7f8a474515336401637dcb3da8dc3f86e71",
-  "models/meta_learner.pkl": "139e9d6b60812ea334e1a963a82a06a95f8d2f39c3bc1293cc8bd137f798df2b",
-  "models/ood_detector.pkl": "750ceeb6de1c0bf4f892ea5eed8609cf315ac54ba88fef7db54038aaef10abad",
-  "models/threshold.json": "1ceb479b5ff69c867ebe54461c0bc0446004f04d97e5609ab34e0101db7630af",
-  "models/panel_thresholds.json": "7ac8913f35d36ff3c6097d682b30ae9591920707c2c56716c6dc78e6ca23be37"
+  "models/xgb_model.json": "1574a2b1667152bfa90cf9ba00b960720a65f305396d3089d6a9adecdcae78cf",
+  "models/lgbm_model.txt": "587278aae99b4035505f42df5127fa4d8fb4730260afde489043731d6f5406a8",
+  "models/gnn_model.pth": "cd459f4bf40b05879bd92024cfe2eacd9f68ec330c939b13f02104e04568e357",
+  "models/dnn_model.pth": "0c28924bfd668dc58ee66f99405ab20471b334cc66be20a777af992207fdad00",
+  "models/preprocessor.pkl": "cae62b7b96e81c00eb2c41bf2ffed4891b70a001c743443cc149c9b1dd1b0cc0",
+  "models/calibrator.pkl": "6b5d0463638499880694276eccf32a482423bd37c199ce6edfb0780e2f9d9912",
+  "models/ensemble.pkl": "c8bf51f2f51ae5eb41a699ff8061dc05b879951c64fdf043b1a9578593bf1d73",
+  "models/meta_learner.pkl": "287dfb352c982d06e750755f4f1d039bde85e76fd6001e89009544ca4645c55e",
+  "models/ood_detector.pkl": "134f1024a3b034d72d2d046aa478b7e896859835e9f16fd107ceb5eb8b8896c7",
+  "models/threshold.json": "dfe7e914dfd41dd3592043458981afa1c7a136dcb5d8b30acb429d09da21e5ad",
+  "models/panel_thresholds.json": "3bde70b4bd5f4e6db91f3d1206b8ada1680271877ca5a9b6ac5fefa928b7c904"
 }

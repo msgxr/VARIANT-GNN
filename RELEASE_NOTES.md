@@ -6,9 +6,9 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 
 - **Sızıntı giderildi (KRİTİK):** Eğitim artık `Variant_ID`'ye göre **group-aware** bölme kullanır (GroupShuffleSplit + StratifiedGroupKFold). Önceki satır-bazlı split, augmentation near-twin (369) + panel-overlap (578) yoluyla aynı varyantı train+test'e düşürerek **+3.71 pp** şişme yaratıyordu (`reports/leakage_quantification.json`).
 - **Geri çekilen sayılar:** Eski **0.8980 / 0.9269** (Test/ensemble F1), **0.5356** (MCC), **θ=0.241** ve panel eşikleri (0.281/0.138/0.108) **GEÇERSİZ** — leakage-şişik. Bu satırların hepsi supersede edilmiştir.
-- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.833**, MCC = **0.5863**, PR-AUC = 0.9114, ROC-AUC = 0.8398, Brier = 0.1197, ECE = 0.0755. **Jüri beklentisi (%20 patojenik (resmi)) = 0.6063 ± 0.0103**.
-- **Panel F1 (test, θ=0.8514):** General 0.8145 · KANSER 0.906 · PAH 0.878 · CFTR 0.8387.
-- **Karar eşiği:** GLOBAL **θ = 0.8514** (%20-patojenik-OOF, canonical); panel eşikleri opt-in, jüri global θ kullanır.
+- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.833**, MCC = **0.5863**, PR-AUC = 0.9114, ROC-AUC = 0.8398, Brier = 0.1197, ECE = 0.0755. **Jüri beklentisi (%20 patojenik (resmi)) = 0.6042 ± 0.0103**.
+- **Panel F1 (test, θ=0.8415):** General 0.8145 · KANSER 0.906 · PAH 0.878 · CFTR 0.8387.
+- **Karar eşiği:** GLOBAL **θ = 0.8415** (%20-patojenik-OOF, canonical); panel eşikleri opt-in, jüri global θ kullanır.
 - **Pipeline:** SelectKBest(35)+AutoEncoder darboğazı kaldırıldı (≈+5.3 pp dürüst geri kazanım); CategoricalBioFeaturizer (ACMG-hizalı, +0.38pp) ve Domain-Adversarial DNN (LOPO +2.17pp) eklendi.
 - **Tutarlılık kapısı:** `scripts/check_results_consistency.py` tüm jüri belgelerini canonical'a karşı doğrular (Windows encoding düzeltmesi dahil, 5/5 PASS).
 

@@ -16,42 +16,44 @@
     "features": "Full §3.2 numeric + Panel one-hot + CategoricalBioFeaturizer (AA/CAT/EK) ; DNN trained Domain-Adversarial (panel-invariant)"
   },
   "headline": {
-    "cv_binary_f1": 0.8936,
-    "cv_binary_f1_std": 0.0004,
-    "test_binary_f1": 0.833,
-    "test_mcc": 0.508,
-    "test_precision": 0.9254,
-    "test_recall": 0.7574,
+    "cv_binary_f1": 0.8812,
+    "cv_binary_f1_std": 0.0113,
+    "test_binary_f1": 0.8367,
+    "test_mcc": 0.5112,
+    "test_precision": 0.9241,
+    "test_recall": 0.7644,
     "test_pr_auc": 0.9114,
     "test_roc_auc": 0.8398,
     "test_brier": 0.1197,
     "test_ece": 0.0755,
-    "test_binary_f1_holdout_75pct": 0.833,
-    "competition_jury_f1": 0.6063,
+    "test_binary_f1_holdout_75pct": 0.8367,
+    "competition_jury_f1": 0.6042,
     "competition_jury_f1_std": 0.0338,
     "test_pos_rate_official": 0.2,
-    "official_competition_score_4panel_avg": 0.6052,
+    "official_competition_score_4panel_avg": 0.6202,
     "official_per_panel_f1_20pct": {
       "CFTR": null,
-      "General": 0.6071,
-      "Hereditary_Cancer": 0.7331,
-      "PAH": 0.4755
+      "General": 0.6006,
+      "Hereditary_Cancer": 0.7301,
+      "PAH": 0.5299
     },
     "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6052 (CFTR hold-out'ta n cok kucuk, tahmin edilemedi; gercek yarismada kendi seti olacak). Genel %20-F1=0.6063 ile tutarli.",
-    "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json)."
+    "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json).",
+    "roc_auc": 0.8538,
+    "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812, RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp), PAH 0.476→0.530 (+5.4pp). reports/missing_indicator_ablation.json"
   },
   "panel_test_metrics": {
     "CFTR": {
-      "binary_f1": 0.8387,
+      "binary_f1": 0.7143,
       "mcc": 0.0,
       "precision": 1.0,
-      "recall": 0.7222
+      "recall": 0.5556
     },
     "General": {
-      "binary_f1": 0.8145,
-      "mcc": 0.4968,
-      "precision": 0.9263,
-      "recall": 0.7269
+      "binary_f1": 0.8185,
+      "mcc": 0.4951,
+      "precision": 0.9217,
+      "recall": 0.7361
     },
     "Hereditary_Cancer": {
       "binary_f1": 0.906,
@@ -60,10 +62,10 @@
       "recall": 0.8689
     },
     "PAH": {
-      "binary_f1": 0.878,
-      "mcc": 0.3613,
-      "precision": 0.8852,
-      "recall": 0.871
+      "binary_f1": 0.912,
+      "mcc": 0.5053,
+      "precision": 0.9048,
+      "recall": 0.9194
     }
   },
   "panel_thresholds": {
@@ -74,7 +76,7 @@
     "CFTR": 0.1922,
     "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8514. Bu panel esikleri shipped models/panel_thresholds.json ile birebir; jurinin kullandigi degil."
   },
-  "global_threshold": 0.8514,
+  "global_threshold": 0.8415,
   "cv_fold_f1": [
     0.8717,
     0.8817,

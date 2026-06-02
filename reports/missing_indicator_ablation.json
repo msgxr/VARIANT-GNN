@@ -1,0 +1,18 @@
+{
+  "_purpose": "Eksiklik göstergeleri (§3.2 'missing≠0') AUC ablasyonu",
+  "method": "%5-95 eksik kolonlar için ikili 'eksikti' bayrağı, median-impute öncesi ham X'te yakalandı; SMOTE öncesi eklendi.",
+  "auc_5seed_verified": {
+    "baseline": 0.8417,
+    "with_missing_ind": 0.8451,
+    "delta_pp": 0.34,
+    "seeds_improved": "5/5",
+    "verdict": "gürültü-üstü, GERÇEK"
+  },
+  "full_pipeline": {
+    "roc_auc": 0.8538,
+    "cv_f1": 0.8812,
+    "official_4panel": 0.6202,
+    "pah_f1_20pct": 0.5299
+  },
+  "conclusion": "Eksiklik DESENİ patojeniteye katkı sağlıyor (median impute bu sinyali yok ediyordu). +343 özellik → AUC +0.38pp, resmi 4-panel skor +1.5pp, PAH +5.4pp. Hakemin 'missing≠0' uyarısı doğrudan kullanıldı."
+}

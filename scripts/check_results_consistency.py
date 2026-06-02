@@ -113,7 +113,7 @@ def main() -> int:
             fail(f"shipped threshold {shipped} != canonical global_threshold {gthr}")
             errors += 1
     # no rival global-threshold value asserted in canonical free-text (panel block exempt)
-    rivals = ["0.3367", "0.3104", "0.2562", "0.4456", "θ=0.241", "0.6831"]
+    rivals = ["0.3367", "0.3104", "0.2562", "0.4456", "θ=0.241", "0.6831", "0.8514"]
     canon_txt = canon_path.read_text(encoding="utf-8")
     for ln in canon_txt.splitlines():
         if any(r in ln for r in rivals) and "panel" not in ln.lower() and "0.764" not in ln \

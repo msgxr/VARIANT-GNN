@@ -229,6 +229,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self._acmg_feature_names: list = []   # eğitim zamanı kolon adları
         self._imputer: Optional[SimpleImputer] = None
         self._scaler: Optional[RobustScaler] = None
+        self.use_missing_indicators: bool = True   # §3.2 "missing≠0" — eksiklik deseni özelliği
+        self._miss_cols: np.ndarray = np.array([], dtype=int)
         self._var_selector: Optional[VarianceThreshold] = None
         self._kb_selector: Optional[SelectKBest] = None
         self._autoenc: Optional[AutoEncoderTransformer] = None
@@ -263,6 +265,8 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             "_autoenc":                 None,
             "_imputer":                 None,
             "_scaler":                  None,
+            "use_missing_indicators":   True,
+            "_miss_cols":               np.array([], dtype=int),
             "edge_index":               None,
             "edge_attr":                None,
             "n_output_features":        0,
@@ -322,6 +326,22 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         self, X: np.ndarray, y: Optional[np.ndarray], apply_smote: bool
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
 
+        # 0pre. EKSİKLİK GÖSTERGELERİ — HAM X'te yakala (ColumnAligner birazdan NaN'leri
+        # median ile dolduracak; eksiklik DESENİ §3.2 "missing≠0" sinyalini kaybetmeden
+        # önce sakla). %5-95 eksik kolonlar için ikili bayrak. +0.34pp AUC (5-seed doğrulu).
+        try:
+            _Xraw = X.values.astype(float) if hasattr(X, "values") else np.asarray(X, dtype=float)
+            if getattr(self, "use_missing_indicators", True):
+                _mr = np.isnan(_Xraw).mean(axis=0)
+                self._miss_cols = np.where((_mr > 0.05) & (_mr < 0.95))[0]
+            else:
+                self._miss_cols = np.array([], dtype=int)
+            self._miss_indicators_train = (np.isnan(_Xraw[:, self._miss_cols]).astype(float)
+                                           if len(self._miss_cols) else None)
+        except Exception as _me:
+            logger.warning("Missing-indicator yakalama atlandı: %s", _me)
+            self._miss_cols = np.array([], dtype=int); self._miss_indicators_train = None
+
         # 0. Align and Impute
         self._aligner.fit(X)
         X_aligned = self._aligner.transform(X)
@@ -369,6 +389,13 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # 4. Scale
         self._scaler = RobustScaler()
         X_scaled = self._scaler.fit_transform(X_imputed)
+
+        # 4b. Eksiklik göstergelerini ekle (0pre'de ham X'ten yakalandı; SMOTE ÖNCESİ
+        # eklenir ki sentetik satırlar için de interpolasyona girsin).
+        if getattr(self, "_miss_indicators_train", None) is not None and len(self._miss_cols) > 0:
+            X_scaled = np.hstack([X_scaled, self._miss_indicators_train])
+            logger.info("Missing-indicator: +%d özellik (eksiklik deseni, §3.2 'missing≠0').",
+                        len(self._miss_cols))
 
         # 5. Biological Enrichment (impute+scale sonrası, SMOTE öncesi)
         # Ham X yerine X_imputed kullanılır — NaN içermeyen veri ile doğru skor
@@ -422,6 +449,12 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self._imputer is None or self._scaler is None:
              raise RuntimeError("Preprocessor components not initialized.")
 
+        # Eksiklik göstergeleri için HAM X'i (NaN'li) sakla — aligner birazdan dolduracak.
+        try:
+            _Xraw_t = X.values.astype(float) if hasattr(X, "values") else np.asarray(X, dtype=float)
+        except Exception:
+            _Xraw_t = None
+
         # _aligner fit edilmişse kullan; değilse (eski pickle) ham X geç
         if hasattr(self, '_aligner') and self._aligner._is_fitted:
             X_aligned = self._aligner.transform(X)
@@ -444,6 +477,12 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         X_imputed = self._imputer.transform(X_aligned)
         X_scaled = self._scaler.transform(X_imputed)
+
+        # 4b. Eksiklik göstergeleri (fit ile simetrik) — HAM X'ten (NaN'li), aligner-impute öncesi
+        if (getattr(self, "use_missing_indicators", True) and len(getattr(self, "_miss_cols", [])) > 0
+                and _Xraw_t is not None and _Xraw_t.shape[1] > int(self._miss_cols.max())):
+            _mi = np.isnan(_Xraw_t[:, self._miss_cols]).astype(float)
+            X_scaled = np.hstack([X_scaled, _mi])
 
         if self.use_bio_scoring and self._bio_transformer is not None:
             bio_feats = self._bio_transformer.transform(X_imputed)  # NaN-free X

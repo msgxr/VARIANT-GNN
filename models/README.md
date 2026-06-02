@@ -46,7 +46,7 @@ python main.py --mode crossval --data_file data/train_variants.csv
 | `ensemble.pkl` / `ensemble_config.json` | Ensemble nesnesi / optimize ağırlıklar |
 | `calibrator.pkl` | EnsembleCalibrator (isotonik olasılık kalibrasyonu) |
 | `ood_detector.pkl` | OOD dedektörü (train-fit; inference'ta sadece `detect()`) |
-| `threshold.json` | Global F1-optimal sınıflandırma eşiği θ=0.8514 (canonical) |
+| `threshold.json` | Global F1-optimal sınıflandırma eşiği θ=0.8415 (canonical) |
 | `panel_thresholds.json` | 4 panel × opt-in eşik (varsayılan KAPALI; jüri global θ kullanır) |
 | `metadata.json` / `manifest.json` | SHA256 + versiyon + artifact manifesti |
 | `PROVENANCE.json` | Eğitim verisi kaynağı ve durum belgesi |

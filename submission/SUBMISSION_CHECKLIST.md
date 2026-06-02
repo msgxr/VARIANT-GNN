@@ -63,7 +63,7 @@
 | sklearn deprecation warning suppress | ✅ Tamamlandı | `warnings.filterwarnings()` |
 | tests/unit/ testler mevcut | ✅ Tamamlandı | 444/444 test geçiyor (2 Haziran 2026) |
 | prediction_schema OOD_Score/OOD_Flag | ✅ Tamamlandı | PREDICTION_COLUMNS güncellendi; build_prediction_frame destekliyor |
-| models/threshold.json | ✅ Tamamlandı | θ=0.8514 (global F1-optimal) |
+| models/threshold.json | ✅ Tamamlandı | θ=0.8415 (global F1-optimal) |
 | models/panel_thresholds.json | ✅ Tamamlandı | 4 panel eşik değerleri |
 | models/manifest.json | ✅ Tamamlandı | v1.0.0, model_version, tüm metrikler |
 

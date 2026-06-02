@@ -35,7 +35,7 @@ Bu yükümlülükler gereği:
 ✗  Pilot veya sentetik veri sonuçları gerçek yarışma başarısı gibi gösterilemez
 ✗  Tekrar üretilemeyen metrik veya sonuç beyan edilemez
 ✗  "Kesin başarı", "%100 doğru", "mükemmel sonuç" gibi ifadeler kullanılamaz
-✅  Beyan edilen sonuçlar: CV F1=0.8779±0.0062 | Test F1=0.833 | θ=0.8514 (global)
+✅  Beyan edilen sonuçlar: CV F1=0.8779±0.0062 | Test F1=0.833 | θ=0.8415 (global)
 ```
 
 ### 1.2. Klinik İddia Yasağı — Şartname §10
