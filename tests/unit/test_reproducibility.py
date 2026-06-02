@@ -1,4 +1,5 @@
 """tests/unit/test_reproducibility.py"""
+
 from __future__ import annotations
 
 import json
@@ -9,14 +10,13 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.utils.reproducibility import setup_reproducibility, snapshot_environment
+from src.utils.artifact_manifest import build_manifest, load_manifest, save_manifest
 from src.utils.fingerprinting import (
     config_fingerprint,
     dataframe_fingerprint,
     file_fingerprint,
 )
-from src.utils.artifact_manifest import build_manifest, save_manifest, load_manifest
-
+from src.utils.reproducibility import setup_reproducibility, snapshot_environment
 
 # ---------------------------------------------------------------------------
 # setup_reproducibility

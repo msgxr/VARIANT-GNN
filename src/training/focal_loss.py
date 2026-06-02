@@ -10,6 +10,7 @@ Lin et al. (2017) "Focal Loss for Dense Object Detection"
 Özellikle küçük panellerde (CFTR: 70+70) ve sınır bölgesindeki
 varyantlarda etkilidir.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -50,9 +51,7 @@ class FocalLoss(nn.Module):
         else:
             self.alpha = None
 
-    def forward(
-        self, logits: torch.Tensor, targets: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Parameters
         ----------
@@ -83,6 +82,7 @@ class FocalLoss(nn.Module):
     ) -> "FocalLoss":
         """Factory: compute balanced alpha weights from label array."""
         import numpy as np
+
         counts = np.bincount(y, minlength=num_classes).astype(float)
         alpha = len(y) / (num_classes * counts)
         return FocalLoss(

@@ -3,6 +3,7 @@ src/explainability/clinical_insight.py
 Klinik Karar Destek Asistanı — SHAP değerlerini kullanarak
 varyant bazında otomatik Türkçe klinik yorum üretir.
 """
+
 from __future__ import annotations
 
 from typing import Dict, List, Optional, Tuple
@@ -14,52 +15,70 @@ from typing import Dict, List, Optional, Tuple
 _FEATURE_GROUPS: Dict[str, Dict] = {
     # Amino asit ve protein etkileri
     "amino_acid": {
-        "keywords": ["aa_change", "amino", "missense", "nonsense", "frameshift",
-                     "polyphen", "sift", "provean", "mut_taster", "mut_assessor"],
+        "keywords": [
+            "aa_change",
+            "amino",
+            "missense",
+            "nonsense",
+            "frameshift",
+            "polyphen",
+            "sift",
+            "provean",
+            "mut_taster",
+            "mut_assessor",
+        ],
         "label": "amino asit/protein yapısı değişimi",
         "risk_text": "Bu varyant proteinin yapısal veya fonksiyonel bütünlüğünü olumsuz etkileyen "
-                     "bir amino asit değişimine yol açmaktadır. SIFT/PolyPhen gibi hesaplamalı "
-                     "araçların bu mutasyon için 'damaging/deleterious' tahminleri risk artışını destekler.",
+        "bir amino asit değişimine yol açmaktadır. SIFT/PolyPhen gibi hesaplamalı "
+        "araçların bu mutasyon için 'damaging/deleterious' tahminleri risk artışını destekler.",
         "benign_text": "Amino asit değişimi hesaplamalı araçlar tarafından genellikle 'tolerated' "
-                       "ya da 'benign' olarak değerlendirilmektedir. Protein fonksiyonu korunuyor olabilir.",
+        "ya da 'benign' olarak değerlendirilmektedir. Protein fonksiyonu korunuyor olabilir.",
     },
     # Evrimsel korunmuşluk
     "conservation": {
         "keywords": ["phylop", "phastcons", "gerp", "conservation", "cons"],
         "label": "evrimsel korunmuşluk skoru",
         "risk_text": "Varyantın bulunduğu genomik bölge evrimsel süreçte yüksek düzeyde "
-                     "korunmuştur (yüksek GERP/PhyloP skoru). Korunmuş bir bölgedeki değişimin "
-                     "güçlü negatif seleksiyona tabi olması, fonksiyonel önemi işaret eder.",
+        "korunmuştur (yüksek GERP/PhyloP skoru). Korunmuş bir bölgedeki değişimin "
+        "güçlü negatif seleksiyona tabi olması, fonksiyonel önemi işaret eder.",
         "benign_text": "Etkilenen bölge evrimsel olarak az korunmuş bir bölgede yer almaktadır. "
-                       "Bu durum varyantın işlevsel açıdan daha az kritik bir konumda olduğuna işaret edebilir.",
+        "Bu durum varyantın işlevsel açıdan daha az kritik bir konumda olduğuna işaret edebilir.",
     },
     # Popülasyon frekansı
     "population": {
         "keywords": ["af", "freq", "population", "gnomad", "exac", "allele", "maf", "1000g"],
         "label": "popülasyon allel frekansı",
         "risk_text": "Varyant populasyonda çok nadir ya da hiç gözlemlenmemiş (düşük AF) bir değişimi "
-                     "temsil etmektedir. Nadir varyantlar sıklıkla hastalık ilişkili varyantlarla örtüşür.",
+        "temsil etmektedir. Nadir varyantlar sıklıkla hastalık ilişkili varyantlarla örtüşür.",
         "benign_text": "Varyant popülasyonda nispeten yüksek frekansta bulunmaktadır (yüksek AF). "
-                       "Yaygın varyantlar genellikle hastalık yapıcı olarak değerlendirilmez.",
+        "Yaygın varyantlar genellikle hastalık yapıcı olarak değerlendirilmez.",
     },
     # Hesaplamalı risk skorları
     "computational": {
-        "keywords": ["cadd", "revel", "dann", "fathmm", "vest", "metasvm", "metalr",
-                     "primateai", "spliceai", "score"],
+        "keywords": ["cadd", "revel", "dann", "fathmm", "vest", "metasvm", "metalr", "primateai", "spliceai", "score"],
         "label": "birleşik hesaplamalı risk skoru",
         "risk_text": "Birden fazla hesaplamalı yöntem (ör. CADD, REVEL) bu varyant için yüksek "
-                     "patojenite skoru öngörmektedir. Bu konsensüs modellerin yüksek skorları "
-                     "güçlü bir patojenite kanıtı niteliği taşır.",
+        "patojenite skoru öngörmektedir. Bu konsensüs modellerin yüksek skorları "
+        "güçlü bir patojenite kanıtı niteliği taşır.",
         "benign_text": "Hesaplamalı risk araçları bu varyant için düşük-orta düzey patojenite puanı vermektedir.",
     },
     # Sekans özellikleri
     "sequence": {
-        "keywords": ["gc_content", "cpg", "sequence", "nucleotide", "ref", "alt",
-                     "transition", "transversion", "codon"],
+        "keywords": [
+            "gc_content",
+            "cpg",
+            "sequence",
+            "nucleotide",
+            "ref",
+            "alt",
+            "transition",
+            "transversion",
+            "codon",
+        ],
         "label": "sekans bağlamı ve CpG içeriği",
         "risk_text": "Sekans bağlamı (CpG adaları, GC içeriği) analizi bu bölgenin metilasyon "
-                     "baskılanmasına yatkın olduğunu göstermektedir. CpG'deki C→T değişimleri "
-                     "insan hastalıklarında sık görülen mutasyon mekanizmasıdır.",
+        "baskılanmasına yatkın olduğunu göstermektedir. CpG'deki C→T değişimleri "
+        "insan hastalıklarında sık görülen mutasyon mekanizmasıdır.",
         "benign_text": "Sekans bağlamı özellikler açısından ortalama değerlere yakındır.",
     },
     # Splicing
@@ -67,23 +86,23 @@ _FEATURE_GROUPS: Dict[str, Dict] = {
         "keywords": ["splice", "donor", "acceptor", "intron", "exon", "utr"],
         "label": "splicing bölgesi etkisi",
         "risk_text": "Varyant splicing donor/akseptör bölgesine yakın konumdadır. Splicing anomalileri "
-                     "transkript kaybına veya anormal protein üretimine yol açabilir.",
+        "transkript kaybına veya anormal protein üretimine yol açabilir.",
         "benign_text": "Varyantın splicing bölgeleri üzerinde anlamlı bir etkisinin olmadığı öngörülmektedir.",
     },
 }
 
 _RISK_ZONES = {
     "critical": (75, 100),
-    "high":     (60, 75),
+    "high": (60, 75),
     "moderate": (40, 60),
-    "low":      (0, 40),
+    "low": (0, 40),
 }
 
 _ZONE_LABELS = {
     "critical": ("🔴 KRİTİK RİSK", "#fc8181"),
-    "high":     ("🟠 YÜKSEK RİSK", "#f6ad55"),
-    "moderate": ("🟡 ORTA RİSK",   "#faf089"),
-    "low":      ("🟢 DÜŞÜK RİSK",  "#68d391"),
+    "high": ("🟠 YÜKSEK RİSK", "#f6ad55"),
+    "moderate": ("🟡 ORTA RİSK", "#faf089"),
+    "low": ("🟢 DÜŞÜK RİSK", "#68d391"),
 }
 
 
@@ -181,29 +200,33 @@ def generate_clinical_insight(
             g_info = _FEATURE_GROUPS[group]
             insight_text = g_info["risk_text"] if is_pathogenic else g_info["benign_text"]
             direction = "artırdı" if shap_val > 0 else "azalttı"
-            key_findings.append({
-                "feature":   feat_name,
-                "group":     g_info["label"],
-                "shap":      shap_val,
-                "direction": direction,
-                "insight":   insight_text,
-            })
+            key_findings.append(
+                {
+                    "feature": feat_name,
+                    "group": g_info["label"],
+                    "shap": shap_val,
+                    "direction": direction,
+                    "insight": insight_text,
+                }
+            )
         if len(key_findings) >= 3:
             break
 
     # En az 1 bulgu garantisi
     if not key_findings and top_features:
         feat_name, shap_val = top_features[0]
-        key_findings.append({
-            "feature":   feat_name,
-            "group":     "hesaplamalı özellik",
-            "shap":      shap_val,
-            "direction": "artırdı" if shap_val > 0 else "azalttı",
-            "insight":   (
-                "Bu özellik, ensemble modelin temel belirleyicilerinden biridir. "
-                "Değerinin tipik patojenik varyantlarla uyumu risk tahminine yansımaktadır."
-            ),
-        })
+        key_findings.append(
+            {
+                "feature": feat_name,
+                "group": "hesaplamalı özellik",
+                "shap": shap_val,
+                "direction": "artırdı" if shap_val > 0 else "azalttı",
+                "insight": (
+                    "Bu özellik, ensemble modelin temel belirleyicilerinden biridir. "
+                    "Değerinin tipik patojenik varyantlarla uyumu risk tahminine yansımaktadır."
+                ),
+            }
+        )
 
     # ── Öneri ──────────────────────────────────────────────────
     if zone in ("critical", "high"):
@@ -225,12 +248,12 @@ def generate_clinical_insight(
         )
 
     return {
-        "zone":           zone,
-        "zone_label":     zone_label,
-        "zone_color":     zone_color,
-        "summary":        summary,
-        "key_findings":   key_findings,
+        "zone": zone,
+        "zone_label": zone_label,
+        "zone_color": zone_color,
+        "summary": summary,
+        "key_findings": key_findings,
         "recommendation": recommendation,
-        "probability":    probability,
-        "risk_score":     risk_score,
+        "probability": probability,
+        "risk_score": risk_score,
     }

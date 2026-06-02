@@ -8,6 +8,7 @@ Primary competition metric (TEKNOFEST 2026 §7.3):
 
 Additional metrics: Macro F1, Precision, Recall, ROC-AUC, PR-AUC, Brier Score, MCC, ECE.
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,56 +35,56 @@ class EvaluationReport:
     """All metrics in one dataclass."""
 
     # TEKNOFEST 2026 §7.3 primary ranking metric: F1 = 2*TP/(2*TP+FP+FN)
-    binary_f1:  float = 0.0   # binary F1 for Pathogenic class (positive=1)
+    binary_f1: float = 0.0  # binary F1 for Pathogenic class (positive=1)
     # Supporting metrics
-    macro_f1:   float = 0.0
-    precision:  float = 0.0
-    recall:     float = 0.0
-    roc_auc:    Optional[float] = None
-    pr_auc:     Optional[float] = None
+    macro_f1: float = 0.0
+    precision: float = 0.0
+    recall: float = 0.0
+    roc_auc: Optional[float] = None
+    pr_auc: Optional[float] = None
     # Calibration
     brier_score: float = 0.0
-    ece:         float = 0.0
+    ece: float = 0.0
     # Robustness
-    mcc:         float = 0.0
+    mcc: float = 0.0
     # Confusion matrix
     conf_matrix: Optional[np.ndarray] = None
     # Per-threshold performance for reporting
     threshold_used: float = 0.5
     # Calibration curve data
     calibration_fraction_pos: Optional[np.ndarray] = None
-    calibration_mean_pred:    Optional[np.ndarray] = None
+    calibration_mean_pred: Optional[np.ndarray] = None
 
     def as_dict(self) -> Dict[str, object]:
         return {
             # §7.3 primary competition metric first
-            "binary_f1":     self.binary_f1,
-            "macro_f1":      self.macro_f1,
-            "precision":     self.precision,
-            "recall":        self.recall,
-            "roc_auc":       self.roc_auc,
-            "pr_auc":        self.pr_auc,
-            "brier_score":   self.brier_score,
-            "ece":           self.ece,
-            "mcc":           self.mcc,
-            "threshold":     self.threshold_used,
+            "binary_f1": self.binary_f1,
+            "macro_f1": self.macro_f1,
+            "precision": self.precision,
+            "recall": self.recall,
+            "roc_auc": self.roc_auc,
+            "pr_auc": self.pr_auc,
+            "brier_score": self.brier_score,
+            "ece": self.ece,
+            "mcc": self.mcc,
+            "threshold": self.threshold_used,
         }
 
     def log(self, prefix: str = "") -> None:
         tag = f"[{prefix}] " if prefix else ""
-        logger.info("%s=== Evaluation Report ===",                   tag)
-        logger.info("%s[§7.3 PRIMARY] Binary F1     : %.4f",        tag, self.binary_f1)
-        logger.info("%s               Macro F1      : %.4f",        tag, self.macro_f1)
-        logger.info("%s               Precision     : %.4f",        tag, self.precision)
-        logger.info("%s               Recall        : %.4f",        tag, self.recall)
-        logger.info("%s               MCC           : %.4f",        tag, self.mcc)
+        logger.info("%s=== Evaluation Report ===", tag)
+        logger.info("%s[§7.3 PRIMARY] Binary F1     : %.4f", tag, self.binary_f1)
+        logger.info("%s               Macro F1      : %.4f", tag, self.macro_f1)
+        logger.info("%s               Precision     : %.4f", tag, self.precision)
+        logger.info("%s               Recall        : %.4f", tag, self.recall)
+        logger.info("%s               MCC           : %.4f", tag, self.mcc)
         if self.roc_auc is not None:
-            logger.info("%s               ROC-AUC       : %.4f",    tag, self.roc_auc)
+            logger.info("%s               ROC-AUC       : %.4f", tag, self.roc_auc)
         if self.pr_auc is not None:
-            logger.info("%s               PR-AUC        : %.4f",    tag, self.pr_auc)
-        logger.info("%s[CALIB ]       Brier Score   : %.4f",        tag, self.brier_score)
-        logger.info("%s               ECE           : %.4f",        tag, self.ece)
-        logger.info("%s               Threshold     : %.3f",        tag, self.threshold_used)
+            logger.info("%s               PR-AUC        : %.4f", tag, self.pr_auc)
+        logger.info("%s[CALIB ]       Brier Score   : %.4f", tag, self.brier_score)
+        logger.info("%s               ECE           : %.4f", tag, self.ece)
+        logger.info("%s               Threshold     : %.3f", tag, self.threshold_used)
 
 
 # ---------------------------------------------------------------------------
@@ -109,15 +110,15 @@ def expected_calibration_error(
     -------
     ECE as a float in [0, 1].
     """
-    bins   = np.linspace(0.0, 1.0, n_bins + 1)
-    ece    = 0.0
-    n      = len(y_true)
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    ece = 0.0
+    n = len(y_true)
 
     for lo, hi in zip(bins[:-1], bins[1:]):
         mask = (y_prob >= lo) & (y_prob < hi)
         if mask.sum() == 0:
             continue
-        acc  = y_true[mask].mean()
+        acc = y_true[mask].mean()
         conf = y_prob[mask].mean()
         ece += mask.sum() / n * abs(conf - acc)
 
@@ -193,7 +194,7 @@ def find_panel_thresholds(
             mask = np.ones(len(y_true), dtype=bool)
             label = "General"
         else:
-            mask  = np.array(panels) == panel
+            mask = np.array(panels) == panel
             label = panel
 
         if mask.sum() < 10:
@@ -230,6 +231,7 @@ def save_threshold_report(
     import json
 
     import matplotlib
+
     matplotlib.use("Agg")
     from pathlib import Path
 
@@ -256,13 +258,20 @@ def save_threshold_report(
 
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.plot(rec_arr, prec_arr, lw=2, color="#e63946", label=f"PR Eğrisi (AUC={pr_auc:.4f})")
-    ax.axvline(rec_arr[np.argmax(f1_arr)], color="#2563eb", ls="--", lw=1.2,
-               label=f"Optimal Eşik ({global_thr:.3f}) F1={global_f1:.4f}")
+    ax.axvline(
+        rec_arr[np.argmax(f1_arr)],
+        color="#2563eb",
+        ls="--",
+        lw=1.2,
+        label=f"Optimal Eşik ({global_thr:.3f}) F1={global_f1:.4f}",
+    )
     ax.set_xlabel("Recall", fontsize=11)
     ax.set_ylabel("Precision", fontsize=11)
     ax.set_title("Precision-Recall Eğrisi — TEKNOFEST 2026", fontsize=12, fontweight="bold")
-    ax.legend(fontsize=9); ax.grid(alpha=0.3)
-    ax.set_xlim(0, 1.02); ax.set_ylim(0, 1.02)
+    ax.legend(fontsize=9)
+    ax.grid(alpha=0.3)
+    ax.set_xlim(0, 1.02)
+    ax.set_ylim(0, 1.02)
     plt.tight_layout()
     fig_path = fig_dir / "precision_recall_curve.png"
     plt.savefig(fig_path, dpi=150, bbox_inches="tight")
@@ -273,7 +282,9 @@ def save_threshold_report(
     panel_thresholds: Dict[str, float] = {"General": global_thr}
     if panels is not None:
         panel_thresholds = find_panel_thresholds(
-            y_true, y_prob, panels,
+            y_true,
+            y_prob,
+            panels,
             output_path=str(rep_dir / "panel_thresholds.json"),
         )
 
@@ -296,9 +307,9 @@ def save_threshold_report(
 
 
 def evaluate(
-    y_true:    np.ndarray,
-    y_prob:    np.ndarray,            # (N, 2) array
-    threshold: float    = 0.5,
+    y_true: np.ndarray,
+    y_prob: np.ndarray,  # (N, 2) array
+    threshold: float = 0.5,
     n_calibration_bins: int = 10,
 ) -> EvaluationReport:
     """
@@ -310,50 +321,49 @@ def evaluate(
     y_prob    : (N, 2) probability array for [Benign, Pathogenic].
     threshold : Classification threshold applied to Pathogenic prob.
     """
-    p1    = y_prob[:, 1]
+    p1 = y_prob[:, 1]
     preds = (p1 >= threshold).astype(int)
 
     # §7.3 primary competition metric: binary F1 (TP/FP/FN for Pathogenic class)
     binary_f1 = float(f1_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
-    macro_f1  = float(f1_score(y_true, preds, average="macro", zero_division=0))
+    macro_f1 = float(f1_score(y_true, preds, average="macro", zero_division=0))
     precision = float(precision_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
-    recall    = float(recall_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
-    mcc       = float(matthews_corrcoef(y_true, preds))
-    brier     = float(brier_score_loss(y_true, p1))
-    ece       = expected_calibration_error(y_true, p1, n_bins=n_calibration_bins)
-    cm        = confusion_matrix(y_true, preds)
+    recall = float(recall_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
+    mcc = float(matthews_corrcoef(y_true, preds))
+    brier = float(brier_score_loss(y_true, p1))
+    ece = expected_calibration_error(y_true, p1, n_bins=n_calibration_bins)
+    cm = confusion_matrix(y_true, preds)
 
     roc_auc: Optional[float] = None
-    pr_auc:  Optional[float] = None
+    pr_auc: Optional[float] = None
     try:
         roc_auc = float(roc_auc_score(y_true, p1))
-        pr_auc  = float(average_precision_score(y_true, p1))
+        pr_auc = float(average_precision_score(y_true, p1))
     except ValueError:
         pass
 
     # Calibration curve
     from sklearn.calibration import calibration_curve
+
     try:
-        frac_pos, mean_pred = calibration_curve(
-            y_true, p1, n_bins=n_calibration_bins, strategy="uniform"
-        )
+        frac_pos, mean_pred = calibration_curve(y_true, p1, n_bins=n_calibration_bins, strategy="uniform")
     except Exception:
         frac_pos, mean_pred = np.array([]), np.array([])
 
     report = EvaluationReport(
-        binary_f1                 = binary_f1,
-        macro_f1                  = macro_f1,
-        precision                 = precision,
-        recall                    = recall,
-        roc_auc                   = roc_auc,
-        pr_auc                    = pr_auc,
-        brier_score               = brier,
-        ece                       = ece,
-        mcc                       = mcc,
-        conf_matrix               = cm,
-        threshold_used            = threshold,
-        calibration_fraction_pos  = frac_pos,
-        calibration_mean_pred     = mean_pred,
+        binary_f1=binary_f1,
+        macro_f1=macro_f1,
+        precision=precision,
+        recall=recall,
+        roc_auc=roc_auc,
+        pr_auc=pr_auc,
+        brier_score=brier,
+        ece=ece,
+        mcc=mcc,
+        conf_matrix=cm,
+        threshold_used=threshold,
+        calibration_fraction_pos=frac_pos,
+        calibration_mean_pred=mean_pred,
     )
     report.log()
     return report
@@ -364,7 +374,7 @@ def evaluate(
 # ---------------------------------------------------------------------------
 
 
-from typing import Union
+from typing import Union  # noqa: E402
 
 
 def evaluate_per_panel(
@@ -406,10 +416,12 @@ def evaluate_per_panel(
         reports[str(panel)] = panel_report
         logger.info(
             "Panel %s | n=%d | thr=%.3f | F1=%.4f | AUC=%s | Brier=%.4f",
-            panel, mask.sum(), panel_thr, panel_report.binary_f1,
+            panel,
+            mask.sum(),
+            panel_thr,
+            panel_report.binary_f1,
             f"{panel_report.roc_auc:.4f}" if panel_report.roc_auc else "N/A",
             panel_report.brier_score,
         )
 
     return reports
-

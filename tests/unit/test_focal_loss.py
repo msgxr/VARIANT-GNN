@@ -2,6 +2,7 @@
 tests/unit/test_focal_loss.py
 Unit tests for FocalLoss (src/training/focal_loss.py).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -14,6 +15,7 @@ class TestFocalLoss:
 
     def test_forward_shape(self):
         from src.training.focal_loss import FocalLoss
+
         loss_fn = FocalLoss(gamma=2.0)
         logits = torch.randn(16, 2)
         targets = torch.randint(0, 2, (16,))
@@ -24,6 +26,7 @@ class TestFocalLoss:
     def test_gamma_zero_equals_ce(self):
         """γ=0 → Focal Loss == Cross-Entropy (without alpha)."""
         from src.training.focal_loss import FocalLoss
+
         torch.manual_seed(42)
         logits = torch.randn(32, 2)
         targets = torch.randint(0, 2, (32,))
@@ -35,6 +38,7 @@ class TestFocalLoss:
     def test_higher_gamma_lower_easy_loss(self):
         """Higher gamma should down-weight easy examples → lower loss on confident predictions."""
         from src.training.focal_loss import FocalLoss
+
         # Create easy predictions (high confidence correct)
         logits = torch.tensor([[5.0, -5.0], [-5.0, 5.0], [4.0, -4.0]], dtype=torch.float)
         targets = torch.tensor([0, 1, 0])
@@ -48,6 +52,7 @@ class TestFocalLoss:
     def test_alpha_weights(self):
         """Alpha class weights should affect loss."""
         from src.training.focal_loss import FocalLoss
+
         torch.manual_seed(42)
         logits = torch.randn(20, 2)
         targets = torch.randint(0, 2, (20,))
@@ -60,6 +65,7 @@ class TestFocalLoss:
 
     def test_reduction_none_shape(self):
         from src.training.focal_loss import FocalLoss
+
         loss_fn = FocalLoss(gamma=2.0, reduction="none")
         logits = torch.randn(10, 2)
         targets = torch.randint(0, 2, (10,))
@@ -68,6 +74,7 @@ class TestFocalLoss:
 
     def test_reduction_sum(self):
         from src.training.focal_loss import FocalLoss
+
         loss_fn = FocalLoss(gamma=2.0, reduction="sum")
         logits = torch.randn(10, 2)
         targets = torch.randint(0, 2, (10,))
@@ -77,6 +84,7 @@ class TestFocalLoss:
     def test_from_labels_factory(self):
         """Factory method should compute balanced alpha weights."""
         from src.training.focal_loss import FocalLoss
+
         y = np.array([0, 0, 0, 1, 1, 1, 1, 1])  # imbalanced: 3 vs 5
         fl = FocalLoss.from_labels(y, gamma=2.0, num_classes=2)
         assert fl.alpha is not None
@@ -87,10 +95,13 @@ class TestFocalLoss:
     def test_gradient_flows(self):
         """Ensure gradients flow through FocalLoss."""
         from src.training.focal_loss import FocalLoss
+
         logits = torch.randn(8, 2, requires_grad=True)
         targets = torch.randint(0, 2, (8,))
         loss = FocalLoss(gamma=2.0)(logits, targets)
         loss.backward()
         assert logits.grad is not None
+
+
 """
 """

@@ -35,6 +35,7 @@ Bu modül, kolon adına ASLA güvenmeyen alternatif bir inference yolu sunar:
 
 Çıktı: Standart predict_from_dataset DataFrame'i (Variant_ID + tahminler).
 """
+
 from __future__ import annotations
 
 import logging
@@ -52,8 +53,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-_NUC_ALPHABET = set("ACGTNRYKMSWBDHV.-_")    # IUPAC + gap chars
-_AA_ALPHABET  = set("ACDEFGHIKLMNPQRSTVWYX*-")
+_NUC_ALPHABET = set("ACGTNRYKMSWBDHV.-_")  # IUPAC + gap chars
+_AA_ALPHABET = set("ACDEFGHIKLMNPQRSTVWYX*-")
 
 
 def _is_nucleotide_string(s: str) -> bool:
@@ -89,23 +90,23 @@ def detect_sequence_columns(
     Returns ``(nuc_col_name, aa_col_name)`` — either may be None if not found.
     """
     nuc_col: Optional[str] = None
-    aa_col:  Optional[str] = None
+    aa_col: Optional[str] = None
 
     object_cols = df.select_dtypes(include="object").columns.tolist()
     sample = df.head(min(sample_rows, len(df)))
 
     nuc_scores: Dict[str, float] = {}
-    aa_scores:  Dict[str, float] = {}
+    aa_scores: Dict[str, float] = {}
 
     for col in object_cols:
         values = sample[col].dropna().astype(str).tolist()
         if not values:
             continue
         nuc_hits = sum(1 for v in values if _is_nucleotide_string(v))
-        aa_hits  = sum(1 for v in values if _is_amino_acid_string(v))
+        aa_hits = sum(1 for v in values if _is_amino_acid_string(v))
         if values:
             nuc_scores[col] = nuc_hits / len(values)
-            aa_scores[col]  = aa_hits / len(values)
+            aa_scores[col] = aa_hits / len(values)
 
     # Best Nuc candidate (≥ 80 % rows match)
     if nuc_scores:
@@ -114,7 +115,8 @@ def detect_sequence_columns(
             nuc_col = best_nuc[0]
             logger.info(
                 "Sequence auto-detect: Nuc_Context → '%s' (score=%.2f)",
-                best_nuc[0], best_nuc[1],
+                best_nuc[0],
+                best_nuc[1],
             )
 
     # Best AA candidate (must differ from Nuc col)
@@ -124,7 +126,8 @@ def detect_sequence_columns(
                 aa_col = col
                 logger.info(
                     "Sequence auto-detect: AA_Context → '%s' (score=%.2f)",
-                    col, score,
+                    col,
+                    score,
                 )
                 break
 
@@ -137,8 +140,11 @@ def detect_sequence_columns(
 
 
 KNOWN_PANEL_VALUES = {
-    "general", "hereditary_cancer", "hereditary cancer",
-    "pah", "cftr",
+    "general",
+    "hereditary_cancer",
+    "hereditary cancer",
+    "pah",
+    "cftr",
 }
 
 
@@ -156,8 +162,7 @@ def detect_panel_column(df: pd.DataFrame) -> Optional[str]:
             continue
         match_count = sum(1 for v in unique if v in KNOWN_PANEL_VALUES)
         if match_count / len(unique) >= 0.60:
-            logger.info("Panel column auto-detect: '%s' (%d/%d values match)",
-                        col, match_count, len(unique))
+            logger.info("Panel column auto-detect: '%s' (%d/%d values match)", col, match_count, len(unique))
             return col
     return None
 
@@ -193,12 +198,12 @@ class AnonymousDataAdapter:
     def __init__(
         self,
         expected_n_features: int,
-        feature_signatures:  Optional[Dict[str, Dict]] = None,
-        fuzzy_threshold:     float = 0.70,
+        feature_signatures: Optional[Dict[str, Dict]] = None,
+        fuzzy_threshold: float = 0.70,
     ) -> None:
         self.expected_n_features = expected_n_features
-        self.feature_signatures  = feature_signatures or {}
-        self.fuzzy_threshold     = fuzzy_threshold
+        self.feature_signatures = feature_signatures or {}
+        self.fuzzy_threshold = fuzzy_threshold
 
     # ------------------------------------------------------------------
 
@@ -222,9 +227,7 @@ class AnonymousDataAdapter:
         variant_id_col = self._detect_variant_id(df)
         if variant_id_col is None:
             logger.warning("Variant_ID kolonu bulunamadı — sentetik ID üretiliyor.")
-            df["__synthetic_variant_id"] = [
-                f"VAR_{i:06d}" for i in range(len(df))
-            ]
+            df["__synthetic_variant_id"] = [f"VAR_{i:06d}" for i in range(len(df))]
             variant_id_col = "__synthetic_variant_id"
 
         # 2. Panel detection
@@ -254,15 +257,9 @@ class AnonymousDataAdapter:
 
         # Extract sequences before any further processing
         nuc_sequences = (
-            metadata_df["Nuc_Context"].astype(str).tolist()
-            if "Nuc_Context" in metadata_df.columns
-            else None
+            metadata_df["Nuc_Context"].astype(str).tolist() if "Nuc_Context" in metadata_df.columns else None
         )
-        aa_sequences = (
-            metadata_df["AA_Context"].astype(str).tolist()
-            if "AA_Context" in metadata_df.columns
-            else None
-        )
+        aa_sequences = metadata_df["AA_Context"].astype(str).tolist() if "AA_Context" in metadata_df.columns else None
 
         # 4. Numeric feature alignment
         # Drop metadata columns and keep numeric ones for feature matrix
@@ -286,9 +283,10 @@ class AnonymousDataAdapter:
         feat_df = self._fit_to_expected_size(feat_df)
 
         logger.info(
-            "AnonymousDataAdapter: adapted %d→%d features (n=%d, "
-            "panel=%s, nuc=%s, aa=%s)",
-            feat_df_raw.shape[1], feat_df.shape[1], len(df),
+            "AnonymousDataAdapter: adapted %d→%d features (n=%d, panel=%s, nuc=%s, aa=%s)",
+            feat_df_raw.shape[1],
+            feat_df.shape[1],
+            len(df),
             "yes" if panel_col else "no",
             "yes" if nuc_col else "no",
             "yes" if aa_col else "no",
@@ -338,11 +336,11 @@ class AnonymousDataAdapter:
                 continue
             q1, q3 = series.quantile(0.25), series.quantile(0.75)
             inc_sigs[col] = {
-                "mean":  float(series.mean()),
-                "std":   float(series.std()),
-                "iqr":   float(q3 - q1),
-                "min":   float(series.min()),
-                "max":   float(series.max()),
+                "mean": float(series.mean()),
+                "std": float(series.std()),
+                "iqr": float(q3 - q1),
+                "min": float(series.min()),
+                "max": float(series.max()),
                 "range": float(series.max() - series.min()),
             }
 
@@ -354,7 +352,7 @@ class AnonymousDataAdapter:
                 va, vb = a.get(key, 0.0), b.get(key, 0.0)
                 if abs(va) + abs(vb) > 1e-9:
                     delta = abs(va - vb) / (abs(va) + abs(vb))
-                    score += (1.0 - delta)
+                    score += 1.0 - delta
                     weight += 1.0
             return score / max(weight, 1.0)
 
@@ -392,7 +390,8 @@ class AnonymousDataAdapter:
 
         logger.info(
             "Distributional align: %d/%d incoming columns matched.",
-            len(mapping), feat_df.shape[1],
+            len(mapping),
+            feat_df.shape[1],
         )
         return feat_df[new_columns]
 
@@ -406,15 +405,18 @@ class AnonymousDataAdapter:
         elif n_cols > self.expected_n_features:
             logger.warning(
                 "AnonymousDataAdapter: %d → %d columns (truncated).",
-                n_cols, self.expected_n_features,
+                n_cols,
+                self.expected_n_features,
             )
-            return feat_df.iloc[:, :self.expected_n_features]
+            return feat_df.iloc[:, : self.expected_n_features]
         else:
             # Pad with zero columns
             n_pad = self.expected_n_features - n_cols
             logger.warning(
                 "AnonymousDataAdapter: %d → %d columns (zero-padded by %d).",
-                n_cols, self.expected_n_features, n_pad,
+                n_cols,
+                self.expected_n_features,
+                n_pad,
             )
             for i in range(n_pad):
                 feat_df[f"__pad_{i}"] = 0.0
@@ -427,9 +429,9 @@ class AnonymousDataAdapter:
 
 
 def predict_anonymous_csv(
-    csv_path:    str | Path,
-    pipeline,                     # InferencePipeline (loaded)
-    output_csv:  Optional[str | Path] = None,
+    csv_path: str | Path,
+    pipeline,  # InferencePipeline (loaded)
+    output_csv: Optional[str | Path] = None,
 ) -> pd.DataFrame:
     """
     End-to-end anonymous-CSV → submission predictions.
@@ -452,8 +454,7 @@ def predict_anonymous_csv(
     df_result : pandas DataFrame with predictions + metadata.
     """
     df = pd.read_csv(csv_path, low_memory=False)
-    logger.info("Anonymous CSV loaded: %d rows × %d cols from %s",
-                len(df), df.shape[1], csv_path)
+    logger.info("Anonymous CSV loaded: %d rows × %d cols from %s", len(df), df.shape[1], csv_path)
 
     # Pull expected n_features and feature_signatures from pipeline
     preprocessor = pipeline._preprocessor
@@ -468,30 +469,32 @@ def predict_anonymous_csv(
     feature_signatures = getattr(preprocessor, "feature_signatures", {})
 
     adapter = AnonymousDataAdapter(
-        expected_n_features = expected_n,
-        feature_signatures  = feature_signatures,
+        expected_n_features=expected_n,
+        feature_signatures=feature_signatures,
     )
     feat_df, meta_df, nuc_seqs, aa_seqs = adapter.adapt(df)
 
     # Build LoadedDataset and predict
     from src.data.loader import LoadedDataset
+
     dataset = LoadedDataset(
-        features        = feat_df,
-        labels          = None,
-        metadata        = meta_df,
-        feature_columns = list(feat_df.columns),
-        nuc_sequences   = nuc_seqs,
-        aa_sequences    = aa_seqs,
+        features=feat_df,
+        labels=None,
+        metadata=meta_df,
+        feature_columns=list(feat_df.columns),
+        nuc_sequences=nuc_seqs,
+        aa_sequences=aa_seqs,
     )
     df_result = pipeline.predict_from_dataset(dataset)
 
     if output_csv is not None:
         from src.api.export import export_predictions
+
         export_predictions(
             df_result,
-            output_dir      = Path(output_csv).parent,
-            prefix          = Path(output_csv).stem,
-            submission_path = output_csv,
+            output_dir=Path(output_csv).parent,
+            prefix=Path(output_csv).stem,
+            submission_path=output_csv,
         )
 
     return df_result

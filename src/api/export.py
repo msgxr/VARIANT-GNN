@@ -11,6 +11,7 @@ Garanti edilen 7 kolon (submission/predictions.csv):
   uncertainty_score     | MC-Dropout std (varsa) yoksa max_prob tabanlı
   expert_review_flag    | True = Uzman değerlendirmesi gerekli
 """
+
 from __future__ import annotations
 
 import logging
@@ -45,9 +46,7 @@ def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     # 2. prediction_label  (1/0)
     if "Prediction" in df.columns:
-        out["prediction_label"] = df["Prediction"].map(
-            {"Pathogenic": 1, "Benign": 0}
-        ).fillna(0).astype(int)
+        out["prediction_label"] = df["Prediction"].map({"Pathogenic": 1, "Benign": 0}).fillna(0).astype(int)
     elif "Predicted_Label" in df.columns:
         out["prediction_label"] = df["Predicted_Label"].astype(int)
     else:
@@ -79,15 +78,11 @@ def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
         # Güvenden türet: yüksek güven → düşük belirsizlik
         out["uncertainty_score"] = (1 - df["Confidence"].clip(0, 100) / 100).round(4)
     else:
-        out["uncertainty_score"] = (
-            1 - out["confidence_level"] / 100
-        ).round(4)
+        out["uncertainty_score"] = (1 - out["confidence_level"] / 100).round(4)
 
     # 7. expert_review_flag  (bool)
     if "Clinical_Flag" in df.columns:
-        out["expert_review_flag"] = df["Clinical_Flag"].str.contains(
-            "Uzman", na=False
-        )
+        out["expert_review_flag"] = df["Clinical_Flag"].str.contains("Uzman", na=False)
     else:
         # Belirsizlik > 0.30 veya risk 30-70 arası → gri bölge
         unc = out["uncertainty_score"].values
@@ -132,8 +127,7 @@ def export_predictions(
     rest = [c for c in full_df.columns if c not in lead]
     full_path = output_dir / f"{prefix}_full.csv"
     full_df[lead + rest].to_csv(full_path, index=False)
-    logger.info("Full CSV → %s (%d satır, %d kolon)",
-                full_path, len(full_df), len(full_df.columns))
+    logger.info("Full CSV → %s (%d satır, %d kolon)", full_path, len(full_df), len(full_df.columns))
 
     # ── 3. Submission path (--output argümanı) ────────────────────────
     sub_path = None
@@ -145,11 +139,13 @@ def export_predictions(
 
     # ── Özet istatistikler ────────────────────────────────────────────
     n_path = int((jury_df["prediction_label"] == 1).sum())
-    n_ben  = int((jury_df["prediction_label"] == 0).sum())
-    n_exp  = int(jury_df["expert_review_flag"].sum())
+    n_ben = int((jury_df["prediction_label"] == 0).sum())
+    n_exp = int(jury_df["expert_review_flag"].sum())
     logger.info(
         "Özet: %d Patojenik | %d Benign | %d Uzman Değerlendirmesi",
-        n_path, n_ben, n_exp,
+        n_path,
+        n_ben,
+        n_exp,
     )
 
     return {"jury": jury_path, "full": full_path, "submission": sub_path}

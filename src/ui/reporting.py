@@ -7,6 +7,7 @@ import pandas as pd
 
 try:
     from fpdf import FPDF
+
     FPDF_AVAILABLE = True
 except ImportError:
     FPDF_AVAILABLE = False
@@ -18,8 +19,7 @@ class _PDF(FPDF):
         if self.page_no() > 1:
             self.set_font("Helvetica", "I", 8)
             self.set_text_color(120, 120, 120)
-            self.cell(0, 6, "VARIANT-GNN  |  Genetik Varyant Analiz Raporu",
-                      new_x="LMARGIN", new_y="NEXT", align="C")
+            self.cell(0, 6, "VARIANT-GNN  |  Genetik Varyant Analiz Raporu", new_x="LMARGIN", new_y="NEXT", align="C")
             self.line(10, 12, self.w - 10, 12)
             self.ln(4)
 
@@ -27,8 +27,8 @@ class _PDF(FPDF):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f"Sayfa {self.page_no()}/{{nb}}",
-                  new_x="RIGHT", new_y="TOP", align="C")
+        self.cell(0, 10, f"Sayfa {self.page_no()}/{{nb}}", new_x="RIGHT", new_y="TOP", align="C")
+
 
 def generate_pdf_report(df_result: pd.DataFrame, cfg: Any) -> bytes:
     """Analiz sonuçlarını fpdf2 ile profesyonel bir PDF'e dönüştürür."""
@@ -57,11 +57,25 @@ def generate_pdf_report(df_result: pd.DataFrame, cfg: Any) -> bytes:
     pdf.ln(10)
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(60, 60, 60)
-    pdf.cell(0, 8, f"Toplam Varyant: {total}   |   Patojenik: {pathogenic}   |   Benign: {benign}   |   Oran: {pct:.1f}%", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(
+        0,
+        8,
+        f"Toplam Varyant: {total}   |   Patojenik: {pathogenic}   |   Benign: {benign}   |   Oran: {pct:.1f}%",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
     pdf.ln(30)
     pdf.set_font("Helvetica", "I", 10)
     pdf.set_text_color(130, 130, 130)
-    pdf.cell(0, 8, f"TEKNOFEST 2026 | Sağlıkta Yapay Zeka  -  {datetime.now().strftime('%d.%m.%Y %H:%M')}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(
+        0,
+        8,
+        f"TEKNOFEST 2026 | Sağlıkta Yapay Zeka  -  {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
 
     # Özet Sayfası
     pdf.add_page()
@@ -69,7 +83,7 @@ def generate_pdf_report(df_result: pd.DataFrame, cfg: Any) -> bytes:
     pdf.set_text_color(30, 60, 120)
     pdf.cell(0, 10, "Analiz Özeti", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
-    
+
     summary_rows: List[Tuple[str, str]] = [
         ("Toplam Varyant", str(total)),
         ("Patojenik", str(pathogenic)),
@@ -97,10 +111,12 @@ def generate_pdf_report(df_result: pd.DataFrame, cfg: Any) -> bytes:
     pdf.cell(0, 10, "Varyant Sonuçları", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
 
-    show_cols: List[str] = [c for c in ["Variant_ID", "Prediction", "Calibrated_Risk", "Confidence", "High_Risk"] if c in df_result.columns]
-    if not show_cols: 
+    show_cols: List[str] = [
+        c for c in ["Variant_ID", "Prediction", "Calibrated_Risk", "Confidence", "High_Risk"] if c in df_result.columns
+    ]
+    if not show_cols:
         show_cols = list(df_result.columns[:5])
-    
+
     n_cols: int = len(show_cols)
     usable_w: float = pdf.w - 20
     col_widths: List[float] = [usable_w / n_cols] * n_cols

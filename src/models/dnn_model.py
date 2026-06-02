@@ -13,6 +13,7 @@ Geriye dönük import yolları (src.core.dnn, src.core.models.dnn, src.models.dn
 ya doğrudan kaldırılmıştır ya da bu modülü yeniden ihraç eden ince shim'lere
 indirilmiştir.
 """
+
 from __future__ import annotations
 
 import torch

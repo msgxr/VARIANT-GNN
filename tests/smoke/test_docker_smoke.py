@@ -5,12 +5,12 @@ Docker build and Dockerfile structure smoke tests.
 Does NOT require Docker daemon to be running.
 Validates Dockerfile syntax and structure that a jury member would use.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
-
 
 DOCKERFILE = Path("Dockerfile")
 DOCKERFILE_API = Path("Dockerfile.api")
@@ -20,6 +20,7 @@ DOCKER_COMPOSE = Path("docker-compose.yml")
 # ---------------------------------------------------------------------------
 # Dockerfile existence
 # ---------------------------------------------------------------------------
+
 
 class TestDockerfileExists:
     def test_dockerfile_exists(self):
@@ -34,6 +35,7 @@ class TestDockerfileExists:
 # ---------------------------------------------------------------------------
 # Dockerfile content checks (no Docker daemon needed)
 # ---------------------------------------------------------------------------
+
 
 class TestDockerfileContent:
     def _read(self, path: Path = DOCKERFILE) -> str:
@@ -51,9 +53,7 @@ class TestDockerfileContent:
     def test_requirements_txt_copied(self):
         """Dockerfile must COPY requirements.txt."""
         content = self._read()
-        assert "requirements.txt" in content, (
-            "Dockerfile must install from requirements.txt"
-        )
+        assert "requirements.txt" in content, "Dockerfile must install from requirements.txt"
 
     def test_pip_install_present(self):
         """Dockerfile must run pip install."""
@@ -72,14 +72,13 @@ class TestDockerfileContent:
         content = self._read()
         forbidden = ["password", "secret", "token", "api_key", "ghp_"]
         for word in forbidden:
-            assert word.lower() not in content.lower(), (
-                f"Dockerfile contains suspicious keyword: {word}"
-            )
+            assert word.lower() not in content.lower(), f"Dockerfile contains suspicious keyword: {word}"
 
 
 # ---------------------------------------------------------------------------
 # docker-compose.yml content checks
 # ---------------------------------------------------------------------------
+
 
 class TestDockerComposeContent:
     def _read(self) -> str:
@@ -90,6 +89,7 @@ class TestDockerComposeContent:
     def test_compose_parseable(self):
         """docker-compose.yml must be valid YAML."""
         import yaml
+
         content = self._read()
         data = yaml.safe_load(content)
         assert isinstance(data, dict), "docker-compose.yml must parse to dict"
@@ -97,6 +97,7 @@ class TestDockerComposeContent:
     def test_compose_has_services(self):
         """docker-compose.yml must define at least one service."""
         import yaml
+
         content = self._read()
         data = yaml.safe_load(content)
         assert "services" in data, "docker-compose.yml must have 'services' key"
@@ -107,34 +108,29 @@ class TestDockerComposeContent:
 # Reproducibility infrastructure
 # ---------------------------------------------------------------------------
 
+
 class TestReproducibilityInfrastructure:
     def test_requirements_txt_pinned(self):
         """requirements.txt must have pinned versions (== format)."""
         path = Path("requirements.txt")
         assert path.exists(), "requirements.txt missing"
         content = path.read_text(encoding="utf-8")
-        lines = [l.strip() for l in content.splitlines()
-                 if l.strip() and not l.startswith("#")]
+        lines = [l.strip() for l in content.splitlines() if l.strip() and not l.startswith("#")]
         pinned = [l for l in lines if "==" in l]
         assert len(pinned) > 0, "requirements.txt must have pinned (==) versions"
         # At least 80% of non-empty, non-comment lines should be pinned
         ratio = len(pinned) / max(len(lines), 1)
-        assert ratio > 0.5, (
-            f"Only {ratio:.0%} of requirements are pinned — jury cannot reproduce environment"
-        )
+        assert ratio > 0.5, f"Only {ratio:.0%} of requirements are pinned — jury cannot reproduce environment"
 
     def test_single_command_train_documented(self):
         """README must document the single training command."""
         path = Path("README.md")
         assert path.exists()
         content = path.read_text(encoding="utf-8")
-        assert "main.py" in content and "--mode train" in content, (
-            "README must document: python main.py --mode train"
-        )
+        assert "main.py" in content and "--mode train" in content, "README must document: python main.py --mode train"
 
     def test_single_command_predict_documented(self):
         """README must document the jury prediction command."""
-        path = Path("README.md")
         content = Path("README.md").read_text(encoding="utf-8")
         assert "submission/predict.py" in content or "predict.py" in content, (
             "README must document the prediction entry point"

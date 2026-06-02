@@ -27,6 +27,7 @@ JSON raporu üretilir:
 
   reports/ablation_report.json
 """
+
 from __future__ import annotations
 
 import copy
@@ -56,22 +57,22 @@ logger = logging.getLogger(__name__)
 class AblationResult:
     """Tek bir ablation koşusunun sonucu."""
 
-    name:        str                # "baseline", "no_xgb", "no_smote", ...
+    name: str  # "baseline", "no_xgb", "no_smote", ...
     description: str
-    binary_f1:   float
-    delta_f1:    float = 0.0        # baseline'a göre fark (negatif = düşüş)
-    metadata:    Dict[str, Any] = field(default_factory=dict)
+    binary_f1: float
+    delta_f1: float = 0.0  # baseline'a göre fark (negatif = düşüş)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class AblationReport:
     """Tüm ablation koşularının raporu."""
 
-    baseline:     AblationResult
-    ablations:    List[AblationResult] = field(default_factory=list)
-    n_samples:    int = 0
-    test_size:    float = 0.2
-    seed:         int = 42
+    baseline: AblationResult
+    ablations: List[AblationResult] = field(default_factory=list)
+    n_samples: int = 0
+    test_size: float = 0.2
+    seed: int = 42
 
     def summary(self) -> str:
         lines = [
@@ -86,10 +87,7 @@ class AblationReport:
         ]
         for r in self.ablations:
             sign = "↓" if r.delta_f1 < 0 else "↑" if r.delta_f1 > 0 else "·"
-            lines.append(
-                f"  {r.name:25s} {r.binary_f1:>8.4f}  "
-                f"{sign} {abs(r.delta_f1):>6.4f}  {r.description:40s}"
-            )
+            lines.append(f"  {r.name:25s} {r.binary_f1:>8.4f}  {sign} {abs(r.delta_f1):>6.4f}  {r.description:40s}")
         return "\n".join(lines)
 
     def log(self) -> None:
@@ -102,16 +100,16 @@ class AblationReport:
             "test_size": self.test_size,
             "seed": self.seed,
             "baseline": {
-                "name":        self.baseline.name,
-                "binary_f1":   self.baseline.binary_f1,
+                "name": self.baseline.name,
+                "binary_f1": self.baseline.binary_f1,
                 "description": self.baseline.description,
             },
             "ablations": [
                 {
-                    "name":        r.name,
+                    "name": r.name,
                     "description": r.description,
-                    "binary_f1":   r.binary_f1,
-                    "delta_f1":    r.delta_f1,
+                    "binary_f1": r.binary_f1,
+                    "delta_f1": r.delta_f1,
                 }
                 for r in self.ablations
             ],
@@ -126,23 +124,17 @@ class AblationReport:
             | Tam Ensemble | 0.945     | —    | ...    |
             ...
         """
-        header = (
-            "| Konfigürasyon | Binary F1 | Delta F1 | Notlar |\n"
-            "|--------------|-----------|----------|--------|\n"
-        )
+        header = "| Konfigürasyon | Binary F1 | Delta F1 | Notlar |\n|--------------|-----------|----------|--------|\n"
         baseline_row = (
-            f"| **Tam Ensemble (baseline)** | **{self.baseline.binary_f1:.3f}** | -- | "
-            f"{self.baseline.description} |\n"
+            f"| **Tam Ensemble (baseline)** | **{self.baseline.binary_f1:.3f}** | -- | {self.baseline.description} |\n"
         )
 
         rows = []
         for r in sorted(self.ablations, key=lambda x: x.delta_f1):
-            sign  = "-" if r.delta_f1 < 0 else "+"
+            sign = "-" if r.delta_f1 < 0 else "+"
             delta = f"{sign}{abs(r.delta_f1):.3f}"
             notlar = "Kritik" if r.delta_f1 < -0.02 else ("Orta" if r.delta_f1 < 0 else "minimal")
-            rows.append(
-                f"| {r.description} | {r.binary_f1:.3f} | {delta} | {notlar} |"
-            )
+            rows.append(f"| {r.description} | {r.binary_f1:.3f} | {delta} | {notlar} |")
 
         return header + baseline_row + "\n".join(rows)
 
@@ -158,8 +150,10 @@ class AblationReport:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write("## Ablation Analizi — PDR §4.5\n\n")
             fh.write(self.pdr_table())
-            fh.write(f"\n\n*N={self.n_samples}, test_size={self.test_size}, "
-                     f"seed={self.seed}, metric=Binary F1 (Patojenik, §7.3)*\n")
+            fh.write(
+                f"\n\n*N={self.n_samples}, test_size={self.test_size}, "
+                f"seed={self.seed}, metric=Binary F1 (Patojenik, §7.3)*\n"
+            )
         logger.info("Ablation Markdown tablosu → %s", path)
 
 
@@ -190,33 +184,36 @@ class AblationRunner:
 
     def __init__(
         self,
-        X:            np.ndarray,
-        y:            np.ndarray,
-        nuc_seqs:     Optional[List[str]] = None,
-        aa_seqs:      Optional[List[str]] = None,
-        test_size:    float = 0.20,
-        seed:         int   = 42,
-        threshold:    float = 0.50,
+        X: np.ndarray,
+        y: np.ndarray,
+        nuc_seqs: Optional[List[str]] = None,
+        aa_seqs: Optional[List[str]] = None,
+        test_size: float = 0.20,
+        seed: int = 42,
+        threshold: float = 0.50,
     ) -> None:
-        self.X         = X
-        self.y         = y
-        self.nuc_seqs  = nuc_seqs
-        self.aa_seqs   = aa_seqs
+        self.X = X
+        self.y = y
+        self.nuc_seqs = nuc_seqs
+        self.aa_seqs = aa_seqs
         self.test_size = test_size
-        self.seed      = seed
+        self.seed = seed
         self.threshold = threshold
 
         # Tek bir tutarlı train/test split — tüm ablation'lar aynı split'te
         # değerlendirilir (apples-to-apples karşılaştırma).
         idx = np.arange(len(X))
         idx_tr, idx_te = train_test_split(
-            idx, test_size=test_size, stratify=y, random_state=seed,
+            idx,
+            test_size=test_size,
+            stratify=y,
+            random_state=seed,
         )
         self._idx_tr, self._idx_te = idx_tr, idx_te
         self._X_tr, self._X_te = X[idx_tr], X[idx_te]
         self._y_tr, self._y_te = y[idx_tr], y[idx_te]
         self._nuc_tr = [nuc_seqs[i] for i in idx_tr] if nuc_seqs else None
-        self._aa_tr  = [aa_seqs[i]  for i in idx_tr] if aa_seqs  else None
+        self._aa_tr = [aa_seqs[i] for i in idx_tr] if aa_seqs else None
 
     # ------------------------------------------------------------------
 
@@ -234,7 +231,6 @@ class AblationRunner:
           - use_autoencoder: bool
           - use_feature_selection : bool
         """
-        from src.config.settings import reset_settings, load_settings
 
         cfg = get_settings()
         # Settings'i kirletmemek için derin kopya yap
@@ -249,6 +245,7 @@ class AblationRunner:
 
         # Geçici Settings override — reset_settings() ile atomik geri alma
         from src.config import settings as _settings_mod
+
         _orig = _settings_mod._settings
         _settings_mod._settings = local_cfg
         try:
@@ -261,8 +258,10 @@ class AblationRunner:
 
             trainer = VariantTrainer()
             preprocessor_local, ensemble, X_inner_val, y_inner_val = trainer._fit_single(
-                self._X_tr, self._y_tr,
-                nuc_seqs=self._nuc_tr, aa_seqs=self._aa_tr,
+                self._X_tr,
+                self._y_tr,
+                nuc_seqs=self._nuc_tr,
+                aa_seqs=self._aa_tr,
             )
         finally:
             # Her durumda orijinal settings'i geri yükle
@@ -280,23 +279,26 @@ class AblationRunner:
             ensemble.dnn = None
         # Yeniden normalize ensemble weights
         active_idx = [
-            i for i, m in enumerate([ensemble.xgb, ensemble.lgbm, ensemble.gnn, ensemble.dnn])
-            if m is not None
+            i for i, m in enumerate([ensemble.xgb, ensemble.lgbm, ensemble.gnn, ensemble.dnn]) if m is not None
         ]
         if not active_idx:
             raise RuntimeError("All ensemble members dropped — invalid ablation.")
 
         # Hold-out test üzerinde değerlendirme
         X_te_proc = preprocessor_local.transform(self._X_te)
-        preds, _  = ensemble.predict(X_te_proc, threshold=self.threshold)
-        bf1 = float(f1_score(
-            self._y_te, preds, average="binary", pos_label=1, zero_division=0,
-        ))
+        preds, _ = ensemble.predict(X_te_proc, threshold=self.threshold)
+        bf1 = float(
+            f1_score(
+                self._y_te,
+                preds,
+                average="binary",
+                pos_label=1,
+                zero_division=0,
+            )
+        )
 
         meta = {
-            "active_models": [
-                name for i, name in enumerate(["xgb", "lgbm", "gnn", "dnn"]) if i in active_idx
-            ],
+            "active_models": [name for i, name in enumerate(["xgb", "lgbm", "gnn", "dnn"]) if i in active_idx],
             "smote_enabled": preprocessor_local.smote_enabled,
             "use_autoencoder": preprocessor_local.use_autoencoder,
             "use_feature_selection": preprocessor_local.use_feature_selection,
@@ -309,19 +311,18 @@ class AblationRunner:
         """Run all ablation configurations and return the report."""
 
         ablation_specs: List[Tuple[str, str, Dict[str, Any]]] = [
-            ("baseline",       "Tüm ensemble + tüm preprocessing", {}),
-            ("no_xgb",         "XGBoost devre dışı",             {"drop_models": ["xgb"]}),
-            ("no_lgbm",        "LightGBM devre dışı",            {"drop_models": ["lgbm"]}),
-            ("no_gnn",         "GATv2 GNN devre dışı",           {"drop_models": ["gnn"]}),
-            ("no_dnn",         "DNN devre dışı",                 {"drop_models": ["dnn"]}),
-            ("no_smote",       "SMOTE devre dışı",               {"smote_enabled": False}),
+            ("baseline", "Tüm ensemble + tüm preprocessing", {}),
+            ("no_xgb", "XGBoost devre dışı", {"drop_models": ["xgb"]}),
+            ("no_lgbm", "LightGBM devre dışı", {"drop_models": ["lgbm"]}),
+            ("no_gnn", "GATv2 GNN devre dışı", {"drop_models": ["gnn"]}),
+            ("no_dnn", "DNN devre dışı", {"drop_models": ["dnn"]}),
+            ("no_smote", "SMOTE devre dışı", {"smote_enabled": False}),
             ("no_autoencoder", "AutoEncoder feature devre dışı", {"use_autoencoder": False}),
-            ("no_feature_selection",
-                                "SelectKBest devre dışı",        {"use_feature_selection": False}),
+            ("no_feature_selection", "SelectKBest devre dışı", {"use_feature_selection": False}),
         ]
 
         results: List[AblationResult] = []
-        baseline_f1: Optional[float]   = None
+        baseline_f1: Optional[float] = None
 
         for name, desc, overrides in ablation_specs:
             logger.info("Ablation çalışıyor: %s (%s)", name, desc)
@@ -332,10 +333,10 @@ class AblationRunner:
                 f1, meta = float("nan"), {"error": str(exc)}
 
             result = AblationResult(
-                name        = name,
-                description = desc,
-                binary_f1   = f1,
-                metadata    = meta,
+                name=name,
+                description=desc,
+                binary_f1=f1,
+                metadata=meta,
             )
             if name == "baseline":
                 baseline_f1 = f1
@@ -348,11 +349,11 @@ class AblationRunner:
             logger.info("Ablation '%s' Binary F1 = %.4f", name, f1)
 
         report = AblationReport(
-            baseline   = baseline_result,  # type: ignore[arg-type]
-            ablations  = results,
-            n_samples  = len(self.X),
-            test_size  = self.test_size,
-            seed       = self.seed,
+            baseline=baseline_result,  # type: ignore[arg-type]
+            ablations=results,
+            n_samples=len(self.X),
+            test_size=self.test_size,
+            seed=self.seed,
         )
         report.log()
         return report
@@ -364,11 +365,11 @@ class AblationRunner:
 
 
 def run_ablation(
-    X:        np.ndarray,
-    y:        np.ndarray,
+    X: np.ndarray,
+    y: np.ndarray,
     nuc_seqs: Optional[List[str]] = None,
-    aa_seqs:  Optional[List[str]] = None,
-    output:   Path = Path("reports/ablation_report.json"),
+    aa_seqs: Optional[List[str]] = None,
+    output: Path = Path("reports/ablation_report.json"),
 ) -> AblationReport:
     """
     Tek satırlık ablation entrypoint'i.

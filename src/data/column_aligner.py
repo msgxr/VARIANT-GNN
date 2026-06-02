@@ -20,6 +20,7 @@ Usage
     for line in report:
         logger.warning(line)
 """
+
 from __future__ import annotations
 
 import difflib
@@ -42,10 +43,10 @@ logger = logging.getLogger(__name__)
 class AlignmentReport:
     """Summary of what happened during column alignment."""
 
-    exact_matches:      List[str] = field(default_factory=list)
-    case_matches:       List[Tuple[str, str]] = field(default_factory=list)   # (incoming, expected)
-    fuzzy_matches:      List[Tuple[str, str, float]] = field(default_factory=list)  # (inc, exp, score)
-    positional_matches: List[Tuple[str, str]] = field(default_factory=list)   # (inc, expected)
+    exact_matches: List[str] = field(default_factory=list)
+    case_matches: List[Tuple[str, str]] = field(default_factory=list)  # (incoming, expected)
+    fuzzy_matches: List[Tuple[str, str, float]] = field(default_factory=list)  # (inc, exp, score)
+    positional_matches: List[Tuple[str, str]] = field(default_factory=list)  # (inc, expected)
     unmatched_expected: List[str] = field(default_factory=list)
     unmatched_incoming: List[str] = field(default_factory=list)
 
@@ -55,18 +56,13 @@ class AlignmentReport:
         for inc, exp in self.case_matches:
             msgs.append(f"ColumnAligner [case]: '{inc}' → '{exp}'")
         for inc, exp, score in self.fuzzy_matches:
-            msgs.append(
-                f"ColumnAligner [fuzzy={score:.2f}]: '{inc}' → '{exp}'"
-            )
+            msgs.append(f"ColumnAligner [fuzzy={score:.2f}]: '{inc}' → '{exp}'")
         for inc, exp in self.positional_matches:
             msgs.append(
-                f"ColumnAligner [positional]: '{inc}' mapped to expected position '{exp}' — "
-                "verify this is correct!"
+                f"ColumnAligner [positional]: '{inc}' mapped to expected position '{exp}' — verify this is correct!"
             )
         for col in self.unmatched_expected:
-            msgs.append(
-                f"ColumnAligner: expected column '{col}' NOT FOUND — will be filled with NaN."
-            )
+            msgs.append(f"ColumnAligner: expected column '{col}' NOT FOUND — will be filled with NaN.")
         return msgs
 
     @property
@@ -93,12 +89,12 @@ class ColumnAligner:
 
     def __init__(
         self,
-        expected_columns:  List[str],
-        fuzzy_threshold:   float = 0.85,
-        allow_positional:  bool  = True,
+        expected_columns: List[str],
+        fuzzy_threshold: float = 0.85,
+        allow_positional: bool = True,
     ) -> None:
         self.expected_columns = list(expected_columns)
-        self.fuzzy_threshold  = fuzzy_threshold
+        self.fuzzy_threshold = fuzzy_threshold
         self.allow_positional = allow_positional
 
         # Build lowercase lookup for stage-2
@@ -109,7 +105,8 @@ class ColumnAligner:
 
     # ------------------------------------------------------------------
     def set_reference_distributions(
-        self, ref_df: "pd.DataFrame",
+        self,
+        ref_df: "pd.DataFrame",
     ) -> None:
         """
         Compute distributional signatures from training-time data.
@@ -191,7 +188,8 @@ class ColumnAligner:
 
     # ------------------------------------------------------------------
     def build_mapping(
-        self, incoming_columns: List[str],
+        self,
+        incoming_columns: List[str],
         incoming_df: Optional[pd.DataFrame] = None,
     ) -> Tuple[Dict[str, str], AlignmentReport]:
         """
@@ -210,8 +208,8 @@ class ColumnAligner:
         mapping : dict {incoming_col: expected_col}
         report  : AlignmentReport with details of each match type.
         """
-        report   = AlignmentReport()
-        mapping:  Dict[str, str] = {}   # incoming → expected
+        report = AlignmentReport()
+        mapping: Dict[str, str] = {}  # incoming → expected
         remaining_expected = list(self.expected_columns)
         remaining_incoming = list(incoming_columns)
 
@@ -238,7 +236,7 @@ class ColumnAligner:
         # ── Stage 3: Fuzzy match (difflib) ──────────────────────────────
         for col in list(remaining_incoming):
             best_match: Optional[str] = None
-            best_score: float         = 0.0
+            best_score: float = 0.0
             for exp_col in remaining_expected:
                 score = difflib.SequenceMatcher(None, col.lower(), exp_col.lower()).ratio()
                 if score > best_score:
@@ -253,8 +251,7 @@ class ColumnAligner:
         # ── Stage 3.5: Distributional signature match ───────────────────
         # Uses dtype, IQR, range, mean, std to pair anonymous columns
         # (e.g. Col_0, Col_1, ...) with expected biological categories.
-        if (self._ref_signatures and incoming_df is not None
-                and remaining_incoming and remaining_expected):
+        if self._ref_signatures and incoming_df is not None and remaining_incoming and remaining_expected:
             logger.info(
                 "ColumnAligner: distributional matching for %d remaining columns …",
                 len(remaining_incoming),
@@ -300,7 +297,9 @@ class ColumnAligner:
                     used_exp.add(exp_col)
                     logger.info(
                         "ColumnAligner [distributional=%.2f]: '%s' → '%s'",
-                        sim, inc_col, exp_col,
+                        sim,
+                        inc_col,
+                        exp_col,
                     )
 
             remaining_expected = [c for c in remaining_expected if c not in used_exp]
@@ -327,7 +326,7 @@ class ColumnAligner:
     # ------------------------------------------------------------------
     def apply(
         self,
-        df:            pd.DataFrame,
+        df: pd.DataFrame,
         extra_numeric: bool = False,
     ) -> Tuple[pd.DataFrame, AlignmentReport]:
         """
@@ -349,7 +348,7 @@ class ColumnAligner:
         """
 
         source_df = df.select_dtypes(include=[np.number]) if extra_numeric else df
-        incoming  = source_df.columns.tolist()
+        incoming = source_df.columns.tolist()
 
         mapping, report = self.build_mapping(incoming, incoming_df=source_df)
 
@@ -407,7 +406,7 @@ class ColumnAligner:
         df = df.copy()
         for col in df.columns:
             if col in SEQ_COLS:
-                continue   # Senaryo 6: sekans kolonları string olarak kalabilir
+                continue  # Senaryo 6: sekans kolonları string olarak kalabilir
             try:
                 coerced = pd.to_numeric(df[col], errors="coerce")
                 # Yalnızca sayısal sütun adayıysa (beklenenlerle eşleşebilirse) uygula
@@ -420,27 +419,26 @@ class ColumnAligner:
         missing_seq = [c for c in SEQ_COLS if c not in df.columns]
         if missing_seq:
             logger.warning(
-                "[Senaryo 6] Sekans kolonları eksik (%s). "
-                "Multimodal encoder devre dışı; sistem devam ediyor.",
+                "[Senaryo 6] Sekans kolonları eksik (%s). Multimodal encoder devre dışı; sistem devam ediyor.",
                 missing_seq,
             )
 
         # ── Senaryo 7: tek satır — BatchNorm uyarısı ─────────────────────
         if len(df) == 1:
             logger.info(
-                "[Senaryo 7] Tek satır tespit edildi. "
-                "PyG BatchNorm track_running_stats devre dışı bırakılacak."
+                "[Senaryo 7] Tek satır tespit edildi. PyG BatchNorm track_running_stats devre dışı bırakılacak."
             )
 
         # ── Senaryo 8: büyük batch — chunk'la işle ───────────────────────
         if len(df) > chunk_size:
             logger.info(
                 "[Senaryo 8] %d satır algılandı; %d'lik chunk'larla işleniyor.",
-                len(df), chunk_size,
+                len(df),
+                chunk_size,
             )
             chunks, agg_report = [], None
             for start in range(0, len(df), chunk_size):
-                chunk = df.iloc[start:start + chunk_size]
+                chunk = df.iloc[start : start + chunk_size]
                 aligned_chunk, rep = self._apply_single(chunk)
                 chunks.append(aligned_chunk)
                 if agg_report is None:
@@ -458,16 +456,14 @@ class ColumnAligner:
         # Sayısal sütunları önce dene; sonra tümünü
         source = df[numeric_cols] if numeric_cols else df
 
-        mapping, report = self.build_mapping(
-            source.columns.tolist(), incoming_df=source
-        )
+        mapping, report = self.build_mapping(source.columns.tolist(), incoming_df=source)
 
         for msg in report.warnings():
             # Türkçe uyarı ön eki ekle
             tr_msg = (
                 msg.replace("NOT FOUND", "BULUNAMADI — otomatik sıfır doldurma ile devam")
-                   .replace("positional", "konum bazlı (anonim)")
-                   .replace("fuzzy=", "benzerlik=")
+                .replace("positional", "konum bazlı (anonim)")
+                .replace("fuzzy=", "benzerlik=")
             )
             logger.warning("ColumnAligner: %s", tr_msg)
 
@@ -477,6 +473,6 @@ class ColumnAligner:
             if exp_col in renamed.columns:
                 aligned[exp_col] = renamed[exp_col].values
             else:
-                aligned[exp_col] = np.nan   # Senaryo 3/4: eksik → NaN → imputer
+                aligned[exp_col] = np.nan  # Senaryo 3/4: eksik → NaN → imputer
 
         return aligned, report

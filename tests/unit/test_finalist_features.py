@@ -7,6 +7,7 @@ TEKNOFEST 2026 finalist özelliklerinin unit testleri.
 - adversarial_validate (domain shift tespiti)
 - evaluate_per_panel (panel bazlı metrikler)
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -16,6 +17,7 @@ import torch
 # ---------------------------------------------------------------------------
 # MC Dropout Uncertainty
 # ---------------------------------------------------------------------------
+
 
 class TestMCDropoutEstimator:
     def test_estimate_dnn_shapes(self):
@@ -68,6 +70,7 @@ class TestMCDropoutEstimator:
 # ---------------------------------------------------------------------------
 # Focal Loss
 # ---------------------------------------------------------------------------
+
 
 class TestFocalLoss:
     def test_forward_shape(self):
@@ -123,6 +126,7 @@ class TestFocalLoss:
 # Adversarial Validation
 # ---------------------------------------------------------------------------
 
+
 class TestAdversarialValidation:
     def test_similar_distributions_low_auc(self):
         """Benzer dağılımlar → AUC ~0.5"""
@@ -163,6 +167,7 @@ class TestAdversarialValidation:
 # ---------------------------------------------------------------------------
 # Panel-Based Evaluation
 # ---------------------------------------------------------------------------
+
 
 class TestEvaluatePerPanel:
     def test_returns_reports_per_panel(self):

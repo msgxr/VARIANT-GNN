@@ -29,6 +29,7 @@ Kullanım:
     agg = RankAggregator(method="borda")
     proba_final = agg.aggregate([xgb_proba, lgbm_proba, gnn_proba, dnn_proba])
 """
+
 from __future__ import annotations
 
 import logging
@@ -98,31 +99,25 @@ class RankAggregator:
 
     # ── Borda Count ─────────────────────────────────────────────────────────
 
-    def _borda(
-        self, probas: List[np.ndarray], w: np.ndarray, N: int
-    ) -> np.ndarray:
+    def _borda(self, probas: List[np.ndarray], w: np.ndarray, N: int) -> np.ndarray:
         borda_sum = np.zeros(N)
         for i, p in enumerate(probas):
-            ranks = self._rank(p)              # yüksek olasılık → yüksek sıra
+            ranks = self._rank(p)  # yüksek olasılık → yüksek sıra
             borda_sum += w[i] * ranks
         return self._normalize(borda_sum)
 
     # ── Reciprocal Rank ──────────────────────────────────────────────────────
 
-    def _reciprocal_rank(
-        self, probas: List[np.ndarray], w: np.ndarray, N: int
-    ) -> np.ndarray:
+    def _reciprocal_rank(self, probas: List[np.ndarray], w: np.ndarray, N: int) -> np.ndarray:
         rr_sum = np.zeros(N)
         for i, p in enumerate(probas):
-            ranks = self._rank(p)              # 1..N
+            ranks = self._rank(p)  # 1..N
             rr_sum += w[i] * (1.0 / (N - ranks + 1))  # düşük sıra → yüksek rr
         return self._normalize(rr_sum)
 
     # ── Geometric Mean ───────────────────────────────────────────────────────
 
-    def _geometric_mean(
-        self, probas: List[np.ndarray], w: np.ndarray
-    ) -> np.ndarray:
+    def _geometric_mean(self, probas: List[np.ndarray], w: np.ndarray) -> np.ndarray:
         log_sum = np.zeros_like(probas[0], dtype=float)
         for i, p in enumerate(probas):
             log_sum += w[i] * np.log(np.clip(p, 1e-9, 1 - 1e-9))
@@ -158,28 +153,27 @@ class RankAggregator:
 
         rank_proba = self.aggregate(proba_list)
         rank_preds = (rank_proba >= threshold).astype(int)
-        rank_f1 = float(f1_score(y_true, rank_preds, average="binary",
-                                  pos_label=1, zero_division=0))
+        rank_f1 = float(f1_score(y_true, rank_preds, average="binary", pos_label=1, zero_division=0))
 
-        probas_1d = [np.asarray(p)[:, 1] if np.asarray(p).ndim == 2
-                     else np.asarray(p) for p in proba_list]
+        probas_1d = [np.asarray(p)[:, 1] if np.asarray(p).ndim == 2 else np.asarray(p) for p in proba_list]
         if self.weights is None:
             w = np.ones(len(probas_1d)) / len(probas_1d)
         else:
-            w = np.asarray(self.weights[:len(probas_1d)]) / sum(self.weights[:len(probas_1d)])
+            w = np.asarray(self.weights[: len(probas_1d)]) / sum(self.weights[: len(probas_1d)])
 
         avg_proba = sum(wi * pi for wi, pi in zip(w, probas_1d))
         avg_preds = (avg_proba >= threshold).astype(int)
-        avg_f1 = float(f1_score(y_true, avg_preds, average="binary",
-                                 pos_label=1, zero_division=0))
+        avg_f1 = float(f1_score(y_true, avg_preds, average="binary", pos_label=1, zero_division=0))
 
         logger.info(
             "Rank Aggregation (%s) F1=%.4f vs Weighted Avg F1=%.4f",
-            self.method, rank_f1, avg_f1,
+            self.method,
+            rank_f1,
+            avg_f1,
         )
         return {
             "rank_aggregation_f1": rank_f1,
-            "weighted_avg_f1":     avg_f1,
-            "rank_method":         self.method,
-            "delta_f1":            round(rank_f1 - avg_f1, 4),
+            "weighted_avg_f1": avg_f1,
+            "rank_method": self.method,
+            "delta_f1": round(rank_f1 - avg_f1, 4),
         }

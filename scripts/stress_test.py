@@ -16,6 +16,7 @@ Senaryolar:
   single_variant  → Tek satır veri — edge case
   large_batch     → 10.000 varyant toplu yükleme
 """
+
 from __future__ import annotations
 
 import json
@@ -43,30 +44,58 @@ log = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 
 FEATURE_COLS = [
-    "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type",
-    "AA_Grantham_Score", "GC_Content_Window", "In_CpG_Site",
-    "Motif_Disruption_Score", "AA_Polarity_Change",
-    "AA_Hydrophobicity_Diff", "AA_Mol_Weight_Diff", "AA_Size_Diff",
-    "Protein_Impact_Score", "Delta_Solvent_Accessibility",
-    "Secondary_Structure_Disruption", "GERP_RS",
-    "PhyloP100way_vertebrate", "phastCons100way_vertebrate",
-    "SiPhy_29way_logOdds", "Phylo_Diversity_Index",
-    "gnomAD_exomes_AF", "gnomAD_exomes_AF_afr",
-    "gnomAD_exomes_AF_eur", "gnomAD_exomes_AF_eas",
-    "gnomAD_exomes_AF_sas", "gnomAD_exomes_AF_amr", "ExAC_AF",
-    "SIFT_score", "PolyPhen2_HDIV_score", "PolyPhen2_HVAR_score",
-    "CADD_phred", "REVEL_score", "MutPred2_score", "VEST4_score",
-    "PROVEAN_score", "MutationTaster_score", "MetaSVM_score",
-    "MetaLR_score", "MCAP_score", "In_Critical_Protein_Domain",
-    "Splice_Site_Distance", "Is_Exonic", "Exon_Conservation_Ratio",
+    "Ref_Nucleotide",
+    "Alt_Nucleotide",
+    "Codon_Change_Type",
+    "AA_Grantham_Score",
+    "GC_Content_Window",
+    "In_CpG_Site",
+    "Motif_Disruption_Score",
+    "AA_Polarity_Change",
+    "AA_Hydrophobicity_Diff",
+    "AA_Mol_Weight_Diff",
+    "AA_Size_Diff",
+    "Protein_Impact_Score",
+    "Delta_Solvent_Accessibility",
+    "Secondary_Structure_Disruption",
+    "GERP_RS",
+    "PhyloP100way_vertebrate",
+    "phastCons100way_vertebrate",
+    "SiPhy_29way_logOdds",
+    "Phylo_Diversity_Index",
+    "gnomAD_exomes_AF",
+    "gnomAD_exomes_AF_afr",
+    "gnomAD_exomes_AF_eur",
+    "gnomAD_exomes_AF_eas",
+    "gnomAD_exomes_AF_sas",
+    "gnomAD_exomes_AF_amr",
+    "ExAC_AF",
+    "SIFT_score",
+    "PolyPhen2_HDIV_score",
+    "PolyPhen2_HVAR_score",
+    "CADD_phred",
+    "REVEL_score",
+    "MutPred2_score",
+    "VEST4_score",
+    "PROVEAN_score",
+    "MutationTaster_score",
+    "MetaSVM_score",
+    "MetaLR_score",
+    "MCAP_score",
+    "In_Critical_Protein_Domain",
+    "Splice_Site_Distance",
+    "Is_Exonic",
+    "Exon_Conservation_Ratio",
     "OMIM_Disease_Gene",
 ]
 
 
 def _base_df(n: int = 50, seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
-    data = {"Variant_ID": [f"V{i:04d}" for i in range(n)],
-            "Panel": np.random.choice(["General", "Hereditary_Cancer"], n)}
+    data = {
+        "Variant_ID": [f"V{i:04d}" for i in range(n)],
+        "Panel": np.random.choice(["General", "Hereditary_Cancer"], n),
+    }
     for col in FEATURE_COLS:
         data[col] = rng.uniform(0, 1, n)
     return pd.DataFrame(data)
@@ -75,6 +104,7 @@ def _base_df(n: int = 50, seed: int = 0) -> pd.DataFrame:
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario definitions
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def scenario_missing_data(pipeline) -> dict:
     """Verilerin %30'u rastgele NaN — XGBoost + Median Imputer direnci."""
@@ -111,11 +141,11 @@ def scenario_corrupt_columns(pipeline) -> dict:
     try:
         result = pipeline.predict_from_dataframe(df_corrupt)
         status = "PASSED"
-        note   = "ColumnAligner bozuk sütunları dağılımsal imza ile eşleştirdi."
+        note = "ColumnAligner bozuk sütunları dağılımsal imza ile eşleştirdi."
     except Exception as exc:
         result = pd.DataFrame()
         status = "PARTIAL"
-        note   = f"Pipeline sıfır-doldurma ile devam etti: {exc}"
+        note = f"Pipeline sıfır-doldurma ile devam etti: {exc}"
     elapsed = time.perf_counter() - t0
 
     return {
@@ -162,11 +192,11 @@ def scenario_wrong_types(pipeline) -> dict:
     try:
         result = pipeline.predict_from_dataframe(df)
         status = "PASSED"
-        note   = "String değerler NaN'a coerce edildi, imputer devraldı."
+        note = "String değerler NaN'a coerce edildi, imputer devraldı."
     except Exception as exc:
         result = pd.DataFrame()
         status = "FAILED"
-        note   = str(exc)
+        note = str(exc)
     elapsed = time.perf_counter() - t0
 
     return {
@@ -236,10 +266,7 @@ def scenario_large_batch(pipeline) -> dict:
         "n_predictions": len(result),
         "latency_sec": round(elapsed, 3),
         "variants_per_sec": round(vps, 1),
-        "note": (
-            f"10.000 varyant {elapsed:.2f}s'de analiz edildi "
-            f"({vps:,.0f} v/s). GPU gerektirmez."
-        ),
+        "note": (f"10.000 varyant {elapsed:.2f}s'de analiz edildi ({vps:,.0f} v/s). GPU gerektirmez."),
     }
 
 
@@ -248,21 +275,23 @@ def scenario_large_batch(pipeline) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 ALL_SCENARIOS: dict[str, Callable] = {
-    "missing_data":    scenario_missing_data,
+    "missing_data": scenario_missing_data,
     "corrupt_columns": scenario_corrupt_columns,
-    "extra_columns":   scenario_extra_columns,
-    "wrong_types":     scenario_wrong_types,
-    "empty_panel":     scenario_empty_panel,
-    "single_variant":  scenario_single_variant,
-    "large_batch":     scenario_large_batch,
+    "extra_columns": scenario_extra_columns,
+    "wrong_types": scenario_wrong_types,
+    "empty_panel": scenario_empty_panel,
+    "single_variant": scenario_single_variant,
+    "large_batch": scenario_large_batch,
 }
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="VARIANT-GNN Stress Test")
     parser.add_argument(
-        "--scenario", nargs="+",
+        "--scenario",
+        nargs="+",
         choices=list(ALL_SCENARIOS) + ["all"],
         default=["all"],
     )
@@ -277,6 +306,7 @@ def main():
 
     log.info("\n⏳  Pipeline yükleniyor…")
     from src.api.pipeline import InferencePipeline
+
     pipeline = InferencePipeline()
     pipeline.load()
     log.info("✅  Pipeline hazır.\n")
@@ -313,9 +343,9 @@ def main():
     out_path = reports_dir / "stress_test_results.json"
     out_path.write_text(
         json.dumps(
-            {"summary": {"total": len(selected), "passed": passed, "failed": failed},
-             "scenarios": report},
-            indent=2, ensure_ascii=False,
+            {"summary": {"total": len(selected), "passed": passed, "failed": failed}, "scenarios": report},
+            indent=2,
+            ensure_ascii=False,
         )
     )
     log.info(f"\n📄  Stres test raporu → {out_path}")

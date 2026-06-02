@@ -1,4 +1,5 @@
 """src/ui/header.py — Hero banner for VARIANT-GNN Streamlit app."""
+
 import streamlit as st
 
 
@@ -9,7 +10,8 @@ def render_header() -> None:
 
 def render_hero() -> None:
     """TEKNOFEST 2026 hero banner with project identity."""
-    st.markdown("""
+    st.markdown(
+        """
     <div class="hero-banner">
         <p class="hero-title">🧬 <span>VARIANT-GNN</span></p>
         <p class="hero-subtitle">
@@ -20,4 +22,6 @@ def render_hero() -> None:
         <span class="hero-badge">🔬 Sağlıkta Yapay Zeka</span>
         <span class="hero-badge">⚡ GNN + XGBoost + LightGBM + DNN</span>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

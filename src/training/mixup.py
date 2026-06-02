@@ -40,6 +40,7 @@ TEKNOFEST 2026 motivasyonu:
   - λ-Beta dağılımı ayarlanabilir
   - Label smoothing entegrasyonu
 """
+
 from __future__ import annotations
 
 import logging
@@ -142,10 +143,10 @@ def mixup_data(
 
 def mixup_loss(
     criterion: nn.Module,
-    logits:    torch.Tensor,
-    y_a:       torch.Tensor,
-    y_b:       torch.Tensor,
-    lam:       torch.Tensor,
+    logits: torch.Tensor,
+    y_a: torch.Tensor,
+    y_b: torch.Tensor,
+    lam: torch.Tensor,
 ) -> torch.Tensor:
     """
     Compute Mixup loss: λ·L(ŷ, y_a) + (1-λ)·L(ŷ, y_b).
@@ -192,7 +193,7 @@ class ManifoldMixupHook:
     def __init__(self, alpha: float = 0.2) -> None:
         self.alpha = alpha
         self.enabled = True
-        self.last_lam:  Optional[torch.Tensor] = None
+        self.last_lam: Optional[torch.Tensor] = None
         self.last_perm: Optional[torch.Tensor] = None
         self._handle = None
 
@@ -209,7 +210,7 @@ class ManifoldMixupHook:
         lam = _sample_lambda(self.alpha, 1).to(device)
         perm = torch.randperm(n, device=device)
 
-        self.last_lam  = lam
+        self.last_lam = lam
         self.last_perm = perm
 
         # Broadcast lam to output shape
@@ -227,7 +228,7 @@ class ManifoldMixupHook:
         if self._handle is not None:
             self._handle.remove()
             self._handle = None
-        self.last_lam  = None
+        self.last_lam = None
         self.last_perm = None
 
 
@@ -350,6 +351,10 @@ def mixup_numpy(
 
     logger.info(
         "mixup_numpy: %d → %d samples (+%d synthetic, same_class=%s, α=%.2f).",
-        n, len(X_aug), n_synthetic, same_class_only, alpha,
+        n,
+        len(X_aug),
+        n_synthetic,
+        same_class_only,
+        alpha,
     )
     return X_aug, y_aug

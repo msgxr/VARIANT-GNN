@@ -16,6 +16,7 @@ Kanonik artefakt seti (ModelStore tarafından üretilir):
 
 Bu sınıf ``ModelStore.load_all()`` ile uyumlu çalışır.
 """
+
 from __future__ import annotations
 
 import json
@@ -69,6 +70,7 @@ class ArtifactLoader:
         # Önce joblib dene (ModelStore joblib.dump ile kaydediyor)
         try:
             import joblib
+
             obj = joblib.load(str(path))
             logger.debug("Loaded artifact (joblib): %s", path)
             return obj
@@ -86,6 +88,7 @@ class ArtifactLoader:
         # joblib pickle uyumlu
         try:
             import joblib
+
             return joblib.load(str(self.model_dir / "preprocessor.pkl"))
         except Exception:
             return self._load_pickle("preprocessor.pkl")
@@ -103,6 +106,7 @@ class ArtifactLoader:
             return self._load_pickle("ensemble.pkl")
 
         from src.utils.serialization import ModelStore
+
         store = ModelStore(self.model_dir)
         _preproc, ensemble, _cal = store.load_all()
         return ensemble
@@ -115,6 +119,7 @@ class ArtifactLoader:
             return None
         try:
             import joblib
+
             return joblib.load(str(path))
         except Exception:
             return self._load_pickle("calibrator.pkl")
@@ -133,9 +138,7 @@ class ArtifactLoader:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
         # Kanonik key: classification_threshold; legacy: threshold
-        return float(
-            data.get("classification_threshold", data.get("threshold", default))
-        )
+        return float(data.get("classification_threshold", data.get("threshold", default)))
 
     def load_feature_names(self) -> Optional[list[str]]:
         """
@@ -151,6 +154,7 @@ class ArtifactLoader:
         # XGB booster fallback
         try:
             from src.utils.serialization import ModelStore
+
             store = ModelStore(self.model_dir)
             xgb_model = store.load_xgb()
             names = xgb_model.get_booster().feature_names
@@ -180,12 +184,9 @@ class ArtifactLoader:
           2. Kanonik: ``xgb_model.json`` + ``ensemble_config.json`` + ``preprocessor.pkl``
         """
         # Önce legacy path'i kontrol et (mock testler ve eski deployment'lar)
-        legacy_ok = all(
-            (self.model_dir / f).exists() for f in _REQUIRED_LEGACY
-        )
+        legacy_ok = all((self.model_dir / f).exists() for f in _REQUIRED_LEGACY)
         if legacy_ok:
-            logger.info(
-                "ArtifactLoader: legacy path → ensemble.pkl + preprocessor.pkl mevcut.")
+            logger.info("ArtifactLoader: legacy path → ensemble.pkl + preprocessor.pkl mevcut.")
             return
 
         # Aksi halde kanonik artefakt setini ara
@@ -196,9 +197,6 @@ class ArtifactLoader:
                 missing.append(filename)
         if missing:
             raise FileNotFoundError(
-                f"Zorunlu artefakt eksik: {missing}. "
-                "Önce eğitim çalıştırılıp model kaydedilmelidir."
+                f"Zorunlu artefakt eksik: {missing}. Önce eğitim çalıştırılıp model kaydedilmelidir."
             )
-        logger.info(
-            "ArtifactLoader: tüm kanonik artefaktlar mevcut → %s", self.model_dir
-        )
+        logger.info("ArtifactLoader: tüm kanonik artefaktlar mevcut → %s", self.model_dir)

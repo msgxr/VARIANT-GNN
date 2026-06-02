@@ -21,6 +21,7 @@ Kurulum:
 Docker:
   docker-compose up variant-gnn-api
 """
+
 from __future__ import annotations
 
 import io
@@ -40,26 +41,36 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse  # noqa: F401  (availability check)
     from pydantic import BaseModel, Field
+
     _FASTAPI_AVAILABLE = True
 except ImportError:
     _FASTAPI_AVAILABLE = False
+
     # Stub — FastAPI kurulu değilken modül import hatası vermesin
-    class FastAPI:           # type: ignore
-        def __init__(self, *a, **kw): pass
-        def get(self, *a, **kw):  return lambda f: f
-        def post(self, *a, **kw): return lambda f: f
-        def add_middleware(self, *a, **kw): pass
-    class BaseModel: pass    # type: ignore
-    def Field(*a, **kw): return None  # type: ignore
+    class FastAPI:  # type: ignore
+        def __init__(self, *a, **kw):
+            pass
+
+        def get(self, *a, **kw):
+            return lambda f: f
+
+        def post(self, *a, **kw):
+            return lambda f: f
+
+        def add_middleware(self, *a, **kw):
+            pass
+
+    class BaseModel:
+        pass  # type: ignore
+
+    def Field(*a, **kw):
+        return None  # type: ignore
 
 
 # ── Application ──────────────────────────────────────────────────────────────
 app = FastAPI(
     title="VARIANT-GNN API",
-    description=(
-        "Genetik varyant patojenite tahmini için REST API. "
-        "TEKNOFEST 2026 | Takım XYRA3"
-    ),
+    description=("Genetik varyant patojenite tahmini için REST API. TEKNOFEST 2026 | Takım XYRA3"),
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -67,13 +78,12 @@ app = FastAPI(
 
 if _FASTAPI_AVAILABLE:
     import os
-    _cors_origins = os.environ.get(
-        "CORS_ALLOWED_ORIGINS", "http://localhost:8501,http://localhost:3000"
-    ).split(",")
+
+    _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:8501,http://localhost:3000").split(",")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins,
-        allow_methods=["GET", "POST"],          # Sadece gerekli metodlar
+        allow_methods=["GET", "POST"],  # Sadece gerekli metodlar
         allow_headers=["Content-Type", "Accept", "Authorization"],  # Sadece gerekli headerlar
         allow_credentials=False,
     )
@@ -89,6 +99,7 @@ def _get_pipeline():
     global _pipeline
     if _pipeline is None:
         from src.api.pipeline import InferencePipeline
+
         _pipeline = InferencePipeline()
         _pipeline.load()
         logger.info("InferencePipeline yüklendi.")
@@ -98,11 +109,12 @@ def _get_pipeline():
 # ── Pydantic schemas ──────────────────────────────────────────────────────────
 class VariantRecord(BaseModel):
     """Tek bir varyant kaydı — tüm sayısal feature'lar + opsiyonel metadata."""
+
     Variant_ID: Optional[str] = Field(None, description="Varyant kimliği")
-    Panel: Optional[str]      = Field(None, description="Panel adı: General | Hereditary_Cancer | PAH | CFTR")
+    Panel: Optional[str] = Field(None, description="Panel adı: General | Hereditary_Cancer | PAH | CFTR")
 
     class Config:
-        extra = "allow"           # Bilinmeyen feature sütunlarını kabul et
+        extra = "allow"  # Bilinmeyen feature sütunlarını kabul et
 
 
 class PredictJsonRequest(BaseModel):
@@ -114,22 +126,22 @@ class PredictJsonRequest(BaseModel):
 
 
 class PredictionResult(BaseModel):
-    Variant_ID:      Optional[str]
-    Prediction:      str           # "Pathogenic" | "Benign"
-    Probability:     float
+    Variant_ID: Optional[str]
+    Prediction: str  # "Pathogenic" | "Benign"
+    Probability: float
     Calibrated_Risk: float
-    Confidence:      float
-    High_Risk:       bool
-    Clinical_Flag:   str           # ✅ / 🔶 / ⚠️
+    Confidence: float
+    High_Risk: bool
+    Clinical_Flag: str  # ✅ / 🔶 / ⚠️
 
 
 class PredictResponse(BaseModel):
-    status:      str = "success"
-    model:       str = "VARIANT-GNN v2.0"
-    timestamp:   str
-    n_variants:  int
-    latency_ms:  float
-    results:     List[PredictionResult]
+    status: str = "success"
+    model: str = "VARIANT-GNN v2.0"
+    timestamp: str
+    n_variants: int
+    latency_ms: float
+    results: List[PredictionResult]
     summary: Dict[str, Any]
 
 
@@ -150,6 +162,7 @@ def info():
     """Model versiyonu ve konfigürasyon bilgisi."""
     try:
         from src.config import get_settings
+
         cfg = get_settings()
         return {
             "model": "VARIANT-GNN",
@@ -166,8 +179,7 @@ def info():
                 "uncertainty_flag_threshold": 0.30,
                 "high_confidence_threshold": 0.15,
                 "description": (
-                    "MC-Dropout belirsizliği > 0.30 olan varyantlar "
-                    "⚠️ Uzman Değerlendirmesi Gerekli olarak işaretlenir."
+                    "MC-Dropout belirsizliği > 0.30 olan varyantlar ⚠️ Uzman Değerlendirmesi Gerekli olarak işaretlenir."
                 ),
             },
         }
@@ -199,7 +211,7 @@ async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosy
         if len(contents) > _MAX_UPLOAD_BYTES:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail=f"Dosya boyutu limiti aşıldı (max {_MAX_UPLOAD_BYTES // (1024*1024)} MB).",
+                detail=f"Dosya boyutu limiti aşıldı (max {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB).",
             )
         df_raw = pd.read_csv(io.BytesIO(contents))
     except HTTPException:
@@ -237,13 +249,15 @@ def predict_sample():
     Rastgele oluşturulmuş örnek veri ile demo tahmini.
     Model yüklü olmalıdır.
     """
-    t0  = time.perf_counter()
+    t0 = time.perf_counter()
     rng = np.random.default_rng(42)
-    df_raw = pd.DataFrame({
-        "Variant_ID": [f"DEMO_{i:03d}" for i in range(5)],
-        "Panel": ["General"] * 5,
-        **{f"feature_{i}": rng.uniform(0, 1, 5).tolist() for i in range(43)},
-    })
+    df_raw = pd.DataFrame(
+        {
+            "Variant_ID": [f"DEMO_{i:03d}" for i in range(5)],
+            "Panel": ["General"] * 5,
+            **{f"feature_{i}": rng.uniform(0, 1, 5).tolist() for i in range(43)},
+        }
+    )
     return _run_prediction(df_raw, t0)
 
 
@@ -279,37 +293,38 @@ def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
     # ── Build results list ────────────────────────────────────────────────────
     results = []
     for _, row in df_result.iterrows():
-        results.append(PredictionResult(
-            Variant_ID      = str(row.get("Variant_ID", ""))    or None,
-            Prediction      = str(row.get("Prediction",  "?")),
-            Probability     = float(row.get("Probability",     0.0)),
-            Calibrated_Risk = float(row.get("Calibrated_Risk", 0.0)),
-            Confidence      = float(row.get("Confidence",      0.0)),
-            High_Risk       = bool(row.get("High_Risk",        False)),
-            Clinical_Flag   = str(row.get("Clinical_Flag",     "🔶 Orta Güven")),
-        ))
+        results.append(
+            PredictionResult(
+                Variant_ID=str(row.get("Variant_ID", "")) or None,
+                Prediction=str(row.get("Prediction", "?")),
+                Probability=float(row.get("Probability", 0.0)),
+                Calibrated_Risk=float(row.get("Calibrated_Risk", 0.0)),
+                Confidence=float(row.get("Confidence", 0.0)),
+                High_Risk=bool(row.get("High_Risk", False)),
+                Clinical_Flag=str(row.get("Clinical_Flag", "🔶 Orta Güven")),
+            )
+        )
 
-    n        = len(results)
-    path_n   = sum(1 for r in results if r.Prediction == "Pathogenic")
+    n = len(results)
+    path_n = sum(1 for r in results if r.Prediction == "Pathogenic")
     expert_n = sum(1 for r in results if "Uzman" in r.Clinical_Flag)
-    hc_n     = sum(1 for r in results if "Yüksek" in r.Clinical_Flag)
+    hc_n = sum(1 for r in results if "Yüksek" in r.Clinical_Flag)
 
     return PredictResponse(
-        timestamp  = datetime.utcnow().isoformat(),
-        n_variants = n,
-        latency_ms = round(latency_ms, 2),
-        results    = results,
-        summary    = {
-            "total":                  n,
-            "pathogenic":             path_n,
-            "benign":                 n - path_n,
-            "pathogenic_rate_pct":    round(100 * path_n  / max(n, 1), 1),
+        timestamp=datetime.utcnow().isoformat(),
+        n_variants=n,
+        latency_ms=round(latency_ms, 2),
+        results=results,
+        summary={
+            "total": n,
+            "pathogenic": path_n,
+            "benign": n - path_n,
+            "pathogenic_rate_pct": round(100 * path_n / max(n, 1), 1),
             "expert_review_required": expert_n,
-            "high_confidence":        hc_n,
+            "high_confidence": hc_n,
             "latency_per_variant_ms": round(latency_ms / max(n, 1), 3),
             "human_in_the_loop": (
-                f"{expert_n}/{n} varyant uzman değerlendirmesine yönlendirildi "
-                f"(MC-Dropout belirsizliği > 0.30)"
+                f"{expert_n}/{n} varyant uzman değerlendirmesine yönlendirildi (MC-Dropout belirsizliği > 0.30)"
             ),
         },
     ).model_dump()

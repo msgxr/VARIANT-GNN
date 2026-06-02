@@ -1,4 +1,5 @@
 """Unit tests for CategoricalBioFeaturizer — §3.2 biological signal recovery layer."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -39,8 +40,15 @@ def test_grantham_matches_published_matrix():
 def test_transform_produces_expected_columns(sample_df):
     f = CategoricalBioFeaturizer(append=False).fit(sample_df)
     out = f.transform(sample_df)
-    for col in ["bio_grantham", "bio_blosum62", "bio_stop_gain", "bio_charge_flip",
-                "pop_breadth_CAT_1", "region_lcr", "insilico_consensus"]:
+    for col in [
+        "bio_grantham",
+        "bio_blosum62",
+        "bio_stop_gain",
+        "bio_charge_flip",
+        "pop_breadth_CAT_1",
+        "region_lcr",
+        "insilico_consensus",
+    ]:
         assert col in out.columns, f"missing {col}"
     assert len(out) == len(sample_df)
     assert out.isna().sum().sum() == 0  # no NaN leaks into features
@@ -81,9 +89,7 @@ def test_deterministic_no_leakage(sample_df):
     f = CategoricalBioFeaturizer(append=False)
     out1 = f.fit(sample_df).transform(sample_df)
     out2 = f.fit(sample_df.iloc[:2]).transform(sample_df)
-    pd.testing.assert_frame_equal(
-        out1[["bio_grantham", "bio_blosum62"]], out2[["bio_grantham", "bio_blosum62"]]
-    )
+    pd.testing.assert_frame_equal(out1[["bio_grantham", "bio_blosum62"]], out2[["bio_grantham", "bio_blosum62"]])
 
 
 def test_append_mode_preserves_original(sample_df):

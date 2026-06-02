@@ -31,6 +31,7 @@ TEKNOFEST 2026 motivasyonu:
   - Closure-style training (PyTorch optimizer protokolüne uygun)
   - GNN ve DNN için drop-in replacement
 """
+
 from __future__ import annotations
 
 import logging
@@ -141,7 +142,7 @@ class SAM(torch.optim.Optimizer):
                 if p.grad is None:
                     continue
                 if "old_p" in self.state[p]:
-                    p.data = self.state[p]["old_p"]   # restore original w
+                    p.data = self.state[p]["old_p"]  # restore original w
 
         self.base_optimizer.step()
         if zero_grad:
@@ -161,8 +162,7 @@ class SAM(torch.optim.Optimizer):
         """
         if closure is None:
             raise RuntimeError(
-                "SAM.step requires a closure that recomputes loss and "
-                "calls .backward(). See SAM docstring for usage."
+                "SAM.step requires a closure that recomputes loss and calls .backward(). See SAM docstring for usage."
             )
 
         # First pass: compute gradients at original w
@@ -216,9 +216,9 @@ class SAM(torch.optim.Optimizer):
 
 
 def sam_train_step(
-    model:     nn.Module,
-    inputs:    torch.Tensor,
-    targets:   torch.Tensor,
+    model: nn.Module,
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
     criterion: nn.Module,
     optimizer: SAM,
     extra_forward_args: Optional[dict] = None,
@@ -255,12 +255,12 @@ def sam_train_step(
 
 
 def sam_train_step_graph(
-    model:     nn.Module,
-    data,                        # PyG Data object with .x, .edge_index, .y
+    model: nn.Module,
+    data,  # PyG Data object with .x, .edge_index, .y
     criterion: nn.Module,
     optimizer: SAM,
-    nuc_ids:   Optional[torch.Tensor] = None,
-    aa_ids:    Optional[torch.Tensor] = None,
+    nuc_ids: Optional[torch.Tensor] = None,
+    aa_ids: Optional[torch.Tensor] = None,
 ) -> float:
     """
     SAM training step adapted for full-batch GNN node classification.

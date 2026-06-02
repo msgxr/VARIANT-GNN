@@ -1,10 +1,12 @@
 """tests/unit/test_triage.py"""
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from src.evaluation.abstention_analysis import compute_abstention_stats
 from src.inference.triage import (
     ALL_FLAGS,
     BORDERLINE_PROBABILITY,
@@ -14,8 +16,6 @@ from src.inference.triage import (
     STABLE_PREDICTION,
     TriageEngine,
 )
-from src.evaluation.abstention_analysis import compute_abstention_stats
-
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -139,7 +139,7 @@ def test_prediction_column_unchanged():
     eng = _engine()
     p = np.array([0.9, 0.1, 0.5, 0.4])
     u = np.array([0.5, 0.5, 0.5, 0.1])
-    flags = eng.assign_flags(p, u)
+    eng.assign_flags(p, u)
     # flags are separate; binary decisions must still respect threshold
     binary = (p >= 0.5).astype(int)
     assert binary[0] == 1

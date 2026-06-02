@@ -28,6 +28,7 @@ Rules:
   - Leakage firewall runs automatically.
   - Output schema is fixed (PREDICTION_COLUMNS).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.reproducibility import setup_reproducibility
+from src.utils.reproducibility import setup_reproducibility  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,21 +53,30 @@ logger = logging.getLogger("submission.predict")
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="TEKNOFEST 2026 — Variant-GNN offline inference"
-    )
+    parser = argparse.ArgumentParser(description="TEKNOFEST 2026 — Variant-GNN offline inference")
     _root = Path(__file__).resolve().parent.parent
-    parser.add_argument("--input", required=True, type=Path,
-                        help="Blind test CSV path (e.g. data/jury_test.csv)")
-    parser.add_argument("--model_dir", required=False, type=Path,
-                        default=_root / "models",
-                        help="Trained model directory (default: models/)")
-    parser.add_argument("--output", required=False, type=Path,
-                        default=_root / "submission" / "predictions.csv",
-                        help="Output predictions CSV (default: submission/predictions.csv)")
-    parser.add_argument("--config", required=False, type=Path,
-                        default=_root / "configs" / "pdr.yaml",
-                        help="YAML config (default: configs/pdr.yaml)")
+    parser.add_argument("--input", required=True, type=Path, help="Blind test CSV path (e.g. data/jury_test.csv)")
+    parser.add_argument(
+        "--model_dir",
+        required=False,
+        type=Path,
+        default=_root / "models",
+        help="Trained model directory (default: models/)",
+    )
+    parser.add_argument(
+        "--output",
+        required=False,
+        type=Path,
+        default=_root / "submission" / "predictions.csv",
+        help="Output predictions CSV (default: submission/predictions.csv)",
+    )
+    parser.add_argument(
+        "--config",
+        required=False,
+        type=Path,
+        default=_root / "configs" / "pdr.yaml",
+        help="YAML config (default: configs/pdr.yaml)",
+    )
     parser.add_argument(
         "--local_validation",
         action="store_true",
@@ -104,18 +114,17 @@ def main() -> None:
 
     # ── Validate paths ─────────────────────────────────────────────────
     # resolve() → Windows UNC path ve relative path sorunlarını çözer
-    args.input     = args.input.resolve()
+    args.input = args.input.resolve()
     args.model_dir = args.model_dir.resolve()
-    args.output    = args.output.resolve()
-    args.config    = args.config.resolve()
+    args.output = args.output.resolve()
+    args.config = args.config.resolve()
 
     if not args.input.exists():
         logger.error("Input CSV bulunamadi: %s", args.input)
         sys.exit(1)
     if not args.model_dir.exists():
         logger.error(
-            "Model dizini bulunamadi: %s\n"
-            "  Önce modeli egit: python main.py --mode train --config configs/pdr.yaml",
+            "Model dizini bulunamadi: %s\n  Önce modeli egit: python main.py --mode train --config configs/pdr.yaml",
             args.model_dir,
         )
         sys.exit(1)
@@ -141,6 +150,7 @@ def main() -> None:
         reports_dir=reports_dir,
     )
     import pandas as pd
+
     # runner önce kendi iç formatında yazar, sonra jury formatına çevireceğiz
     _tmp_path = args.output.with_suffix(".tmp.csv")
     predictions = runner.run(
@@ -152,16 +162,16 @@ def main() -> None:
     # ── Jury submission formatına dönüştür ────────────────────────────
     # jury_predictions.csv standardı: prediction_label, pathogenic_probability, ...
     jury = pd.DataFrame()
-    jury["Variant_ID"]              = predictions["Variant_ID"]
-    jury["prediction_label"]        = (predictions["Prediction"] == "Pathogenic").astype(int)
-    jury["pathogenic_probability"]  = predictions["Pathogenic_Probability"].round(4)
-    jury["calibrated_risk"]         = (predictions["Calibrated_Risk"] * 100).round(2)
-    jury["confidence_level"]        = ((1.0 - predictions["Uncertainty"]) * 100).round(2)
-    jury["uncertainty_score"]       = predictions["Uncertainty"].round(4)
-    jury["expert_review_flag"]      = predictions["Uncertainty"] > 0.30
+    jury["Variant_ID"] = predictions["Variant_ID"]
+    jury["prediction_label"] = (predictions["Prediction"] == "Pathogenic").astype(int)
+    jury["pathogenic_probability"] = predictions["Pathogenic_Probability"].round(4)
+    jury["calibrated_risk"] = (predictions["Calibrated_Risk"] * 100).round(2)
+    jury["confidence_level"] = ((1.0 - predictions["Uncertainty"]) * 100).round(2)
+    jury["uncertainty_score"] = predictions["Uncertainty"].round(4)
+    jury["expert_review_flag"] = predictions["Uncertainty"] > 0.30
 
     jury.to_csv(args.output, index=False)
-    _tmp_path.unlink(missing_ok=True)   # geçici dosyayı temizle
+    _tmp_path.unlink(missing_ok=True)  # geçici dosyayı temizle
 
     logger.info(
         "Done. %d predictions written to %s",
@@ -178,13 +188,12 @@ def main() -> None:
     # ── Otomatik submission formatı doğrulama ─────────────────────────
     try:
         from src.scientific.submission_validator import SubmissionValidator
+
         validator = SubmissionValidator()
         report = validator.validate(submission_path=args.output)
         validator.print_report(report, verbose=True)
         if not report.passed:
-            logger.error(
-                "Submission validation FAILED — jüriye göndermeden önce düzeltin!"
-            )
+            logger.error("Submission validation FAILED — jüriye göndermeden önce düzeltin!")
             sys.exit(1)
         logger.info("Submission doğrulama PASSED — jüri formatı uyumlu.")
     except Exception as val_exc:

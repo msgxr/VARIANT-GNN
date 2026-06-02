@@ -4,6 +4,7 @@ Runtime schema enforcement: validates that a DataFrame matches the expected
 feature schema before model inference.  Raises on hard violations; emits
 warnings on soft violations (unexpected extra columns, minor type mismatches).
 """
+
 from __future__ import annotations
 
 import logging

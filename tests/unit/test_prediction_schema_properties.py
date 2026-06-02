@@ -6,6 +6,7 @@ Verifies PREDICTION_COLUMNS contract holds for arbitrary valid inputs,
 including edge cases the jury may submit (all-zero features, single row,
 extreme probability values, etc.).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -21,6 +22,7 @@ from src.inference.prediction_schema import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_frame(
     n: int,
@@ -54,6 +56,7 @@ def _make_frame(
 # ---------------------------------------------------------------------------
 # Schema contract tests
 # ---------------------------------------------------------------------------
+
 
 def test_prediction_columns_order_stable():
     """PREDICTION_COLUMNS must always contain OOD_Score and OOD_Flag."""
@@ -113,8 +116,7 @@ def test_probabilities_sum_to_one():
 def test_probabilities_in_range():
     """All probability columns must be in [0, 1]."""
     df = _make_frame(200)
-    for col in ("Pathogenic_Probability", "Benign_Probability",
-                "Calibrated_Risk", "Uncertainty"):
+    for col in ("Pathogenic_Probability", "Benign_Probability", "Calibrated_Risk", "Uncertainty"):
         assert df[col].between(0.0, 1.0).all(), f"{col} out of [0,1]"
 
 
@@ -139,8 +141,7 @@ def test_ood_score_with_values():
 def test_no_nan_in_numeric_columns():
     """No NaN allowed in any numeric output column."""
     df = _make_frame(100)
-    for col in ("Pathogenic_Probability", "Benign_Probability",
-                "Calibrated_Risk", "Uncertainty", "OOD_Score"):
+    for col in ("Pathogenic_Probability", "Benign_Probability", "Calibrated_Risk", "Uncertainty", "OOD_Score"):
         assert not df[col].isna().any(), f"NaN found in {col}"
 
 
@@ -165,8 +166,7 @@ def test_variant_id_preserved():
 
 def test_panel_label_preserved():
     """Panel labels must be preserved exactly."""
-    panels = ["General", "Hereditary_Cancer", "PAH", "CFTR",
-              "General", "PAH", "CFTR", "Hereditary_Cancer"]
+    panels = ["General", "Hereditary_Cancer", "PAH", "CFTR", "General", "PAH", "CFTR", "Hereditary_Cancer"]
     n = len(panels)
     probs = np.full(n, 0.6)
     df = build_prediction_frame(

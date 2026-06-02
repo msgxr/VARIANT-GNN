@@ -12,6 +12,7 @@ Rules enforced:
   - Metrics computed only when labels are explicitly present (local validation mode).
   - Output conforms to prediction_schema.PREDICTION_COLUMNS.
 """
+
 from __future__ import annotations
 
 import logging
@@ -76,6 +77,7 @@ class ExternalValidationRunner:
         if _ood_path.exists():
             try:
                 from src.scientific.ood_detector import OODDetector
+
                 self._ood_detector = OODDetector.load(_ood_path)
                 logger.info("OOD detector yüklendi → %s", _ood_path)
             except Exception as _ood_exc:
@@ -102,9 +104,7 @@ class ExternalValidationRunner:
         if self._feature_names is None:
             # Best-effort: use numeric columns only
             numeric_df = feat_df.select_dtypes(include="number")
-            logger.warning(
-                "No feature_names.json found; using %d numeric columns.", numeric_df.shape[1]
-            )
+            logger.warning("No feature_names.json found; using %d numeric columns.", numeric_df.shape[1])
             return numeric_df.values.astype(float)
 
         aligner = ColumnAligner(expected_columns=self._feature_names)
@@ -140,6 +140,7 @@ class ExternalValidationRunner:
         """
         # Block ClinVar API for the duration of inference (TEKNOFEST §3.2)
         from src.explainability.clinvar_api import set_inference_mode
+
         set_inference_mode(True)
 
         input_path = Path(input_path)
@@ -203,27 +204,26 @@ class ExternalValidationRunner:
                 cal_proba = self._calibrator.transform(raw_proba)
                 calibrated_risk = cal_proba[:, 1] if cal_proba.ndim == 2 else cal_proba
             except Exception as _cal_exc:
-                logger.warning(
-                    "Kalibrasyon basarisiz (%s); ham olasilik kullaniliyor.", _cal_exc
-                )
+                logger.warning("Kalibrasyon basarisiz (%s); ham olasilik kullaniliyor.", _cal_exc)
                 calibrated_risk = pathogenic_prob
         else:
             calibrated_risk = pathogenic_prob
 
         # ── OOD tespiti ────────────────────────────────────────────────────
         ood_scores = np.zeros(len(X_scaled), dtype=float)
-        ood_flags  = np.zeros(len(X_scaled), dtype=bool)
+        ood_flags = np.zeros(len(X_scaled), dtype=bool)
         if self._ood_detector is not None:
             try:
-                ood_report  = self._ood_detector.detect(X_scaled)
-                ood_scores  = ood_report.get("ood_scores",  ood_scores)
-                ood_flags   = ood_report.get("ood_flags",   ood_flags)
+                ood_report = self._ood_detector.detect(X_scaled)
+                ood_scores = ood_report.get("ood_scores", ood_scores)
+                ood_flags = ood_report.get("ood_flags", ood_flags)
                 n_ood = int(ood_flags.sum())
                 if n_ood > 0:
                     logger.warning(
                         "OOD uyarı: %d/%d varyant eğitim dağılımı dışında "
                         "(ood_score > eşik). Bu varyantlarda tahmin güvenilirliği düşük.",
-                        n_ood, len(X_scaled),
+                        n_ood,
+                        len(X_scaled),
                     )
             except Exception as _ood_exc:
                 logger.warning("OOD detect başarısız (%s); atlandı.", _ood_exc)
@@ -269,9 +269,7 @@ class ExternalValidationRunner:
         prob = preds_df["Pathogenic_Probability"].values
 
         label_map = {"pathogenic": 1, "benign": 0, "1": 1, "0": 0, "1.0": 1, "0.0": 0}
-        y = np.array(
-            [label_map.get(str(v).strip().lower(), int(float(v))) for v in labels], dtype=int
-        )
+        y = np.array([label_map.get(str(v).strip().lower(), int(float(v))) for v in labels], dtype=int)
 
         f1 = f1_score(y, pred_binary, average="binary", pos_label=1, zero_division=0)
         try:
@@ -281,5 +279,7 @@ class ExternalValidationRunner:
 
         logger.info(
             "[LocalValidation] F1=%.4f  AUC=%.4f  n=%d",
-            f1, auc, len(y),
+            f1,
+            auc,
+            len(y),
         )

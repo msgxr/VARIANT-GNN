@@ -5,6 +5,7 @@ Nelder-Mead optimisation of per-panel ensemble weights.
 Weights are learned exclusively from out-of-fold (OOF) predictions or a
 held-out validation set.  The blind/test set is NEVER touched here.
 """
+
 from __future__ import annotations
 
 import logging

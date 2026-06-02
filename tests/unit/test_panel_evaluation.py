@@ -7,6 +7,7 @@ TEKNOFEST 2026 §7.3 — Panel bazlı binary F1 değerlendirme testleri.
   - Her panel için ayrı Binary F1 (TP/FP/FN, pos_label=1) hesaplanmalı
   - Temel metrik binary F1; macro F1 ikincil
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -28,7 +29,8 @@ def _make_panel_data(seed: int = 42):
         y = np.array([1] * n_pat + [0] * n_ben)
         p = np.clip(
             y * rng.normal(0.7, 0.15, n) + (1 - y) * rng.normal(0.3, 0.15, n),
-            0.01, 0.99,
+            0.01,
+            0.99,
         )
         all_labels.append(y)
         all_probs.append(p)
@@ -43,6 +45,7 @@ def _make_panel_data(seed: int = 42):
 class TestPanelEvaluationF1:
     def test_evaluate_per_panel_returns_all_panels(self):
         from src.evaluation.metrics import evaluate_per_panel
+
         y, p, panels = _make_panel_data()
         proba = np.column_stack([1 - p, p])
         reports = evaluate_per_panel(y, proba, panels, threshold=0.5)
@@ -52,14 +55,13 @@ class TestPanelEvaluationF1:
     def test_binary_f1_is_primary_metric_per_panel(self):
         """§7.3 — Her panel için binary_f1 birincil metrik olmalı."""
         from src.evaluation.metrics import evaluate_per_panel
+
         y, p, panels = _make_panel_data()
         proba = np.column_stack([1 - p, p])
         reports = evaluate_per_panel(y, proba, panels, threshold=0.5)
         for panel, rep in reports.items():
             preds = (p[panels == panel] >= 0.5).astype(int)
-            expected = float(f1_score(
-                y[panels == panel], preds, average="binary", pos_label=1, zero_division=0
-            ))
+            expected = float(f1_score(y[panels == panel], preds, average="binary", pos_label=1, zero_division=0))
             assert abs(rep.binary_f1 - expected) < 1e-6, (
                 f"Panel {panel}: binary_f1 beklenen {expected:.6f}, alınan {rep.binary_f1:.6f}"
             )
@@ -67,6 +69,7 @@ class TestPanelEvaluationF1:
     def test_cftr_panel_has_minimum_samples(self):
         """CFTR eğitim: 70P + 70B = 140; test: 30P + 30B = 60 — şartname §3.2."""
         from src.evaluation.metrics import evaluate_per_panel
+
         y, p, panels = _make_panel_data()
         proba = np.column_stack([1 - p, p])
         cftr_mask = panels == "CFTR"
@@ -82,17 +85,17 @@ class TestPanelEvaluationF1:
 
     def test_all_panel_binary_f1_in_range(self):
         from src.evaluation.metrics import evaluate_per_panel
+
         y, p, panels = _make_panel_data()
         proba = np.column_stack([1 - p, p])
         reports = evaluate_per_panel(y, proba, panels, threshold=0.5)
         for panel, rep in reports.items():
-            assert 0.0 <= rep.binary_f1 <= 1.0, (
-                f"Panel {panel}: binary_f1={rep.binary_f1} geçerli aralık dışında"
-            )
+            assert 0.0 <= rep.binary_f1 <= 1.0, f"Panel {panel}: binary_f1={rep.binary_f1} geçerli aralık dışında"
 
     def test_panel_dict_threshold(self):
         """Panel bazlı farklı eşik değerleri desteklenmeli."""
         from src.evaluation.metrics import evaluate_per_panel
+
         y, p, panels = _make_panel_data()
         proba = np.column_stack([1 - p, p])
         thr_dict = {

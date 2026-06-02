@@ -22,6 +22,7 @@ Kullanım:
 Model eğitiminden önce çağrılması şiddetle tavsiye edilir; eksik kategori
 tespiti, başarısız tahminlerin post-hoc hata ayıklamasını önler.
 """
+
 from __future__ import annotations
 
 import logging
@@ -39,53 +40,89 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 CATEGORY_FEATURES: Dict[str, FrozenSet[str]] = {
-    "Sekans ve Değişim": frozenset({
-        "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type",
-        "AA_Grantham_Score", "GC_Content_Window", "In_CpG_Site",
-        "Motif_Disruption_Score", "Nuc_Context", "AA_Context",
-    }),
-    "Yerel Bağlam": frozenset({
-        "AA_Polarity_Change", "AA_Hydrophobicity_Diff",
-        "AA_Mol_Weight_Diff", "AA_Size_Diff",
-        "Protein_Impact_Score", "Delta_Solvent_Accessibility",
-        "Secondary_Structure_Disruption",
-    }),
-    "Biyokimyasal ve Yapısal": frozenset({
-        "In_Critical_Protein_Domain", "Splice_Site_Distance",
-        "Is_Exonic", "Exon_Conservation_Ratio",
-        "OMIM_Disease_Gene",
-    }),
-    "Evrimsel Korunmuşluk": frozenset({
-        "GERP_RS", "PhyloP100way_vertebrate", "phastCons100way_vertebrate",
-        "SiPhy_29way_logOdds", "Phylo_Diversity_Index",
-    }),
-    "Popülasyon Verileri": frozenset({
-        "gnomAD_exomes_AF", "gnomAD_exomes_AF_afr", "gnomAD_exomes_AF_eur",
-        "gnomAD_exomes_AF_eas", "gnomAD_exomes_AF_sas", "gnomAD_exomes_AF_amr",
-        "ExAC_AF",
-    }),
-    "In Silico Risk Skorları": frozenset({
-        "SIFT_score", "PolyPhen2_HDIV_score", "PolyPhen2_HVAR_score",
-        "CADD_phred", "REVEL_score", "MutPred2_score", "VEST4_score",
-        "PROVEAN_score", "MutationTaster_score", "MetaSVM_score",
-        "MetaLR_score", "MCAP_score",
-    }),
+    "Sekans ve Değişim": frozenset(
+        {
+            "Ref_Nucleotide",
+            "Alt_Nucleotide",
+            "Codon_Change_Type",
+            "AA_Grantham_Score",
+            "GC_Content_Window",
+            "In_CpG_Site",
+            "Motif_Disruption_Score",
+            "Nuc_Context",
+            "AA_Context",
+        }
+    ),
+    "Yerel Bağlam": frozenset(
+        {
+            "AA_Polarity_Change",
+            "AA_Hydrophobicity_Diff",
+            "AA_Mol_Weight_Diff",
+            "AA_Size_Diff",
+            "Protein_Impact_Score",
+            "Delta_Solvent_Accessibility",
+            "Secondary_Structure_Disruption",
+        }
+    ),
+    "Biyokimyasal ve Yapısal": frozenset(
+        {
+            "In_Critical_Protein_Domain",
+            "Splice_Site_Distance",
+            "Is_Exonic",
+            "Exon_Conservation_Ratio",
+            "OMIM_Disease_Gene",
+        }
+    ),
+    "Evrimsel Korunmuşluk": frozenset(
+        {
+            "GERP_RS",
+            "PhyloP100way_vertebrate",
+            "phastCons100way_vertebrate",
+            "SiPhy_29way_logOdds",
+            "Phylo_Diversity_Index",
+        }
+    ),
+    "Popülasyon Verileri": frozenset(
+        {
+            "gnomAD_exomes_AF",
+            "gnomAD_exomes_AF_afr",
+            "gnomAD_exomes_AF_eur",
+            "gnomAD_exomes_AF_eas",
+            "gnomAD_exomes_AF_sas",
+            "gnomAD_exomes_AF_amr",
+            "ExAC_AF",
+        }
+    ),
+    "In Silico Risk Skorları": frozenset(
+        {
+            "SIFT_score",
+            "PolyPhen2_HDIV_score",
+            "PolyPhen2_HVAR_score",
+            "CADD_phred",
+            "REVEL_score",
+            "MutPred2_score",
+            "VEST4_score",
+            "PROVEAN_score",
+            "MutationTaster_score",
+            "MetaSVM_score",
+            "MetaLR_score",
+            "MCAP_score",
+        }
+    ),
 }
 
 # Her kategorinin minimum temsil sayısı (en az kaç özniteliğin mevcut
 # olması gerektiği — tam kapsam zorunlu değil)
 MIN_FEATURES_PER_CATEGORY: Dict[str, int] = {
-    "Sekans ve Değişim":       1,
-    "Yerel Bağlam":            1,
+    "Sekans ve Değişim": 1,
+    "Yerel Bağlam": 1,
     "Biyokimyasal ve Yapısal": 1,
-    "Evrimsel Korunmuşluk":    2,
-    "Popülasyon Verileri":     1,
+    "Evrimsel Korunmuşluk": 2,
+    "Popülasyon Verileri": 1,
     "In Silico Risk Skorları": 3,
 }
 
-ALL_KNOWN_FEATURES: FrozenSet[str] = frozenset(
-    f for cat in CATEGORY_FEATURES.values() for f in cat
-)
+ALL_KNOWN_FEATURES: FrozenSet[str] = frozenset(f for cat in CATEGORY_FEATURES.values() for f in cat)
 
 
 # ---------------------------------------------------------------------------
@@ -97,21 +134,21 @@ ALL_KNOWN_FEATURES: FrozenSet[str] = frozenset(
 class FeatureValidationReport:
     """§3.2 özellik kategori doğrulama sonucu."""
 
-    n_columns:        int
-    n_numeric:        int
+    n_columns: int
+    n_numeric: int
 
     # Kategori bazlı kapsam
-    category_coverage: Dict[str, float]       # kategori → kapsam oranı [0, 1]
-    category_present:  Dict[str, List[str]]   # kategori → bulunan özellik listesi
-    category_missing:  Dict[str, List[str]]   # kategori → eksik özellik listesi
+    category_coverage: Dict[str, float]  # kategori → kapsam oranı [0, 1]
+    category_present: Dict[str, List[str]]  # kategori → bulunan özellik listesi
+    category_missing: Dict[str, List[str]]  # kategori → eksik özellik listesi
 
     # Genel skorlar
-    overall_coverage:  float                  # [0, 1] tüm kategorilerdeki kapsam
-    kritik_missing:    List[str]              # min eşiği sağlamayan kategoriler
+    overall_coverage: float  # [0, 1] tüm kategorilerdeki kapsam
+    kritik_missing: List[str]  # min eşiği sağlamayan kategoriler
 
     # Bilinmeyen özellikler (şartnamede tanımlanmamış ama mevcut)
-    unknown_features:  List[str]
-    anonymous_count:   int                    # Sayısal sütun adı gibi görünen kolon sayısı
+    unknown_features: List[str]
+    anonymous_count: int  # Sayısal sütun adı gibi görünen kolon sayısı
 
     def is_spec_compliant(self) -> bool:
         """True iff all MINIMUM_FEATURES thresholds are met."""
@@ -122,33 +159,30 @@ class FeatureValidationReport:
             "=== TEKNOFEST §3.2 Özellik Kategori Doğrulaması ===",
             f"  Toplam sütun   : {self.n_columns}",
             f"  Sayısal sütun  : {self.n_numeric}",
-            f"  Genel kapsam   : {100*self.overall_coverage:.1f} %",
+            f"  Genel kapsam   : {100 * self.overall_coverage:.1f} %",
             "",
         ]
         for cat, cov in self.category_coverage.items():
-            present  = self.category_present.get(cat, [])
-            min_req  = MIN_FEATURES_PER_CATEGORY.get(cat, 1)
-            status   = "✓" if len(present) >= min_req else "✗ EKSİK"
-            lines.append(
-                f"  [{status}] {cat:30s} {len(present)}/{len(CATEGORY_FEATURES[cat])} "
-                f"({100*cov:.0f} %)"
-            )
+            present = self.category_present.get(cat, [])
+            min_req = MIN_FEATURES_PER_CATEGORY.get(cat, 1)
+            status = "✓" if len(present) >= min_req else "✗ EKSİK"
+            lines.append(f"  [{status}] {cat:30s} {len(present)}/{len(CATEGORY_FEATURES[cat])} ({100 * cov:.0f} %)")
         if self.kritik_missing:
             lines.append("")
             lines.append("  UYARI: Minimum eşiği sağlamayan kategoriler:")
             for cat in self.kritik_missing:
                 lines.append(f"    - {cat} (min={MIN_FEATURES_PER_CATEGORY[cat]})")
         if self.anonymous_count > 0:
-            lines.append(f"\n  UYARI: {self.anonymous_count} anonim kolon adı tespit edildi "
-                         "(§3.2: öznitelik isimleri gizli olabilir).")
+            lines.append(
+                f"\n  UYARI: {self.anonymous_count} anonim kolon adı tespit edildi "
+                "(§3.2: öznitelik isimleri gizli olabilir)."
+            )
         return "\n".join(lines)
 
     def log(self) -> None:
         # If the dataset is anonymised (TEKNOFEST §3.2 — kolon adları gizli),
         # category-mismatch lines are expected behaviour: downgrade WARNING→INFO.
-        is_anonymous_dataset = (
-            self.n_numeric > 0 and self.anonymous_count >= self.n_numeric / 2
-        )
+        is_anonymous_dataset = self.n_numeric > 0 and self.anonymous_count >= self.n_numeric / 2
         for line in self.summary().splitlines():
             severity = logger.warning if ("UYARI" in line or "EKSİK" in line) else logger.info
             if is_anonymous_dataset:
@@ -188,9 +222,7 @@ class FeatureValidator:
     def __init__(self, fuzzy: bool = True) -> None:
         self.fuzzy = fuzzy
         # Hızlı arama için lowercase → canonical name eşlemesi
-        self._lower_map: Dict[str, str] = {
-            f.lower(): f for f in ALL_KNOWN_FEATURES
-        }
+        self._lower_map: Dict[str, str] = {f.lower(): f for f in ALL_KNOWN_FEATURES}
 
     def _match_column(self, col: str) -> Optional[str]:
         """Return canonical feature name or None."""
@@ -221,13 +253,14 @@ class FeatureValidator:
         -------
         FeatureValidationReport
         """
-        cols     = list(df.columns)
-        numeric  = df.select_dtypes(include=[np.number]).columns.tolist()
+        cols = list(df.columns)
+        numeric = df.select_dtypes(include=[np.number]).columns.tolist()
 
         # Anonim kolon tespiti — kısa harf prefix + sayı formatı.
         # Şartname §3.2: yarışmada öznitelik isimleri verilmiyor; gerçek veride
         # AL_1..AL_351, EK_1..EK_9, CAT_1..CAT_6, AA_1..AA_8 gibi adlar geliyor.
         import re as _re
+
         _anon_pat = _re.compile(r"^[A-Za-z]{1,6}_?\d+$")
         anon_cols = [c for c in cols if _anon_pat.match(c)]
 
@@ -239,49 +272,43 @@ class FeatureValidator:
                 matched.add(m)
 
         # Kategori başına kapsam hesapla
-        cat_cov:     Dict[str, float]      = {}
-        cat_present: Dict[str, List[str]]  = {}
-        cat_missing: Dict[str, List[str]]  = {}
+        cat_cov: Dict[str, float] = {}
+        cat_present: Dict[str, List[str]] = {}
+        cat_missing: Dict[str, List[str]] = {}
 
-        total_spec   = 0
-        total_found  = 0
+        total_spec = 0
+        total_found = 0
 
         for cat, feats in CATEGORY_FEATURES.items():
-            found   = sorted(f for f in feats if f in matched)
+            found = sorted(f for f in feats if f in matched)
             missing = sorted(f for f in feats if f not in matched)
-            cov     = len(found) / max(len(feats), 1)
+            cov = len(found) / max(len(feats), 1)
 
-            cat_cov[cat]     = cov
+            cat_cov[cat] = cov
             cat_present[cat] = found
             cat_missing[cat] = missing
 
-            total_spec  += len(feats)
+            total_spec += len(feats)
             total_found += len(found)
 
         overall_cov = total_found / max(total_spec, 1)
 
         # Kritik kategoriler (min eşiğini sağlamayan)
-        kritik = [
-            cat for cat, feats in cat_present.items()
-            if len(feats) < MIN_FEATURES_PER_CATEGORY.get(cat, 1)
-        ]
+        kritik = [cat for cat, feats in cat_present.items() if len(feats) < MIN_FEATURES_PER_CATEGORY.get(cat, 1)]
 
         # Bilinmeyen özellikler
-        unknown = [
-            c for c in cols
-            if c not in ALL_KNOWN_FEATURES and self._match_column(c) is None
-        ]
+        unknown = [c for c in cols if c not in ALL_KNOWN_FEATURES and self._match_column(c) is None]
 
         report = FeatureValidationReport(
-            n_columns        = len(cols),
-            n_numeric        = len(numeric),
-            category_coverage = cat_cov,
-            category_present  = cat_present,
-            category_missing  = cat_missing,
-            overall_coverage  = overall_cov,
-            kritik_missing    = kritik,
-            unknown_features  = unknown,
-            anonymous_count   = len(anon_cols),
+            n_columns=len(cols),
+            n_numeric=len(numeric),
+            category_coverage=cat_cov,
+            category_present=cat_present,
+            category_missing=cat_missing,
+            overall_coverage=overall_cov,
+            kritik_missing=kritik,
+            unknown_features=unknown,
+            anonymous_count=len(anon_cols),
         )
         return report
 
@@ -290,17 +317,12 @@ class FeatureValidator:
         report = self.validate(df)
         report.log()
         if not report.is_spec_compliant():
-            is_anonymous_dataset = (
-                report.n_numeric > 0
-                and report.anonymous_count >= report.n_numeric / 2
-            )
+            is_anonymous_dataset = report.n_numeric > 0 and report.anonymous_count >= report.n_numeric / 2
             msg = (
                 "FeatureValidator: yarışma verisi anonim — §3.2 kategori eşleştirmesi atlandı (beklenen). "
                 "Eksik kategoriler: %s"
                 if is_anonymous_dataset
-                else
-                "FeatureValidator: VERİ SETİ §3.2 MİNİMUM GEREKSİNİMLERİNİ "
-                "KARŞILAMIYOR.  Eksik kategoriler: %s"
+                else "FeatureValidator: VERİ SETİ §3.2 MİNİMUM GEREKSİNİMLERİNİ KARŞILAMIYOR.  Eksik kategoriler: %s"
             )
             (logger.info if is_anonymous_dataset else logger.warning)(msg, report.kritik_missing)
         return report
@@ -321,7 +343,5 @@ def validate_features(df: pd.DataFrame, raise_on_critical: bool = False) -> Feat
     """
     report = FeatureValidator().validate_and_warn(df)
     if raise_on_critical and not report.is_spec_compliant():
-        raise ValueError(
-            f"TEKNOFEST §3.2 ihlali — eksik kategoriler: {report.kritik_missing}"
-        )
+        raise ValueError(f"TEKNOFEST §3.2 ihlali — eksik kategoriler: {report.kritik_missing}")
     return report

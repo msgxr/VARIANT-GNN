@@ -11,6 +11,7 @@ Usage pattern:
     calibrator.fit(proba_val, y_val)           # fit on held-out validation set
     cal_proba = calibrator.transform(proba)    # calibrated probabilities
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,7 +44,7 @@ class EnsembleCalibrator:
             raise ValueError(f"Unknown calibration method: {method!r}. Use 'isotonic' or 'sigmoid'.")
         self.method = method
         self._calibrator = None
-        self._is_fitted  = False
+        self._is_fitted = False
 
     # ------------------------------------------------------------------
     def fit(self, proba: np.ndarray, y: np.ndarray) -> "EnsembleCalibrator":
@@ -124,16 +125,12 @@ class EnsembleCalibrator:
             ``fraction_of_positives_after``
             ``mean_predicted_value_after``
         """
-        frac_before, mean_before = calibration_curve(
-            y, proba[:, 1], n_bins=n_bins, strategy="uniform"
-        )
+        frac_before, mean_before = calibration_curve(y, proba[:, 1], n_bins=n_bins, strategy="uniform")
         cal_proba = self.transform(proba)
-        frac_after, mean_after = calibration_curve(
-            y, cal_proba[:, 1], n_bins=n_bins, strategy="uniform"
-        )
+        frac_after, mean_after = calibration_curve(y, cal_proba[:, 1], n_bins=n_bins, strategy="uniform")
         return {
             "fraction_of_positives_before": frac_before,
-            "mean_predicted_value_before":  mean_before,
-            "fraction_of_positives_after":  frac_after,
-            "mean_predicted_value_after":   mean_after,
+            "mean_predicted_value_before": mean_before,
+            "fraction_of_positives_after": frac_after,
+            "mean_predicted_value_after": mean_after,
         }

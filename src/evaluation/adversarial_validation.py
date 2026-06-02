@@ -12,6 +12,7 @@ Yöntem:
 
 Jüri için: "Veri kalitesini de test ettik" argümanı.
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AdversarialResult:
     """Adversarial validation sonuçları."""
+
     auc_mean: float
     auc_std: float
     auc_per_fold: List[float]
@@ -37,8 +39,7 @@ class AdversarialResult:
         logger.info("AUC: %.4f ± %.4f", self.auc_mean, self.auc_std)
         logger.info("Karar: %s", self.verdict)
         if self.top_shift_features:
-            logger.info("En çok shift gösteren öznitelikler: %s",
-                       ", ".join(self.top_shift_features[:5]))
+            logger.info("En çok shift gösteren öznitelikler: %s", ", ".join(self.top_shift_features[:5]))
 
 
 def adversarial_validate(
@@ -68,10 +69,12 @@ def adversarial_validate(
 
     # Train=0, Test=1
     X_combined = np.vstack([X_train, X_test])
-    y_combined = np.concatenate([
-        np.zeros(len(X_train)),
-        np.ones(len(X_test)),
-    ])
+    y_combined = np.concatenate(
+        [
+            np.zeros(len(X_train)),
+            np.ones(len(X_test)),
+        ]
+    )
 
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_state)
     aucs = []

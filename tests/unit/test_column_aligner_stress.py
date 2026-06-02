@@ -2,12 +2,12 @@
 tests/unit/test_column_aligner_stress.py
 ColumnAligner stres testleri — edge-case senaryoları
 """
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from src.data.column_aligner import ColumnAligner
-
 
 EXPECTED = [f"AL_{i}" for i in range(1, 21)]  # AL_1 … AL_20
 
@@ -19,9 +19,7 @@ def _aligner(expected=None):
 
 def _ref_df():
     rng = np.random.default_rng(42)
-    return pd.DataFrame(
-        {col: rng.uniform(0, 100, 200) for col in EXPECTED}
-    )
+    return pd.DataFrame({col: rng.uniform(0, 100, 200) for col in EXPECTED})
 
 
 # ── 1. Tamamen boş kolon ──────────────────────────────────────────────────────
@@ -30,7 +28,7 @@ class TestEmptyColumn:
         al = _aligner()
         al.set_reference_distributions(_ref_df())
         df = _ref_df().rename(columns={c: c for c in EXPECTED})
-        df["AL_5"] = np.nan                 # tüm değerler NaN
+        df["AL_5"] = np.nan  # tüm değerler NaN
         out, report = al.apply(df)
         assert "AL_5" in out.columns
         assert out.shape[1] == len(EXPECTED)
@@ -79,7 +77,7 @@ class TestSingleRowInference:
 
     def test_single_row_missing_columns_filled_nan(self):
         al = _aligner()
-        partial = EXPECTED[:10]   # sadece ilk 10 kolon
+        partial = EXPECTED[:10]  # sadece ilk 10 kolon
         df = pd.DataFrame({col: [1.0] for col in partial})
         out, report = al.apply(df)
         assert out.shape == (1, len(EXPECTED))
@@ -102,9 +100,7 @@ class TestPositionalFallback:
     def test_partial_name_match_then_positional(self):
         al = _aligner()
         mixed_cols = EXPECTED[:10] + [f"UNKNOWN_{i}" for i in range(10)]
-        df = pd.DataFrame(
-            {col: np.random.rand(5) for col in mixed_cols}
-        )
+        df = pd.DataFrame({col: np.random.rand(5) for col in mixed_cols})
         out, report = al.apply(df)
         assert out.shape[1] == len(EXPECTED)
 
@@ -123,7 +119,7 @@ class TestDistributionalSignature:
     def test_signature_matching_survives_zero_variance(self):
         al = _aligner()
         ref = _ref_df()
-        ref["AL_7"] = 99.0   # sıfır varyans
+        ref["AL_7"] = 99.0  # sıfır varyans
         al.set_reference_distributions(ref)
         df = _ref_df()
         out, _ = al.apply(df)
@@ -133,6 +129,6 @@ class TestDistributionalSignature:
         al = _aligner()
         ref = _ref_df()
         al.set_reference_distributions(ref)
-        al.set_reference_distributions(ref)   # iki kez çağrılınca çökmemeli
+        al.set_reference_distributions(ref)  # iki kez çağrılınca çökmemeli
         out, _ = al.apply(ref)
         assert out.shape == ref.shape

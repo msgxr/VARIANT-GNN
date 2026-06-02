@@ -9,6 +9,7 @@ belirsizliği.
 Klinik etki: "Bu tahmine güvenilir mi?" sorusuna yanıt veren
 güvenilirlik metriği. Jüri için güçlü diferansiyatör.
 """
+
 from __future__ import annotations
 
 import logging
@@ -73,7 +74,7 @@ class MCDropoutEstimator:
                 all_probs.append(probs)
 
         stacked = np.stack(all_probs, axis=0)  # [n_forward, N, C]
-        mean_probs = stacked.mean(axis=0)       # [N, C]
+        mean_probs = stacked.mean(axis=0)  # [N, C]
         # Predictive entropy as uncertainty
         uncertainty = self._predictive_entropy(mean_probs)
 
@@ -130,8 +131,5 @@ class MCDropoutEstimator:
 
         Returns: string array — 'Yüksek Güven', 'Orta Güven', 'Düşük Güven'
         """
-        categories = np.where(
-            scores < 0.15, "Yüksek Güven",
-            np.where(scores < 0.30, "Orta Güven", "Düşük Güven")
-        )
+        categories = np.where(scores < 0.15, "Yüksek Güven", np.where(scores < 0.30, "Orta Güven", "Düşük Güven"))
         return categories

@@ -3,6 +3,7 @@ src/explainability/gnn_explainer.py
 GNNExplainer wrapper with safe fallback for environments where
 torch_geometric.explain is unavailable or incompatible.
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from torch_geometric.explain import Explainer, GNNExplainer
+
     _GNN_EXPLAINER_AVAILABLE = True
 except ImportError:
     _GNN_EXPLAINER_AVAILABLE = False
@@ -31,22 +33,22 @@ class GNNExplainerWrapper:
     """
 
     def __init__(self, model, device: Optional[torch.device] = None) -> None:
-        self._model  = model
+        self._model = model
         self._device = device or torch.device("cpu")
         self._explainer = None
 
         if _GNN_EXPLAINER_AVAILABLE:
             try:
                 self._explainer = Explainer(
-                    model          = model,
-                    algorithm      = GNNExplainer(epochs=100),
-                    explanation_type = "model",
-                    node_mask_type = "attributes",
-                    edge_mask_type = "object",
-                    model_config   = dict(
-                        mode       = "multiclass_classification",
-                        task_level = "graph",
-                        return_type= "log_probs",
+                    model=model,
+                    algorithm=GNNExplainer(epochs=100),
+                    explanation_type="model",
+                    node_mask_type="attributes",
+                    edge_mask_type="object",
+                    model_config=dict(
+                        mode="multiclass_classification",
+                        task_level="graph",
+                        return_type="log_probs",
                     ),
                 )
                 logger.info("GNNExplainer initialised.")
@@ -65,9 +67,9 @@ class GNNExplainerWrapper:
         try:
             data = data.to(self._device)
             explanation = self._explainer(
-                x          = data.x,
-                edge_index = data.edge_index,
-                batch      = data.batch,
+                x=data.x,
+                edge_index=data.edge_index,
+                batch=data.batch,
             )
             return explanation
         except Exception as exc:
@@ -77,8 +79,8 @@ class GNNExplainerWrapper:
     # ------------------------------------------------------------------
     def analyze_neighborhood_stats(
         self,
-        edge_index:  "torch.Tensor",
-        labels:      "torch.Tensor",
+        edge_index: "torch.Tensor",
+        labels: "torch.Tensor",
         edge_weight: Optional["torch.Tensor"] = None,
         mc_dropout_scores: Optional["torch.Tensor"] = None,
         uncertain_threshold: float = 0.30,
@@ -115,14 +117,10 @@ class GNNExplainerWrapper:
         import numpy as np
 
         try:
-            ei  = edge_index.cpu().numpy()     # (2, E)
-            lbl = labels.cpu().numpy()         # (N,)
-            ew  = (edge_weight.cpu().numpy()
-                   if edge_weight is not None
-                   else np.ones(ei.shape[1], dtype=float))
-            mcd = (mc_dropout_scores.cpu().numpy()
-                   if mc_dropout_scores is not None
-                   else None)
+            ei = edge_index.cpu().numpy()  # (2, E)
+            lbl = labels.cpu().numpy()  # (N,)
+            ew = edge_weight.cpu().numpy() if edge_weight is not None else np.ones(ei.shape[1], dtype=float)
+            mcd = mc_dropout_scores.cpu().numpy() if mc_dropout_scores is not None else None
         except Exception as exc:
             logger.warning("neighborhood_stats tensor convert failed: %s", exc)
             return {}
@@ -132,23 +130,23 @@ class GNNExplainerWrapper:
 
         stats: dict = {
             "pathogenic": {"neighbor_counts": [], "same_class_counts": [], "edge_weights": []},
-            "benign":     {"neighbor_counts": [], "same_class_counts": [], "edge_weights": []},
-            "uncertain":  {"neighbor_counts": [], "mixed_counts": [], "edge_weights": []},
+            "benign": {"neighbor_counts": [], "same_class_counts": [], "edge_weights": []},
+            "uncertain": {"neighbor_counts": [], "mixed_counts": [], "edge_weights": []},
         }
 
         for node in range(n_nodes):
-            mask         = src == node
-            neighbors    = dst[mask]
-            weights      = ew[mask]
-            n_neigh      = len(neighbors)
+            mask = src == node
+            neighbors = dst[mask]
+            weights = ew[mask]
+            n_neigh = len(neighbors)
 
             if n_neigh == 0:
                 continue
 
-            node_lbl     = int(lbl[node])
+            node_lbl = int(lbl[node])
             neigh_labels = lbl[neighbors]
-            same_class   = int(np.sum(neigh_labels == node_lbl))
-            avg_w        = float(np.mean(weights))
+            same_class = int(np.sum(neigh_labels == node_lbl))
+            avg_w = float(np.mean(weights))
 
             key = "pathogenic" if node_lbl == 1 else "benign"
             stats[key]["neighbor_counts"].append(n_neigh)
@@ -156,7 +154,7 @@ class GNNExplainerWrapper:
             stats[key]["edge_weights"].append(avg_w)
 
             if mcd is not None and float(mcd[node]) > uncertain_threshold:
-                patho_neigh  = int(np.sum(neigh_labels == 1))
+                patho_neigh = int(np.sum(neigh_labels == 1))
                 benign_neigh = int(np.sum(neigh_labels == 0))
                 mixed = min(patho_neigh, benign_neigh) / n_neigh
                 stats["uncertain"]["neighbor_counts"].append(n_neigh)
@@ -168,9 +166,9 @@ class GNNExplainerWrapper:
             if not nc:
                 return {"avg_neighbors": 0.0, "avg_edge_weight": 0.0}
             return {
-                "avg_neighbors":    round(float(np.mean(nc)),  2),
-                "std_neighbors":    round(float(np.std(nc)),   2),
-                "avg_edge_weight":  round(float(np.mean(d["edge_weights"])), 3),
+                "avg_neighbors": round(float(np.mean(nc)), 2),
+                "std_neighbors": round(float(np.std(nc)), 2),
+                "avg_edge_weight": round(float(np.mean(d["edge_weights"])), 3),
             }
 
         result: dict = {}
@@ -187,14 +185,14 @@ class GNNExplainerWrapper:
 
         unc = _agg(stats["uncertain"])
         mc_mix = stats["uncertain"]["mixed_counts"]
-        unc["mixed_ratio"]  = round(float(np.mean(mc_mix)), 3) if mc_mix else 0.0
-        unc["n_variants"]   = len(stats["uncertain"]["neighbor_counts"])
+        unc["mixed_ratio"] = round(float(np.mean(mc_mix)), 3) if mc_mix else 0.0
+        unc["n_variants"] = len(stats["uncertain"]["neighbor_counts"])
         result["uncertain"] = unc
 
         result["overall"] = {
             "avg_edge_weight": round(float(np.mean(ew)), 3),
-            "n_edges":         int(len(ew)),
-            "n_nodes":         n_nodes,
+            "n_edges": int(len(ew)),
+            "n_nodes": n_nodes,
         }
 
         logger.info(

@@ -10,6 +10,7 @@ Enforces:
   - Schema mismatch reporting.
   - reports/leakage_report.json written on demand.
 """
+
 from __future__ import annotations
 
 import json
@@ -93,11 +94,7 @@ class LeakageReport:
     def is_clean(self) -> bool:
         # Variant_ID bu projede model özelliği olarak kullanılmaz (ColumnAligner AL_x/EK_x/CAT_x eşler).
         # Dolayısıyla Variant_ID örtüşmesi özellik sızıntısı değildir; is_clean'i etkilemez.
-        return (
-            not self.coordinate_hits
-            and not self.label_hits
-            and not self.errors_raised
-        )
+        return not self.coordinate_hits and not self.label_hits and not self.errors_raised
 
     def to_dict(self) -> dict:
         d: dict = {
@@ -165,9 +162,7 @@ class LeakageFirewall:
         self.reports_dir = reports_dir
 
     # ------------------------------------------------------------------
-    def _detect_prohibited(
-        self, df: pd.DataFrame, blocklist: FrozenSet[str]
-    ) -> List[str]:
+    def _detect_prohibited(self, df: pd.DataFrame, blocklist: FrozenSet[str]) -> List[str]:
         """Return original column names that match blocklist (case-insensitive)."""
         lower_map = _lower_cols(df)
         hits: List[str] = []
@@ -177,9 +172,7 @@ class LeakageFirewall:
         return sorted(set(hits))
 
     # ------------------------------------------------------------------
-    def _check_variant_id_overlap(
-        self, train_df: pd.DataFrame, test_df: pd.DataFrame
-    ) -> int:
+    def _check_variant_id_overlap(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> int:
         """Return count of Variant_IDs present in both train and test."""
         if "Variant_ID" not in train_df.columns or "Variant_ID" not in test_df.columns:
             return 0
@@ -197,9 +190,7 @@ class LeakageFirewall:
         return int(dup_mask.sum())
 
     # ------------------------------------------------------------------
-    def _schema_mismatch(
-        self, df: pd.DataFrame, expected_columns: Optional[List[str]]
-    ) -> List[str]:
+    def _schema_mismatch(self, df: pd.DataFrame, expected_columns: Optional[List[str]]) -> List[str]:
         if expected_columns is None:
             return []
         expected_set = set(expected_columns)
@@ -278,16 +269,12 @@ class LeakageFirewall:
             overlap = self._check_variant_id_overlap(train_df, df)
             report.variant_id_overlaps = overlap
             if overlap > 0:
-                logger.warning(
-                    "[LeakageFirewall] %d Variant_IDs found in both train and test sets!", overlap
-                )
+                logger.warning("[LeakageFirewall] %d Variant_IDs found in both train and test sets!", overlap)
 
         # ── Duplicate fingerprint ──────────────────────────────────────────
         report.duplicate_row_count = self._count_duplicates(df)
         if report.duplicate_row_count > 0:
-            logger.info(
-                "[LeakageFirewall] %d duplicate rows detected.", report.duplicate_row_count
-            )
+            logger.info("[LeakageFirewall] %d duplicate rows detected.", report.duplicate_row_count)
 
         # ── Schema mismatch ────────────────────────────────────────────────
         report.schema_mismatches = self._schema_mismatch(df, expected_columns)

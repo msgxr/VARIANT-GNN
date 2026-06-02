@@ -1,4 +1,5 @@
 """src/ui/analysis.py — Variant Analysis tab for VARIANT-GNN Streamlit app."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,15 +7,15 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from src.ui.utils import section_header
 from src.ui.analytics import (
-    render_summary_cards,
-    render_risk_histogram,
-    render_risk_map,
     render_model_comparison,
     render_results_table,
+    render_risk_histogram,
+    render_risk_map,
+    render_summary_cards,
 )
 from src.ui.reporting import generate_pdf_report
+from src.ui.utils import section_header
 
 
 def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
@@ -25,12 +26,12 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
         "Varyant CSV dosyasi yukleyin",
         type=["csv"],
         help=(
-            "Sayisal ozellik sutunlari iceren CSV. Label opsiyonel. "
-            "Ornek format: data/samples/jury_blind_sample.csv"
+            "Sayisal ozellik sutunlari iceren CSV. Label opsiyonel. Ornek format: data/samples/jury_blind_sample.csv"
         ),
     )
     if uploaded is None:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.2);
                     border-radius:10px;padding:16px 20px;margin-top:8px;">
             <div style="font-size:0.85rem;font-weight:700;color:#63b3ed;margin-bottom:8px;">
@@ -44,36 +45,35 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
                 <code>data/samples/jury_blind_sample.csv</code> (34 özellik, 10 satır)
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         return
 
     df_raw = pd.read_csv(uploaded)
     col_prev, col_stat = st.columns([3, 1])
     with col_prev:
         st.markdown(f"**Onizleme** — {len(df_raw):,} satir · {df_raw.shape[1]} sutun")
-        st.dataframe(df_raw.head(5), width='stretch')
+        st.dataframe(df_raw.head(5), width="stretch")
     with col_stat:
         st.metric("Varyant Sayisi", f"{len(df_raw):,}")
-        st.metric("Eksik Veri", f"{df_raw.isnull().mean().mean()*100:.1f}%")
+        st.metric("Eksik Veri", f"{df_raw.isnull().mean().mean() * 100:.1f}%")
         st.metric("Sutun Sayisi", str(df_raw.shape[1]))
 
     if pipeline is None:
-        st.warning(
-            "Model yuklenemedi. "
-            "`python main.py --mode train --config configs/pdr.yaml` calistirin."
-        )
+        st.warning("Model yuklenemedi. `python main.py --mode train --config configs/pdr.yaml` calistirin.")
         return
 
-    if st.button("🚀 ANALIZI BASLAT", type="primary", width='stretch'):
+    if st.button("🚀 ANALIZI BASLAT", type="primary", width="stretch"):
         with st.spinner("XGBoost + LightGBM + GATv2GNN + DNN modelleri calisiyor..."):
             try:
                 # predict_from_csv runs the full preprocessing pipeline
                 # (imputer → scaler → SelectKBest → autoencoder → graph)
                 # predict_from_dataframe expects already-processed features — wrong for raw data
-                import tempfile, os
-                with tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".csv", delete=False, encoding="utf-8"
-                ) as tmp:
+                import os
+                import tempfile
+
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as tmp:
                     df_raw.to_csv(tmp, index=False)
                     tmp_path = tmp.name
                 try:
@@ -101,7 +101,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
             data=df_result.to_csv(index=False).encode(),
             file_name="variant_predictions.csv",
             mime="text/csv",
-            width='stretch',
+            width="stretch",
         )
     with col_dl2:
         with st.spinner("PDF hazirlaniyor..."):
@@ -111,7 +111,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
             data=pdf_bytes,
             file_name="variant_analiz_raporu.pdf",
             mime="application/pdf",
-            width='stretch',
+            width="stretch",
         )
 
     render_risk_histogram(df_result)

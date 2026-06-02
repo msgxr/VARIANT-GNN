@@ -38,6 +38,7 @@ Kullanım:
     # sets[i] = list of likely classes (e.g., [1] or [0,1])
     coverage = cp.evaluate_coverage(sets, test_labels)
 """
+
 from __future__ import annotations
 
 import logging
@@ -61,13 +62,13 @@ ConformalMethod = Literal["APS", "LAC"]
 class CoverageReport:
     """Conformal Prediction empirical coverage analizi."""
 
-    target_coverage:    float                  # 1 - alpha (örn. 0.90)
-    empirical_coverage: float                  # Gerçekleşen coverage
-    average_set_size:   float                  # Ortalama küme boyutu
-    singleton_rate:     float                  # |C(x)| = 1 olan örnekler / N
-    abstention_rate:    float                  # |C(x)| ≥ 2 olan örnekler / N
-    class_coverage:     Dict[int, float]       # Sınıf bazlı coverage
-    set_size_dist:      Dict[int, int]         # Boyut histogramı
+    target_coverage: float  # 1 - alpha (örn. 0.90)
+    empirical_coverage: float  # Gerçekleşen coverage
+    average_set_size: float  # Ortalama küme boyutu
+    singleton_rate: float  # |C(x)| = 1 olan örnekler / N
+    abstention_rate: float  # |C(x)| ≥ 2 olan örnekler / N
+    class_coverage: Dict[int, float]  # Sınıf bazlı coverage
+    set_size_dist: Dict[int, int]  # Boyut histogramı
 
     def is_valid(self, tolerance: float = 0.02) -> bool:
         """Gerçek coverage hedefe ≥ tolerance içinde mi?"""
@@ -100,14 +101,14 @@ class CoverageReport:
 
     def as_dict(self) -> dict:
         return {
-            "target_coverage":    self.target_coverage,
+            "target_coverage": self.target_coverage,
             "empirical_coverage": round(self.empirical_coverage, 4),
-            "average_set_size":   round(self.average_set_size, 4),
-            "singleton_rate":     round(self.singleton_rate, 4),
-            "abstention_rate":    round(self.abstention_rate, 4),
-            "class_coverage":     {str(k): round(v, 4) for k, v in self.class_coverage.items()},
+            "average_set_size": round(self.average_set_size, 4),
+            "singleton_rate": round(self.singleton_rate, 4),
+            "abstention_rate": round(self.abstention_rate, 4),
+            "class_coverage": {str(k): round(v, 4) for k, v in self.class_coverage.items()},
             "set_size_distribution": {str(k): v for k, v in self.set_size_dist.items()},
-            "is_valid":           self.is_valid(),
+            "is_valid": self.is_valid(),
         }
 
 
@@ -147,7 +148,7 @@ class ConformalPredictor:
             raise ValueError(f"alpha must be in (0, 1), got {alpha}")
         if method not in ("APS", "LAC"):
             raise ValueError(f"method must be 'APS' or 'LAC', got {method!r}")
-        self.alpha  = alpha
+        self.alpha = alpha
         self.method = method
 
         self._q_hat: Optional[float] = None  # Calibrated quantile threshold
@@ -229,8 +230,10 @@ class ConformalPredictor:
                 "ConformalPredictor: kalibrasyon seti cok kucuk (n=%d < %d). "
                 "Coverage garantisi (%0.0f%%) istatistiksel olarak guvenilir olmayabilir. "
                 "En az %d ornek onerilir.",
-                self._n_calib, _MIN_CALIB,
-                (1 - self.alpha) * 100, _MIN_CALIB,
+                self._n_calib,
+                _MIN_CALIB,
+                (1 - self.alpha) * 100,
+                _MIN_CALIB,
             )
 
         # Conformal quantile: ⌈(n+1)(1-α)⌉ / n (finite-sample correction)
@@ -243,7 +246,10 @@ class ConformalPredictor:
 
         logger.info(
             "ConformalPredictor calibrated [method=%s, α=%.2f, n=%d]: q̂ = %.4f",
-            self.method, self.alpha, self._n_calib, self._q_hat,
+            self.method,
+            self.alpha,
+            self._n_calib,
+            self._q_hat,
         )
         return self
 
@@ -303,7 +309,7 @@ class ConformalPredictor:
 
     def evaluate_coverage(
         self,
-        sets:        List[List[int]],
+        sets: List[List[int]],
         true_labels: np.ndarray,
     ) -> CoverageReport:
         """
@@ -312,10 +318,10 @@ class ConformalPredictor:
         Returns a ``CoverageReport`` for analysis.
         """
         n = len(true_labels)
-        covered      = sum(1 for i in range(n) if int(true_labels[i]) in sets[i])
-        sizes        = [len(s) for s in sets]
-        singletons   = sum(1 for s in sizes if s == 1)
-        abstain      = sum(1 for s in sizes if s >= 2)
+        covered = sum(1 for i in range(n) if int(true_labels[i]) in sets[i])
+        sizes = [len(s) for s in sets]
+        singletons = sum(1 for s in sizes if s == 1)
+        abstain = sum(1 for s in sizes if s >= 2)
 
         # Class-conditional coverage
         class_cov: Dict[int, float] = {}
@@ -330,13 +336,13 @@ class ConformalPredictor:
             size_dist[s] = size_dist.get(s, 0) + 1
 
         return CoverageReport(
-            target_coverage    = 1.0 - self.alpha,
-            empirical_coverage = covered / n if n > 0 else 0.0,
-            average_set_size   = float(np.mean(sizes)) if sizes else 0.0,
-            singleton_rate     = singletons / n if n > 0 else 0.0,
-            abstention_rate    = abstain / n if n > 0 else 0.0,
-            class_coverage     = class_cov,
-            set_size_dist      = size_dist,
+            target_coverage=1.0 - self.alpha,
+            empirical_coverage=covered / n if n > 0 else 0.0,
+            average_set_size=float(np.mean(sizes)) if sizes else 0.0,
+            singleton_rate=singletons / n if n > 0 else 0.0,
+            abstention_rate=abstain / n if n > 0 else 0.0,
+            class_coverage=class_cov,
+            set_size_dist=size_dist,
         )
 
     # ------------------------------------------------------------------
@@ -367,7 +373,7 @@ class ConformalPredictor:
         """
         sets, _ = self.predict_sets(test_proba)
         n = len(sets)
-        decisions  = np.empty(n, dtype=object)
+        decisions = np.empty(n, dtype=object)
         confidence = np.zeros(n, dtype=float)
 
         for i, s in enumerate(sets):
@@ -382,9 +388,9 @@ class ConformalPredictor:
                 confidence[i] = 0.0
 
         return {
-            "decisions":       decisions,
+            "decisions": decisions,
             "prediction_sets": sets,
-            "confidence":      confidence,
+            "confidence": confidence,
         }
 
 
@@ -420,17 +426,17 @@ class MondrianConformalPredictor:
         method: ConformalMethod = "APS",
         min_calibration_size: int = 20,
     ) -> None:
-        self.alpha  = alpha
+        self.alpha = alpha
         self.method = method
         self.min_calibration_size = min_calibration_size
 
         self._predictors: Dict[str, ConformalPredictor] = {}
-        self._fallback:   Optional[ConformalPredictor]   = None
+        self._fallback: Optional[ConformalPredictor] = None
         self._is_fitted: bool = False
 
     def fit(
         self,
-        cal_proba:  np.ndarray,
+        cal_proba: np.ndarray,
         cal_labels: np.ndarray,
         cal_groups: np.ndarray,
     ) -> "MondrianConformalPredictor":
@@ -447,12 +453,13 @@ class MondrianConformalPredictor:
         unique_groups = np.unique(cal_groups)
         for g in unique_groups:
             mask = cal_groups == g
-            n_g  = int(mask.sum())
+            n_g = int(mask.sum())
             if n_g < self.min_calibration_size:
                 logger.info(
-                    "Mondrian CP: group '%s' has only %d samples (< %d) — "
-                    "using global fallback predictor.",
-                    g, n_g, self.min_calibration_size,
+                    "Mondrian CP: group '%s' has only %d samples (< %d) — using global fallback predictor.",
+                    g,
+                    n_g,
+                    self.min_calibration_size,
                 )
                 continue
             cp_g = ConformalPredictor(alpha=self.alpha, method=self.method)
@@ -460,7 +467,9 @@ class MondrianConformalPredictor:
             self._predictors[str(g)] = cp_g
             logger.info(
                 "Mondrian CP: group '%s' calibrated (n=%d, q̂=%.4f).",
-                g, n_g, cp_g._q_hat,
+                g,
+                n_g,
+                cp_g._q_hat,
             )
 
         self._is_fitted = True
@@ -468,7 +477,7 @@ class MondrianConformalPredictor:
 
     def predict_sets(
         self,
-        test_proba:  np.ndarray,
+        test_proba: np.ndarray,
         test_groups: np.ndarray,
     ) -> List[List[int]]:
         """Per-group prediction set generation."""
@@ -480,13 +489,13 @@ class MondrianConformalPredictor:
         for i in range(n):
             g = str(test_groups[i])
             cp = self._predictors.get(g, self._fallback)
-            cp_sets, _ = cp.predict_sets(test_proba[i:i + 1])
+            cp_sets, _ = cp.predict_sets(test_proba[i : i + 1])
             sets.append(cp_sets[0])
         return sets
 
     def evaluate_per_group(
         self,
-        test_proba:  np.ndarray,
+        test_proba: np.ndarray,
         test_labels: np.ndarray,
         test_groups: np.ndarray,
     ) -> Dict[str, CoverageReport]:
@@ -495,7 +504,7 @@ class MondrianConformalPredictor:
         unique_groups = np.unique(test_groups)
         reports: Dict[str, CoverageReport] = {}
         for g in unique_groups:
-            mask  = test_groups == g
+            mask = test_groups == g
             g_sets = [sets[i] for i in range(len(sets)) if mask[i]]
             cp = self._predictors.get(str(g), self._fallback)
             reports[str(g)] = cp.evaluate_coverage(g_sets, test_labels[mask])

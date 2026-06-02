@@ -7,6 +7,7 @@ SMOTE is applied after scaling — also inside each fold.
 AutoEncoder latent features are concatenated after SMOTE.
 Graph edge information is derived from training-fold correlation only.
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,6 +33,7 @@ def _compute_signatures(ref_df: "object") -> dict:
     column-by-distribution matching when column names are anonymised
     (TEKNOFEST §3.2 jury data does not expose feature names)."""
     import pandas as _pd
+
     sigs: dict = {}
     if not isinstance(ref_df, _pd.DataFrame):
         ref_df = _pd.DataFrame(ref_df)
@@ -68,23 +70,25 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
 
     def fit(self, X: Any, y: Optional[np.ndarray] = None) -> ColumnAligner:
         import pandas as pd
+
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
-        
+
         self.feature_names_in_ = list(X.columns)
         if self.target_columns is None:
             self.target_columns = self.feature_names_in_
-            
+
         # Fit imputer for numeric columns
         numeric_cols = X.select_dtypes(include=[np.number]).columns
         if not numeric_cols.empty:
             self._imputer.fit(X[numeric_cols])
-            
+
         self._is_fitted = True
         return self
 
     def transform(self, X: Any) -> np.ndarray:
         import pandas as pd
+
         if not self._is_fitted:
             raise RuntimeError("ColumnAligner must be fitted first.")
 
@@ -92,25 +96,22 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
             X = pd.DataFrame(X)
 
         # 1 & 2 & 4: Handle anonymous columns, shuffled order, and noise
-        # Strategy: If column names match exactly, use them. 
-        # If not, and shapes match, assume order. 
+        # Strategy: If column names match exactly, use them.
+        # If not, and shapes match, assume order.
         # If shapes don't match, try fuzzy matching or drop noise.
-        
+
         # Build entire frame in one shot — avoids pandas' fragmented-frame
         # PerformanceWarning when iterating over hundreds of columns.
         n = len(X)
         nan_template = np.full(n, np.nan)
-        col_data = {
-            col: (X[col].values if col in X.columns else nan_template.copy())
-            for col in self.target_columns
-        }
+        col_data = {col: (X[col].values if col in X.columns else nan_template.copy()) for col in self.target_columns}
         out_df = pd.DataFrame(col_data, index=X.index)
 
         # 3: Coerce any object columns to numeric in one vectorised pass.
         obj_cols = out_df.select_dtypes(include=["object"]).columns
         if len(obj_cols):
             out_df[obj_cols] = out_df[obj_cols].apply(pd.to_numeric, errors="coerce")
-        
+
         # Impute
         if len(out_df.columns) > 0:
             # We reconstruct the imputer logic because we might have different cols now
@@ -128,21 +129,22 @@ class ColumnAligner(BaseEstimator, TransformerMixin):
                     logger.warning(
                         "ColumnAligner: imputer boyutu (%d) != çıktı boyutu (%d). "
                         "Her sütun için ayrı medyan kullanılıyor.",
-                        len(medians), arr.shape[1],
+                        len(medians),
+                        arr.shape[1],
                     )
                     col_medians = np.nanmedian(arr, axis=0)
                     col_medians = np.where(np.isnan(col_medians), 0.0, col_medians)
                     for i in range(arr.shape[1]):
                         arr[mask[:, i], i] = col_medians[i]
             return arr
-            
+
         return out_df.values
 
 
 class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
     """
     Scientific enrichment: Calculates BLOSUM62 and Grantham scores.
-    Expects a DataFrame with 'Ref_AA' and 'Alt_AA' columns, or 
+    Expects a DataFrame with 'Ref_AA' and 'Alt_AA' columns, or
     tries to extract them from 'AA_Context'.
     """
 
@@ -153,21 +155,19 @@ class BiologicalEnrichmentTransformer(BaseEstimator, TransformerMixin):
         if not isinstance(X, (np.ndarray, list)):
             # If it's a DataFrame, we can do real scoring
             import pandas as pd
+
             if isinstance(X, pd.DataFrame):
                 scores = []
                 for _, row in X.iterrows():
-                    ref = str(row.get('Ref_AA', 'A'))
-                    alt = str(row.get('Alt_AA', 'A'))
+                    ref = str(row.get("Ref_AA", "A"))
+                    alt = str(row.get("Alt_AA", "A"))
                     if len(ref) != 1 or len(alt) != 1:
-                         # Try parsing from AA_Context if available
-                         ctx = str(row.get('AA_Context', 'A/A'))
-                         if '/' in ctx:
-                             ref, alt = ctx.split('/')[:2]
-                    
-                    scores.append([
-                        get_blosum62_score(ref, alt),
-                        get_grantham_score(ref, alt)
-                    ])
+                        # Try parsing from AA_Context if available
+                        ctx = str(row.get("AA_Context", "A/A"))
+                        if "/" in ctx:
+                            ref, alt = ctx.split("/")[:2]
+
+                    scores.append([get_blosum62_score(ref, alt), get_grantham_score(ref, alt)])
                 return np.array(scores)
 
         # If amino-acid context is unavailable (plain numeric arrays),
@@ -226,10 +226,10 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         # Fitted components
         self._bio_transformer: Optional[BiologicalEnrichmentTransformer] = None
-        self._acmg_feature_names: list = []   # eğitim zamanı kolon adları
+        self._acmg_feature_names: list = []  # eğitim zamanı kolon adları
         self._imputer: Optional[SimpleImputer] = None
         self._scaler: Optional[RobustScaler] = None
-        self.use_missing_indicators: bool = True   # §3.2 "missing≠0" — eksiklik deseni özelliği
+        self.use_missing_indicators: bool = True  # §3.2 "missing≠0" — eksiklik deseni özelliği
         self._miss_cols: np.ndarray = np.array([], dtype=int)
         self._var_selector: Optional[VarianceThreshold] = None
         self._kb_selector: Optional[SelectKBest] = None
@@ -249,31 +249,31 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     def __setstate__(self, state: dict) -> None:
         """Eski pickle'lardan yükleme sırasında eksik attribute'ları güvenli doldur."""
         _defaults = {
-            "use_bio_scoring":          False,
-            "_bio_transformer":         None,
-            "_aligner":                 ColumnAligner(),   # KRİTİK: yeni eklendi
-            "use_feature_selection":    False,
-            "k_best_features":          30,
-            "use_autoencoder":          True,
+            "use_bio_scoring": False,
+            "_bio_transformer": None,
+            "_aligner": ColumnAligner(),  # KRİTİK: yeni eklendi
+            "use_feature_selection": False,
+            "k_best_features": 30,
+            "use_autoencoder": True,
             "autoencoder_encoding_dim": 16,
-            "autoencoder_epochs":       10,
-            "smote_enabled":            True,
-            "device":                   "auto",
-            "random_state":             42,
-            "_var_selector":            None,
-            "_kb_selector":             None,
-            "_autoenc":                 None,
-            "_imputer":                 None,
-            "_scaler":                  None,
-            "use_missing_indicators":   True,
-            "_miss_cols":               np.array([], dtype=int),
-            "edge_index":               None,
-            "edge_attr":                None,
-            "n_output_features":        0,
-            "_is_fitted":               False,
-            "feature_signatures":       {},
-            "use_acmg_proxy":           False,
-            "_acmg_feature_names":      [],
+            "autoencoder_epochs": 10,
+            "smote_enabled": True,
+            "device": "auto",
+            "random_state": 42,
+            "_var_selector": None,
+            "_kb_selector": None,
+            "_autoenc": None,
+            "_imputer": None,
+            "_scaler": None,
+            "use_missing_indicators": True,
+            "_miss_cols": np.array([], dtype=int),
+            "edge_index": None,
+            "edge_attr": None,
+            "n_output_features": 0,
+            "_is_fitted": False,
+            "feature_signatures": {},
+            "use_acmg_proxy": False,
+            "_acmg_feature_names": [],
         }
         for key, val in _defaults.items():
             state.setdefault(key, val)
@@ -291,7 +291,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
     def transform(self, X: np.ndarray) -> np.ndarray:
         if not self._is_fitted:
             raise RuntimeError("VariantPreprocessor must be fitted first.")
-            
+
         # 8. Handle huge batches (chunking)
         MAX_BATCH = 10000
         if len(X) > MAX_BATCH:
@@ -300,23 +300,21 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             for i in range(0, len(X), MAX_BATCH):
                 chunks.append(self._transform_internal(X[i : i + MAX_BATCH]))
             return np.vstack(chunks)
-            
+
         return self._transform_internal(X)
 
     # ------------------------------------------------------------------
     # Training-aware API (returns resampled data + fitted preprocessor)
     # ------------------------------------------------------------------
 
-    def fit_resample_train(
-        self, X: np.ndarray, y: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def fit_resample_train(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Fit on X/y, apply SMOTE, and return processed training arrays.
         Use this inside CV folds for the training split only.
         Returns (X_processed, y_resampled).
         """
         X_res, y_res = self._fit_internal(X, y, apply_smote=self.smote_enabled)
-        return X_res, y_res # type: ignore
+        return X_res, y_res  # type: ignore
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -336,11 +334,13 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
                 self._miss_cols = np.where((_mr > 0.05) & (_mr < 0.95))[0]
             else:
                 self._miss_cols = np.array([], dtype=int)
-            self._miss_indicators_train = (np.isnan(_Xraw[:, self._miss_cols]).astype(float)
-                                           if len(self._miss_cols) else None)
+            self._miss_indicators_train = (
+                np.isnan(_Xraw[:, self._miss_cols]).astype(float) if len(self._miss_cols) else None
+            )
         except Exception as _me:
             logger.warning("Missing-indicator yakalama atlandı: %s", _me)
-            self._miss_cols = np.array([], dtype=int); self._miss_indicators_train = None
+            self._miss_cols = np.array([], dtype=int)
+            self._miss_indicators_train = None
 
         # 0. Align and Impute
         self._aligner.fit(X)
@@ -350,7 +350,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self.use_acmg_proxy:
             try:
                 import pandas as _pd
+
                 from src.features.acmg_proxy_features import ACMGProxyFeatures
+
                 _names = list(self._aligner.feature_names_in_)
                 _df = _pd.DataFrame(X_aligned, columns=_names)
                 _proxy = ACMGProxyFeatures()
@@ -367,6 +369,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # statistical profile (TEKNOFEST §3.2 — column names hidden).
         try:
             import pandas as _pd
+
             ref_df = _pd.DataFrame(X) if not isinstance(X, _pd.DataFrame) else X
             self.feature_signatures = _compute_signatures(ref_df)
         except Exception as _exc:
@@ -378,9 +381,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         all_nan_cols = np.where(np.all(np.isnan(X_aligned), axis=0))[0]
         if len(all_nan_cols) > 0:
             logger.warning(
-                "Tumu NaN olan %d kolon tespit edildi (indeksler: %s). "
-                "Bu kolonlar 0 ile doldurulacak.",
-                len(all_nan_cols), all_nan_cols[:5].tolist(),
+                "Tumu NaN olan %d kolon tespit edildi (indeksler: %s). Bu kolonlar 0 ile doldurulacak.",
+                len(all_nan_cols),
+                all_nan_cols[:5].tolist(),
             )
             X_aligned[:, all_nan_cols] = 0.0
         self._imputer = SimpleImputer(strategy="median")
@@ -394,8 +397,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # eklenir ki sentetik satırlar için de interpolasyona girsin).
         if getattr(self, "_miss_indicators_train", None) is not None and len(self._miss_cols) > 0:
             X_scaled = np.hstack([X_scaled, self._miss_indicators_train])
-            logger.info("Missing-indicator: +%d özellik (eksiklik deseni, §3.2 'missing≠0').",
-                        len(self._miss_cols))
+            logger.info("Missing-indicator: +%d özellik (eksiklik deseni, §3.2 'missing≠0').", len(self._miss_cols))
 
         # 5. Biological Enrichment (impute+scale sonrası, SMOTE öncesi)
         # Ham X yerine X_imputed kullanılır — NaN içermeyen veri ile doğru skor
@@ -419,12 +421,14 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         # 8. AutoEncoder
         if self.use_autoencoder:
             _input_dim = X_scaled.shape[1]
-            _enc_dim   = self.autoencoder_encoding_dim
+            _enc_dim = self.autoencoder_encoding_dim
             if _enc_dim >= _input_dim:
                 logger.warning(
                     "AutoEncoder: encoding_dim (%d) >= input_dim (%d) — "
                     "sikistirma anlamsiz. encoding_dim = input_dim // 4 = %d olarak ayarlaniyor.",
-                    _enc_dim, _input_dim, max(1, _input_dim // 4),
+                    _enc_dim,
+                    _input_dim,
+                    max(1, _input_dim // 4),
                 )
                 _enc_dim = max(1, _input_dim // 4)
             self._autoenc = AutoEncoderTransformer(
@@ -447,7 +451,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
     def _transform_internal(self, X: np.ndarray) -> np.ndarray:
         if self._imputer is None or self._scaler is None:
-             raise RuntimeError("Preprocessor components not initialized.")
+            raise RuntimeError("Preprocessor components not initialized.")
 
         # Eksiklik göstergeleri için HAM X'i (NaN'li) sakla — aligner birazdan dolduracak.
         try:
@@ -456,18 +460,21 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
             _Xraw_t = None
 
         # _aligner fit edilmişse kullan; değilse (eski pickle) ham X geç
-        if hasattr(self, '_aligner') and self._aligner._is_fitted:
+        if hasattr(self, "_aligner") and self._aligner._is_fitted:
             X_aligned = self._aligner.transform(X)
         else:
             import numpy as _np
+
             X_aligned = _np.array(X, dtype=float)
 
         # ACMG Proxy (transform aşaması — fitted değil, rule-based)
-        if getattr(self, 'use_acmg_proxy', False) and getattr(self, '_acmg_feature_names', []):
+        if getattr(self, "use_acmg_proxy", False) and getattr(self, "_acmg_feature_names", []):
             try:
                 import pandas as _pd
+
                 from src.features.acmg_proxy_features import ACMGProxyFeatures
-                _base_names = self._acmg_feature_names[:-len(ACMGProxyFeatures.FEATURE_NAMES)]
+
+                _base_names = self._acmg_feature_names[: -len(ACMGProxyFeatures.FEATURE_NAMES)]
                 _df = _pd.DataFrame(X_aligned, columns=_base_names)
                 _proxy = ACMGProxyFeatures()
                 _df_out = _proxy.transform(_df)
@@ -479,8 +486,12 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         X_scaled = self._scaler.transform(X_imputed)
 
         # 4b. Eksiklik göstergeleri (fit ile simetrik) — HAM X'ten (NaN'li), aligner-impute öncesi
-        if (getattr(self, "use_missing_indicators", True) and len(getattr(self, "_miss_cols", [])) > 0
-                and _Xraw_t is not None and _Xraw_t.shape[1] > int(self._miss_cols.max())):
+        if (
+            getattr(self, "use_missing_indicators", True)
+            and len(getattr(self, "_miss_cols", [])) > 0
+            and _Xraw_t is not None
+            and _Xraw_t.shape[1] > int(self._miss_cols.max())
+        ):
             _mi = np.isnan(_Xraw_t[:, self._miss_cols]).astype(float)
             X_scaled = np.hstack([X_scaled, _mi])
 
@@ -500,14 +511,10 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         return X_scaled
 
-    def _fit_feature_selection(
-        self, X: np.ndarray, y: Optional[np.ndarray]
-    ) -> np.ndarray:
+    def _fit_feature_selection(self, X: np.ndarray, y: Optional[np.ndarray]) -> np.ndarray:
         self._var_selector = VarianceThreshold(threshold=0.01)
         X_var = self._var_selector.fit_transform(X)
-        logger.info(
-            "VarianceThreshold: %d → %d features", X.shape[1], X_var.shape[1]
-        )
+        logger.info("VarianceThreshold: %d → %d features", X.shape[1], X_var.shape[1])
 
         if y is not None and X_var.shape[1] > self.k_best_features:
             k = min(self.k_best_features, X_var.shape[1])
@@ -528,7 +535,7 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
                 X_scaled.shape[0],
             )
             self.edge_index = torch.empty((2, 0), dtype=torch.long)
-            self.edge_attr  = torch.empty((0,), dtype=torch.float)
+            self.edge_attr = torch.empty((0,), dtype=torch.float)
             return
         corr = np.corrcoef(X_scaled, rowvar=False)
         corr = np.nan_to_num(corr, nan=0.0)
@@ -550,7 +557,9 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
 
         logger.info(
             "Feature graph: %d nodes, %d edges (corr_threshold=%.2f)",
-            n, len(edges), self.corr_threshold,
+            n,
+            len(edges),
+            self.corr_threshold,
         )
 
     # ------------------------------------------------------------------
@@ -590,15 +599,15 @@ def build_preprocessor_from_config() -> VariantPreprocessor:
     cfg = get_settings()
     p = cfg.preprocessing
     return VariantPreprocessor(
-        corr_threshold = p.corr_threshold,
-        use_autoencoder = p.use_autoencoder,
-        autoencoder_encoding_dim = p.autoencoder_encoding_dim,
-        autoencoder_epochs = p.autoencoder_epochs,
-        use_feature_selection = p.use_feature_selection,
-        k_best_features = p.k_best_features,
-        smote_enabled = p.smote_enabled,
-        use_bio_scoring = p.use_bio_scoring,
-        use_acmg_proxy = getattr(p, 'use_acmg_proxy', True),
-        device = cfg.device,
-        random_state = cfg.seed,
+        corr_threshold=p.corr_threshold,
+        use_autoencoder=p.use_autoencoder,
+        autoencoder_encoding_dim=p.autoencoder_encoding_dim,
+        autoencoder_epochs=p.autoencoder_epochs,
+        use_feature_selection=p.use_feature_selection,
+        k_best_features=p.k_best_features,
+        smote_enabled=p.smote_enabled,
+        use_bio_scoring=p.use_bio_scoring,
+        use_acmg_proxy=getattr(p, "use_acmg_proxy", True),
+        device=cfg.device,
+        random_state=cfg.seed,
     )

@@ -8,6 +8,7 @@ sütun isimleriyle gelebilir.
 Bu test, ColumnAligner'ın pozisyonel fallback mekanizmasının
 anonim sütunlarla doğru çalıştığını doğrular.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -19,10 +20,16 @@ from src.data.column_aligner import ColumnAligner
 # ── Test fixtures ─────────────────────────────────────────────────────
 
 EXPECTED_FEATURES = [
-    "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type",
-    "AA_Grantham_Score", "GC_Content_Window", "In_CpG_Site",
-    "Motif_Disruption_Score", "AA_Polarity_Change",
-    "AA_Hydrophobicity_Diff", "AA_Mol_Weight_Diff",
+    "Ref_Nucleotide",
+    "Alt_Nucleotide",
+    "Codon_Change_Type",
+    "AA_Grantham_Score",
+    "GC_Content_Window",
+    "In_CpG_Site",
+    "Motif_Disruption_Score",
+    "AA_Polarity_Change",
+    "AA_Hydrophobicity_Diff",
+    "AA_Mol_Weight_Diff",
 ]
 
 
@@ -74,9 +81,7 @@ class TestColumnAlignerAnonymous:
         assert aligned.shape == (5, len(EXPECTED_FEATURES))
 
         # Values should be preserved (same data, just renamed)
-        np.testing.assert_array_almost_equal(
-            aligned.values, df.values
-        )
+        np.testing.assert_array_almost_equal(aligned.values, df.values)
 
     def test_positional_fallback_with_numeric_names(self):
         """0, 1, 2, ... → positional fallback maps by index order."""
@@ -92,9 +97,7 @@ class TestColumnAlignerAnonymous:
         assert len(report.positional_matches) == len(EXPECTED_FEATURES)
         assert len(report.unmatched_expected) == 0
 
-        np.testing.assert_array_almost_equal(
-            aligned.values, df.values
-        )
+        np.testing.assert_array_almost_equal(aligned.values, df.values)
 
     def test_mixed_exact_and_positional(self):
         """Some exact matches, rest via positional fallback."""

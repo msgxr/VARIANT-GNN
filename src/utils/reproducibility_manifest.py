@@ -26,6 +26,7 @@ Manifest İçeriği:
 
 Çıktı: ``models/reproducibility_manifest.json``  (insanlığa ve jüriye uygun)
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -65,27 +66,46 @@ def _sha256_string(s: str) -> str:
 def _git_info() -> Dict[str, Optional[str]]:
     """Capture current git state (commit, branch, dirty)."""
     info: Dict[str, Optional[str]] = {
-        "commit":  None,
-        "branch":  None,
+        "commit": None,
+        "branch": None,
         "is_dirty": None,
-        "remote":  None,
+        "remote": None,
     }
     try:
-        info["commit"] = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL,
-        ).decode().strip()
-        info["branch"] = subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.DEVNULL,
-        ).decode().strip()
-        status = subprocess.check_output(
-            ["git", "status", "--porcelain"], stderr=subprocess.DEVNULL,
-        ).decode().strip()
+        info["commit"] = (
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+        info["branch"] = (
+            subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+        status = (
+            subprocess.check_output(
+                ["git", "status", "--porcelain"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
         info["is_dirty"] = bool(status)
         try:
-            info["remote"] = subprocess.check_output(
-                ["git", "config", "--get", "remote.origin.url"],
-                stderr=subprocess.DEVNULL,
-            ).decode().strip()
+            info["remote"] = (
+                subprocess.check_output(
+                    ["git", "config", "--get", "remote.origin.url"],
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode()
+                .strip()
+            )
         except subprocess.CalledProcessError:
             pass
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -96,10 +116,17 @@ def _git_info() -> Dict[str, Optional[str]]:
 def _package_versions() -> Dict[str, str]:
     """Capture key ML package versions for reproducibility."""
     pkgs = [
-        "numpy", "pandas", "scikit-learn", "scipy",
-        "torch", "torch-geometric",
-        "xgboost", "lightgbm",
-        "pyyaml", "joblib", "matplotlib",
+        "numpy",
+        "pandas",
+        "scikit-learn",
+        "scipy",
+        "torch",
+        "torch-geometric",
+        "xgboost",
+        "lightgbm",
+        "pyyaml",
+        "joblib",
+        "matplotlib",
         "shap",
     ]
     versions: Dict[str, str] = {}
@@ -133,6 +160,7 @@ def _data_fingerprint(csv_path: Optional[Path]) -> Dict[str, Any]:
 
     try:
         import pandas as pd
+
         df = pd.read_csv(csv_path, low_memory=False)
         fp["n_rows"] = int(len(df))
         fp["n_cols"] = int(df.shape[1])
@@ -140,9 +168,7 @@ def _data_fingerprint(csv_path: Optional[Path]) -> Dict[str, Any]:
         for label_col in ("Label", "label", "y", "target"):
             if label_col in df.columns:
                 vc = df[label_col].astype(str).str.lower().value_counts()
-                fp["label_distribution"] = {
-                    str(k): int(v) for k, v in vc.items()
-                }
+                fp["label_distribution"] = {str(k): int(v) for k, v in vc.items()}
                 break
     except Exception as exc:
         logger.debug("CSV fingerprint failed (%s).", exc)
@@ -160,27 +186,27 @@ class ReproducibilityManifest:
     """Full TEKNOFEST §7.5 jury-reproducibility manifest."""
 
     schema_version: str = "1.0"
-    timestamp_utc:  str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    competition:    str = "TEKNOFEST 2026 — Sağlıkta Yapay Zeka (Üniversite ve Üzeri)"
-    pipeline:       str = "VARIANT-GNN"
+    timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    competition: str = "TEKNOFEST 2026 — Sağlıkta Yapay Zeka (Üniversite ve Üzeri)"
+    pipeline: str = "VARIANT-GNN"
     pipeline_version: str = "2.0.0"
 
     # Random state
-    seed:                int  = 42
+    seed: int = 42
     deterministic_torch: bool = True
 
     # Environment
-    python_version:    str = ""
-    platform:          str = ""
-    os_environ_hash:   str = ""           # hash of relevant env vars
-    package_versions:  Dict[str, str] = field(default_factory=dict)
+    python_version: str = ""
+    platform: str = ""
+    os_environ_hash: str = ""  # hash of relevant env vars
+    package_versions: Dict[str, str] = field(default_factory=dict)
 
     # Code state
     git: Dict[str, Optional[str]] = field(default_factory=dict)
 
     # Data state
     train_data: Dict[str, Any] = field(default_factory=dict)
-    test_data:  Dict[str, Any] = field(default_factory=dict)
+    test_data: Dict[str, Any] = field(default_factory=dict)
 
     # Configuration
     settings_dump: Dict[str, Any] = field(default_factory=dict)
@@ -213,8 +239,7 @@ class ReproducibilityManifest:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(asdict(self), fh, indent=2, ensure_ascii=False, default=str)
-        logger.info("Reproducibility manifest → %s  [sha256=%s]",
-                    path, self.manifest_sha256[:12])
+        logger.info("Reproducibility manifest → %s  [sha256=%s]", path, self.manifest_sha256[:12])
 
     @classmethod
     def from_json(cls, path: Path) -> "ReproducibilityManifest":
@@ -240,7 +265,8 @@ class ReproducibilityManifest:
         if not match:
             logger.warning(
                 "MANIFEST INTEGRITY FAILURE: stored=%s  actual=%s",
-                stored[:12], actual[:12],
+                stored[:12],
+                actual[:12],
             )
         return match
 
@@ -268,27 +294,25 @@ class ManifestBuilder:
 
     def __init__(self, seed: int = 42) -> None:
         self.manifest = ReproducibilityManifest(
-            seed              = seed,
-            python_version    = platform.python_version(),
-            platform          = platform.platform(),
-            git               = _git_info(),
-            package_versions  = _package_versions(),
+            seed=seed,
+            python_version=platform.python_version(),
+            platform=platform.platform(),
+            git=_git_info(),
+            package_versions=_package_versions(),
         )
         # Hash of relevant env vars (no full dump for privacy)
         relevant_env = {
-            "PYTHONHASHSEED":  os.environ.get("PYTHONHASHSEED", ""),
+            "PYTHONHASHSEED": os.environ.get("PYTHONHASHSEED", ""),
             "OMP_NUM_THREADS": os.environ.get("OMP_NUM_THREADS", ""),
             "MKL_NUM_THREADS": os.environ.get("MKL_NUM_THREADS", ""),
             "CUBLAS_WORKSPACE_CONFIG": os.environ.get("CUBLAS_WORKSPACE_CONFIG", ""),
         }
-        self.manifest.os_environ_hash = _sha256_string(
-            json.dumps(relevant_env, sort_keys=True)
-        )
+        self.manifest.os_environ_hash = _sha256_string(json.dumps(relevant_env, sort_keys=True))
 
     def with_data(
         self,
         train_csv: Optional[str | Path] = None,
-        test_csv:  Optional[str | Path] = None,
+        test_csv: Optional[str | Path] = None,
     ) -> "ManifestBuilder":
         if train_csv is not None:
             self.manifest.train_data = _data_fingerprint(Path(train_csv))
@@ -301,13 +325,12 @@ class ManifestBuilder:
         try:
             from dataclasses import asdict as _asdict
             from dataclasses import is_dataclass
+
             if is_dataclass(settings_obj):
                 self.manifest.settings_dump = _asdict(settings_obj)
             else:
                 # Fallback: collect __dict__
-                self.manifest.settings_dump = {
-                    k: str(v) for k, v in vars(settings_obj).items()
-                }
+                self.manifest.settings_dump = {k: str(v) for k, v in vars(settings_obj).items()}
         except Exception as exc:
             logger.debug("Settings dump failed (%s).", exc)
         return self
@@ -357,7 +380,7 @@ class ManifestBuilder:
 
 def verify_manifest_chain(
     manifest_path: Path,
-    models_dir:    Path,
+    models_dir: Path,
     raise_on_mismatch: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -394,7 +417,7 @@ def verify_manifest_chain(
     for filename, expected_hash in manifest.artifact_hashes.items():
         path = models_dir / filename
         actual = _sha256_file(path) if path.exists() else None
-        artifact_matches[filename] = (actual == expected_hash)
+        artifact_matches[filename] = actual == expected_hash
 
     all_match = integrity and all(artifact_matches.values())
 
@@ -402,15 +425,15 @@ def verify_manifest_chain(
     current_git = _git_info()
     git_aligned: Optional[bool] = None
     if current_git["commit"] and manifest.git.get("commit"):
-        git_aligned = (current_git["commit"] == manifest.git["commit"])
+        git_aligned = current_git["commit"] == manifest.git["commit"]
 
     result = {
         "manifest_integrity": integrity,
-        "artifact_matches":   artifact_matches,
-        "all_match":          all_match,
-        "git_aligned":        git_aligned,
-        "git_current":        current_git.get("commit"),
-        "git_manifest":       manifest.git.get("commit"),
+        "artifact_matches": artifact_matches,
+        "all_match": all_match,
+        "git_aligned": git_aligned,
+        "git_current": current_git.get("commit"),
+        "git_manifest": manifest.git.get("commit"),
     }
 
     if not all_match:

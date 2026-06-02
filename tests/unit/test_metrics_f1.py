@@ -5,16 +5,17 @@ F1 score computation tests per TEKNOFEST §7.3.
 Formula: F1 = 2·TP / (2·TP + FP + FN)
 Primary metric: binary F1 for Pathogenic class (pos_label=1).
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 from sklearn.metrics import f1_score as sklearn_f1
 
-
 # ---------------------------------------------------------------------------
 # Helper: import competition metric
 # ---------------------------------------------------------------------------
+
 
 def _binary_f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """§7.3 binary F1 for Pathogenic class (pos_label=1)."""
@@ -24,6 +25,7 @@ def _binary_f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 # Formula correctness — §7.3
 # ---------------------------------------------------------------------------
+
 
 class TestF1Formula:
     def test_perfect_predictions(self):
@@ -59,8 +61,8 @@ class TestF1Formula:
 
     def test_high_recall_low_precision(self):
         """High-recall model (as used in competition) must still compute correctly."""
-        y_true = np.array([1]*90 + [0]*10)
-        y_pred = np.array([1]*95 + [0]*5)   # catches all 1s + 5 false positives
+        y_true = np.array([1] * 90 + [0] * 10)
+        y_pred = np.array([1] * 95 + [0] * 5)  # catches all 1s + 5 false positives
         result = _binary_f1(y_true, y_pred)
         assert 0.0 < result < 1.0
 
@@ -85,6 +87,7 @@ class TestF1Formula:
 # Threshold effect on F1
 # ---------------------------------------------------------------------------
 
+
 class TestThresholdEffect:
     def test_low_threshold_maximizes_recall(self):
         """Low threshold → high recall, potentially lower precision."""
@@ -96,6 +99,7 @@ class TestThresholdEffect:
         y_pred_high = (proba >= 0.9).astype(int)
 
         from sklearn.metrics import recall_score
+
         recall_low = recall_score(y_true, y_pred_low, pos_label=1, zero_division=0)
         recall_high = recall_score(y_true, y_pred_high, pos_label=1, zero_division=0)
         assert recall_low >= recall_high
@@ -106,22 +110,21 @@ class TestThresholdEffect:
         y_true = rng.integers(0, 2, 300)
         proba = rng.beta(2, 5, 300)  # skewed toward low values (harder problem)
 
-        best_f1, best_t = 0.0, 0.5
+        best_f1 = 0.0
         for t in np.linspace(0.05, 0.95, 50):
             y_pred = (proba >= t).astype(int)
             f1 = sklearn_f1(y_true, y_pred, average="binary", pos_label=1, zero_division=0)
             if f1 > best_f1:
                 best_f1 = f1
-                best_t = t
 
-        f1_at_default = sklearn_f1(y_true, (proba >= 0.5).astype(int),
-                                   average="binary", pos_label=1, zero_division=0)
+        f1_at_default = sklearn_f1(y_true, (proba >= 0.5).astype(int), average="binary", pos_label=1, zero_division=0)
         assert best_f1 >= f1_at_default - 1e-9
 
 
 # ---------------------------------------------------------------------------
 # Panel-level F1 — §7.3 requires per-panel reporting
 # ---------------------------------------------------------------------------
+
 
 class TestPanelF1:
     # Canonical per-panel test (group-aware hold-out @ θ=0.8415) binary F1.
@@ -155,8 +158,7 @@ class TestPanelF1:
         for panel, expected_f1 in self.EXPECTED.items():
             canonical_f1 = pm[panel]["binary_f1"]
             assert expected_f1 == pytest.approx(canonical_f1, abs=0.03), (
-                f"{panel}: test EXPECTED {expected_f1} drifted from "
-                f"canonical {canonical_f1}"
+                f"{panel}: test EXPECTED {expected_f1} drifted from canonical {canonical_f1}"
             )
 
     def test_cftr_f1_reflects_small_n_holdout(self):

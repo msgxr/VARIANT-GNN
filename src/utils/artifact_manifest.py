@@ -12,6 +12,7 @@ The manifest records:
   - Artifact file checksums
   - Timestamp
 """
+
 from __future__ import annotations
 
 import importlib

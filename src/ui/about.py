@@ -1,15 +1,21 @@
 """src/ui/about.py — About / Project Info tab for VARIANT-GNN Streamlit app."""
+
 from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
 
-
 REPO_URL = "https://github.com/msgxr/VARIANT-GNN"
 
 _PERF_DATA = {
-    "Model": ["VARIANT-GNN (Hibrit)", "GATv2GNN (solo)", "LightGBM (solo)",
-              "XGBoost (solo)", "DNN (solo)", "Baseline (LogReg)"],
+    "Model": [
+        "VARIANT-GNN (Hibrit)",
+        "GATv2GNN (solo)",
+        "LightGBM (solo)",
+        "XGBoost (solo)",
+        "DNN (solo)",
+        "Baseline (LogReg)",
+    ],
     "CV F1": ["0.8668", "0.8472", "0.8764", "0.8382", "0.8208", "~0.74"],
     "Test F1": ["0.8980 ✅", "—", "—", "—", "—", "—"],
     "MCC": ["0.5356", "—", "—", "—", "—", "—"],
@@ -28,7 +34,8 @@ _PANEL_DATA = {
 def render_about_tab() -> None:
     """Render the About / Project Info tab."""
     # ── Hero ────────────────────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background:linear-gradient(135deg,#0f2044 0%,#1a3a6e 40%,#0d2855 100%);
                 border:1px solid rgba(99,179,237,0.3); border-radius:16px;
                 padding:36px 40px; margin-bottom:28px;">
@@ -51,17 +58,23 @@ def render_about_tab() -> None:
                   border-radius:20px;">⚡ Test F1 = 0.8980</span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # ── Architecture diagram ─────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(
+        """
     <div class="section-header">
         <div class="section-icon">📐</div>
         <h3>Sistem Mimarisi (§VIII)</h3>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.code("""
+    st.code(
+        """
   Anonim Varyant CSV (NDA)
        │
        ▼
@@ -83,48 +96,64 @@ def render_about_tab() -> None:
        Panel-Specific Threshold  ·  OOD Detector
                 │
        prediction_label  ·  calibrated_risk  ·  uncertainty
-    """, language="")
+    """,
+        language="",
+    )
 
     # ── 4 Model cards ────────────────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     models = [
-        ("🕸️ VariantGATv2GNN", "3× GATv2Conv blok, 4 kafa, 128 hidden, cosine k-NN graf. Dinamik attention (Brody 2022).", "0.25"),
+        (
+            "🕸️ VariantGATv2GNN",
+            "3× GATv2Conv blok, 4 kafa, 128 hidden, cosine k-NN graf. Dinamik attention (Brody 2022).",
+            "0.25",
+        ),
         ("🌲 XGBoost", "Gradient boosting, max_depth=6, 200 ağaç, L1+L2 reg, early stopping.", "0.30"),
         ("💡 LightGBM", "Leaf-wise büyüme, 63 yaprak, fast inference, tabular uzmanı.", "0.30"),
         ("🤖 DNN", "3-katman MLP [input→128→64→2], BatchNorm + Dropout(0.4), SWA.", "0.15"),
     ]
     for col, (title, desc, w) in zip([c1, c2, c3, c4], models):
         with col:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="model-card">
                 <h4>{title}</h4>
                 <p>{desc}<br>
                 <span style="color:#63b3ed; font-weight:600;">Ağırlık: {w}</span></p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     # ── Performance table ────────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(
+        """
     <div class="section-header">
         <div class="section-icon">📈</div>
         <h3>Ablasyon — Model Karşılaştırması (CV F1)</h3>
     </div>
-    """, unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(_PERF_DATA), width='stretch', hide_index=True)
+    """,
+        unsafe_allow_html=True,
+    )
+    st.dataframe(pd.DataFrame(_PERF_DATA), width="stretch", hide_index=True)
 
     # ── Panel performance ────────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(
+        """
     <div class="section-header">
         <div class="section-icon">🧬</div>
         <h3>Panel Bazlı Performans (Test Seti)</h3>
     </div>
-    """, unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(_PANEL_DATA), width='stretch', hide_index=True)
+    """,
+        unsafe_allow_html=True,
+    )
+    st.dataframe(pd.DataFrame(_PANEL_DATA), width="stretch", hide_index=True)
 
     # ── Tech stack + References ──────────────────────────────────────────────
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="model-card">
             <h4>⚡ Teknoloji Stack</h4>
             <p>
@@ -134,9 +163,12 @@ def render_about_tab() -> None:
                 📝 Pydantic v2 · 🐳 Docker · 🔄 GitHub Actions CI
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
     with col_t2:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="model-card">
             <h4>📚 Temel Referanslar</h4>
             <p>
@@ -147,10 +179,13 @@ def render_about_tab() -> None:
                 5. <strong>SWA</strong> — Izmailov et al. (UAI 2018)
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     # ── Footer + clinical disclaimer ─────────────────────────────────────────
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="text-align:center; margin-top:24px; margin-bottom:12px;">
         <a href="{REPO_URL}" target="_blank"
            style="display:inline-block; background:linear-gradient(135deg,#2b6cb0,#3182ce);
@@ -166,4 +201,6 @@ def render_about_tab() -> None:
         tıbbi karar desteği için kullanılamaz (TEKNOFEST §10).
         <br><strong>TEKNOFEST 2026</strong> | XYRA3 Takımı | PDR Teslimi: 29 Haziran 2026
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

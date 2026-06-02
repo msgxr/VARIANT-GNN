@@ -9,6 +9,7 @@ trained artifacts.  They verify the pipeline contract:
   - produces canonical output schema
   - works fully offline
 """
+
 from __future__ import annotations
 
 import json
@@ -22,7 +23,6 @@ import pandas as pd
 import pytest
 
 from src.inference.prediction_schema import PREDICTION_COLUMNS, validate_prediction_frame
-
 
 # ---------------------------------------------------------------------------
 # Minimal fake artifacts

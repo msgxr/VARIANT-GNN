@@ -4,6 +4,7 @@ Pydantic v2 schema for incoming variant CSV rows.
 Validates that numeric features are present, metadata columns are preserved,
 and target labels (when present) are in a known set.
 """
+
 from __future__ import annotations
 
 from typing import Any, List, Optional
@@ -15,6 +16,7 @@ from pydantic import BaseModel, Field, field_validator
 # ---------------------------------------------------------------------------
 # Row-level model (used for single-sample validation)
 # ---------------------------------------------------------------------------
+
 
 class VariantRow(BaseModel):
     """A single variant row — metadata fields are optional, features are dynamic."""
@@ -37,8 +39,14 @@ class VariantRow(BaseModel):
 # ---------------------------------------------------------------------------
 
 KNOWN_LABEL_VALUES = {
-    "pathogenic", "likely pathogenic", "benign", "likely benign",
-    "1", "1.0", "0", "0.0",
+    "pathogenic",
+    "likely pathogenic",
+    "benign",
+    "likely benign",
+    "1",
+    "1.0",
+    "0",
+    "0.0",
 }
 
 MINIMUM_NUMERIC_FEATURES = 1
@@ -104,19 +112,13 @@ def validate_dataset(
     feature_cols = [c for c in numeric_cols if c not in metadata_cols]
 
     # Non-numeric, non-metadata columns
-    non_numeric_non_meta = [
-        c for c in df.columns
-        if c not in numeric_cols and c not in metadata_cols
-    ]
+    non_numeric_non_meta = [c for c in df.columns if c not in numeric_cols and c not in metadata_cols]
     if non_numeric_non_meta:
-        warnings.append(
-            f"Non-numeric, non-metadata columns will be dropped: {non_numeric_non_meta}"
-        )
+        warnings.append(f"Non-numeric, non-metadata columns will be dropped: {non_numeric_non_meta}")
 
     if len(feature_cols) < MINIMUM_NUMERIC_FEATURES:
         errors.append(
-            f"At least {MINIMUM_NUMERIC_FEATURES} numeric feature column(s) required; "
-            f"found {len(feature_cols)}."
+            f"At least {MINIMUM_NUMERIC_FEATURES} numeric feature column(s) required; found {len(feature_cols)}."
         )
 
     # Check for all-NaN feature columns
@@ -129,10 +131,7 @@ def validate_dataset(
         unique_labels = set(df[label_col].astype(str).str.strip().str.lower().unique())
         unknown = unique_labels - KNOWN_LABEL_VALUES
         if unknown:
-            errors.append(
-                f"Unknown label values in '{label_col}': {unknown}. "
-                f"Expected one of: {KNOWN_LABEL_VALUES}"
-            )
+            errors.append(f"Unknown label values in '{label_col}': {unknown}. Expected one of: {KNOWN_LABEL_VALUES}")
 
     is_valid = len(errors) == 0
 

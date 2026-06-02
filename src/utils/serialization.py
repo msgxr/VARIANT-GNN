@@ -8,6 +8,7 @@ Security notes:
   - Preprocessor and calibrator use joblib with explicit path validation.
   - No arbitrary pickle deserialization from untrusted paths.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -43,11 +44,10 @@ def _build_legacy_sage_gnn(
     class _SBlock(_nn.Module):
         def __init__(self, in_c, out_c, drop=0.3):
             super().__init__()
-            self.conv    = _SAGEConv(in_c, out_c)
-            self.bn      = _PyGBN(out_c)
+            self.conv = _SAGEConv(in_c, out_c)
+            self.bn = _PyGBN(out_c)
             self.dropout = _nn.Dropout(p=drop)
-            self.skip    = (_nn.Linear(in_c, out_c, bias=False)
-                            if in_c != out_c else _nn.Identity())
+            self.skip = _nn.Linear(in_c, out_c, bias=False) if in_c != out_c else _nn.Identity()
 
         def forward(self, x, edge_index):
             res = self.skip(x)
@@ -63,26 +63,26 @@ def _build_legacy_sage_gnn(
             self.use_multimodal = use_multimodal
             if use_multimodal:
                 from src.features.multimodal_encoder import SequenceEncoder as _SE
+
                 self.seq_encoder = _SE(cnn_channels=seq_enc_dim // 2)
                 in_ch = numeric_dim + self.seq_encoder.output_dim
             else:
                 self.seq_encoder = None
                 in_ch = numeric_dim
             self.input_proj = _nn.Linear(in_ch, hidden_dim)
-            self.block1     = _SBlock(hidden_dim, hidden_dim, dropout)
-            self.block2     = _SBlock(hidden_dim, hidden_dim, dropout)
-            self.block3     = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.block1 = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.block2 = _SBlock(hidden_dim, hidden_dim, dropout)
+            self.block3 = _SBlock(hidden_dim, hidden_dim, dropout)
             self.classifier = _nn.Linear(hidden_dim, num_classes)
 
-        def forward(self, x, edge_index,
-                    nuc_ids=None, aa_ids=None, **kw):
+        def forward(self, x, edge_index, nuc_ids=None, aa_ids=None, **kw):
             if self.use_multimodal and self.seq_encoder is not None:
                 if nuc_ids is not None and aa_ids is not None:
                     seq = self.seq_encoder(nuc_ids, aa_ids)
                 else:
                     import torch as _t
-                    seq = _t.zeros(x.shape[0], self.seq_encoder.output_dim,
-                                   device=x.device, dtype=x.dtype)
+
+                    seq = _t.zeros(x.shape[0], self.seq_encoder.output_dim, device=x.device, dtype=x.dtype)
                 x = _t.cat([x, seq], dim=1)
             x = _F.relu(self.input_proj(x))
             x = self.block1(x, edge_index)
@@ -102,12 +102,14 @@ class _LGBMBoosterWrapper:
 
     def __init__(self, booster) -> None:
         import numpy as _np
+
         self._booster = booster
         self._np = _np
 
     def predict_proba(self, X) -> "numpy.ndarray":  # noqa: F821
         import numpy as _np
         import pandas as _pd
+
         # LightGBM raw Booster feature_name kontrolü yapar; DataFrame geçmek hata üretebilir
         X_arr = X.values if isinstance(X, _pd.DataFrame) else _np.asarray(X)
         raw = self._booster.predict(X_arr)
@@ -156,27 +158,48 @@ class ModelStore:
     # ------------------------------------------------------------------
 
     @property
-    def _xgb_path(self)          -> Path: return self.model_dir / "xgb_model.json"
+    def _xgb_path(self) -> Path:
+        return self.model_dir / "xgb_model.json"
+
     @property
-    def _lgbm_path(self)         -> Path: return self.model_dir / "lgbm_model.txt"
+    def _lgbm_path(self) -> Path:
+        return self.model_dir / "lgbm_model.txt"
+
     @property
-    def _meta_learner_path(self) -> Path: return self.model_dir / "meta_learner.pkl"
+    def _meta_learner_path(self) -> Path:
+        return self.model_dir / "meta_learner.pkl"
+
     @property
-    def _gnn_path(self)          -> Path: return self.model_dir / "gnn_model.pth"
+    def _gnn_path(self) -> Path:
+        return self.model_dir / "gnn_model.pth"
+
     @property
-    def _gnn_arch_path(self)     -> Path: return self.model_dir / "gnn_arch.json"
+    def _gnn_arch_path(self) -> Path:
+        return self.model_dir / "gnn_arch.json"
+
     @property
-    def _dnn_path(self)          -> Path: return self.model_dir / "dnn_model.pth"
+    def _dnn_path(self) -> Path:
+        return self.model_dir / "dnn_model.pth"
+
     @property
-    def _autoenc_path(self)      -> Path: return self.model_dir / "autoencoder.pth"
+    def _autoenc_path(self) -> Path:
+        return self.model_dir / "autoencoder.pth"
+
     @property
-    def _preprocessor_path(self) -> Path: return self.model_dir / "preprocessor.pkl"
+    def _preprocessor_path(self) -> Path:
+        return self.model_dir / "preprocessor.pkl"
+
     @property
-    def _calibrator_path(self)   -> Path: return self.model_dir / "calibrator.pkl"
+    def _calibrator_path(self) -> Path:
+        return self.model_dir / "calibrator.pkl"
+
     @property
-    def _ensemble_cfg_path(self) -> Path: return self.model_dir / "ensemble_config.json"
+    def _ensemble_cfg_path(self) -> Path:
+        return self.model_dir / "ensemble_config.json"
+
     @property
-    def _threshold_path(self)    -> Path: return self.model_dir / "threshold.json"
+    def _threshold_path(self) -> Path:
+        return self.model_dir / "threshold.json"
 
     # ------------------------------------------------------------------
     # Save
@@ -191,7 +214,7 @@ class ModelStore:
         """Persist all artefacts.  ``ensemble`` is a ``HybridEnsemble``."""
         import json
         from datetime import datetime
-        
+
         self._save_xgb(ensemble.xgb)
         self._save_lgbm(ensemble.lgbm)
         self._save_gnn(ensemble.gnn)
@@ -202,7 +225,7 @@ class ModelStore:
         self._save_meta_learner(ensemble)
         if calibrator is not None:
             self._save_calibrator(calibrator)
-        
+
         # ── ensemble.pkl — required by ArtifactLoader ──────────────────
         joblib.dump(ensemble, str(self.model_dir / "ensemble.pkl"))
         logger.info("Ensemble -> %s", self.model_dir / "ensemble.pkl")
@@ -237,6 +260,7 @@ class ModelStore:
         # ── manifest.json — reproducibility layer ───────────────────────
         try:
             from src.utils.artifact_manifest import save_manifest as _save_manifest
+
             _save_manifest(self.model_dir, model_version="1.0.0")
         except Exception as _mex:
             logger.warning("Manifest save failed (non-fatal): %s", _mex)
@@ -271,6 +295,7 @@ class ModelStore:
         # VariantGATv2GNN is the base class; VariantSAGEGNN is a subclass alias.
         # We check the base class so both variants are handled identically.
         from src.core.models.gnn import VariantGATv2GNN as _VGATGNN
+
         arch: dict = {"type": type(model).__name__}
         if isinstance(model, _VGATGNN):
             # Save true numeric_dim (pre-concat), NOT input_proj.in_features
@@ -278,9 +303,9 @@ class ModelStore:
             _in_feats = model.input_proj.in_features
             if model.use_multimodal and model.seq_encoder is not None:
                 _in_feats -= model.seq_encoder.output_dim
-            arch["numeric_dim"]    = _in_feats
+            arch["numeric_dim"] = _in_feats
             # input_proj: Linear(in_channels, hidden_dim) → out_features == hidden_dim
-            arch["hidden_dim"]     = model.input_proj.out_features
+            arch["hidden_dim"] = model.input_proj.out_features
             arch["use_multimodal"] = bool(model.use_multimodal)
             if model.seq_encoder is not None:
                 arch["seq_enc_dim"] = model.seq_encoder.output_dim
@@ -299,9 +324,7 @@ class ModelStore:
             and preprocessor._autoenc is not None
             and preprocessor._autoenc._net is not None
         ):
-            torch.save(
-                preprocessor._autoenc._net.state_dict(), str(self._autoenc_path)
-            )
+            torch.save(preprocessor._autoenc._net.state_dict(), str(self._autoenc_path))
             logger.info("AutoEncoder -> %s", self._autoenc_path)
 
     def _save_preprocessor(self, preprocessor) -> None:
@@ -310,6 +333,7 @@ class ModelStore:
 
     def _save_ensemble_cfg(self, ensemble) -> None:
         import json
+
         cfg = {"weights": ensemble.weights}
         with open(self._ensemble_cfg_path, "w") as fh:
             json.dump(cfg, fh)
@@ -321,6 +345,7 @@ class ModelStore:
     def save_threshold(self, threshold: float) -> None:
         """Persist the F1-optimal classification threshold (TEKNOFEST §7.3)."""
         import json
+
         with open(self._threshold_path, "w") as fh:
             json.dump({"classification_threshold": threshold}, fh)
         logger.info("Threshold -> %s  (thr=%.4f)", self._threshold_path, threshold)
@@ -335,6 +360,7 @@ class ModelStore:
         numbers.
         """
         import json
+
         if not self._threshold_path.exists():
             return default
         try:
@@ -348,13 +374,15 @@ class ModelStore:
             return default
 
     @property
-    def _panel_threshold_path(self) -> Path: return self.model_dir / "panel_thresholds.json"
+    def _panel_threshold_path(self) -> Path:
+        return self.model_dir / "panel_thresholds.json"
 
     def save_panel_thresholds(self, thresholds: dict) -> None:
         # FLAT format ({"General": 0.33, ...}) — human-readable and the convention
         # the shipped file + tests expect. load_panel_thresholds() reads both flat
         # and legacy wrapped files.
         import json
+
         with open(self._panel_threshold_path, "w") as fh:
             json.dump({k: float(v) for k, v in thresholds.items()}, fh, indent=2)
         logger.info("Panel Thresholds -> %s", self._panel_threshold_path)
@@ -369,6 +397,7 @@ class ModelStore:
         panel-specific reported F1 values (TEKNOFEST §7.5).
         """
         import json
+
         if not self._panel_threshold_path.exists():
             return {}
         try:
@@ -379,8 +408,7 @@ class ModelStore:
             # Flat file: treat the dict itself as the panel→threshold mapping
             # (ignore non-float bookkeeping keys defensively).
             if isinstance(data, dict):
-                return {k: float(v) for k, v in data.items()
-                        if isinstance(v, (int, float))}
+                return {k: float(v) for k, v in data.items() if isinstance(v, (int, float))}
             return {}
         except Exception:
             return {}
@@ -400,6 +428,7 @@ class ModelStore:
         if not self._xgb_path.exists():
             raise FileNotFoundError(f"XGBoost model not found: {self._xgb_path}")
         from src.config import get_settings as _gs
+
         cfg = _gs()
         model = xgb.XGBClassifier(**cfg.xgb.as_dict())
         model.load_model(str(self._xgb_path))
@@ -423,39 +452,31 @@ class ModelStore:
         from src.features.preprocessing import VariantPreprocessor
         from src.models.dnn_model import VariantDNN
 
-        cfg    = get_settings()
-        device = torch.device(
-            "cuda" if torch.cuda.is_available() and cfg.device != "cpu" else "cpu"
-        )
+        cfg = get_settings()
+        device = torch.device("cuda" if torch.cuda.is_available() and cfg.device != "cpu" else "cpu")
 
         # --- Preprocessor ---
         if not self._preprocessor_path.exists():
-            raise FileNotFoundError(
-                f"Preprocessor not found: {self._preprocessor_path}"
-            )
+            raise FileNotFoundError(f"Preprocessor not found: {self._preprocessor_path}")
         preprocessor: VariantPreprocessor = joblib.load(str(self._preprocessor_path))
 
         # Restore autoencoder weights if present
-        if (
-            hasattr(preprocessor, "_autoenc")
-            and preprocessor._autoenc is not None
-            and self._autoenc_path.exists()
-        ):
-            ae       = preprocessor._autoenc
+        if hasattr(preprocessor, "_autoenc") and preprocessor._autoenc is not None and self._autoenc_path.exists():
+            ae = preprocessor._autoenc
             ae._device_obj = device
             from src.features.autoencoder import _TorchAutoEncoder
+
             # Re-create net to restore weights
             input_dim = preprocessor.n_output_features - ae.encoding_dim
-            ae._net   = _TorchAutoEncoder(input_dim, ae.encoding_dim).to(device)
-            ae._net.load_state_dict(
-                _safe_torch_load(self._autoenc_path, device)
-            )
+            ae._net = _TorchAutoEncoder(input_dim, ae.encoding_dim).to(device)
+            ae._net.load_state_dict(_safe_torch_load(self._autoenc_path, device))
             ae._net.eval()
 
         n_features = preprocessor.n_output_features
 
         # --- GNN: detect saved architecture ---
         import json as _json
+
         _gnn_arch: dict = {"type": "FeatureGNN"}
         if self._gnn_arch_path.exists():
             with open(self._gnn_arch_path) as _fh:
@@ -478,27 +499,28 @@ class ModelStore:
             # Checkpoint orijinal SAGEConv mimarisine ait (BatchNorm + tek Linear)
             # Bu mimariyi inline olarak yeniden oluştur.
             gnn_model = _build_legacy_sage_gnn(
-                numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
-                hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
-                num_classes    = 2,
-                use_multimodal = _gnn_arch.get("use_multimodal", False),
-                seq_enc_dim    = _seq_enc_dim,
+                numeric_dim=_gnn_arch.get("numeric_dim", n_features),
+                hidden_dim=_gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
+                num_classes=2,
+                use_multimodal=_gnn_arch.get("use_multimodal", False),
+                seq_enc_dim=_seq_enc_dim,
             ).to(device)
             logger.info("GNN: SAGEConv checkpoint tespit edildi → LegacySAGEGNN yükleniyor.")
         elif _gnn_type in ("VariantGATv2GNN", "VariantSAGEGNN"):
             from src.core.models.gnn import VariantGATv2GNN
+
             gnn_model = VariantGATv2GNN(
-                numeric_dim    = _gnn_arch.get("numeric_dim", n_features),
-                hidden_dim     = _gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
-                use_multimodal = _gnn_arch.get("use_multimodal", False),
-                seq_enc_dim    = _seq_enc_dim,
+                numeric_dim=_gnn_arch.get("numeric_dim", n_features),
+                hidden_dim=_gnn_arch.get("hidden_dim", cfg.gnn.hidden_dim),
+                use_multimodal=_gnn_arch.get("use_multimodal", False),
+                seq_enc_dim=_seq_enc_dim,
             ).to(device)
         else:
             gnn_model = FeatureGNN(
-                in_channels = 1,
-                hidden_dim  = cfg.gnn.hidden_dim,
-                num_classes = 2,
-                use_gat     = cfg.gnn.use_gat,
+                in_channels=1,
+                hidden_dim=cfg.gnn.hidden_dim,
+                num_classes=2,
+                use_gat=cfg.gnn.use_gat,
             ).to(device)
 
         if _sd_raw:
@@ -515,9 +537,9 @@ class ModelStore:
 
         # --- DNN ---
         dnn_model = VariantDNN(
-            input_dim  = n_features,
-            hidden_dim = cfg.dnn.hidden_dim,
-            num_classes= 2,
+            input_dim=n_features,
+            hidden_dim=cfg.dnn.hidden_dim,
+            num_classes=2,
         ).to(device)
         if self._dnn_path.exists():
             dnn_model.load_state_dict(_safe_torch_load(self._dnn_path, device))
@@ -535,6 +557,7 @@ class ModelStore:
         if self._lgbm_path.exists():
             try:
                 import lightgbm as lgb
+
                 lgbm_model = lgb.Booster(model_file=str(self._lgbm_path))
                 # Wrap in sklearn API shim for predict_proba compatibility
                 lgbm_model = _LGBMBoosterWrapper(lgbm_model)
@@ -554,16 +577,17 @@ class ModelStore:
         weights = cfg.ensemble.weights
         if self._ensemble_cfg_path.exists():
             import json
+
             with open(self._ensemble_cfg_path) as fh:
                 weights = json.load(fh).get("weights", weights)
 
         ensemble = HybridEnsemble(
-            xgb_model  = xgb_model,
-            lgbm_model = lgbm_model,
-            gnn_model  = gnn_model,
-            dnn_model  = dnn_model,
-            weights    = weights,
-            device     = device,
+            xgb_model=xgb_model,
+            lgbm_model=lgbm_model,
+            gnn_model=gnn_model,
+            dnn_model=dnn_model,
+            weights=weights,
+            device=device,
         )
 
         # --- Calibrator (optional) ---

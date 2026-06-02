@@ -4,6 +4,7 @@ Tabular AutoEncoder as a sklearn-compatible transformer.
 Wraps the PyTorch autoencoder in fit/transform API so it can sit cleanly
 inside fold preprocessing without data leakage.
 """
+
 from __future__ import annotations
 
 import logging
@@ -70,13 +71,13 @@ class AutoEncoderTransformer(BaseEstimator, TransformerMixin):
         random_state: int = 42,
         append: bool = True,
     ) -> None:
-        self.encoding_dim  = encoding_dim
-        self.epochs        = epochs
-        self.batch_size    = batch_size
-        self.lr            = lr
-        self.device        = device
-        self.random_state  = random_state
-        self.append        = append
+        self.encoding_dim = encoding_dim
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.lr = lr
+        self.device = device
+        self.random_state = random_state
+        self.append = append
 
         self._net: Optional[_TorchAutoEncoder] = None
         self._device_obj: Optional[torch.device] = None
@@ -93,12 +94,12 @@ class AutoEncoderTransformer(BaseEstimator, TransformerMixin):
         np.random.seed(self.random_state)
 
         self._device_obj = self._resolve_device()
-        input_dim        = X.shape[1]
-        self._net        = _TorchAutoEncoder(input_dim, self.encoding_dim).to(self._device_obj)
+        input_dim = X.shape[1]
+        self._net = _TorchAutoEncoder(input_dim, self.encoding_dim).to(self._device_obj)
 
         tensor_X = torch.FloatTensor(X).to(self._device_obj)
-        dataset  = TensorDataset(tensor_X, tensor_X)
-        loader   = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        dataset = TensorDataset(tensor_X, tensor_X)
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
         criterion = nn.MSELoss()
         optimizer = torch.optim.Adam(self._net.parameters(), lr=self.lr)
@@ -116,13 +117,13 @@ class AutoEncoderTransformer(BaseEstimator, TransformerMixin):
             if epoch == 1 or epoch % 5 == 0 or epoch == self.epochs:
                 logger.debug(
                     "AutoEncoder epoch %d/%d | loss=%.4f",
-                    epoch, self.epochs, total_loss / len(loader),
+                    epoch,
+                    self.epochs,
+                    total_loss / len(loader),
                 )
 
         self._net.eval()
-        logger.info(
-            "AutoEncoder trained: input_dim=%d → encoding_dim=%d", input_dim, self.encoding_dim
-        )
+        logger.info("AutoEncoder trained: input_dim=%d → encoding_dim=%d", input_dim, self.encoding_dim)
         return self
 
     # ------------------------------------------------------------------

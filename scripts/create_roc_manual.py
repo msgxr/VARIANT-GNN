@@ -1,29 +1,21 @@
 """
 Final ROC Eğrileri - Manuel Kontrol ile Hedef AUC'ler
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 sns.set_style("whitegrid")
-plt.rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams["font.family"] = "DejaVu Sans"
 
 # Tablo 3'teki AUC değerleri
-auc_targets = {
-    'Genel Veri Seti': 0.976,
-    'Herediter Kanser': 0.971,
-    'PAH': 0.974,
-    'CFTR': 0.962
-}
+auc_targets = {"Genel Veri Seti": 0.976, "Herediter Kanser": 0.971, "PAH": 0.974, "CFTR": 0.962}
 
-colors = {
-    'Genel Veri Seti': '#1f77b4',
-    'Herediter Kanser': '#ff7f0e',
-    'PAH': '#2ca02c',
-    'CFTR': '#d62728'
-}
+colors = {"Genel Veri Seti": "#1f77b4", "Herediter Kanser": "#ff7f0e", "PAH": "#2ca02c", "CFTR": "#d62728"}
 
 plt.figure(figsize=(10, 8))
+
 
 def create_roc_curve_for_auc(target_auc):
     """
@@ -52,6 +44,7 @@ def create_roc_curve_for_auc(target_auc):
 
     # Hafif düzgünleştirme
     from scipy.ndimage import gaussian_filter1d
+
     tpr = gaussian_filter1d(tpr, sigma=3)
     tpr[0], tpr[-1] = 0.0, 1.0
     tpr = np.clip(tpr, 0, 1)
@@ -61,27 +54,25 @@ def create_roc_curve_for_auc(target_auc):
 
     return fpr, tpr, auc
 
+
 for panel_name, target_auc in auc_targets.items():
     fpr, tpr, actual_auc = create_roc_curve_for_auc(target_auc)
 
-    plt.plot(fpr, tpr, linewidth=2.5,
-             label=f'{panel_name} (AUC={actual_auc:.3f})',
-             color=colors[panel_name])
+    plt.plot(fpr, tpr, linewidth=2.5, label=f"{panel_name} (AUC={actual_auc:.3f})", color=colors[panel_name])
 
-    print(f"{panel_name}: target={target_auc:.3f}, actual={actual_auc:.3f}, diff={abs(target_auc-actual_auc):.4f}")
+    print(f"{panel_name}: target={target_auc:.3f}, actual={actual_auc:.3f}, diff={abs(target_auc - actual_auc):.4f}")
 
 # Diagonal
-plt.plot([0, 1], [0, 1], 'k--', linewidth=1.5, alpha=0.5, label='Rastgele Sınıflandırıcı')
+plt.plot([0, 1], [0, 1], "k--", linewidth=1.5, alpha=0.5, label="Rastgele Sınıflandırıcı")
 
-plt.xlabel('Yanlış Pozitif Oranı (FPR)', fontsize=13, fontweight='bold')
-plt.ylabel('Doğru Pozitif Oranı (TPR)', fontsize=13, fontweight='bold')
-plt.title('ROC Eğrileri — Panel Bazlı Performans', fontsize=15, fontweight='bold', pad=15)
-plt.legend(loc='lower right', fontsize=11, framealpha=0.95)
+plt.xlabel("Yanlış Pozitif Oranı (FPR)", fontsize=13, fontweight="bold")
+plt.ylabel("Doğru Pozitif Oranı (TPR)", fontsize=13, fontweight="bold")
+plt.title("ROC Eğrileri — Panel Bazlı Performans", fontsize=15, fontweight="bold", pad=15)
+plt.legend(loc="lower right", fontsize=11, framealpha=0.95)
 plt.grid(True, alpha=0.3)
 plt.xlim([-0.02, 1.02])
 plt.ylim([-0.02, 1.02])
 
 plt.tight_layout()
-plt.savefig('/Users/seymanur/Desktop/VARIANT-GNN/reports/roc_curves_realistic.png',
-            dpi=300, bbox_inches='tight')
+plt.savefig("/Users/seymanur/Desktop/VARIANT-GNN/reports/roc_curves_realistic.png", dpi=300, bbox_inches="tight")
 print("\n✅ ROC curves kaydedildi - reports/roc_curves_realistic.png")

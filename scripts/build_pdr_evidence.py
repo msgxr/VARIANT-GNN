@@ -1,12 +1,12 @@
-
+import logging
 import os
 import shutil
 import subprocess
-import logging
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("PDR-Builder")
+
 
 # Izin verilen komut argumanlari — shell injection'a karsi liste tabanli cagri
 def run_command(args: list[str]) -> None:
@@ -35,25 +35,41 @@ def build_package() -> None:
 
     # 1. Predictions & External Val
     if os.path.exists(test_file):
-        run_command([
-            "python", "main.py",
-            "--mode", "predict",
-            "--test_file", test_file,
-            "--output", "submission/predictions.csv",
-        ])
-        run_command([
-            "python", "main.py",
-            "--mode", "external_val",
-            "--test_file", test_file,
-        ])
+        run_command(
+            [
+                "python",
+                "main.py",
+                "--mode",
+                "predict",
+                "--test_file",
+                test_file,
+                "--output",
+                "submission/predictions.csv",
+            ]
+        )
+        run_command(
+            [
+                "python",
+                "main.py",
+                "--mode",
+                "external_val",
+                "--test_file",
+                test_file,
+            ]
+        )
 
     # 2. Explainability
     if os.path.exists(test_file):
-        run_command([
-            "python", "main.py",
-            "--mode", "explain",
-            "--test_file", test_file,
-        ])
+        run_command(
+            [
+                "python",
+                "main.py",
+                "--mode",
+                "explain",
+                "--test_file",
+                test_file,
+            ]
+        )
 
     # 3. Ablation Study
     run_command(["python", "scripts/run_ablation.py"])

@@ -28,6 +28,7 @@ Kullanım:
     tta = TTAPredictor(n_augmentations=10, noise_scale=0.03)
     proba_mean, proba_std = tta.predict(ensemble, preprocessor, X_df)
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,10 +44,11 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TTAResult:
     """TTA çıktısı."""
-    proba_mean: np.ndarray       # [N, 2] — ortalama P(Benign), P(Pathogenic)
-    proba_std:  np.ndarray       # [N] — P(Pathogenic) standart sapması
-    predictions: np.ndarray     # [N] — 0/1 hard label (ortalama > thr)
-    uncertainty_tta: np.ndarray # [N] — TTA belirsizlik skoru [0,1]
+
+    proba_mean: np.ndarray  # [N, 2] — ortalama P(Benign), P(Pathogenic)
+    proba_std: np.ndarray  # [N] — P(Pathogenic) standart sapması
+    predictions: np.ndarray  # [N] — 0/1 hard label (ortalama > thr)
+    uncertainty_tta: np.ndarray  # [N] — TTA belirsizlik skoru [0,1]
     n_augmentations: int
 
 
@@ -140,28 +142,28 @@ class TTAPredictor:
         if not all_probas:
             raise RuntimeError("TTA: hiçbir augmentation başarılı olmadı.")
 
-        stack = np.stack(all_probas, axis=0)   # [K, N, 2]
-        proba_mean = stack.mean(axis=0)         # [N, 2]
-        proba_std  = stack[:, :, 1].std(axis=0) # [N] — P(Pathogenic) std
+        stack = np.stack(all_probas, axis=0)  # [K, N, 2]
+        proba_mean = stack.mean(axis=0)  # [N, 2]
+        proba_std = stack[:, :, 1].std(axis=0)  # [N] — P(Pathogenic) std
 
         predictions = (proba_mean[:, 1] >= self.threshold).astype(int)
 
         uncertainty_tta = np.clip(2.0 * proba_std, 0, 1)
 
         logger.info(
-            "TTA tamamlandı: %d augmentation, N=%d, ortalama P(Path)=%.4f, "
-            "ortalama tta_uncertainty=%.4f",
-            len(all_probas), N,
+            "TTA tamamlandı: %d augmentation, N=%d, ortalama P(Path)=%.4f, ortalama tta_uncertainty=%.4f",
+            len(all_probas),
+            N,
             float(proba_mean[:, 1].mean()),
             float(uncertainty_tta.mean()),
         )
 
         return TTAResult(
-            proba_mean      = proba_mean,
-            proba_std       = proba_std,
-            predictions     = predictions,
-            uncertainty_tta = uncertainty_tta,
-            n_augmentations = len(all_probas),
+            proba_mean=proba_mean,
+            proba_std=proba_std,
+            predictions=predictions,
+            uncertainty_tta=uncertainty_tta,
+            n_augmentations=len(all_probas),
         )
 
     def predict_with_threshold(
@@ -205,15 +207,12 @@ def tta_predict_dataframe(
     nuc_seqs / aa_seqs : Multimodal GNN için opsiyonel sekans listeleri.
     """
     X = df[feature_columns].values
-    tta = TTAPredictor(n_augmentations=n_augmentations, noise_scale=noise_scale,
-                       threshold=threshold, seed=seed)
-    result = tta.predict(ensemble, preprocessor, X,
-                         nuc_seqs=nuc_seqs, aa_seqs=aa_seqs)
+    tta = TTAPredictor(n_augmentations=n_augmentations, noise_scale=noise_scale, threshold=threshold, seed=seed)
+    result = tta.predict(ensemble, preprocessor, X, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs)
 
     out = df.copy()
-    out["TTA_Probability"]  = result.proba_mean[:, 1]
-    out["TTA_Uncertainty"]  = result.uncertainty_tta
-    out["TTA_Prediction"]   = np.where(result.predictions == 1, "Pathogenic", "Benign")
-    out["TTA_Flag"]         = np.where(result.uncertainty_tta > 0.30,
-                                       "HIGH_UNCERTAINTY", "OK")
+    out["TTA_Probability"] = result.proba_mean[:, 1]
+    out["TTA_Uncertainty"] = result.uncertainty_tta
+    out["TTA_Prediction"] = np.where(result.predictions == 1, "Pathogenic", "Benign")
+    out["TTA_Flag"] = np.where(result.uncertainty_tta > 0.30, "HIGH_UNCERTAINTY", "OK")
     return out

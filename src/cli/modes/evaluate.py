@@ -1,4 +1,5 @@
 """src/cli/modes/evaluate.py — eval, crossval, external_val, adversarial_val modes."""
+
 from __future__ import annotations
 
 import json
@@ -7,11 +8,11 @@ import sys
 
 import numpy as np
 
-from src.data.loader import load_csv
-from src.api.pipeline import InferencePipeline
-from src.scientific.metrics.metrics import evaluate, evaluate_per_panel
 from src.api.export import export_predictions
+from src.api.pipeline import InferencePipeline
 from src.cli.modes.train import _get_labelled_data
+from src.data.loader import load_csv
+from src.scientific.metrics.metrics import evaluate, evaluate_per_panel
 
 
 def mode_eval(args, cfg):
@@ -33,8 +34,8 @@ def mode_eval(args, cfg):
 
 def mode_crossval(args, cfg):
     """Standalone 5-fold cross-validation on a labelled CSV."""
-    from src.utils.seeds import set_global_seed
     from src.training.trainer import VariantTrainer
+    from src.utils.seeds import set_global_seed
 
     ds = _get_labelled_data(args.data_file, cfg)
     trainer = VariantTrainer()
@@ -44,8 +45,15 @@ def mode_crossval(args, cfg):
     std_f1 = float(np.std([r.f1 for r in folds]))
     logging.info("Cross-val | Binary F1 (§7.3) = %.4f ± %.4f", mean_f1, std_f1)
     for r in folds:
-        logging.info("  Fold %d | Ens=%.4f  XGB=%.4f  LGB=%.4f  GNN=%.4f  DNN=%.4f",
-                     r.fold, r.f1, r.xgb_f1, getattr(r, "lgbm_f1", 0.0), r.gnn_f1, r.dnn_f1)
+        logging.info(
+            "  Fold %d | Ens=%.4f  XGB=%.4f  LGB=%.4f  GNN=%.4f  DNN=%.4f",
+            r.fold,
+            r.f1,
+            r.xgb_f1,
+            getattr(r, "lgbm_f1", 0.0),
+            r.gnn_f1,
+            r.dnn_f1,
+        )
 
 
 def mode_external_val(args, cfg):
@@ -83,9 +91,7 @@ def mode_external_val(args, cfg):
     panel_metrics: dict = {}
     if "Panel" in ds.metadata.columns and len(ds.metadata) == len(y_true):
         panels_arr = ds.metadata["Panel"].values
-        panel_reports = evaluate_per_panel(
-            y_true, y_prob, panels_arr, threshold=effective_threshold
-        )
+        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=effective_threshold)
         for pname, prep in panel_reports.items():
             prep.log(prefix=f"PANEL_{pname}")
             panel_metrics[pname] = prep.as_dict()
@@ -94,21 +100,24 @@ def mode_external_val(args, cfg):
 
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         cm = report.conf_matrix
         if cm is not None:
             fig, ax = plt.subplots(figsize=(5, 4))
             ax.imshow(cm, cmap="Blues")
-            ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
+            ax.set_xticks([0, 1])
+            ax.set_yticks([0, 1])
             ax.set_xticklabels(["Benign", "Pathogenic"])
             ax.set_yticklabels(["Benign", "Pathogenic"])
-            ax.set_xlabel("Predicted"); ax.set_ylabel("Actual")
+            ax.set_xlabel("Predicted")
+            ax.set_ylabel("Actual")
             ax.set_title(f"Confusion Matrix | F1={report.binary_f1:.4f}")
             for i in range(2):
                 for j in range(2):
-                    ax.text(j, i, str(cm[i][j]), ha="center", va="center",
-                            fontsize=14, fontweight="bold")
+                    ax.text(j, i, str(cm[i][j]), ha="center", va="center", fontsize=14, fontweight="bold")
             plt.tight_layout()
             cm_path = cfg.paths.reports_dir / "external_val_confusion_matrix.png"
             plt.savefig(cm_path, dpi=150, bbox_inches="tight")
@@ -118,7 +127,8 @@ def mode_external_val(args, cfg):
         logging.warning("Plot failed: %s", exc)
 
     export_predictions(
-        df_result, cfg.paths.reports_dir,
+        df_result,
+        cfg.paths.reports_dir,
         prefix="external_val",
         submission_path=getattr(args, "output", None),
     )
@@ -130,8 +140,7 @@ def mode_external_val(args, cfg):
         "threshold_used": threshold,
         "threshold_source": "training_artifact",
         "metrics": report.as_dict(),
-        "confusion_matrix": (report.conf_matrix.tolist()
-                             if report.conf_matrix is not None else None),
+        "confusion_matrix": (report.conf_matrix.tolist() if report.conf_matrix is not None else None),
         "panel_metrics": panel_metrics,
     }
     out_json = cfg.paths.reports_dir / "external_validation_report.json"

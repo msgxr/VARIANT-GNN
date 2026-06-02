@@ -4,6 +4,7 @@ Thin orchestration layer that runs the LeakageFirewall for both training
 and inference contexts, respecting competition.mode and strict_leakage flags
 read from the project config.
 """
+
 from __future__ import annotations
 
 import logging

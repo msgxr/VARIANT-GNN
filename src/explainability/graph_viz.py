@@ -3,6 +3,7 @@ src/explainability/graph_viz.py
 GNN etkileşim grafını Matplotlib + NetworkX ile görselleştirir.
 Preprocessor'dan gelen edge_index ve feature matrisini kullanır.
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import networkx as nx
+
     _NX_AVAILABLE = True
 except ImportError:
     _NX_AVAILABLE = False
@@ -123,8 +125,8 @@ def plot_variant_graph(
 
     # ── Görselleştirme ──────────────────────────────────────────
     fig, ax = plt.subplots(figsize=figsize)
-    fig.patch.set_facecolor('#0d1117')
-    ax.set_facecolor('#0d1117')
+    fig.patch.set_facecolor("#0d1117")
+    ax.set_facecolor("#0d1117")
 
     # Layout
     try:
@@ -148,7 +150,7 @@ def plot_variant_graph(
 
     for i in range(len(top_idx)):
         if i == new_hl:
-            node_colors.append('#fc8181')   # Seçili varyant — kırmızı
+            node_colors.append("#fc8181")  # Seçili varyant — kırmızı
         else:
             # Mavi → yeşil gradient (düşük → yüksek değer)
             r = 0.2 + 0.3 * norms[i]
@@ -159,60 +161,69 @@ def plot_variant_graph(
     # Kenarlar
     if G.number_of_edges() > 0:
         nx.draw_networkx_edges(
-            G, pos, ax=ax,
-            edge_color='#4a5568',
+            G,
+            pos,
+            ax=ax,
+            edge_color="#4a5568",
             alpha=0.5,
             width=0.8,
         )
 
     # Düğümler
-    node_sizes = [
-        600 if i == new_hl else 300 + int(degree[top_idx[i]] * 40)
-        for i in range(len(top_idx))
-    ]
+    node_sizes = [600 if i == new_hl else 300 + int(degree[top_idx[i]] * 40) for i in range(len(top_idx))]
     nx.draw_networkx_nodes(
-        G, pos, ax=ax,
+        G,
+        pos,
+        ax=ax,
         node_color=node_colors,
         node_size=node_sizes,
     )
 
     # Etiketler — uzun isimler kısalt
-    short_labels = {
-        i: (name[:12] + "…" if len(name) > 13 else name)
-        for i, name in enumerate(sub_names)
-    }
+    short_labels = {i: (name[:12] + "…" if len(name) > 13 else name) for i, name in enumerate(sub_names)}
     nx.draw_networkx_labels(
-        G, pos, labels=short_labels, ax=ax,
-        font_size=7, font_color='#e2e8f0',
-        font_weight='normal',
+        G,
+        pos,
+        labels=short_labels,
+        ax=ax,
+        font_size=7,
+        font_color="#e2e8f0",
+        font_weight="normal",
     )
 
     ax.set_title(
         f"Genetik Etkileşim Grafı — Top-{len(top_idx)} Özellik Düğümü",
-        fontsize=12, fontweight='bold', color='#e2e8f0', pad=14,
+        fontsize=12,
+        fontweight="bold",
+        color="#e2e8f0",
+        pad=14,
     )
-    ax.axis('off')
+    ax.axis("off")
 
     # Legend
     legend_elements = [
-        mpatches.Patch(facecolor='#fc8181', label='Seçili Varyant'),
-        mpatches.Patch(facecolor=(0.2, 0.7, 0.7, 0.9), label='Yüksek Etki'),
-        mpatches.Patch(facecolor=(0.2, 0.5, 0.8, 0.9), label='Düşük Etki'),
+        mpatches.Patch(facecolor="#fc8181", label="Seçili Varyant"),
+        mpatches.Patch(facecolor=(0.2, 0.7, 0.7, 0.9), label="Yüksek Etki"),
+        mpatches.Patch(facecolor=(0.2, 0.5, 0.8, 0.9), label="Düşük Etki"),
     ]
     ax.legend(
         handles=legend_elements,
-        loc='lower right', fontsize=8,
-        facecolor='#1a2744', edgecolor='#4a5568',
-        labelcolor='#94a3b8',
+        loc="lower right",
+        fontsize=8,
+        facecolor="#1a2744",
+        edgecolor="#4a5568",
+        labelcolor="#94a3b8",
     )
 
     node_count = G.number_of_nodes()
     edge_count = G.number_of_edges()
     ax.text(
-        0.01, 0.01,
+        0.01,
+        0.01,
         f"Düğüm: {node_count}  |  Kenar (Korelasyon Bağı): {edge_count}",
         transform=ax.transAxes,
-        fontsize=7.5, color='#718096',
+        fontsize=7.5,
+        color="#718096",
     )
 
     plt.tight_layout()
@@ -238,31 +249,34 @@ def plot_feature_correlation_heatmap(
         return None
 
     fig, ax = plt.subplots(figsize=figsize)
-    fig.patch.set_facecolor('#0d1117')
-    ax.set_facecolor('#0d1117')
+    fig.patch.set_facecolor("#0d1117")
+    ax.set_facecolor("#0d1117")
 
     # Isı haritası
-    im = ax.imshow(corr, cmap='RdYlBu_r', aspect='auto', vmin=-1, vmax=1)
+    im = ax.imshow(corr, cmap="RdYlBu_r", aspect="auto", vmin=-1, vmax=1)
 
     # Eksenleri ayarla
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
     short = [nm[:10] + "…" if len(nm) > 11 else nm for nm in names]
-    ax.set_xticklabels(short, rotation=45, ha='right', fontsize=7, color='#94a3b8')
-    ax.set_yticklabels(short, fontsize=7, color='#94a3b8')
+    ax.set_xticklabels(short, rotation=45, ha="right", fontsize=7, color="#94a3b8")
+    ax.set_yticklabels(short, fontsize=7, color="#94a3b8")
 
     # Colorbar
     cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.ax.tick_params(colors='#94a3b8', labelsize=7)
-    cbar.set_label('Korelasyon', color='#94a3b8', fontsize=8)
+    cbar.ax.tick_params(colors="#94a3b8", labelsize=7)
+    cbar.set_label("Korelasyon", color="#94a3b8", fontsize=8)
 
     ax.set_title(
         f"Özellik Korelasyon Matrisi (GNN Graf Temeli, Top-{n})",
-        fontsize=11, fontweight='bold', color='#e2e8f0', pad=12,
+        fontsize=11,
+        fontweight="bold",
+        color="#e2e8f0",
+        pad=12,
     )
 
     for sp in ax.spines.values():
-        sp.set_edgecolor('#4a5568')
+        sp.set_edgecolor("#4a5568")
 
     plt.tight_layout()
     return fig

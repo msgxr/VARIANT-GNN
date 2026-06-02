@@ -24,6 +24,7 @@ Usage
         torch.tensor(aa_ids),
     )   # [N, encoder.output_dim]
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,40 +44,72 @@ logger = logging.getLogger(__name__)
 # 0 = PAD, 5 = ambiguous / unknown
 NUC_VOCAB: dict[str, int] = {
     "<PAD>": 0,
-    "A":     1,
-    "C":     2,
-    "G":     3,
-    "T":     4,
-    "U":     4,   # RNA uracil mapped to T
-    "N":     5, "R": 5, "Y": 5, "S": 5, "W": 5,
-    "K":     5, "M": 5, "B": 5, "D": 5, "H": 5, "V": 5,
+    "A": 1,
+    "C": 2,
+    "G": 3,
+    "T": 4,
+    "U": 4,  # RNA uracil mapped to T
+    "N": 5,
+    "R": 5,
+    "Y": 5,
+    "S": 5,
+    "W": 5,
+    "K": 5,
+    "M": 5,
+    "B": 5,
+    "D": 5,
+    "H": 5,
+    "V": 5,
 }
-NUC_VOCAB_SIZE = 6   # 0..5
+NUC_VOCAB_SIZE = 6  # 0..5
 
 # Standard single-letter amino-acid codes → integer index
 # 0 = PAD, 21 = unknown / non-standard
 AA_VOCAB: dict[str, int] = {
     "<PAD>": 0,
-    "A": 1,  "R": 2,  "N": 3,  "D": 4,  "C": 5,
-    "Q": 6,  "E": 7,  "G": 8,  "H": 9,  "I": 10,
-    "L": 11, "K": 12, "M": 13, "F": 14, "P": 15,
-    "S": 16, "T": 17, "W": 18, "Y": 19, "V": 20,
-    "X": 21, "*": 21, "-": 21, "?": 21, "U": 21, "B": 21, "Z": 21,
+    "A": 1,
+    "R": 2,
+    "N": 3,
+    "D": 4,
+    "C": 5,
+    "Q": 6,
+    "E": 7,
+    "G": 8,
+    "H": 9,
+    "I": 10,
+    "L": 11,
+    "K": 12,
+    "M": 13,
+    "F": 14,
+    "P": 15,
+    "S": 16,
+    "T": 17,
+    "W": 18,
+    "Y": 19,
+    "V": 20,
+    "X": 21,
+    "*": 21,
+    "-": 21,
+    "?": 21,
+    "U": 21,
+    "B": 21,
+    "Z": 21,
 }
-AA_VOCAB_SIZE = 22   # 0..21
+AA_VOCAB_SIZE = 22  # 0..21
 
 # Default sequence lengths: ±5 + ref = 11
 NUC_SEQ_LEN: int = 11
-AA_SEQ_LEN:  int = 11
+AA_SEQ_LEN: int = 11
 
 
 # ---------------------------------------------------------------------------
 # Tokenisation helpers
 # ---------------------------------------------------------------------------
 
+
 def tokenize_nucleotides(
     sequences: List[str],
-    seq_len:   int = NUC_SEQ_LEN,
+    seq_len: int = NUC_SEQ_LEN,
 ) -> np.ndarray:
     """
     Convert a list of nucleotide strings to a padded integer token matrix.
@@ -95,13 +128,13 @@ def tokenize_nucleotides(
     for i, seq in enumerate(sequences):
         seq = str(seq).upper()[:seq_len]
         for j, char in enumerate(seq):
-            out[i, j] = NUC_VOCAB.get(char, 5)   # 5 = unknown
+            out[i, j] = NUC_VOCAB.get(char, 5)  # 5 = unknown
     return out
 
 
 def tokenize_amino_acids(
     sequences: List[str],
-    seq_len:   int = AA_SEQ_LEN,
+    seq_len: int = AA_SEQ_LEN,
 ) -> np.ndarray:
     """
     Convert a list of amino-acid strings to a padded integer token matrix.
@@ -119,13 +152,14 @@ def tokenize_amino_acids(
     for i, seq in enumerate(sequences):
         seq = str(seq).upper()[:seq_len]
         for j, char in enumerate(seq):
-            out[i, j] = AA_VOCAB.get(char, 21)   # 21 = unknown
+            out[i, j] = AA_VOCAB.get(char, 21)  # 21 = unknown
     return out
 
 
 # ---------------------------------------------------------------------------
 # Sequence encoder module
 # ---------------------------------------------------------------------------
+
 
 class SequenceEncoder(nn.Module):
     """
@@ -154,16 +188,14 @@ class SequenceEncoder(nn.Module):
     def __init__(
         self,
         nuc_vocab_size: int = NUC_VOCAB_SIZE,
-        aa_vocab_size:  int = AA_VOCAB_SIZE,
-        embedding_dim:  int = 8,
-        cnn_channels:   int = 16,
+        aa_vocab_size: int = AA_VOCAB_SIZE,
+        embedding_dim: int = 8,
+        cnn_channels: int = 16,
     ) -> None:
         super().__init__()
 
         # ── Nucleotide branch ─────────────────────────────────────────
-        self.nuc_embed = nn.Embedding(
-            nuc_vocab_size, embedding_dim, padding_idx=0
-        )
+        self.nuc_embed = nn.Embedding(nuc_vocab_size, embedding_dim, padding_idx=0)
         self.nuc_cnn = nn.Sequential(
             nn.Conv1d(embedding_dim, cnn_channels, kernel_size=3, padding=1),
             nn.ReLU(),
@@ -173,9 +205,7 @@ class SequenceEncoder(nn.Module):
         )
 
         # ── Amino-acid branch ─────────────────────────────────────────
-        self.aa_embed = nn.Embedding(
-            aa_vocab_size, embedding_dim, padding_idx=0
-        )
+        self.aa_embed = nn.Embedding(aa_vocab_size, embedding_dim, padding_idx=0)
         self.aa_cnn = nn.Sequential(
             nn.Conv1d(embedding_dim, cnn_channels, kernel_size=3, padding=1),
             nn.ReLU(),
@@ -188,13 +218,15 @@ class SequenceEncoder(nn.Module):
 
         logger.info(
             "SequenceEncoder: embedding_dim=%d, cnn_channels=%d, output_dim=%d",
-            embedding_dim, cnn_channels, self.output_dim,
+            embedding_dim,
+            cnn_channels,
+            self.output_dim,
         )
 
     def forward(
         self,
-        nuc_ids: torch.Tensor,   # [N, nuc_seq_len] — int64
-        aa_ids:  torch.Tensor,   # [N, aa_seq_len]  — int64
+        nuc_ids: torch.Tensor,  # [N, nuc_seq_len] — int64
+        aa_ids: torch.Tensor,  # [N, aa_seq_len]  — int64
     ) -> torch.Tensor:
         """
         Parameters
@@ -207,11 +239,11 @@ class SequenceEncoder(nn.Module):
         torch.Tensor of shape [N, output_dim] (float32).
         """
         # Nucleotide
-        nuc_emb  = self.nuc_embed(nuc_ids).permute(0, 2, 1)   # [N, emb, seq]
-        nuc_feat = self.nuc_cnn(nuc_emb).squeeze(-1)            # [N, cnn_ch]
+        nuc_emb = self.nuc_embed(nuc_ids).permute(0, 2, 1)  # [N, emb, seq]
+        nuc_feat = self.nuc_cnn(nuc_emb).squeeze(-1)  # [N, cnn_ch]
 
         # Amino acid
-        aa_emb   = self.aa_embed(aa_ids).permute(0, 2, 1)
-        aa_feat  = self.aa_cnn(aa_emb).squeeze(-1)
+        aa_emb = self.aa_embed(aa_ids).permute(0, 2, 1)
+        aa_feat = self.aa_cnn(aa_emb).squeeze(-1)
 
-        return torch.cat([nuc_feat, aa_feat], dim=1)            # [N, output_dim]
+        return torch.cat([nuc_feat, aa_feat], dim=1)  # [N, output_dim]

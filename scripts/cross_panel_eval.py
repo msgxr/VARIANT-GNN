@@ -12,6 +12,7 @@ Bu test, gerçek jüri verisi geldiğinde modelin "görmediği bir alt grup"
 Çıktı:
   reports/cross_panel_eval.json
 """
+
 from __future__ import annotations
 
 import json
@@ -25,9 +26,9 @@ warnings.filterwarnings("ignore", category=Warning, module="urllib3.*")
 warnings.filterwarnings("ignore", message=".*BaseEstimator._validate_data.*", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost.*")
 
-import numpy as np
-import pandas as pd
-from sklearn.metrics import (
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.metrics import (  # noqa: E402
     confusion_matrix,
     f1_score,
     precision_score,
@@ -38,10 +39,10 @@ from sklearn.metrics import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.config import get_settings, reset_settings
-from src.data.loader import load_csv, LoadedDataset
-from src.training.trainer import VariantTrainer
-from src.utils.seeds import set_global_seed
+from src.config import get_settings, reset_settings  # noqa: E402
+from src.data.loader import load_csv  # noqa: E402
+from src.training.trainer import VariantTrainer  # noqa: E402
+from src.utils.seeds import set_global_seed  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ def main() -> int:
     results = {}
 
     for held_out in panels:
-        print(f"\n{'='*60}\nLeave-out panel: {held_out}\n{'='*60}")
+        print(f"\n{'=' * 60}\nLeave-out panel: {held_out}\n{'=' * 60}")
 
         test_mask = (ds.metadata["Panel"] == held_out).values
         train_mask = ~test_mask
@@ -88,13 +89,11 @@ def main() -> int:
 
         X_train = X_full.iloc[train_mask].reset_index(drop=True)
         y_train = y_full[train_mask]
-        X_test  = X_full.iloc[test_mask].reset_index(drop=True)
-        y_test  = y_full[test_mask]
+        X_test = X_full.iloc[test_mask].reset_index(drop=True)
+        y_test = y_full[test_mask]
 
-        print(f"  Train: {len(y_train)} satır  "
-              f"({(y_train==1).sum()} P / {(y_train==0).sum()} B)")
-        print(f"  Test : {len(y_test)} satır  "
-              f"({(y_test==1).sum()} P / {(y_test==0).sum()} B)")
+        print(f"  Train: {len(y_train)} satır  ({(y_train == 1).sum()} P / {(y_train == 0).sum()} B)")
+        print(f"  Test : {len(y_test)} satır  ({(y_test == 1).sum()} P / {(y_test == 0).sum()} B)")
 
         set_global_seed(cfg.seed)
         trainer = VariantTrainer()
@@ -102,7 +101,7 @@ def main() -> int:
 
         metrics = evaluate_panel(result.ensemble, result.preprocessor, X_test, y_test)
         metrics["cv_mean_f1"] = float(result.mean_cv_f1)
-        metrics["cv_std_f1"]  = float(result.std_cv_f1)
+        metrics["cv_std_f1"] = float(result.std_cv_f1)
 
         print(f"  → Test panel {held_out}:")
         print(f"     Binary F1   : {metrics['binary_f1']:.4f}")
@@ -120,14 +119,16 @@ def main() -> int:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"\n📁 Rapor kaydedildi: {out_path}")
 
-    print(f"\n{'='*60}\nÖZET — Leave-One-Panel-Out Cross-Eval\n{'='*60}")
+    print(f"\n{'=' * 60}\nÖZET — Leave-One-Panel-Out Cross-Eval\n{'=' * 60}")
     print(f"{'Panel':<25} {'n_test':>8} {'F1':>8} {'Prec':>8} {'Rec':>8} {'AUC':>8}")
     print("-" * 60)
     for panel, m in results.items():
-        auc_str = f"{m['roc_auc']:.4f}" if m['roc_auc'] is not None else "n/a"
-        print(f"{panel:<25} {m['n_samples']:>8} "
-              f"{m['binary_f1']:>8.4f} {m['precision']:>8.4f} "
-              f"{m['recall']:>8.4f} {auc_str:>8}")
+        auc_str = f"{m['roc_auc']:.4f}" if m["roc_auc"] is not None else "n/a"
+        print(
+            f"{panel:<25} {m['n_samples']:>8} "
+            f"{m['binary_f1']:>8.4f} {m['precision']:>8.4f} "
+            f"{m['recall']:>8.4f} {auc_str:>8}"
+        )
 
     f1s = [m["binary_f1"] for m in results.values()]
     print(f"\nOrtalama F1: {np.mean(f1s):.4f} ± {np.std(f1s):.4f}")

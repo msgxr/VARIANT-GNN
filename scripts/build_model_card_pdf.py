@@ -14,6 +14,7 @@ için Unicode TrueType font gerekir.
 Markdown render etmez — yalnızca okunabilir, düz formatlanmış bir
 PDF üretir. PDR ekine konabilir.
 """
+
 from __future__ import annotations
 
 import re
@@ -28,8 +29,8 @@ except ImportError:
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_MD    = PROJECT_ROOT / "MODEL_CARD.md"
-OUTPUT_PDF   = PROJECT_ROOT / "docs" / "MODEL_CARD.pdf"
+SOURCE_MD = PROJECT_ROOT / "MODEL_CARD.md"
+OUTPUT_PDF = PROJECT_ROOT / "docs" / "MODEL_CARD.pdf"
 
 
 def _strip_emojis(text: str) -> str:
@@ -37,12 +38,12 @@ def _strip_emojis(text: str) -> str:
     # Geniş emoji aralığını sil
     emoji_pattern = re.compile(
         "["
-        "\U0001F300-\U0001F9FF"  # emoji
-        "\U00002600-\U000027BF"  # misc symbols
-        "\U0001F900-\U0001F9FF"  # supplemental symbols
-        "\U00002700-\U000027BF"  # dingbats
-        "\U0001FA70-\U0001FAFF"  # extended-A
-        "\U0001F1E0-\U0001F1FF"  # flags
+        "\U0001f300-\U0001f9ff"  # emoji
+        "\U00002600-\U000027bf"  # misc symbols
+        "\U0001f900-\U0001f9ff"  # supplemental symbols
+        "\U00002700-\U000027bf"  # dingbats
+        "\U0001fa70-\U0001faff"  # extended-A
+        "\U0001f1e0-\U0001f1ff"  # flags
         "]+",
         flags=re.UNICODE,
     )
@@ -56,17 +57,41 @@ def _normalise_for_latin1(text: str) -> str:
     fallback için ASCII'ye yaklaştırma).
     """
     repl = {
-        "→": "->", "←": "<-", "↔": "<->", "⇒": "=>",
-        "≈": "~=", "≤": "<=", "≥": ">=",
-        "·": ".",  "•": "*",  "—": "-",  "–": "-",
-        "★": "*",  "✓": "[OK]", "✗": "[X]",
+        "→": "->",
+        "←": "<-",
+        "↔": "<->",
+        "⇒": "=>",
+        "≈": "~=",
+        "≤": "<=",
+        "≥": ">=",
+        "·": ".",
+        "•": "*",
+        "—": "-",
+        "–": "-",
+        "★": "*",
+        "✓": "[OK]",
+        "✗": "[X]",
         "₺": "TL",
-        "α": "alpha", "β": "beta", "γ": "gamma", "λ": "lambda",
-        "ε": "epsilon", "ρ": "rho", "η": "eta", "Σ": "Sum",
-        "²": "^2", "³": "^3",
+        "α": "alpha",
+        "β": "beta",
+        "γ": "gamma",
+        "λ": "lambda",
+        "ε": "epsilon",
+        "ρ": "rho",
+        "η": "eta",
+        "Σ": "Sum",
+        "²": "^2",
+        "³": "^3",
         # Trademark / box drawing
-        "│": "|", "├": "+", "└": "+", "┌": "+", "┐": "+",
-        "┘": "+", "─": "-", "▼": "v", "▲": "^",
+        "│": "|",
+        "├": "+",
+        "└": "+",
+        "┌": "+",
+        "┐": "+",
+        "┘": "+",
+        "─": "-",
+        "▼": "v",
+        "▲": "^",
     }
     for k, v in repl.items():
         text = text.replace(k, v)
@@ -79,8 +104,7 @@ class ModelCardPDF(FPDF):
     def header(self) -> None:
         self.set_font("Helvetica", "B", 9)
         self.set_text_color(80, 80, 80)
-        self.cell(0, 8, "VARIANT-GNN Model Card | TEKNOFEST 2026 | Takim XYRA3",
-                  align="C")
+        self.cell(0, 8, "VARIANT-GNN Model Card | TEKNOFEST 2026 | Takim XYRA3", align="C")
         self.ln(10)
 
     def footer(self) -> None:
@@ -99,7 +123,7 @@ def _safe_multi_cell(pdf: ModelCardPDF, h: float, content: str) -> None:
         try:
             ascii_only = content.encode("ascii", errors="replace").decode("ascii")
             ascii_only = ascii_only.replace("?", " ")
-            chunks = [ascii_only[i:i + 80] for i in range(0, len(ascii_only), 80)]
+            chunks = [ascii_only[i : i + 80] for i in range(0, len(ascii_only), 80)]
             for c in chunks:
                 if c.strip():
                     try:
@@ -210,7 +234,7 @@ def render_markdown(pdf: ModelCardPDF, text: str) -> None:
             safe = _safe(line)
             chunk_size = 110
             for i in range(0, len(safe), chunk_size):
-                _safe_multi_cell(pdf, 4, safe[i:i + chunk_size])
+                _safe_multi_cell(pdf, 4, safe[i : i + chunk_size])
             pdf.set_font("Helvetica", "", 11)
             continue
 
@@ -221,7 +245,7 @@ def render_markdown(pdf: ModelCardPDF, text: str) -> None:
             chunk_size = 200
             if len(safe) > chunk_size:
                 for i in range(0, len(safe), chunk_size):
-                    _safe_multi_cell(pdf, 5, safe[i:i + chunk_size])
+                    _safe_multi_cell(pdf, 5, safe[i : i + chunk_size])
             else:
                 _safe_multi_cell(pdf, 5, safe)
         else:
@@ -242,7 +266,7 @@ def _safe(s: str) -> str:
     for word in words:
         if len(word) > 40:
             # Her 40 karakterde boşluk ekle
-            chunked = [word[i:i + 40] for i in range(0, len(word), 40)]
+            chunked = [word[i : i + 40] for i in range(0, len(word), 40)]
             fixed_words.append(" ".join(chunked))
         else:
             fixed_words.append(word)

@@ -3,7 +3,7 @@ import streamlit as st
 
 def inject_styles(theme: str = "dark") -> None:
     """Tüm Premium CSS kodlarını Streamlit uygulamasına enjekte eder."""
-    
+
     # Tema renk tanımlamaları
     if theme == "light":
         primary_bg = "#f8fafc"
@@ -22,7 +22,8 @@ def inject_styles(theme: str = "dark") -> None:
         border_color = "rgba(99,179,237,0.2)"
         card_bg = "linear-gradient(135deg, #1a2744 0%, #1e2d4e 100%)"
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -94,4 +95,6 @@ def inject_styles(theme: str = "dark") -> None:
         color: var(--text-main);
     }}
 </style>
-""", unsafe_allow_html=True)
+""",
+        unsafe_allow_html=True,
+    )

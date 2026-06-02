@@ -30,6 +30,7 @@ Kullanım (Python):
   result = evaluator.evaluate(X, y, panel_labels)
   result.plot(save_path="reports/figures/panel_transfer.png")
 """
+
 from __future__ import annotations
 
 import logging
@@ -53,12 +54,12 @@ logger = logging.getLogger(__name__)
 class PanelTransferResult:
     """Çapraz panel genelleştirme analizi sonucu."""
 
-    panels:       List[str]                   # Panel isimleri (satır/sütun)
-    f1_matrix:    np.ndarray                  # (N_panels × N_panels) F1 skoru matrisi
-    support:      Dict[str, int]              # Panel başına örnek sayısı
-    in_dist_mean: float                       # Diyagonal ortalama (in-distribution)
-    cross_mean:   float                       # Diyagonal dışı ortalama (transfer)
-    transfer_gap: float                       # in_dist_mean - cross_mean  (küçük = iyi)
+    panels: List[str]  # Panel isimleri (satır/sütun)
+    f1_matrix: np.ndarray  # (N_panels × N_panels) F1 skoru matrisi
+    support: Dict[str, int]  # Panel başına örnek sayısı
+    in_dist_mean: float  # Diyagonal ortalama (in-distribution)
+    cross_mean: float  # Diyagonal dışı ortalama (transfer)
+    transfer_gap: float  # in_dist_mean - cross_mean  (küçük = iyi)
 
     def summary(self) -> str:
         lines = ["=== Çapraz Panel Genelleştirme Matrisi ==="]
@@ -84,12 +85,12 @@ class PanelTransferResult:
 
     def as_dict(self) -> dict:
         return {
-            "panels":        self.panels,
-            "f1_matrix":     self.f1_matrix.tolist(),
-            "support":       self.support,
-            "in_dist_mean":  round(self.in_dist_mean, 4),
-            "cross_mean":    round(self.cross_mean, 4),
-            "transfer_gap":  round(self.transfer_gap, 4),
+            "panels": self.panels,
+            "f1_matrix": self.f1_matrix.tolist(),
+            "support": self.support,
+            "in_dist_mean": round(self.in_dist_mean, 4),
+            "cross_mean": round(self.cross_mean, 4),
+            "transfer_gap": round(self.transfer_gap, 4),
         }
 
     def plot(
@@ -100,6 +101,7 @@ class PanelTransferResult:
         """Matris ısı haritası çiz ve opsiyonel olarak kaydet."""
         try:
             import matplotlib
+
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
 
@@ -120,16 +122,26 @@ class PanelTransferResult:
                     val = self.f1_matrix[i, j]
                     color = "white" if val < 0.4 else "black"
                     marker = "★" if i == j else ""
-                    ax.text(j, i, f"{val:.3f}{marker}",
-                            ha="center", va="center", fontsize=9,
-                            fontweight="bold" if i == j else "normal",
-                            color=color)
+                    ax.text(
+                        j,
+                        i,
+                        f"{val:.3f}{marker}",
+                        ha="center",
+                        va="center",
+                        fontsize=9,
+                        fontweight="bold" if i == j else "normal",
+                        color=color,
+                    )
 
             ax.text(
-                0.5, -0.22,
+                0.5,
+                -0.22,
                 f"In-dist F1={self.in_dist_mean:.3f}  |  Cross F1={self.cross_mean:.3f}  "
                 f"|  Gap={self.transfer_gap:.3f}",
-                ha="center", transform=ax.transAxes, fontsize=8, color="#555",
+                ha="center",
+                transform=ax.transAxes,
+                fontsize=8,
+                color="#555",
             )
 
             plt.tight_layout()
@@ -172,8 +184,8 @@ class CrossPanelEvaluator:
         random_state: int = 42,
     ) -> None:
         self.min_panel_size = min_panel_size
-        self.test_size      = test_size
-        self.random_state   = random_state
+        self.test_size = test_size
+        self.random_state = random_state
 
     # ------------------------------------------------------------------
 
@@ -181,15 +193,25 @@ class CrossPanelEvaluator:
         """Lightweight hızlı panel başına model (tam pipeline değil)."""
         try:
             import xgboost as xgb
+
             return xgb.XGBClassifier(
-                n_estimators=200, max_depth=5, learning_rate=0.05,
-                subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-                n_jobs=-1, verbosity=0, random_state=self.random_state,
+                n_estimators=200,
+                max_depth=5,
+                learning_rate=0.05,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                eval_metric="logloss",
+                n_jobs=-1,
+                verbosity=0,
+                random_state=self.random_state,
             )
         except ImportError:
             from sklearn.ensemble import GradientBoostingClassifier
+
             return GradientBoostingClassifier(
-                n_estimators=100, max_depth=4, learning_rate=0.1,
+                n_estimators=100,
+                max_depth=4,
+                learning_rate=0.1,
                 random_state=self.random_state,
             )
 
@@ -197,8 +219,8 @@ class CrossPanelEvaluator:
 
     def evaluate(
         self,
-        X:            np.ndarray,
-        y:            np.ndarray,
+        X: np.ndarray,
+        y: np.ndarray,
         panel_labels: np.ndarray,
     ) -> PanelTransferResult:
         """
@@ -216,21 +238,18 @@ class CrossPanelEvaluator:
         """
         unique_panels = sorted(set(panel_labels))
         # Yeterli örnekli panelleri filtrele
-        valid_panels = [
-            p for p in unique_panels
-            if (panel_labels == p).sum() >= self.min_panel_size
-        ]
+        valid_panels = [p for p in unique_panels if (panel_labels == p).sum() >= self.min_panel_size]
 
         if len(valid_panels) < 2:
             logger.warning(
-                "CrossPanelEvaluator: geçerli panel sayısı < 2 (%d mevcut). "
-                "En az %d örnek gerekli.",
-                len(valid_panels), self.min_panel_size,
+                "CrossPanelEvaluator: geçerli panel sayısı < 2 (%d mevcut). En az %d örnek gerekli.",
+                len(valid_panels),
+                self.min_panel_size,
             )
 
         n = len(valid_panels)
         f1_matrix = np.zeros((n, n), dtype=float)
-        support   = {}
+        support = {}
 
         # Panel başına eğitim verisi ve test verisi ayır
         panel_data: Dict[str, dict] = {}
@@ -244,12 +263,17 @@ class CrossPanelEvaluator:
                 continue
 
             X_tr, X_te, y_tr, y_te = train_test_split(
-                Xp, yp, test_size=self.test_size,
-                stratify=yp, random_state=self.random_state,
+                Xp,
+                yp,
+                test_size=self.test_size,
+                stratify=yp,
+                random_state=self.random_state,
             )
             panel_data[panel] = {
-                "X_tr": X_tr, "y_tr": y_tr,
-                "X_te": X_te, "y_te": y_te,
+                "X_tr": X_tr,
+                "y_tr": y_tr,
+                "X_te": X_te,
+                "y_te": y_te,
             }
 
         # Eğitim × test kombinasyonları
@@ -263,53 +287,61 @@ class CrossPanelEvaluator:
             except Exception as exc:
                 logger.warning(
                     "Panel %s eğitimi başarısız (%s) — sıfır F1 atandı.",
-                    train_panel, exc,
+                    train_panel,
+                    exc,
                 )
                 continue
 
             # Tüm panellerde test et
             for j, test_panel in enumerate(valid_panels):
                 data_te = panel_data[test_panel]
-                X_te   = data_te["X_te"]
-                y_te   = data_te["y_te"]
+                X_te = data_te["X_te"]
+                y_te = data_te["y_te"]
 
                 try:
                     preds = estimator.predict(X_te)
-                    f1    = float(f1_score(
-                        y_te, preds,
-                        average="binary", pos_label=1, zero_division=0,
-                    ))
+                    f1 = float(
+                        f1_score(
+                            y_te,
+                            preds,
+                            average="binary",
+                            pos_label=1,
+                            zero_division=0,
+                        )
+                    )
                     f1_matrix[i, j] = f1
                     logger.debug(
                         "Transfer %s → %s : F1=%.4f (n_test=%d)",
-                        train_panel, test_panel, f1, len(y_te),
+                        train_panel,
+                        test_panel,
+                        f1,
+                        len(y_te),
                     )
                 except Exception as exc:
                     logger.warning(
                         "Transfer %s → %s başarısız (%s).",
-                        train_panel, test_panel, exc,
+                        train_panel,
+                        test_panel,
+                        exc,
                     )
 
         # Özet istatistikler
         if n >= 2:
-            diag     = [f1_matrix[i, i] for i in range(n)]
-            off_diag = [
-                f1_matrix[i, j]
-                for i in range(n) for j in range(n) if i != j
-            ]
-            in_dist  = float(np.mean(diag))
-            cross    = float(np.mean(off_diag)) if off_diag else 0.0
-            gap      = in_dist - cross
+            diag = [f1_matrix[i, i] for i in range(n)]
+            off_diag = [f1_matrix[i, j] for i in range(n) for j in range(n) if i != j]
+            in_dist = float(np.mean(diag))
+            cross = float(np.mean(off_diag)) if off_diag else 0.0
+            gap = in_dist - cross
         else:
             in_dist = cross = gap = float(f1_matrix[0, 0]) if n == 1 else 0.0
 
         result = PanelTransferResult(
-            panels       = valid_panels,
-            f1_matrix    = f1_matrix,
-            support      = support,
-            in_dist_mean = in_dist,
-            cross_mean   = cross,
-            transfer_gap = gap,
+            panels=valid_panels,
+            f1_matrix=f1_matrix,
+            support=support,
+            in_dist_mean=in_dist,
+            cross_mean=cross,
+            transfer_gap=gap,
         )
         result.log()
         return result

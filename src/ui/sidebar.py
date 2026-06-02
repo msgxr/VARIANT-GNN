@@ -1,4 +1,5 @@
 """src/ui/sidebar.py — Sidebar for VARIANT-GNN Streamlit app."""
+
 from __future__ import annotations
 
 import json
@@ -37,12 +38,13 @@ def _model_status_badge() -> None:
     with open(prov, encoding="utf-8", errors="replace") as f:
         p = json.load(f)
 
-    cv_f1  = p.get("cv_f1_mean", 0)
-    t_f1   = p.get("test_f1",   0)
+    cv_f1 = p.get("cv_f1_mean", 0)
+    t_f1 = p.get("test_f1", 0)
     status = p.get("status", "UNKNOWN")
-    color  = "#22d3ee" if "REAL" in status else "#f59e0b"
+    color = "#22d3ee" if "REAL" in status else "#f59e0b"
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);
                 border-radius:10px;padding:12px 16px;margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -61,14 +63,17 @@ def _model_status_badge() -> None:
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
     """Render sidebar; return (uploaded_df, settings_dict)."""
     with st.sidebar:
         # ── Logo / title ──────────────────────────────────────────────────────
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align:center;padding:20px 0 16px;">
             <div style="font-size:2.4rem;line-height:1;">🧬</div>
             <div style="font-size:1.05rem;font-weight:800;color:#63b3ed;
@@ -76,7 +81,9 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
             <div style="font-size:0.68rem;color:#4a5568;margin-top:3px;
                          letter-spacing:0.5px;">TEKNOFEST 2026 · XYRA3</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # ── Model status ──────────────────────────────────────────────────────
         _model_status_badge()
@@ -102,7 +109,7 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
                 st.markdown(
                     f'<div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);'
                     f'border-radius:6px;padding:8px 12px;font-size:0.78rem;color:#34d399;margin-top:6px;">'
-                    f'✅ {len(df):,} varyant yüklendi</div>',
+                    f"✅ {len(df):,} varyant yüklendi</div>",
                     unsafe_allow_html=True,
                 )
             except Exception as exc:
@@ -119,14 +126,16 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
         default_thr = _load_default_threshold()
         threshold = st.slider(
             "Threshold",
-            min_value=0.05, max_value=0.95,
-            value=default_thr, step=0.01,
+            min_value=0.05,
+            max_value=0.95,
+            value=default_thr,
+            step=0.01,
             label_visibility="collapsed",
             help=f"F1-optimal: {default_thr:.3f} (kalibrasyon setinden)",
         )
         st.markdown(
             f'<div style="text-align:center;font-size:0.7rem;color:#718096;margin-top:-8px;">'
-            f'θ = {threshold:.3f} &nbsp;·&nbsp; F1-optimal: {default_thr:.3f}</div>',
+            f"θ = {threshold:.3f} &nbsp;·&nbsp; F1-optimal: {default_thr:.3f}</div>",
             unsafe_allow_html=True,
         )
 
@@ -138,17 +147,21 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
             'text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🔬 XAI Seçenekleri</p>',
             unsafe_allow_html=True,
         )
-        show_shap      = st.checkbox("📊 Global SHAP Özeti",    value=True)
+        show_shap = st.checkbox("📊 Global SHAP Özeti", value=True)
         show_waterfall = st.checkbox("🌊 Yerel SHAP Waterfall", value=True)
-        show_lime      = st.checkbox("🟢 LIME Açıklaması",      value=False)
-        variant_index  = st.number_input(
-            "Varyant İndeksi (Yerel XAI)", min_value=0, value=0, step=1,
+        show_lime = st.checkbox("🟢 LIME Açıklaması", value=False)
+        variant_index = st.number_input(
+            "Varyant İndeksi (Yerel XAI)",
+            min_value=0,
+            value=0,
+            step=1,
         )
 
         st.divider()
 
         # ── Clinical disclaimer ───────────────────────────────────────────────
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background:rgba(252,129,129,0.06);border:1px solid rgba(252,129,129,0.2);
                     border-radius:8px;padding:10px 12px;font-size:0.72rem;color:#fc8181;
                     line-height:1.6;">
@@ -156,13 +169,15 @@ def render_sidebar() -> Tuple[Optional[pd.DataFrame], Dict[str, Any]]:
             <span style="color:#718096;">Bu sistem yalnızca araştırma ve yarışma
             değerlendirmesi amaçlıdır (TEKNOFEST §10).</span>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         settings: Dict[str, Any] = {
-            "threshold":     threshold,
-            "show_shap":     show_shap,
-            "show_waterfall":show_waterfall,
-            "show_lime":     show_lime,
+            "threshold": threshold,
+            "show_shap": show_shap,
+            "show_waterfall": show_waterfall,
+            "show_lime": show_lime,
             "variant_index": int(variant_index),
         }
 

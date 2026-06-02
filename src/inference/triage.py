@@ -10,6 +10,7 @@ Assigns human-readable risk flags to each prediction based on:
 The binary Prediction column is NOT modified here.
 Clinical_Flag is produced as a separate, audit-friendly column.
 """
+
 from __future__ import annotations
 
 import logging
@@ -94,10 +95,7 @@ class TriageEngine:
         u = np.asarray(uncertainty, dtype=float)
 
         if p.shape != u.shape:
-            raise ValueError(
-                f"pathogenic_prob and uncertainty must have the same shape; "
-                f"got {p.shape} and {u.shape}"
-            )
+            raise ValueError(f"pathogenic_prob and uncertainty must have the same shape; got {p.shape} and {u.shape}")
 
         margin = np.abs(p - threshold)
         entropy = _binary_entropy(p)
@@ -107,11 +105,7 @@ class TriageEngine:
         is_low_confidence = entropy > self.entropy_threshold
 
         # Expert review: at least two risk factors co-occur
-        risk_factor_count = (
-            is_high_uncertainty.astype(int)
-            + is_borderline.astype(int)
-            + is_low_confidence.astype(int)
-        )
+        risk_factor_count = is_high_uncertainty.astype(int) + is_borderline.astype(int) + is_low_confidence.astype(int)
         needs_expert = risk_factor_count >= 2
 
         flags = np.full(len(p), STABLE_PREDICTION, dtype=object)

@@ -1,13 +1,13 @@
 """src/cli/modes/explain.py — explain mode (SHAP, GNNExplainer, LIME, ACMG)."""
+
 from __future__ import annotations
 
 import json
 import logging
 import sys
-from pathlib import Path
 
-from src.data.loader import load_csv
 from src.api.pipeline import InferencePipeline
+from src.data.loader import load_csv
 
 
 def mode_explain(args, cfg):
@@ -17,8 +17,8 @@ def mode_explain(args, cfg):
     results, ACMG criteria mapping, learning curve plot, OOD/drift report,
     Turkish clinical insights, PDF clinical reports.
     """
-    from src.explainability.shap_explainer import SHAPExplainer
     from src.explainability.group_shap import group_shap_report, instance_explanation_tr
+    from src.explainability.shap_explainer import SHAPExplainer
 
     data_path = args.data_file or args.test_file
     if not data_path:
@@ -51,6 +51,7 @@ def mode_explain(args, cfg):
         return
 
     import numpy as np
+
     if isinstance(shap_vals, list):
         shap_vals = np.array(shap_vals[1])
 
@@ -79,10 +80,14 @@ def mode_explain(args, cfg):
         sv_i = shap_vals[i] if shap_vals.ndim == 2 else shap_vals
         text = instance_explanation_tr(sv_i, feature_names, pred, prob, vid)
         logging.info("[Sample %d] %s", i, text)
-        explain_records.append({
-            "variant_id": vid, "prediction": pred,
-            "probability": prob, "clinical_insight_tr": text,
-        })
+        explain_records.append(
+            {
+                "variant_id": vid,
+                "prediction": pred,
+                "probability": prob,
+                "clinical_insight_tr": text,
+            }
+        )
 
     out_json = cfg.paths.reports_dir / "explain_instances.json"
     with open(out_json, "w", encoding="utf-8") as fh:
@@ -109,10 +114,12 @@ def mode_explain(args, cfg):
 
 # ── Private helpers ──────────────────────────────────────────────────────────
 
+
 def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
     try:
-        from src.explainability.gnn_explainer import GNNExplainerWrapper
         from src.core.graph.builder import SampleKNNGraphBuilder
+        from src.explainability.gnn_explainer import GNNExplainerWrapper
+
         gnn_model = ensemble.gnn
         if gnn_model is None:
             logging.warning("GNN model not loaded — GNNExplainer skipped.")
@@ -128,15 +135,13 @@ def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
             return
         gnn_out: dict = {"n_explained": explain_n, "knn_k": knn_k}
         if hasattr(expl, "node_mask") and expl.node_mask is not None:
-            import numpy as np
             nm = expl.node_mask.detach().cpu().numpy()
             feat_imp = nm.mean(axis=0).tolist() if nm.ndim == 2 else nm.tolist()
             gnn_out["node_feature_importance"] = feat_imp
             gnn_out["top_gnn_features"] = [
                 {"feature": f, "importance": round(v, 6)}
                 for f, v in sorted(
-                    zip(feature_names[:len(feat_imp)], feat_imp),
-                    key=lambda x: abs(x[1]), reverse=True
+                    zip(feature_names[: len(feat_imp)], feat_imp), key=lambda x: abs(x[1]), reverse=True
                 )[:10]
             ]
         if hasattr(expl, "edge_mask") and expl.edge_mask is not None:
@@ -153,7 +158,8 @@ def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
 
 def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
     try:
-        from src.explainability.pdf_report import generate_pdf_report, FPDF_AVAILABLE
+        from src.explainability.pdf_report import FPDF_AVAILABLE, generate_pdf_report
+
         if not FPDF_AVAILABLE:
             logging.warning("fpdf2 not installed — PDF reports skipped.")
             return
@@ -161,8 +167,7 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
             vid = rec["variant_id"]
             pred = rec["prediction"]
             prob = float(rec["probability"])
-            risk = (float(df_pred["Calibrated_Risk"].iloc[i])
-                    if "Calibrated_Risk" in df_pred.columns else prob * 100)
+            risk = float(df_pred["Calibrated_Risk"].iloc[i]) if "Calibrated_Risk" in df_pred.columns else prob * 100
             if risk >= 75:
                 zone = "CRITICAL RISK — Clinical Assessment Required"
             elif risk >= 50:
@@ -171,11 +176,9 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
                 zone = "MODERATE RISK — Follow-up Recommended"
             else:
                 zone = "LOW RISK — Likely Benign"
-            import numpy as np
+
             sv_i = shap_vals[i] if shap_vals.ndim == 2 else shap_vals
-            top_feats = sorted(
-                zip(feature_names, sv_i.tolist()), key=lambda x: abs(x[1]), reverse=True
-            )[:10]
+            top_feats = sorted(zip(feature_names, sv_i.tolist()), key=lambda x: abs(x[1]), reverse=True)[:10]
             clinical_insight = {
                 "zone_label": zone,
                 "summary": rec.get("clinical_insight_tr", ""),
@@ -186,12 +189,15 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
                     else "Routine clinical follow-up may suffice. Clinician assessment essential."
                 ),
             }
-            waterfall = (str(cfg.paths.reports_dir / "shap_waterfall_sample0.png")
-                         if i == 0 else None)
+            waterfall = str(cfg.paths.reports_dir / "shap_waterfall_sample0.png") if i == 0 else None
             pdf_bytes = generate_pdf_report(
-                variant_id=str(vid), risk_score=risk, prediction=pred,
-                probability=prob, clinical_insight=clinical_insight,
-                top_features=top_feats, shap_waterfall_path=waterfall,
+                variant_id=str(vid),
+                risk_score=risk,
+                prediction=pred,
+                probability=prob,
+                clinical_insight=clinical_insight,
+                top_features=top_feats,
+                shap_waterfall_path=waterfall,
             )
             safe_vid = str(vid).replace("/", "_").replace(":", "_")[:40]
             pdf_path = cfg.paths.reports_dir / f"clinical_report_{safe_vid}.pdf"
@@ -208,8 +214,10 @@ def _plot_learning_curve(cfg):
         return
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         with open(lc_path) as f:
             lc_data = json.load(f)
         last_run = lc_data[-1]["run_epochs"] if lc_data else []
@@ -221,19 +229,21 @@ def _plot_learning_curve(cfg):
         fig, ax = plt.subplots(figsize=(9, 4))
         ax.plot(epochs, train_f1s, label="Train F1", color="#3182ce", linewidth=2)
         if any(v is not None for v in val_f1s):
-            ax.plot(epochs, [v or 0 for v in val_f1s],
-                    label="Val F1", color="#e53e3e", linewidth=2, linestyle="--")
+            ax.plot(epochs, [v or 0 for v in val_f1s], label="Val F1", color="#e53e3e", linewidth=2, linestyle="--")
             for e in last_run:
                 if e.get("early_stop"):
-                    ax.axvline(e["epoch"], color="gray", linestyle=":",
-                               label=f"Early Stop (epoch {e['epoch']})")
+                    ax.axvline(e["epoch"], color="gray", linestyle=":", label=f"Early Stop (epoch {e['epoch']})")
                     break
-        ax.set_xlabel("Epoch"); ax.set_ylabel("Macro F1")
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Macro F1")
         ax.set_title("GNN Learning Curve (§4.5)", fontweight="bold")
-        ax.legend(); ax.set_ylim(0.5, 1.05); ax.grid(True, alpha=0.3)
+        ax.legend()
+        ax.set_ylim(0.5, 1.05)
+        ax.grid(True, alpha=0.3)
         plt.tight_layout()
         out = cfg.paths.reports_dir / "gnn_learning_curve.png"
-        plt.savefig(out, dpi=150, bbox_inches="tight"); plt.close()
+        plt.savefig(out, dpi=150, bbox_inches="tight")
+        plt.close()
         logging.info("Learning curve plot → %s", out)
     except Exception as exc:
         logging.warning("Learning curve plot failed: %s", exc)
@@ -242,6 +252,7 @@ def _plot_learning_curve(cfg):
 def _run_acmg_mapper(X_sample, shap_vals, feature_names, cfg):
     try:
         from src.scientific.acmg_mapper import ACMGMapper
+
         acmg = ACMGMapper()
         n = min(5, len(X_sample))
         acmg_results = acmg.classify_batch(
@@ -260,20 +271,26 @@ def _run_acmg_mapper(X_sample, shap_vals, feature_names, cfg):
 def _run_ood_detector(X_scaled, X_sample, feature_names, cfg):
     try:
         from src.scientific.ood_detector import OODDetector
+
         ood = OODDetector(z_threshold=3.0, ood_frac_thresh=0.20)
         ood.fit(X_scaled)
         ood_report = ood.detect(X_sample, feature_names=feature_names)
         drift_rpt = ood.drift_report(X_sample, feature_names=feature_names)
         out = cfg.paths.reports_dir / "ood_drift_report.json"
         with open(out, "w", encoding="utf-8") as fh:
-            json.dump({
-                "ood_summary": ood_report["summary"],
-                "n_ood": ood_report["n_ood"],
-                "n_total": ood_report["n_total"],
-                "drift_score": drift_rpt["mean_drift_score"],
-                "drift_flag": drift_rpt["drift_flag"],
-                "top_drifted": drift_rpt["top_drifted_features"],
-            }, fh, indent=2, ensure_ascii=False)
+            json.dump(
+                {
+                    "ood_summary": ood_report["summary"],
+                    "n_ood": ood_report["n_ood"],
+                    "n_total": ood_report["n_total"],
+                    "drift_score": drift_rpt["mean_drift_score"],
+                    "drift_flag": drift_rpt["drift_flag"],
+                    "top_drifted": drift_rpt["top_drifted_features"],
+                },
+                fh,
+                indent=2,
+                ensure_ascii=False,
+            )
         logging.info("OOD/Drift report → %s | %s", out, ood_report["summary"])
     except Exception as exc:
         logging.warning("OOD detector failed: %s", exc)
@@ -282,6 +299,7 @@ def _run_ood_detector(X_scaled, X_sample, feature_names, cfg):
 def _run_pubmed_rag(explain_records, cfg):
     try:
         from src.scientific.pubmed_rag import PubMedRAG
+
         rag = PubMedRAG(cache_ttl=3600)
         first_vid = explain_records[0]["variant_id"] if explain_records else "BRCA1"
         gene = str(first_vid).split("-")[0].split("_")[0]

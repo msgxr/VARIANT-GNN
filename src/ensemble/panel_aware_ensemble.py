@@ -9,6 +9,7 @@ Rules enforced:
   - Deterministic seed used throughout.
   - JSON save/load for artifact persistence.
 """
+
 from __future__ import annotations
 
 import json
@@ -87,9 +88,7 @@ class PanelAwareEnsemble:
         for panel in KNOWN_PANELS:
             mask = panels_arr == panel
             if mask.sum() < 10:
-                logger.warning(
-                    "Panel '%s' has only %d samples; using global weights.", panel, mask.sum()
-                )
+                logger.warning("Panel '%s' has only %d samples; using global weights.", panel, mask.sum())
                 self._panel_weights[panel] = self._global_weights.copy()
                 continue
             w = optimize_weights(
@@ -98,9 +97,7 @@ class PanelAwareEnsemble:
                 seed=self.seed,
             )
             self._panel_weights[panel] = w
-            logger.info(
-                "Panel '%s': n=%d  weights=%s", panel, int(mask.sum()), np.round(w, 4).tolist()
-            )
+            logger.info("Panel '%s': n=%d  weights=%s", panel, int(mask.sum()), np.round(w, 4).tolist())
 
         self._is_fitted = True
         return self
@@ -129,8 +126,7 @@ class PanelAwareEnsemble:
         model_predictions = np.asarray(model_predictions, dtype=float)
         if model_predictions.ndim != 2 or model_predictions.shape[1] != self.n_models:
             raise ValueError(
-                f"model_predictions must be shape (n_samples, {self.n_models}), "
-                f"got {model_predictions.shape}"
+                f"model_predictions must be shape (n_samples, {self.n_models}), got {model_predictions.shape}"
             )
 
         panels = list(panels)

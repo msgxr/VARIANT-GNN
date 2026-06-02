@@ -9,6 +9,7 @@ Canonical locations:
   HybridEnsemble  → src.core.models.ensemble
   VariantGATv2GNN → src.core.models.gnn
 """
+
 from __future__ import annotations
 
 from importlib import import_module

@@ -8,6 +8,7 @@ the reported numbers:
      the shipped models/panel_thresholds.json is flat -> returned {} -> a single
      global threshold was applied to all four panels.
 """
+
 import json
 
 import pytest

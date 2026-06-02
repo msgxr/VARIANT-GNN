@@ -21,6 +21,7 @@ Belirsizlik nicemleme: GATv2 MC-Dropout ile epistemik belirsizlik tahmini.
 Panel bazlı eşik: Her panel (General / Hereditary_Cancer / PAH / CFTR) için
   ayrı optimal eşik kullanılabilir (predict_with_panel_threshold()).
 """
+
 from __future__ import annotations
 
 import logging
@@ -60,6 +61,7 @@ def _dnn_predict_proba(
 def _build_knn_graph(X_scaled: np.ndarray, knn_k: int):
     """X_scaled üzerinde k-NN örnek grafiği kurar (PyG Data nesnesi)."""
     from src.core.graph.builder import SampleKNNGraphBuilder
+
     return SampleKNNGraphBuilder(k=knn_k).build(X_scaled, y=None)
 
 
@@ -86,28 +88,29 @@ class HybridEnsemble:
 
     # TEKNOFEST §3.2: desteklenen 4 panel
     KNOWN_PANELS: Tuple[str, ...] = (
-        "General", "Hereditary_Cancer", "PAH", "CFTR",
+        "General",
+        "Hereditary_Cancer",
+        "PAH",
+        "CFTR",
     )
 
     def __init__(
         self,
-        xgb_model:  Optional[xgb.XGBClassifier] = None,
-        lgbm_model: Optional[Any]                = None,
-        gnn_model:  Optional[VariantGATv2GNN]    = None,
-        dnn_model:  Optional[VariantDNN]          = None,
-        weights:    Optional[List[float]]         = None,
-        device:     Optional[torch.device]        = None,
+        xgb_model: Optional[xgb.XGBClassifier] = None,
+        lgbm_model: Optional[Any] = None,
+        gnn_model: Optional[VariantGATv2GNN] = None,
+        dnn_model: Optional[VariantDNN] = None,
+        weights: Optional[List[float]] = None,
+        device: Optional[torch.device] = None,
     ) -> None:
         cfg = get_settings()
 
-        self.xgb  = xgb_model
+        self.xgb = xgb_model
         self.lgbm = lgbm_model
-        self.gnn  = gnn_model
-        self.dnn  = dnn_model
+        self.gnn = gnn_model
+        self.dnn = dnn_model
 
-        self.device = device or torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
+        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Ağırlıkları normalize et; eksikse yapılandırmadan al
         raw_w = list(weights) if weights is not None else list(cfg.ensemble.weights)
@@ -131,8 +134,11 @@ class HybridEnsemble:
 
         logger.info(
             "HybridEnsemble: models=%s, weights=%s, device=%s",
-            [m for m, v in [("XGB", xgb_model), ("LGB", lgbm_model),
-                             ("GNN", gnn_model), ("DNN", dnn_model)] if v is not None],
+            [
+                m
+                for m, v in [("XGB", xgb_model), ("LGB", lgbm_model), ("GNN", gnn_model), ("DNN", dnn_model)]
+                if v is not None
+            ],
             [round(w, 3) for w in self.weights],
             self.device,
         )
@@ -144,8 +150,8 @@ class HybridEnsemble:
     def predict_proba_all(
         self,
         X_scaled: np.ndarray,
-        nuc_ids:  Optional[torch.Tensor] = None,
-        aa_ids:   Optional[torch.Tensor] = None,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> Tuple[
         Optional[np.ndarray],  # xgb  (N, 2)
         Optional[np.ndarray],  # lgbm (N, 2)
@@ -170,36 +176,32 @@ class HybridEnsemble:
         # GNN (GAT v2 — örnek grafiği üzerinde)
         gnn_probs: Optional[np.ndarray] = None
         if self.gnn is not None:
-            gnn_probs = self._gat_predict_proba(
-                X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids
-            )
+            gnn_probs = self._gat_predict_proba(X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids)
 
         # DNN
         dnn_probs: Optional[np.ndarray] = None
         if self.dnn is not None:
-            dnn_probs = _dnn_predict_proba(
-                self.dnn.to(self.device), X_scaled, self.device
-            )
+            dnn_probs = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device)
 
         return xgb_probs, lgb_probs, gnn_probs, dnn_probs
 
     def _gat_predict_proba(
         self,
         X_scaled: np.ndarray,
-        nuc_ids:  Optional[torch.Tensor] = None,
-        aa_ids:   Optional[torch.Tensor] = None,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> np.ndarray:
         """
         VariantGATv2GNN'den örnek k-NN grafiği üzerinde olasılık döndür.
         Tek satırlık batch'ler de güvenle çalışır (BatchNorm bypass).
         """
-        cfg   = get_settings()
+        cfg = get_settings()
         knn_k = getattr(cfg.gnn, "knn_k", 10)
-        data  = _build_knn_graph(X_scaled, knn_k)
+        data = _build_knn_graph(X_scaled, knn_k)
 
         model = self.gnn.to(self.device)
         model.eval()
-        data  = data.to(self.device)
+        data = data.to(self.device)
 
         with torch.no_grad():
             kwargs: Dict[str, Any] = {}
@@ -208,7 +210,7 @@ class HybridEnsemble:
             if aa_ids is not None:
                 kwargs["aa_ids"] = aa_ids.to(self.device)
             logits = model(data.x, data.edge_index, **kwargs)
-            probs  = F.softmax(logits, dim=1).cpu().numpy()
+            probs = F.softmax(logits, dim=1).cpu().numpy()
 
         return probs
 
@@ -218,10 +220,10 @@ class HybridEnsemble:
 
     def combine(
         self,
-        xgb_proba:  Optional[np.ndarray],
-        lgb_proba:  Optional[np.ndarray],
-        gnn_proba:  Optional[np.ndarray],
-        dnn_proba:  Optional[np.ndarray],
+        xgb_proba: Optional[np.ndarray],
+        lgb_proba: Optional[np.ndarray],
+        gnn_proba: Optional[np.ndarray],
+        dnn_proba: Optional[np.ndarray],
     ) -> np.ndarray:
         """
         Baz model olasılıklarını birleştirir.
@@ -236,28 +238,21 @@ class HybridEnsemble:
         """
         # ── Stacking yolu ──────────────────────────────────────────────
         if self.meta_learner is not None:
-            cols = [
-                p[:, 1]
-                for p in [xgb_proba, lgb_proba, gnn_proba, dnn_proba]
-                if p is not None
-            ]
+            cols = [p[:, 1] for p in [xgb_proba, lgb_proba, gnn_proba, dnn_proba] if p is not None]
             if len(cols) >= 2:
                 try:
-                    meta_X    = np.column_stack(cols)            # (N, n_models)
+                    meta_X = np.column_stack(cols)  # (N, n_models)
                     meta_proba = self.meta_learner.predict_proba(meta_X)  # (N, 2)
                     return meta_proba
                 except Exception as exc:
-                    logger.warning(
-                        "Meta-öğrenici tahmin başarısız (%s) — "
-                        "ağırlıklı ortalamaya geçildi.", exc
-                    )
+                    logger.warning("Meta-öğrenici tahmin başarısız (%s) — ağırlıklı ortalamaya geçildi.", exc)
 
         # ── Ağırlıklı ortalama ────────────────────────────────────────
         pairs = [
-            (xgb_proba,  self.weights[0]),
-            (lgb_proba,  self.weights[1]),
-            (gnn_proba,  self.weights[2]),
-            (dnn_proba,  self.weights[3]),
+            (xgb_proba, self.weights[0]),
+            (lgb_proba, self.weights[1]),
+            (gnn_proba, self.weights[2]),
+            (dnn_proba, self.weights[3]),
         ]
         available = [(p, w) for p, w in pairs if p is not None]
         if not available:
@@ -272,13 +267,11 @@ class HybridEnsemble:
 
         # Model eksikse agirliklar yeniden normalize edilir — bunu logla
         if len(available) < 4:
-            active_names = [
-                name for (p, _), name in zip(pairs, ["XGB", "LGB", "GNN", "DNN"])
-                if p is not None
-            ]
+            active_names = [name for (p, _), name in zip(pairs, ["XGB", "LGB", "GNN", "DNN"]) if p is not None]
             logger.debug(
                 "Ensemble: %d/4 model aktif (%s), agirliklar yeniden normalize edildi.",
-                len(available), active_names,
+                len(available),
+                active_names,
             )
 
         return sum((w / total_w) * p for p, w in available)
@@ -289,10 +282,10 @@ class HybridEnsemble:
 
     def predict(
         self,
-        X_scaled:  np.ndarray,
+        X_scaled: np.ndarray,
         threshold: float = 0.50,
-        nuc_ids:   Optional[torch.Tensor] = None,
-        aa_ids:    Optional[torch.Tensor] = None,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Klasik ensemble tahmini.
@@ -311,9 +304,7 @@ class HybridEnsemble:
         """
         # Threshold sinir koruması
         if not (0.0 <= threshold <= 1.0):
-            logger.warning(
-                "Gecersiz threshold=%.4f; [0.0, 1.0] araligina clip ediliyor.", threshold
-            )
+            logger.warning("Gecersiz threshold=%.4f; [0.0, 1.0] araligina clip ediliyor.", threshold)
             threshold = float(np.clip(threshold, 0.0, 1.0))
         xp, lp, gp, dp = self.predict_proba_all(X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids)
         proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
@@ -322,11 +313,11 @@ class HybridEnsemble:
 
     def predict_with_uncertainty(
         self,
-        X_scaled:  np.ndarray,
-        n_iter:    int   = 15,
+        X_scaled: np.ndarray,
+        n_iter: int = 15,
         threshold: float = 0.50,
-        nuc_ids:   Optional[torch.Tensor] = None,
-        aa_ids:    Optional[torch.Tensor] = None,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         MC-Dropout ile epistemik belirsizlik nicemleme.
@@ -349,15 +340,15 @@ class HybridEnsemble:
         if self.gnn is None:
             # GNN yoksa normal tahmine geri dön, sıfır belirsizlik
             preds, proba = self.predict(X_scaled, threshold=threshold)
-            uncertainty  = np.zeros(len(X_scaled), dtype=np.float32)
+            uncertainty = np.zeros(len(X_scaled), dtype=np.float32)
             return preds, proba, uncertainty
 
-        cfg   = get_settings()
+        cfg = get_settings()
         knn_k = getattr(cfg.gnn, "knn_k", 10)
-        data  = _build_knn_graph(X_scaled, knn_k)
+        data = _build_knn_graph(X_scaled, knn_k)
 
         model = self.gnn.to(self.device)
-        data  = data.to(self.device)
+        data = data.to(self.device)
 
         kwargs: Dict[str, Any] = {}
         if nuc_ids is not None:
@@ -366,33 +357,27 @@ class HybridEnsemble:
             kwargs["aa_ids"] = aa_ids.to(self.device)
 
         # GNN MC-Dropout
-        gnn_mean, gnn_std = model.predict_with_uncertainty(
-            data.x, data.edge_index, n_iter=n_iter, **kwargs
-        )
-        gnn_probs     = gnn_mean.cpu().numpy()   # (N, 2)
-        uncertainty   = gnn_std[:, 1].cpu().numpy()  # P(Pathogenic) std
+        gnn_mean, gnn_std = model.predict_with_uncertainty(data.x, data.edge_index, n_iter=n_iter, **kwargs)
+        gnn_probs = gnn_mean.cpu().numpy()  # (N, 2)
+        uncertainty = gnn_std[:, 1].cpu().numpy()  # P(Pathogenic) std
 
         # Diğer modeller (tek pass)
-        xp = self.xgb.predict_proba(X_scaled) if self.xgb  is not None else None
+        xp = self.xgb.predict_proba(X_scaled) if self.xgb is not None else None
         lp = self.lgbm.predict_proba(X_scaled) if self.lgbm is not None else None
-        dp = _dnn_predict_proba(
-            self.dnn.to(self.device), X_scaled, self.device
-        ) if self.dnn is not None else None
+        dp = _dnn_predict_proba(self.dnn.to(self.device), X_scaled, self.device) if self.dnn is not None else None
 
-        proba = self.combine(
-            xgb_proba=xp, lgb_proba=lp, gnn_proba=gnn_probs, dnn_proba=dp
-        )
+        proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gnn_probs, dnn_proba=dp)
         preds = (proba[:, 1] >= threshold).astype(int)
 
         return preds, proba, uncertainty
 
     def predict_with_panel_threshold(
         self,
-        X_scaled:    np.ndarray,
+        X_scaled: np.ndarray,
         panel_labels: Sequence[str],
         default_threshold: float = 0.50,
-        nuc_ids:    Optional[torch.Tensor] = None,
-        aa_ids:     Optional[torch.Tensor] = None,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Panel bazlı optimal eşiklerle tahmin.
@@ -409,14 +394,12 @@ class HybridEnsemble:
         preds : (N,) binary tahminler.
         proba : (N, 2) birleşik olasılık matrisi.
         """
-        xp, lp, gp, dp = self.predict_proba_all(
-            X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids
-        )
+        xp, lp, gp, dp = self.predict_proba_all(X_scaled, nuc_ids=nuc_ids, aa_ids=aa_ids)
         proba = self.combine(xgb_proba=xp, lgb_proba=lp, gnn_proba=gp, dnn_proba=dp)
 
         preds = np.empty(len(X_scaled), dtype=int)
         for i, panel in enumerate(panel_labels):
-            thr      = self.panel_thresholds.get(panel, default_threshold)
+            thr = self.panel_thresholds.get(panel, default_threshold)
             preds[i] = int(proba[i, 1] >= thr)
 
         return preds, proba
@@ -427,11 +410,11 @@ class HybridEnsemble:
 
     def optimise_weights(
         self,
-        X_val:  np.ndarray,
-        loader: Any,          # API uyumluluğu için — None geçin
-        y_val:  np.ndarray,
-        nuc_ids:  Optional[torch.Tensor] = None,
-        aa_ids:   Optional[torch.Tensor] = None,
+        X_val: np.ndarray,
+        loader: Any,  # API uyumluluğu için — None geçin
+        y_val: np.ndarray,
+        nuc_ids: Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
         n_iter_nm: int = 600,
     ) -> None:
         """
@@ -447,11 +430,9 @@ class HybridEnsemble:
         y_val      : Doğrulama etiketleri (0=Benign, 1=Pathogenic).
         n_iter_nm  : Nelder-Mead maksimum iterasyon sayısı.
         """
-        xp, lp, gp, dp = self.predict_proba_all(
-            X_val, nuc_ids=nuc_ids, aa_ids=aa_ids
-        )
-        matrices   = [xp, lp, gp, dp]
-        avail_idx  = [i for i, m in enumerate(matrices) if m is not None]
+        xp, lp, gp, dp = self.predict_proba_all(X_val, nuc_ids=nuc_ids, aa_ids=aa_ids)
+        matrices = [xp, lp, gp, dp]
+        avail_idx = [i for i, m in enumerate(matrices) if m is not None]
 
         if len(avail_idx) < 2:
             logger.info(
@@ -465,23 +446,29 @@ class HybridEnsemble:
         def _neg_binary_f1(w_raw: np.ndarray) -> float:
             """§7.3: Binary F1 (Pathogenic, pos_label=1) negatifi."""
             from src.evaluation.metrics import find_best_threshold as _fbt
-            w       = np.abs(w_raw)
-            w       = w / (w.sum() + 1e-12)
+
+            w = np.abs(w_raw)
+            w = w / (w.sum() + 1e-12)
             blended = sum(wi * mi for wi, mi in zip(w, avail_m))
             # Sabit 0.5 değil — val üzerinde optimal eşik bul (daha doğru optimizasyon)
             try:
                 thr, _ = _fbt(y_val, blended[:, 1], metric="f1", n_steps=50)
             except Exception:
                 thr = 0.5
-            preds   = (blended[:, 1] >= thr).astype(int)
+            preds = (blended[:, 1] >= thr).astype(int)
             return -f1_score(
-                y_val, preds,
-                average="binary", pos_label=1, zero_division=0,
+                y_val,
+                preds,
+                average="binary",
+                pos_label=1,
+                zero_division=0,
             )
 
-        x0     = np.array([self.weights[i] for i in avail_idx])
+        x0 = np.array([self.weights[i] for i in avail_idx])
         result = minimize(
-            _neg_binary_f1, x0, method="Nelder-Mead",
+            _neg_binary_f1,
+            x0,
+            method="Nelder-Mead",
             options={"maxiter": n_iter_nm, "xatol": 1e-5, "fatol": 1e-5},
         )
 
@@ -496,7 +483,8 @@ class HybridEnsemble:
 
         logger.info(
             "optimise_weights: ağırlıklar=%s  (val Binary F1=%.4f)",
-            [round(w, 4) for w in self.weights], -result.fun,
+            [round(w, 4) for w in self.weights],
+            -result.fun,
         )
 
     # ------------------------------------------------------------------
@@ -505,10 +493,10 @@ class HybridEnsemble:
 
     def optimise_panel_thresholds(
         self,
-        X_val:        np.ndarray,
-        y_val:        np.ndarray,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
         panel_labels: Sequence[str],
-        n_steps:      int = 200,
+        n_steps: int = 200,
     ) -> Dict[str, float]:
         """
         Her panel için F1-optimal sınıflandırma eşiği bul.
@@ -529,26 +517,31 @@ class HybridEnsemble:
         ``self.panel_thresholds`` da güncellenir.
         """
         _, proba = self.predict(X_val, threshold=0.5)
-        p1       = proba[:, 1]
+        p1 = proba[:, 1]
         panels_arr = np.array(panel_labels)
         thresholds = np.linspace(0.01, 0.99, n_steps)
 
         results: Dict[str, float] = {}
 
         # Global (tüm paneller)
-        f1_global = np.array([
-            f1_score(
-                y_val,
-                (p1 >= thr).astype(int),
-                average="binary", pos_label=1, zero_division=0,
-            )
-            for thr in thresholds
-        ])
+        f1_global = np.array(
+            [
+                f1_score(
+                    y_val,
+                    (p1 >= thr).astype(int),
+                    average="binary",
+                    pos_label=1,
+                    zero_division=0,
+                )
+                for thr in thresholds
+            ]
+        )
         best_global = float(thresholds[np.argmax(f1_global)])
         results["__global__"] = best_global
         logger.info(
             "Panel __global__: optimal eşik=%.3f  F1=%.4f",
-            best_global, f1_global.max(),
+            best_global,
+            f1_global.max(),
         )
 
         # Panel bazlı
@@ -558,25 +551,33 @@ class HybridEnsemble:
                 results[panel] = best_global
                 logger.warning(
                     "Panel %s: yetersiz örnek (%d) — global eşik kullanıldı.",
-                    panel, mask.sum(),
+                    panel,
+                    mask.sum(),
                 )
                 continue
 
-            y_p  = y_val[mask]
+            y_p = y_val[mask]
             p1_p = p1[mask]
-            f1_p = np.array([
-                f1_score(
-                    y_p,
-                    (p1_p >= thr).astype(int),
-                    average="binary", pos_label=1, zero_division=0,
-                )
-                for thr in thresholds
-            ])
+            f1_p = np.array(
+                [
+                    f1_score(
+                        y_p,
+                        (p1_p >= thr).astype(int),
+                        average="binary",
+                        pos_label=1,
+                        zero_division=0,
+                    )
+                    for thr in thresholds
+                ]
+            )
             best_p = float(thresholds[np.argmax(f1_p)])
             results[panel] = best_p
             logger.info(
                 "Panel %-22s: optimal eşik=%.3f  F1=%.4f  (n=%d)",
-                panel, best_p, f1_p.max(), mask.sum(),
+                panel,
+                best_p,
+                f1_p.max(),
+                mask.sum(),
             )
 
         self.panel_thresholds = results
@@ -591,7 +592,7 @@ class HybridEnsemble:
         X_val: np.ndarray,
         y_val: np.ndarray,
         nuc_ids: Optional[torch.Tensor] = None,
-        aa_ids:  Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> None:
         """
         Doğrulama kümesi tahminleri üzerine LogisticRegression meta-öğrenicisi eğit.
@@ -606,14 +607,8 @@ class HybridEnsemble:
         """
         from sklearn.linear_model import LogisticRegression
 
-        xp, lp, gp, dp = self.predict_proba_all(
-            X_val, nuc_ids=nuc_ids, aa_ids=aa_ids
-        )
-        cols = [
-            p[:, 1]
-            for p in [xp, lp, gp, dp]
-            if p is not None
-        ]
+        xp, lp, gp, dp = self.predict_proba_all(X_val, nuc_ids=nuc_ids, aa_ids=aa_ids)
+        cols = [p[:, 1] for p in [xp, lp, gp, dp] if p is not None]
         if len(cols) < 2:
             logger.info(
                 "fit_meta_learner: en az 2 aktif model gerekli (%d mevcut) — atlandı.",
@@ -621,26 +616,31 @@ class HybridEnsemble:
             )
             return
 
-        meta_X = np.column_stack(cols)   # (N, n_active_models)
-        lr     = LogisticRegression(
+        meta_X = np.column_stack(cols)  # (N, n_active_models)
+        lr = LogisticRegression(
             C=1.0,
             solver="lbfgs",
             max_iter=1000,
             random_state=42,
-            class_weight="balanced",   # dengeli veri için gereksiz ama zararsız
+            class_weight="balanced",  # dengeli veri için gereksiz ama zararsız
         )
         lr.fit(meta_X, y_val)
         self.meta_learner = lr
 
         # Eğitim sonrası doğrulama Binary F1 (§7.3)
         meta_preds = lr.predict(meta_X)
-        meta_f1    = f1_score(
-            y_val, meta_preds,
-            average="binary", pos_label=1, zero_division=0,
+        meta_f1 = f1_score(
+            y_val,
+            meta_preds,
+            average="binary",
+            pos_label=1,
+            zero_division=0,
         )
         logger.info(
             "fit_meta_learner: %d örnek, %d model kolonu → val Binary F1=%.4f",
-            len(y_val), meta_X.shape[1], meta_f1,
+            len(y_val),
+            meta_X.shape[1],
+            meta_f1,
         )
 
     def fit_meta_learner_from_oof(
@@ -672,12 +672,16 @@ class HybridEnsemble:
         lr.fit(oof_predictions, np.asarray(y).astype(int))
         self.meta_learner = lr
         meta_f1 = f1_score(
-            np.asarray(y).astype(int), lr.predict(oof_predictions),
-            average="binary", pos_label=1, zero_division=0,
+            np.asarray(y).astype(int),
+            lr.predict(oof_predictions),
+            average="binary",
+            pos_label=1,
+            zero_division=0,
         )
         logger.info(
             "fit_meta_learner_from_oof (GENUINE OOF stacking): %d örnek → OOF Binary F1=%.4f",
-            len(y), meta_f1,
+            len(y),
+            meta_f1,
         )
 
     # ------------------------------------------------------------------
@@ -697,8 +701,8 @@ class HybridEnsemble:
 
     def score(
         self,
-        X_scaled:  np.ndarray,
-        y_true:    np.ndarray,
+        X_scaled: np.ndarray,
+        y_true: np.ndarray,
         threshold: float = 0.50,
     ) -> float:
         """
@@ -709,8 +713,11 @@ class HybridEnsemble:
         preds, _ = self.predict(X_scaled, threshold=threshold)
         return float(
             f1_score(
-                y_true, preds,
-                average="binary", pos_label=1, zero_division=0,
+                y_true,
+                preds,
+                average="binary",
+                pos_label=1,
+                zero_division=0,
             )
         )
 
@@ -726,17 +733,10 @@ class HybridEnsemble:
             ]
             if model is not None
         ]
-        weights_str = " | ".join(
-            f"{n}={w:.3f}"
-            for n, w in zip(
-                ["XGB", "LGB", "GNN", "DNN"], self.weights
-            )
-        )
+        weights_str = " | ".join(f"{n}={w:.3f}" for n, w in zip(["XGB", "LGB", "GNN", "DNN"], self.weights))
         meta = "MetaLearner=AKTIF" if self.meta_learner is not None else "MetaLearner=YOK"
         panel_thr = (
-            f"PanelEşikler={list(self.panel_thresholds.keys())}"
-            if self.panel_thresholds
-            else "PanelEşikler=YOK"
+            f"PanelEşikler={list(self.panel_thresholds.keys())}" if self.panel_thresholds else "PanelEşikler=YOK"
         )
         return (
             f"HybridEnsemble[\n"

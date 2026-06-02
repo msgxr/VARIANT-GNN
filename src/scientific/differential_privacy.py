@@ -29,6 +29,7 @@ Kullanım:
     # Privacy raporu
     print(dp.privacy_report())
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -41,8 +42,12 @@ logger = logging.getLogger(__name__)
 
 # KVKK uyumlu önerilen hassas özellikler (popülasyon frekansı + klinik)
 _DEFAULT_SENSITIVE = [
-    "gnomAD_exomes_AF", "gnomAD_exomes_AF_afr", "gnomAD_exomes_AF_eur",
-    "gnomAD_exomes_AF_eas", "gnomAD_exomes_AF_sas", "gnomAD_exomes_AF_amr",
+    "gnomAD_exomes_AF",
+    "gnomAD_exomes_AF_afr",
+    "gnomAD_exomes_AF_eur",
+    "gnomAD_exomes_AF_eas",
+    "gnomAD_exomes_AF_sas",
+    "gnomAD_exomes_AF_amr",
     "ExAC_AF",
 ]
 
@@ -62,31 +67,31 @@ class DifferentialPrivacy:
 
     PRIVACY_LEVELS: Dict[str, float] = {
         "maksimum": 0.1,
-        "yüksek":   0.5,
+        "yüksek": 0.5,
         "standart": 1.0,
-        "düşük":    2.0,
+        "düşük": 2.0,
         "çok düşük": 5.0,
     }
 
     def __init__(
         self,
-        epsilon:            float              = 1.0,
-        sensitivity:        Optional[float]   = None,
+        epsilon: float = 1.0,
+        sensitivity: Optional[float] = None,
         sensitive_features: Optional[List[str]] = None,
-        clip_to_range:      bool              = True,
-        seed:               Optional[int]     = None,
+        clip_to_range: bool = True,
+        seed: Optional[int] = None,
     ) -> None:
         if epsilon <= 0:
             raise ValueError(f"epsilon > 0 olmalıdır, {epsilon} verildi.")
 
-        self.epsilon            = epsilon
-        self.sensitivity        = sensitivity
+        self.epsilon = epsilon
+        self.sensitivity = sensitivity
         self.sensitive_features = sensitive_features
-        self.clip_to_range      = clip_to_range
-        self._rng               = np.random.default_rng(seed)
+        self.clip_to_range = clip_to_range
+        self._rng = np.random.default_rng(seed)
 
         # Takip
-        self._n_queries:   int   = 0
+        self._n_queries: int = 0
         self._budget_used: float = 0.0
         self._total_budget_target: float = 10.0  # toplam bütçe hedefi
 
@@ -103,9 +108,9 @@ class DifferentialPrivacy:
     # ── Ana uygulama ─────────────────────────────────────────────────────────
     def apply(
         self,
-        X:             np.ndarray,
+        X: np.ndarray,
         feature_names: Optional[List[str]] = None,
-        return_mask:   bool = False,
+        return_mask: bool = False,
     ) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
         """
         Veri matriksine Laplace gürültüsü ekle.
@@ -127,9 +132,7 @@ class DifferentialPrivacy:
         # Hangi sütunlara gürültü eklenecek?
         if self.sensitive_features is not None and feature_names is not None:
             sf_lower = {s.lower() for s in self.sensitive_features}
-            col_mask = np.array([
-                (fn.lower() in sf_lower) for fn in feature_names[:F]
-            ], dtype=bool)
+            col_mask = np.array([(fn.lower() in sf_lower) for fn in feature_names[:F]], dtype=bool)
         else:
             col_mask = np.ones(F, dtype=bool)  # Hepsi
 
@@ -146,7 +149,11 @@ class DifferentialPrivacy:
 
         logger.info(
             "DP Laplace: ε=%.2f, Δf=%.4f, scale=%.4f, %d/%d sütun",
-            self.epsilon, delta, scale, n_noised, F,
+            self.epsilon,
+            delta,
+            scale,
+            n_noised,
+            F,
         )
 
         # Gürültü ekle
@@ -163,9 +170,9 @@ class DifferentialPrivacy:
                 X_in[:, ci] = np.clip(X_in[:, ci], lo, hi)
 
         # Bütçe takibi
-        self._n_queries    += 1
-        self._budget_used  += self.epsilon
-        X_in                = np.nan_to_num(X_in, nan=0.0)
+        self._n_queries += 1
+        self._budget_used += self.epsilon
+        X_in = np.nan_to_num(X_in, nan=0.0)
 
         if return_mask:
             return X_in, col_mask
@@ -174,8 +181,8 @@ class DifferentialPrivacy:
     # ── Sadece seçili satırlar ────────────────────────────────────────────────
     def apply_to_rows(
         self,
-        X:             np.ndarray,
-        row_indices:   np.ndarray,
+        X: np.ndarray,
+        row_indices: np.ndarray,
         feature_names: Optional[List[str]] = None,
     ) -> np.ndarray:
         """Sadece belirli satırlara (varyantlara) DP uygula."""
@@ -198,24 +205,26 @@ class DifferentialPrivacy:
                 break
 
         return {
-            "mechanism":          "Laplace",
-            "epsilon":            self.epsilon,
-            "privacy_level":      level,
-            "sensitivity":        self.sensitivity or "otomatik",
-            "scale":              (self.sensitivity or 1.0) / self.epsilon,
-            "n_queries":          self._n_queries,
+            "mechanism": "Laplace",
+            "epsilon": self.epsilon,
+            "privacy_level": level,
+            "sensitivity": self.sensitivity or "otomatik",
+            "scale": (self.sensitivity or 1.0) / self.epsilon,
+            "n_queries": self._n_queries,
             "cumulative_epsilon": round(self._budget_used, 4),
             "sensitive_features": self.sensitive_features or "tüm özellikler",
             "compliance": {
-                "KVKK":  "Madde 6 — Özel nitelikli KVK korunması",
-                "GDPR":  "Madde 89 — İstatistiksel amaçlı güvence",
+                "KVKK": "Madde 6 — Özel nitelikli KVK korunması",
+                "GDPR": "Madde 89 — İstatistiksel amaçlı güvence",
                 "HIPAA": "45 CFR §164.514 — Safe Harbor anonymization",
             },
             "recommendation": (
                 f"ε={self.epsilon} ile gizlilik seviyesi: {level}. "
-                + ("Tıbbi veri için ε ≤ 2.0 önerilir."
-                   if self.epsilon > 2.0 else
-                   "Tıbbi veri için uygun gizlilik seviyesi.")
+                + (
+                    "Tıbbi veri için ε ≤ 2.0 önerilir."
+                    if self.epsilon > 2.0
+                    else "Tıbbi veri için uygun gizlilik seviyesi."
+                )
             ),
         }
 
@@ -224,10 +233,10 @@ class DifferentialPrivacy:
     def recommended_epsilon(data_sensitivity: str = "medical") -> float:
         """Veri hassasiyetine göre önerilen epsilon değeri döner."""
         table = {
-            "medical":     1.0,
-            "genetic":     0.5,
-            "aggregate":   5.0,
-            "public":     10.0,
+            "medical": 1.0,
+            "genetic": 0.5,
+            "aggregate": 5.0,
+            "public": 10.0,
         }
         return table.get(data_sensitivity, 1.0)
 

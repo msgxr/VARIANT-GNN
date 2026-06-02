@@ -11,6 +11,7 @@ from .triage import ALL_FLAGS, TriageEngine
 def __getattr__(name: str):
     if name == "InferencePipeline":
         from src.api.pipeline import InferencePipeline  # lazy — döngüsel import önlenir
+
         return InferencePipeline
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

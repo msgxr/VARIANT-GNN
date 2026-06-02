@@ -21,6 +21,7 @@ Kullanım:
   feature_names.json, threshold.json, manifest.json,
   panel_ensemble_weights.json, reports/leakage_report_train.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,8 +37,8 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.reproducibility import setup_reproducibility
-from src.utils.logging_cfg import setup_logging
+from src.utils.logging_cfg import setup_logging  # noqa: E402
+from src.utils.reproducibility import setup_reproducibility  # noqa: E402
 
 setup_logging()
 logger = logging.getLogger("scripts.train_pdr")
@@ -46,15 +47,9 @@ logger = logging.getLogger("scripts.train_pdr")
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TEKNOFEST 2026 PDR Training")
     parser.add_argument("--data", required=True, type=Path, help="Labelled training CSV")
-    parser.add_argument(
-        "--output", default=Path("models/final"), type=Path, help="Output model directory"
-    )
-    parser.add_argument(
-        "--config", default=Path("configs/pdr.yaml"), type=Path, help="Config YAML"
-    )
-    parser.add_argument(
-        "--panel", default=None, help="Filter to single panel (optional)"
-    )
+    parser.add_argument("--output", default=Path("models/final"), type=Path, help="Output model directory")
+    parser.add_argument("--config", default=Path("configs/pdr.yaml"), type=Path, help="Config YAML")
+    parser.add_argument("--panel", default=None, help="Filter to single panel (optional)")
     return parser.parse_args()
 
 
@@ -69,6 +64,7 @@ def _load_yaml(path: Path) -> dict:
 def _merge_config(pdr_cfg: dict) -> None:
     """Override project config with PDR-specific values."""
     from src.config import get_settings
+
     cfg = get_settings()
     repro = pdr_cfg.get("reproducibility", {})
     if "seed" in repro:
@@ -91,7 +87,9 @@ def main() -> None:
 
     logger.info(
         "PDR training started | seed=%d  competition_mode=%s  panel_aware=%s",
-        seed, competition_mode, panel_aware,
+        seed,
+        competition_mode,
+        panel_aware,
     )
 
     # ── Validate input path ────────────────────────────────────────────
@@ -104,8 +102,8 @@ def main() -> None:
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # ── Load data ──────────────────────────────────────────────────────
-    from src.data.loader import load_csv
     from src.config import get_settings
+    from src.data.loader import load_csv
 
     cfg = get_settings()
     dataset = load_csv(args.data)
@@ -137,9 +135,9 @@ def main() -> None:
 
     # ── Filter by panel ────────────────────────────────────────────────
     feature_cols = [
-        c for c in clean_df.columns
-        if c not in (cfg.schema.target_column, "Variant_ID", "Panel",
-                     "Nuc_Context", "AA_Context")
+        c
+        for c in clean_df.columns
+        if c not in (cfg.schema.target_column, "Variant_ID", "Panel", "Nuc_Context", "AA_Context")
         and c not in leakage_report.coordinate_hits
     ]
     X = clean_df[feature_cols].values.astype(float)
@@ -149,11 +147,7 @@ def main() -> None:
         logger.error("No labels found in training CSV. Training requires labelled data.")
         sys.exit(1)
 
-    panels = (
-        dataset.metadata["Panel"].values
-        if "Panel" in dataset.metadata.columns
-        else np.array(["General"] * len(X))
-    )
+    panels = dataset.metadata["Panel"].values if "Panel" in dataset.metadata.columns else np.array(["General"] * len(X))
 
     if args.panel:
         mask = panels == args.panel
@@ -161,15 +155,9 @@ def main() -> None:
         logger.info("Filtered to panel '%s': %d samples", args.panel, len(X))
 
     nuc_seqs = (
-        dataset.nuc_sequences
-        if hasattr(dataset, "nuc_sequences") and dataset.nuc_sequences is not None
-        else None
+        dataset.nuc_sequences if hasattr(dataset, "nuc_sequences") and dataset.nuc_sequences is not None else None
     )
-    aa_seqs = (
-        dataset.aa_sequences
-        if hasattr(dataset, "aa_sequences") and dataset.aa_sequences is not None
-        else None
-    )
+    aa_seqs = dataset.aa_sequences if hasattr(dataset, "aa_sequences") and dataset.aa_sequences is not None else None
 
     # ── Train ──────────────────────────────────────────────────────────
     from src.training.trainer import VariantTrainer
@@ -178,17 +166,18 @@ def main() -> None:
     result = trainer.train(X, y, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs)
     logger.info(
         "Training complete: mean CV F1=%.4f ± %.4f",
-        result.mean_cv_f1, result.std_cv_f1,
+        result.mean_cv_f1,
+        result.std_cv_f1,
     )
 
     # ── Calibrate ──────────────────────────────────────────────────────
     from sklearn.model_selection import train_test_split
-    from src.scientific.calibration.calibrator import EnsembleCalibrator
+
     from src.features.preprocessing import build_preprocessor_from_config
+    from src.scientific.calibration.calibrator import EnsembleCalibrator
 
     idx = np.arange(len(X))
     idx_tr, idx_cal = train_test_split(idx, test_size=0.15, stratify=y, random_state=seed)
-    preprocessor_cal = build_preprocessor_from_config()
     X_cal_proc = result.preprocessor.transform(X[idx_cal])
     _, raw_proba_cal = result.ensemble.predict(X_cal_proc)
     calibrator = EnsembleCalibrator(method=cfg.calibration.method)
@@ -202,14 +191,12 @@ def main() -> None:
     # tüm-veri ensemble proxy'siyle SAHTE dolduruyordu — ikisi de sızıntıydı, kaldırıldı.
     # Bu yan-artefakt artık yalnızca group-aware GERÇEK tree-member (XGB+LGBM) OOF kullanır.
     if panel_aware:
-        from sklearn.model_selection import StratifiedGroupKFold
-        from src.ensemble.panel_aware_ensemble import PanelAwareEnsemble
         import xgboost as _xgb
+        from sklearn.model_selection import StratifiedGroupKFold
 
-        base_ids = (
-            dataset.metadata["Variant_ID"].astype(str)
-            .str.replace(r"_aug\d*$", "", regex=True).values
-        )
+        from src.ensemble.panel_aware_ensemble import PanelAwareEnsemble
+
+        base_ids = dataset.metadata["Variant_ID"].astype(str).str.replace(r"_aug\d*$", "", regex=True).values
         if getattr(args, "panel", None):  # panel maskesi gruplara da uygulanır
             base_ids = base_ids[mask]
 
@@ -227,6 +214,7 @@ def main() -> None:
             oof_preds[val_idx, 0] = xgb_fold.predict_proba(X_val_p)[:, 1]
             try:
                 import lightgbm as _lgb
+
                 lgb_fold = _lgb.LGBMClassifier(**cfg.lgbm.as_dict())
                 lgb_fold.fit(X_tr_p, y_tr_p, callbacks=[_lgb.log_evaluation(-1)])
                 oof_preds[val_idx, 1] = lgb_fold.predict_proba(X_val_p)[:, 1]
@@ -276,7 +264,8 @@ def main() -> None:
         "Run inference: python submission/predict.py "
         "--input data/blind_test.csv --model_dir %s --output submission/predictions.csv "
         "--config %s",
-        args.output, args.config,
+        args.output,
+        args.config,
     )
 
 

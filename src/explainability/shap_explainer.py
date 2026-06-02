@@ -2,6 +2,7 @@
 src/explainability/shap_explainer.py
 SHAP-based XAI with safe fallback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import shap
+
     _SHAP_AVAILABLE = True
 except ImportError:
     _SHAP_AVAILABLE = False
@@ -38,10 +40,10 @@ class SHAPExplainer:
         feature_names: Optional[List[str]] = None,
         training_data: Optional[np.ndarray] = None,
     ) -> None:
-        self._model        = xgb_model
+        self._model = xgb_model
         self.feature_names = feature_names
         self.training_data = training_data
-        self._explainer    = None
+        self._explainer = None
 
         if _SHAP_AVAILABLE:
             try:
@@ -68,9 +70,7 @@ class SHAPExplainer:
             return None
 
     # ------------------------------------------------------------------
-    def get_top_features(
-        self, X: np.ndarray, top_n: int = 10
-    ) -> List[Tuple[str, float]]:
+    def get_top_features(self, X: np.ndarray, top_n: int = 10) -> List[Tuple[str, float]]:
         """Return list of (feature_name, mean_abs_shap) sorted descending."""
         if self._explainer is None:
             return []
@@ -79,8 +79,8 @@ class SHAPExplainer:
             if isinstance(sv, list):
                 sv = np.array(sv[1])
             mean_abs = np.mean(np.abs(sv), axis=0)
-            names    = self._names(len(mean_abs))
-            ranked   = sorted(zip(names, mean_abs.tolist()), key=lambda t: t[1], reverse=True)
+            names = self._names(len(mean_abs))
+            ranked = sorted(zip(names, mean_abs.tolist()), key=lambda t: t[1], reverse=True)
             return ranked[:top_n]
         except Exception as exc:
             logger.warning("get_top_features failed: %s", exc)
@@ -120,22 +120,26 @@ class SHAPExplainer:
             sv = np.array(sv).flatten()
 
             try:
-                bv = (base_value_override
-                      if base_value_override is not None
-                      else float(self._explainer.expected_value
-                                 if not isinstance(self._explainer.expected_value, (list, np.ndarray))
-                                 else self._explainer.expected_value[1]))
+                bv = (
+                    base_value_override
+                    if base_value_override is not None
+                    else float(
+                        self._explainer.expected_value
+                        if not isinstance(self._explainer.expected_value, (list, np.ndarray))
+                        else self._explainer.expected_value[1]
+                    )
+                )
             except Exception:
                 bv = 0.0
 
-            names = (feature_names or self._names(len(sv)))
+            names = feature_names or self._names(len(sv))
 
             features = [
                 {
-                    "name":      n,
+                    "name": n,
                     "shap_value": round(float(v), 5),
-                    "abs_shap":   round(abs(float(v)), 5),
-                    "direction":  "Patojenik" if v > 0.001 else ("Benign" if v < -0.001 else "Nötr"),
+                    "abs_shap": round(abs(float(v)), 5),
+                    "direction": "Patojenik" if v > 0.001 else ("Benign" if v < -0.001 else "Nötr"),
                 }
                 for n, v in zip(names, sv)
             ]
@@ -144,9 +148,9 @@ class SHAPExplainer:
             top_neg = [f for f in features_sorted if f["direction"] == "Benign"][:5]
 
             return {
-                "base_value":   round(bv, 5),
-                "shap_sum":     round(float(sv.sum()), 5),
-                "features":     features_sorted,
+                "base_value": round(bv, 5),
+                "shap_sum": round(float(sv.sum()), 5),
+                "features": features_sorted,
                 "top_positive": top_pos,
                 "top_negative": top_neg,
             }
@@ -160,7 +164,7 @@ class SHAPExplainer:
             logger.warning("SHAP explainer not available; skipping summary plot.")
             return
         try:
-            sv    = self._explainer.shap_values(X)
+            sv = self._explainer.shap_values(X)
             names = self._names(X.shape[1])
             os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
             plt.figure(figsize=(10, 6))
@@ -173,9 +177,7 @@ class SHAPExplainer:
             logger.warning("SHAP summary plot failed: %s", exc)
 
     # ------------------------------------------------------------------
-    def plot_waterfall(
-        self, x_instance: np.ndarray, output_path: str = "reports/shap_waterfall.png"
-    ) -> None:
+    def plot_waterfall(self, x_instance: np.ndarray, output_path: str = "reports/shap_waterfall.png") -> None:
         if self._explainer is None:
             return
         try:

@@ -17,6 +17,7 @@ Loader (src/data/loader.py) `Panel` kolonunu görürse otomatik
 Panel_General / Panel_Hereditary_Cancer / Panel_PAH / Panel_CFTR
 one-hot özellikleri ekler.
 """
+
 from __future__ import annotations
 
 import sys
@@ -25,14 +26,14 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RAW_DIR   = REPO_ROOT / "data" / "raw"
-OUT_PATH  = REPO_ROOT / "data" / "train_variants.csv"
+RAW_DIR = REPO_ROOT / "data" / "raw"
+OUT_PATH = REPO_ROOT / "data" / "train_variants.csv"
 
 PANEL_MAP = {
     "YARISMA_TRAIN_MASTER.csv": "General",
     "YARISMA_TRAIN_KANSER.csv": "Hereditary_Cancer",
-    "YARISMA_TRAIN_PAH.csv":    "PAH",
-    "YARISMA_TRAIN_CFTR.csv":   "CFTR",
+    "YARISMA_TRAIN_PAH.csv": "PAH",
+    "YARISMA_TRAIN_CFTR.csv": "CFTR",
 }
 
 
@@ -52,7 +53,9 @@ def main() -> int:
         if "Label" in df.columns:
             df["Label"] = df["Label"].astype("Int64")
         frames.append(df)
-        print(f"  {fname:32s}  shape={df.shape}  Panel='{panel}'  Label dağılımı={df['Label'].value_counts().to_dict()}")
+        print(
+            f"  {fname:32s}  shape={df.shape}  Panel='{panel}'  Label dağılımı={df['Label'].value_counts().to_dict()}"
+        )
 
     merged = pd.concat(frames, ignore_index=True)
 
@@ -70,11 +73,11 @@ def main() -> int:
     print(f"Birleştirildi → {OUT_PATH}")
     print(f"Toplam satır: {len(merged):,}")
     print(f"Toplam kolon: {len(merged.columns)}  (Variant_ID + Panel + 351 AL_X + Label)")
-    print(f"Panel dağılımı:")
+    print("Panel dağılımı:")
     print(merged["Panel"].value_counts().to_string())
-    print(f"\nSınıf dağılımı (Label):")
+    print("\nSınıf dağılımı (Label):")
     print(merged["Label"].value_counts().to_string())
-    print(f"\nPanel × Label çapraz tablosu:")
+    print("\nPanel × Label çapraz tablosu:")
     print(pd.crosstab(merged["Panel"], merged["Label"]).to_string())
     return 0
 

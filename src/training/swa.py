@@ -26,11 +26,12 @@ Implementation:
   - Integration hooks: trainer._train_gatv2 and trainer._train_dnn call
     ``swa_buffer.push(epoch, model)`` when epoch >= swa_start_epoch.
 """
+
 from __future__ import annotations
 
 import logging
 from collections import deque
-from typing import Deque, Dict, Iterator, List
+from typing import Deque, Dict, Iterator
 
 import numpy as np
 import torch
@@ -72,7 +73,7 @@ class SWABuffer:
         if not 0.0 <= swa_start_fraction < 1.0:
             raise ValueError("swa_start_fraction must be in [0, 1).")
         self.swa_start_fraction = swa_start_fraction
-        self.max_checkpoints    = max_checkpoints
+        self.max_checkpoints = max_checkpoints
         self._checkpoints: Deque[Dict[str, torch.Tensor]] = deque(maxlen=max_checkpoints)
         self._n_collected: int = 0
 
@@ -100,10 +101,7 @@ class SWABuffer:
             return False
 
         # Deep-copy state dict to CPU to avoid GPU memory pressure.
-        sd = {
-            k: v.detach().cpu().clone()
-            for k, v in model.state_dict().items()
-        }
+        sd = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
         self._checkpoints.append(sd)  # deque(maxlen) otomatik evict eder
         self._n_collected += 1
         return True
@@ -129,8 +127,7 @@ class SWABuffer:
         n = len(self._checkpoints)
         if n < 2:
             logger.warning(
-                "SWA: only %d checkpoint(s) collected (need ≥ 2) — "
-                "returning original model unchanged.",
+                "SWA: only %d checkpoint(s) collected (need ≥ 2) — returning original model unchanged.",
                 n,
             )
             return model
@@ -248,9 +245,9 @@ class CyclicSWAScheduler:
         lr_max: float = 5e-3,
         cycle_length: int = 5,
     ) -> None:
-        self.optimizer    = optimizer
-        self.lr_min       = lr_min
-        self.lr_max       = lr_max
+        self.optimizer = optimizer
+        self.lr_min = lr_min
+        self.lr_max = lr_max
         self.cycle_length = cycle_length
 
     def step(self, epoch_in_swa: int) -> float:

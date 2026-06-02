@@ -8,6 +8,7 @@ only on training data, never on validation or test data.
 These tests simulate the exact failure scenario:
 fit-on-full-dataset → inflated metrics (data leakage).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -27,6 +28,7 @@ def _make_split(n_train=200, n_val=50, n_features=15, seed=42):
 # Core leakage tests
 # ---------------------------------------------------------------------------
 
+
 class TestPreprocessorNoLeakage:
     def test_transform_only_on_val_produces_different_result(self):
         """
@@ -34,17 +36,22 @@ class TestPreprocessorNoLeakage:
         than fitting on train data — proving transform-only is enforced.
         """
         from src.features.preprocessing import VariantPreprocessor
+
         X_train, y_train, X_val, _ = _make_split()
 
         pre_correct = VariantPreprocessor(
-            use_autoencoder=False, smote_enabled=False, k_best_features=10,
+            use_autoencoder=False,
+            smote_enabled=False,
+            k_best_features=10,
             use_bio_scoring=False,
         )
         pre_correct.fit_resample_train(X_train, y_train)
         X_val_correct = pre_correct.transform(X_val)
 
         pre_leaked = VariantPreprocessor(
-            use_autoencoder=False, smote_enabled=False, k_best_features=10,
+            use_autoencoder=False,
+            smote_enabled=False,
+            k_best_features=10,
             use_bio_scoring=False,
         )
         pre_leaked.fit_resample_train(X_val, _[: len(X_val)])
@@ -52,13 +59,13 @@ class TestPreprocessorNoLeakage:
 
         # Results must differ (different fit statistics)
         assert not np.allclose(X_val_correct, X_val_leaked, atol=1e-3), (
-            "Fit on val vs fit on train produced identical output — "
-            "possible leakage or trivial preprocessor"
+            "Fit on val vs fit on train produced identical output — possible leakage or trivial preprocessor"
         )
 
     def test_transform_before_fit_raises(self):
         """Calling transform() before fit() must raise RuntimeError."""
         from src.features.preprocessing import VariantPreprocessor
+
         _, _, X_val, _ = _make_split()
         pre = VariantPreprocessor(use_autoencoder=False)
         with pytest.raises(RuntimeError):
@@ -70,13 +77,16 @@ class TestPreprocessorNoLeakage:
         This is the most common leakage source: fitting scaler on all data.
         """
         from src.features.preprocessing import VariantPreprocessor
+
         X_train, y_train, X_val, _ = _make_split()
 
         # Shift val data significantly
         X_val_shifted = X_val + 100.0
 
         pre = VariantPreprocessor(
-            use_autoencoder=False, smote_enabled=False, k_best_features=8,
+            use_autoencoder=False,
+            smote_enabled=False,
+            k_best_features=8,
             use_bio_scoring=False,
         )
         pre.fit_resample_train(X_train, y_train)
@@ -84,9 +94,7 @@ class TestPreprocessorNoLeakage:
         # transform-only: scaler uses train stats, so large shift remains
         X_val_transformed = pre.transform(X_val_shifted)
         # After scaling with train mean/std, shifted values should still be large
-        assert np.mean(X_val_transformed) > 0.5, (
-            "Scaler appears to be using val statistics — possible leakage"
-        )
+        assert np.mean(X_val_transformed) > 0.5, "Scaler appears to be using val statistics — possible leakage"
 
     def test_smote_not_applied_to_val(self):
         """
@@ -94,10 +102,13 @@ class TestPreprocessorNoLeakage:
         Val set size must remain exactly n_val after transform.
         """
         from src.features.preprocessing import VariantPreprocessor
+
         X_train, y_train, X_val, _ = _make_split(n_train=160, n_val=40)
 
         pre = VariantPreprocessor(
-            use_autoencoder=False, smote_enabled=True, k_best_features=8,
+            use_autoencoder=False,
+            smote_enabled=True,
+            k_best_features=8,
             use_bio_scoring=False,
         )
         X_tr_out, y_tr_out = pre.fit_resample_train(X_train, y_train)
@@ -114,10 +125,13 @@ class TestPreprocessorNoLeakage:
         Feature indices selected on train must be applied to val transform-only.
         """
         from src.features.preprocessing import VariantPreprocessor
+
         X_train, y_train, X_val, _ = _make_split(n_features=20)
 
         pre = VariantPreprocessor(
-            use_autoencoder=False, smote_enabled=False, k_best_features=8,
+            use_autoencoder=False,
+            smote_enabled=False,
+            k_best_features=8,
             use_bio_scoring=False,
         )
         X_tr_out, _ = pre.fit_resample_train(X_train, y_train)
@@ -133,18 +147,22 @@ class TestPreprocessorNoLeakage:
 # LeakageFirewall integration
 # ---------------------------------------------------------------------------
 
+
 class TestLeakageFirewallIntegration:
     def test_firewall_blocks_clinvar_columns(self):
         """ClinVar classification columns must be blocked (label leakage risk)."""
         import pandas as pd
+
         from src.data.leakage_firewall import LeakageFirewall
 
-        df = pd.DataFrame({
-            "Variant_ID": ["V1", "V2"],
-            "feat_0": [0.5, 0.3],
-            "clinvar_classification": ["Pathogenic", "Benign"],
-            "clinvar_significance": ["Pathogenic", "Benign"],
-        })
+        df = pd.DataFrame(
+            {
+                "Variant_ID": ["V1", "V2"],
+                "feat_0": [0.5, 0.3],
+                "clinvar_classification": ["Pathogenic", "Benign"],
+                "clinvar_significance": ["Pathogenic", "Benign"],
+            }
+        )
         fw = LeakageFirewall(competition_mode=True)
         clean, report = fw.check_and_sanitize(df, is_inference=True)
 
@@ -153,17 +171,20 @@ class TestLeakageFirewallIntegration:
 
     def test_firewall_clean_report_no_false_positives(self):
         """Clean dataframe must pass through with is_clean=True."""
-        import pandas as pd
         import numpy as np
+        import pandas as pd
+
         from src.data.leakage_firewall import LeakageFirewall
 
         rng = np.random.default_rng(42)
-        df = pd.DataFrame({
-            "Variant_ID": [f"V{i}" for i in range(20)],
-            "Panel": ["General"] * 20,
-            "feat_0": rng.uniform(0, 1, 20),
-            "feat_1": rng.uniform(0, 1, 20),
-        })
+        df = pd.DataFrame(
+            {
+                "Variant_ID": [f"V{i}" for i in range(20)],
+                "Panel": ["General"] * 20,
+                "feat_0": rng.uniform(0, 1, 20),
+                "feat_1": rng.uniform(0, 1, 20),
+            }
+        )
         fw = LeakageFirewall(competition_mode=True)
         clean, report = fw.check_and_sanitize(df)
         assert report.is_clean
@@ -171,22 +192,29 @@ class TestLeakageFirewallIntegration:
 
     def test_no_train_test_id_overlap(self):
         """Variant IDs in train and test must not overlap."""
-        import pandas as pd
         import numpy as np
+        import pandas as pd
+
         from src.data.leakage_firewall import LeakageFirewall
 
-        train = pd.DataFrame({
-            "Variant_ID": [f"V{i}" for i in range(50)],
-            "feat": np.random.rand(50),
-        })
-        test_no_overlap = pd.DataFrame({
-            "Variant_ID": [f"V{i}" for i in range(50, 100)],
-            "feat": np.random.rand(50),
-        })
-        test_with_overlap = pd.DataFrame({
-            "Variant_ID": [f"V{i}" for i in range(40, 90)],
-            "feat": np.random.rand(50),
-        })
+        train = pd.DataFrame(
+            {
+                "Variant_ID": [f"V{i}" for i in range(50)],
+                "feat": np.random.rand(50),
+            }
+        )
+        test_no_overlap = pd.DataFrame(
+            {
+                "Variant_ID": [f"V{i}" for i in range(50, 100)],
+                "feat": np.random.rand(50),
+            }
+        )
+        test_with_overlap = pd.DataFrame(
+            {
+                "Variant_ID": [f"V{i}" for i in range(40, 90)],
+                "feat": np.random.rand(50),
+            }
+        )
 
         fw = LeakageFirewall(competition_mode=True)
 
@@ -201,11 +229,12 @@ class TestLeakageFirewallIntegration:
 # CV fold isolation tests
 # ---------------------------------------------------------------------------
 
+
 class TestCVFoldIsolation:
     def test_cv_folds_no_index_overlap(self):
         """StratifiedKFold splits must have no index overlap between train and val."""
-        from sklearn.model_selection import StratifiedKFold
         import numpy as np
+        from sklearn.model_selection import StratifiedKFold
 
         n = 300
         X = np.random.rand(n, 10)
@@ -214,14 +243,12 @@ class TestCVFoldIsolation:
         kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         for fold, (train_idx, val_idx) in enumerate(kf.split(X, y)):
             overlap = set(train_idx) & set(val_idx)
-            assert len(overlap) == 0, (
-                f"Fold {fold}: {len(overlap)} overlapping indices between train and val"
-            )
+            assert len(overlap) == 0, f"Fold {fold}: {len(overlap)} overlapping indices between train and val"
 
     def test_cv_all_indices_covered(self):
         """All samples must appear in exactly one validation fold across all folds."""
-        from sklearn.model_selection import StratifiedKFold
         import numpy as np
+        from sklearn.model_selection import StratifiedKFold
 
         n = 500
         X = np.random.rand(n, 5)
@@ -232,6 +259,4 @@ class TestCVFoldIsolation:
         for train_idx, val_idx in kf.split(X, y):
             val_counts[val_idx] += 1
 
-        assert np.all(val_counts == 1), (
-            "Each sample must appear in exactly one validation fold"
-        )
+        assert np.all(val_counts == 1), "Each sample must appear in exactly one validation fold"

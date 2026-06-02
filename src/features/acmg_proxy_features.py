@@ -32,10 +32,11 @@ Kullanım:
     proxy = ACMGProxyFeatures()
     X_enhanced = proxy.transform(X_df)   # DataFrame → DataFrame + 6 yeni kolon
 """
+
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -45,51 +46,51 @@ logger = logging.getLogger(__name__)
 # ── Kolon adı sabitleri (şartname §3.2 özellik grupları) ────────────────────
 
 # In-silico risk skorları
-_CADD    = "CADD_phred"
-_REVEL   = "REVEL_score"
-_SIFT    = "SIFT_score"
-_PP2H    = "PolyPhen2_HDIV_score"
-_PP2V    = "PolyPhen2_HVAR_score"
-_META_S  = "MetaSVM_score"
-_META_L  = "MetaLR_score"
-_MCAP    = "MCAP_score"
+_CADD = "CADD_phred"
+_REVEL = "REVEL_score"
+_SIFT = "SIFT_score"
+_PP2H = "PolyPhen2_HDIV_score"
+_PP2V = "PolyPhen2_HVAR_score"
+_META_S = "MetaSVM_score"
+_META_L = "MetaLR_score"
+_MCAP = "MCAP_score"
 _MUTPRED = "MutPred2_score"
-_VEST    = "VEST4_score"
-_PROVEN  = "PROVEAN_score"
+_VEST = "VEST4_score"
+_PROVEN = "PROVEAN_score"
 
 # Evrimsel korunmuşluk
-_GERP    = "GERP_RS"
-_PHYLOP  = "PhyloP100way_vertebrate"
-_PHASTC  = "phastCons100way_vertebrate"
-_SIPHY   = "SiPhy_29way_logOdds"
+_GERP = "GERP_RS"
+_PHYLOP = "PhyloP100way_vertebrate"
+_PHASTC = "phastCons100way_vertebrate"
+_SIPHY = "SiPhy_29way_logOdds"
 
 # Popülasyon
-_GNOMAD  = "gnomAD_exomes_AF"
-_EXAC    = "ExAC_AF"
+_GNOMAD = "gnomAD_exomes_AF"
+_EXAC = "ExAC_AF"
 
 # Yapısal/biyokimyasal
-_DOMAIN  = "In_Critical_Protein_Domain"
+_DOMAIN = "In_Critical_Protein_Domain"
 _PROTEIN = "Protein_Impact_Score"
-_OMIM    = "OMIM_Disease_Gene"
-_GRANT   = "AA_Grantham_Score"
+_OMIM = "OMIM_Disease_Gene"
+_GRANT = "AA_Grantham_Score"
 
 # ── PP3 eşikleri (Tavtigian 2018 ClinGen kalibrasyon) ───────────────────────
 _PP3_THRESHOLDS = {
-    _CADD:   15.0,    # CADD PHRED ≥ 15 → patojenik sinyal
-    _REVEL:   0.5,    # REVEL ≥ 0.5 → PP3
-    _SIFT:    0.05,   # SIFT < 0.05 → damaging (ters yön)
-    _PP2H:    0.85,   # PolyPhen HDIV ≥ 0.85 → probably damaging
-    _META_S:  0.0,    # MetaSVM > 0 → pathogenic
-    _MCAP:    0.025,  # MCAP ≥ 0.025 → PP3
+    _CADD: 15.0,  # CADD PHRED ≥ 15 → patojenik sinyal
+    _REVEL: 0.5,  # REVEL ≥ 0.5 → PP3
+    _SIFT: 0.05,  # SIFT < 0.05 → damaging (ters yön)
+    _PP2H: 0.85,  # PolyPhen HDIV ≥ 0.85 → probably damaging
+    _META_S: 0.0,  # MetaSVM > 0 → pathogenic
+    _MCAP: 0.025,  # MCAP ≥ 0.025 → PP3
 }
 
 # ── BP4 eşikleri ────────────────────────────────────────────────────────────
 _BP4_THRESHOLDS = {
-    _CADD:   10.0,   # CADD PHRED < 10 → tolerated
-    _SIFT:    0.05,  # SIFT ≥ 0.05 → tolerated
-    _PP2H:    0.15,  # PolyPhen HDIV ≤ 0.15 → benign
-    _REVEL:   0.3,   # REVEL < 0.3 → BP4
-    _META_S: -0.0,   # MetaSVM < 0 → benign
+    _CADD: 10.0,  # CADD PHRED < 10 → tolerated
+    _SIFT: 0.05,  # SIFT ≥ 0.05 → tolerated
+    _PP2H: 0.15,  # PolyPhen HDIV ≤ 0.15 → benign
+    _REVEL: 0.3,  # REVEL < 0.3 → BP4
+    _META_S: -0.0,  # MetaSVM < 0 → benign
 }
 
 
@@ -137,7 +138,7 @@ class ACMGProxyFeatures:
         out["acmg_pp3_score"] = self._pp3(df)
         out["acmg_bp4_score"] = self._bp4(df)
         out["acmg_pm1_score"] = self._pm1(df)
-        out["acmg_ba1_flag"]  = self._ba1(df)
+        out["acmg_ba1_flag"] = self._ba1(df)
         out["acmg_ps3_score"] = self._ps3(df)
         out["acmg_pp2_score"] = self._pp2(df)
         out["acmg_net_score"] = out["acmg_pp3_score"] - out["acmg_bp4_score"]
@@ -205,18 +206,18 @@ class ACMGProxyFeatures:
 
     def _ba1(self, df: pd.DataFrame) -> pd.Series:
         gnomad = pd.to_numeric(df.get(_GNOMAD, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
-        exac   = pd.to_numeric(df.get(_EXAC,   pd.Series(0, index=df.index)), errors="coerce").fillna(0)
+        exac = pd.to_numeric(df.get(_EXAC, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
         max_af = gnomad.combine(exac, max)
         return (max_af >= 0.05).astype(float)
 
     # ── PS3: Evrimsel korunmuşluk skoru ────────────────────────────────────
 
     def _ps3(self, df: pd.DataFrame) -> pd.Series:
-        gerp   = pd.to_numeric(df.get(_GERP,   pd.Series(0, index=df.index)), errors="coerce").fillna(0)
-        phylop = pd.to_numeric(df.get(_PHYLOP,  pd.Series(0, index=df.index)), errors="coerce").fillna(0)
-        phastc = pd.to_numeric(df.get(_PHASTC,  pd.Series(0, index=df.index)), errors="coerce").fillna(0)
+        gerp = pd.to_numeric(df.get(_GERP, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
+        phylop = pd.to_numeric(df.get(_PHYLOP, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
+        phastc = pd.to_numeric(df.get(_PHASTC, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
 
-        gerp_norm   = (gerp.clip(-13, 6) + 13) / 19
+        gerp_norm = (gerp.clip(-13, 6) + 13) / 19
         phylop_norm = (phylop.clip(-20, 10) + 20) / 30
         phastc_norm = phastc.clip(0, 1)
 
@@ -225,7 +226,7 @@ class ACMGProxyFeatures:
     # ── PP2: OMIM gen × Grantham skoru ─────────────────────────────────────
 
     def _pp2(self, df: pd.DataFrame) -> pd.Series:
-        omim   = pd.to_numeric(df.get(_OMIM,   pd.Series(0, index=df.index)), errors="coerce").fillna(0).clip(0, 1)
-        grant  = pd.to_numeric(df.get(_GRANT,  pd.Series(0, index=df.index)), errors="coerce").fillna(0)
-        grant_norm = (grant.clip(0, 215) / 215)
+        omim = pd.to_numeric(df.get(_OMIM, pd.Series(0, index=df.index)), errors="coerce").fillna(0).clip(0, 1)
+        grant = pd.to_numeric(df.get(_GRANT, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
+        grant_norm = grant.clip(0, 215) / 215
         return (omim * 0.5 + grant_norm * 0.5).clip(0, 1)

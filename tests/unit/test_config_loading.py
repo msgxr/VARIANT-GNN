@@ -5,13 +5,13 @@ Config file loading and validation tests.
 Ensures all competition YAML configs (default, pdr, psr, final, dev_quick)
 are parseable, contain required keys, and have correct types.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
 import yaml
-
 
 CONFIGS_DIR = Path("configs")
 
@@ -29,6 +29,7 @@ COMPETITION_CONFIGS = [
 # ---------------------------------------------------------------------------
 # YAML parse tests
 # ---------------------------------------------------------------------------
+
 
 class TestYAMLParsing:
     @pytest.mark.parametrize("config_name", COMPETITION_CONFIGS)
@@ -77,19 +78,19 @@ class TestYAMLParsing:
         # GNN epochs stored under gnn.epochs key
         dq_epochs = (dq.get("gnn") or {}).get("epochs", 999)
         df_epochs = (df.get("gnn") or {}).get("epochs", 50)
-        assert dq_epochs <= df_epochs, (
-            f"dev_quick gnn.epochs ({dq_epochs}) not <= default ({df_epochs})"
-        )
+        assert dq_epochs <= df_epochs, f"dev_quick gnn.epochs ({dq_epochs}) not <= default ({df_epochs})"
 
 
 # ---------------------------------------------------------------------------
 # Settings module tests
 # ---------------------------------------------------------------------------
 
+
 class TestSettingsModule:
     def test_load_settings_returns_object(self):
         """load_settings() must return a settings object with seed."""
         from src.config import load_settings
+
         cfg = load_settings()
         assert hasattr(cfg, "seed")
         assert cfg.seed == 42
@@ -97,23 +98,22 @@ class TestSettingsModule:
     def test_ensemble_weights_sum_to_one(self):
         """Ensemble weights must sum to 1.0 (probability simplex)."""
         from src.config import load_settings
+
         cfg = load_settings()
         weights = cfg.ensemble.weights
-        assert abs(sum(weights) - 1.0) < 0.01, (
-            f"Ensemble weights sum={sum(weights):.4f}, expected 1.0"
-        )
+        assert abs(sum(weights) - 1.0) < 0.01, f"Ensemble weights sum={sum(weights):.4f}, expected 1.0"
 
     def test_ensemble_has_four_components(self):
         """Ensemble must have exactly 4 component weights (§VIII architecture)."""
         from src.config import load_settings
+
         cfg = load_settings()
-        assert len(cfg.ensemble.weights) == 4, (
-            f"Expected 4 ensemble weights, got {len(cfg.ensemble.weights)}"
-        )
+        assert len(cfg.ensemble.weights) == 4, f"Expected 4 ensemble weights, got {len(cfg.ensemble.weights)}"
 
     def test_paths_are_path_objects(self):
         """Config paths must be Path objects (not raw strings)."""
         from src.config import load_settings
+
         cfg = load_settings()
         assert isinstance(cfg.paths.data_dir, Path)
         assert isinstance(cfg.paths.models_dir, Path)
@@ -121,6 +121,7 @@ class TestSettingsModule:
     def test_label_mapping_binary(self):
         """Label mapping must produce exactly 2 classes: 0 and 1."""
         from src.config import load_settings
+
         cfg = load_settings()
         values = set(cfg.schema.label_mapping.values())
         assert values == {0, 1} or values == {"0", "1"} or values == {0.0, 1.0}, (
@@ -132,6 +133,7 @@ class TestSettingsModule:
 # Threshold file tests
 # ---------------------------------------------------------------------------
 
+
 class TestThresholdFiles:
     def test_threshold_json_exists(self):
         """models/threshold.json must exist after training."""
@@ -141,6 +143,7 @@ class TestThresholdFiles:
     def test_threshold_value_in_range(self):
         """Global threshold must be in (0, 1)."""
         import json
+
         path = Path("models/threshold.json")
         if not path.exists():
             pytest.skip("threshold.json not found")
@@ -153,6 +156,7 @@ class TestThresholdFiles:
     def test_panel_thresholds_all_panels_present(self):
         """panel_thresholds.json must contain all four panels."""
         import json
+
         path = Path("models/panel_thresholds.json")
         if not path.exists():
             pytest.skip("panel_thresholds.json not found")

@@ -1,4 +1,5 @@
 """src/cli/modes/science.py — tune, panel_transfer, label_quality, ablation modes."""
+
 from __future__ import annotations
 
 import json
@@ -37,9 +38,7 @@ def mode_panel_transfer(args, cfg):
         return
 
     evaluator = CrossPanelEvaluator(random_state=cfg.seed)
-    result = evaluator.evaluate(
-        ds.features.values, ds.labels, ds.metadata["Panel"].values
-    )
+    result = evaluator.evaluate(ds.features.values, ds.labels, ds.metadata["Panel"].values)
     cfg.paths.create_dirs()
     report_path = cfg.paths.reports_dir / "panel_transfer_matrix.json"
     plot_path = cfg.paths.reports_dir / "panel_transfer.png"
@@ -52,10 +51,10 @@ def mode_panel_transfer(args, cfg):
 def mode_label_quality(args, cfg):
     """Label quality detection via Confident Learning (§3.2 leakage prevention)."""
     try:
-        from src.scientific.label_quality import ConfidentLearner
-        from sklearn.model_selection import cross_val_predict
         import xgboost as xgb
+
         from src.features.preprocessing import build_preprocessor_from_config
+        from src.scientific.label_quality import ConfidentLearner
 
         ds = _get_labelled_data(args.data_file, cfg)
         X = ds.features.values
@@ -65,13 +64,14 @@ def mode_label_quality(args, cfg):
         X_proc, _ = pre.fit_resample_train(X, y)
         # ConfidentLearner runs its OWN group-free 5-fold OOF internally; feed it the
         # REAL (non-SMOTE) rows only — fit_resample_train returns originals first.
-        X_real = X_proc[:len(X)]
+        X_real = X_proc[: len(X)]
         learner = ConfidentLearner(
-            noise_threshold=0.45, cv_folds=5,
+            noise_threshold=0.45,
+            cv_folds=5,
             base_estimator=xgb.XGBClassifier(**cfg.xgb.as_dict()),
         )
         logging.info("ConfidentLearner: %d gerçek örnek üzerinde 5-fold OOF...", len(X_real))
-        report = learner.fit(X_real, y)          # → LabelQualityReport dataclass
+        report = learner.fit(X_real, y)  # → LabelQualityReport dataclass
         report.log()
 
         cfg.paths.create_dirs()
@@ -87,8 +87,12 @@ def mode_label_quality(args, cfg):
         }
         with open(out_path, "w") as fh:
             json.dump(payload, fh, indent=2, ensure_ascii=False)
-        logging.info("Label quality report → %s (n_flagged=%d, noise≈%.2f%%)",
-                     out_path, report.n_flagged, 100 * report.estimated_noise_rate)
+        logging.info(
+            "Label quality report → %s (n_flagged=%d, noise≈%.2f%%)",
+            out_path,
+            report.n_flagged,
+            100 * report.estimated_noise_rate,
+        )
     except Exception as exc:
         logging.error("Label quality analysis failed: %s", exc)
         raise SystemExit(1)
@@ -97,16 +101,14 @@ def mode_label_quality(args, cfg):
 def mode_ablation(args, cfg):
     """Ablation analysis — model + preprocessing contributions (§4.5)."""
     from pathlib import Path
+
     from src.evaluation.ablation import run_ablation
 
     ds = _get_labelled_data(args.data_file, cfg)
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 
-    output_path = (
-        Path(args.output) if args.output
-        else cfg.paths.reports_dir / "ablation_report.json"
-    )
+    output_path = Path(args.output) if args.output else cfg.paths.reports_dir / "ablation_report.json"
     report = run_ablation(
         X=ds.features.values,
         y=ds.labels,
@@ -116,5 +118,6 @@ def mode_ablation(args, cfg):
     )
     logging.info(
         "Ablation complete. Baseline F1=%.4f, %d configs analyzed.",
-        report.baseline.binary_f1, len(report.ablations),
+        report.baseline.binary_f1,
+        len(report.ablations),
     )

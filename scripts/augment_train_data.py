@@ -16,6 +16,7 @@ NOT: Bu, SMOTE'a alternatif değil; SMOTE eğitim pipeline'ı içinde
 zaten azınlık sınıfı dengeler. Bu augmentation **tüm sınıfların**
 gerçek varyantlarına lokal gürültü ekleyerek **generalization gücünü** artırır.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,11 @@ def augment(
     seed: int = 42,
 ) -> None:
     df = pd.read_csv(in_path)
-    print(f"Orijinal: shape={df.shape}  "
-          f"label dist={df['Label'].value_counts().to_dict()}  "
-          f"panel dist={df['Panel'].value_counts().to_dict() if 'Panel' in df.columns else 'n/a'}")
+    print(
+        f"Orijinal: shape={df.shape}  "
+        f"label dist={df['Label'].value_counts().to_dict()}  "
+        f"panel dist={df['Panel'].value_counts().to_dict() if 'Panel' in df.columns else 'n/a'}"
+    )
 
     metadata_cols = [c for c in ["Variant_ID", "Panel", "Label"] if c in df.columns]
     candidate_cols = [c for c in df.columns if c not in metadata_cols]
@@ -47,7 +50,7 @@ def augment(
     string_only_cols = [c for c in candidate_cols if c not in feature_cols]
     print(f"Sayısal feature kolonu: {len(feature_cols)}  (string-only atlandı: {len(string_only_cols)})")
     if string_only_cols:
-        print(f"  Atlanan kolonlar: {string_only_cols[:8]}{' ...' if len(string_only_cols)>8 else ''}")
+        print(f"  Atlanan kolonlar: {string_only_cols[:8]}{' ...' if len(string_only_cols) > 8 else ''}")
 
     rng = np.random.default_rng(seed)
 
@@ -65,7 +68,7 @@ def augment(
         for i, col in enumerate(feature_cols):
             aug[col] = aug_matrix[:, i]
         if "Variant_ID" in aug.columns:
-            aug["Variant_ID"] = aug["Variant_ID"].astype(str) + f"_aug{k+1}"
+            aug["Variant_ID"] = aug["Variant_ID"].astype(str) + f"_aug{k + 1}"
         augmented_frames.append(aug)
 
     merged = pd.concat(augmented_frames, ignore_index=True)
@@ -74,18 +77,17 @@ def augment(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     merged.to_csv(out_path, index=False)
 
-    print(f"\nAugmented: shape={merged.shape}  "
-          f"label dist={merged['Label'].value_counts().to_dict()}")
+    print(f"\nAugmented: shape={merged.shape}  label dist={merged['Label'].value_counts().to_dict()}")
     print(f"Kaydedildi → {out_path}")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--in_file",  default=str(REPO_ROOT / "data" / "train_variants.csv"))
+    parser.add_argument("--in_file", default=str(REPO_ROOT / "data" / "train_variants.csv"))
     parser.add_argument("--out_file", default=str(REPO_ROOT / "data" / "train_variants_aug.csv"))
     parser.add_argument("--noise_scale", type=float, default=0.05)
-    parser.add_argument("--n_copies",   type=int,   default=1)
-    parser.add_argument("--seed",       type=int,   default=42)
+    parser.add_argument("--n_copies", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
     augment(

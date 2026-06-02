@@ -2,6 +2,7 @@
 src/explainability/lime_explainer.py
 LIME-based local explanation with safe fallback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 try:
     import lime
     import lime.lime_tabular
+
     _LIME_AVAILABLE = True
 except ImportError:
     _LIME_AVAILABLE = False
@@ -38,24 +40,24 @@ class LIMEExplainer:
         self,
         training_data: np.ndarray,
         feature_names: Optional[List[str]] = None,
-        class_names: Optional[List[str]]   = None,
-        predict_fn: Optional[Callable]     = None,
+        class_names: Optional[List[str]] = None,
+        predict_fn: Optional[Callable] = None,
         random_state: int = 42,
     ) -> None:
         n = training_data.shape[1]
         self.feature_names = feature_names or [f"Feature_{i}" for i in range(n)]
-        self.class_names   = class_names   or ["Benign", "Pathogenic"]
-        self.predict_fn    = predict_fn
-        self._explainer    = None
+        self.class_names = class_names or ["Benign", "Pathogenic"]
+        self.predict_fn = predict_fn
+        self._explainer = None
 
         if _LIME_AVAILABLE:
             try:
                 self._explainer = lime.lime_tabular.LimeTabularExplainer(
-                    training_data  = training_data,
-                    feature_names  = self.feature_names,
-                    class_names    = self.class_names,
-                    mode           = "classification",
-                    random_state   = random_state,
+                    training_data=training_data,
+                    feature_names=self.feature_names,
+                    class_names=self.class_names,
+                    mode="classification",
+                    random_state=random_state,
                 )
                 logger.info("LIME LimeTabularExplainer initialised.")
             except Exception as exc:
@@ -64,11 +66,11 @@ class LIMEExplainer:
     # ------------------------------------------------------------------
     def explain_instance(
         self,
-        instance:    np.ndarray,
-        predict_fn:  Optional[Callable] = None,
-        num_features: int               = 15,
-        num_samples:  int               = 500,
-        output_html:  Optional[str]     = None,
+        instance: np.ndarray,
+        predict_fn: Optional[Callable] = None,
+        num_features: int = 15,
+        num_samples: int = 500,
+        output_html: Optional[str] = None,
     ) -> Optional[object]:
         """Explain a single instance; return lime explanation object or None."""
         if self._explainer is None:
@@ -79,10 +81,10 @@ class LIMEExplainer:
             return None
         try:
             exp = self._explainer.explain_instance(
-                data_row     = instance,
-                predict_fn   = fn,
-                num_features = num_features,
-                num_samples  = num_samples,
+                data_row=instance,
+                predict_fn=fn,
+                num_features=num_features,
+                num_samples=num_samples,
             )
             if output_html:
                 os.makedirs(os.path.dirname(output_html) or ".", exist_ok=True)

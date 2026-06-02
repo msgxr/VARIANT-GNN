@@ -7,6 +7,7 @@ These tests are intentionally lightweight: they use small synthetic datasets
 so they run quickly. They verify architectural correctness (shapes, IDs,
 no leakage artifacts) rather than model quality.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,6 +18,7 @@ import pytest
 # Shared fixture
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module")
 def synthetic_dataset():
     """
@@ -24,10 +26,10 @@ def synthetic_dataset():
     Balanced classes, reproducible.
     """
     rng = np.random.default_rng(0)
-    n   = 120
+    n = 120
     n_f = 15
-    X   = rng.standard_normal((n, n_f)).astype(np.float32)
-    y   = np.array([0] * (n // 2) + [1] * (n // 2), dtype=np.int64)
+    X = rng.standard_normal((n, n_f)).astype(np.float32)
+    y = np.array([0] * (n // 2) + [1] * (n // 2), dtype=np.int64)
     rng.shuffle(y)
     ids = [f"VAR_{i:04d}" for i in range(n)]
     df = pd.DataFrame(X, columns=[f"feat_{j}" for j in range(n_f)])
@@ -40,9 +42,11 @@ def synthetic_dataset():
 # Preprocessing integration
 # ---------------------------------------------------------------------------
 
+
 class TestPreprocessingIntegration:
     def test_fit_then_transform_same_shape(self, synthetic_dataset):
         from src.features.preprocessing import VariantPreprocessor
+
         df = synthetic_dataset
         feat_cols = [c for c in df.columns if c.startswith("feat_")]
         X = df[feat_cols].values
@@ -54,7 +58,7 @@ class TestPreprocessingIntegration:
 
         pp = VariantPreprocessor(use_autoencoder=False, use_feature_selection=False)
         X_proc, _y_res = pp.fit_resample_train(X_train, y_train)
-        X_test_proc    = pp.transform(X_test)
+        X_test_proc = pp.transform(X_test)
 
         assert X_proc.shape[1] == X_test_proc.shape[1], (
             "Train and test must have same number of features after preprocessing"
@@ -63,12 +67,15 @@ class TestPreprocessingIntegration:
     def test_smote_increases_minority(self, synthetic_dataset):
         """After SMOTE, the resampled y should have equal class counts."""
         from src.features.preprocessing import VariantPreprocessor
+
         df = synthetic_dataset.copy()
         # Make imbalanced: 90 class-0, 30 class-1
-        df_imb = pd.concat([
-            df[df["Label"] == 0].iloc[:90],
-            df[df["Label"] == 1].iloc[:30],
-        ]).reset_index(drop=True)
+        df_imb = pd.concat(
+            [
+                df[df["Label"] == 0].iloc[:90],
+                df[df["Label"] == 1].iloc[:30],
+            ]
+        ).reset_index(drop=True)
         feat_cols = [c for c in df_imb.columns if c.startswith("feat_")]
         X = df_imb[feat_cols].values
         y = df_imb["Label"].values
@@ -80,8 +87,9 @@ class TestPreprocessingIntegration:
 
     def test_graph_edges_built_from_training_only(self, synthetic_dataset):
         """edge_index should be non-None after fit and reflect only training data."""
-        from src.features.preprocessing import VariantPreprocessor
         from src.core.models.gnn import VariantGATv2GNN
+        from src.features.preprocessing import VariantPreprocessor
+
         df = synthetic_dataset
         feat_cols = [c for c in df.columns if c.startswith("feat_")]
         X = df[feat_cols].values
@@ -97,13 +105,15 @@ class TestPreprocessingIntegration:
 # Calibration integration
 # ---------------------------------------------------------------------------
 
+
 class TestCalibrationIntegration:
     def test_calibrated_proba_in_unit_range(self):
         from src.scientific.calibration.calibrator import EnsembleCalibrator
-        rng   = np.random.default_rng(1)
+
+        rng = np.random.default_rng(1)
         proba = rng.dirichlet([1, 1], size=100)
-        y     = rng.integers(0, 2, size=100)
-        cal   = EnsembleCalibrator(method="isotonic")
+        y = rng.integers(0, 2, size=100)
+        cal = EnsembleCalibrator(method="isotonic")
         cal.fit(proba, y)
         out = cal.transform(proba)
         assert out.shape == (100, 2)
@@ -115,13 +125,15 @@ class TestCalibrationIntegration:
 # Evaluation integration
 # ---------------------------------------------------------------------------
 
+
 class TestEvaluationIntegration:
     def test_full_evaluate_call(self):
         from src.scientific.metrics.metrics import evaluate
-        rng   = np.random.default_rng(2)
-        N     = 80
+
+        rng = np.random.default_rng(2)
+        N = 80
         y_true = rng.integers(0, 2, size=N)
-        proba  = rng.dirichlet([1, 1], size=N)
+        proba = rng.dirichlet([1, 1], size=N)
         report = evaluate(y_true, proba)
         assert report.macro_f1 >= 0.0
         assert report.roc_auc >= 0.0
@@ -130,9 +142,10 @@ class TestEvaluationIntegration:
 
     def test_confusion_matrix_shape(self):
         from src.scientific.metrics.metrics import evaluate
-        rng    = np.random.default_rng(3)
+
+        rng = np.random.default_rng(3)
         y_true = rng.integers(0, 2, size=60)
-        proba  = rng.dirichlet([1, 1], size=60)
+        proba = rng.dirichlet([1, 1], size=60)
         report = evaluate(y_true, proba)
         assert report.conf_matrix.shape == (2, 2)
 
@@ -141,10 +154,11 @@ class TestEvaluationIntegration:
 # Schema + loader integration
 # ---------------------------------------------------------------------------
 
+
 class TestSchemaLoaderIntegration:
     def test_validate_then_load(self, synthetic_dataset, tmp_path):
-        from src.data.schemas.variant_schema import validate_dataset
         from src.data.loader import load_csv
+        from src.data.schemas.variant_schema import validate_dataset
 
         csv_path = tmp_path / "test_data.csv"
         synthetic_dataset.to_csv(csv_path, index=False)
@@ -165,14 +179,14 @@ class TestSchemaLoaderIntegration:
         loaded = load_csv(str(csv_path))
 
         original_ids = synthetic_dataset["Variant_ID"].tolist()
-        loaded_ids   = loaded.metadata["Variant_ID"].tolist()
+        loaded_ids = loaded.metadata["Variant_ID"].tolist()
         assert original_ids == loaded_ids, "Variant_ID must be preserved unchanged"
 
     def test_predict_csv_no_labels(self, synthetic_dataset, tmp_path):
         from src.data.loader import load_predict_csv
 
         df_no_label = synthetic_dataset.drop(columns=["Label"])
-        csv_path    = tmp_path / "predict_data.csv"
+        csv_path = tmp_path / "predict_data.csv"
         df_no_label.to_csv(csv_path, index=False)
 
         loaded = load_predict_csv(str(csv_path))

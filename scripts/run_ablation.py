@@ -11,10 +11,10 @@ Kullanım:
 PDR §4.5 — Teknik Evrim için zorunlu kanıt.
 Her ensemble bileşeninin ve preprocessing adımının Binary F1 üzerindeki etkisini ölçer.
 """
+
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import logging
 import sys
@@ -30,8 +30,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.config.settings import load_settings, reset_settings
-from src.utils.seeds import set_global_seed
+from src.config.settings import load_settings, reset_settings  # noqa: E402
+from src.utils.seeds import set_global_seed  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -112,18 +112,31 @@ ABLATION_SPECS = [
 ]
 
 NON_FEATURE_COLS = {
-    "Variant_ID", "Panel", "Nuc_Context", "AA_Context",
-    "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type",
-    "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic",
-    "OMIM_Disease_Gene", "Secondary_Structure_Disruption",
+    "Variant_ID",
+    "Panel",
+    "Nuc_Context",
+    "AA_Context",
+    "Ref_Nucleotide",
+    "Alt_Nucleotide",
+    "Codon_Change_Type",
+    "AA_Polarity_Change",
+    "In_Critical_Protein_Domain",
+    "Is_Exonic",
+    "OMIM_Disease_Gene",
+    "Secondary_Structure_Disruption",
 }
 
 LABEL_MAP = {
-    "pathogenic": 1, "likely pathogenic": 1,
+    "pathogenic": 1,
+    "likely pathogenic": 1,
     "pathogenic/likely pathogenic": 1,
-    "benign": 0, "likely benign": 0,
+    "benign": 0,
+    "likely benign": 0,
     "benign/likely benign": 0,
-    "1": 1, "1.0": 1, "0": 0, "0.0": 0,
+    "1": 1,
+    "1.0": 1,
+    "0": 0,
+    "0.0": 0,
 }
 
 
@@ -153,7 +166,10 @@ def _load_data(data_path: Path) -> tuple[np.ndarray, np.ndarray, list[str]]:
 
     logger.info(
         "Veri yüklendi: %d örnek, %d özellik | Pozitif=%d (%.1f%%)",
-        len(X), X.shape[1], int(y.sum()), 100 * y.mean(),
+        len(X),
+        X.shape[1],
+        int(y.sum()),
+        100 * y.mean(),
     )
     return X, y, list(feat_df.columns)
 
@@ -168,8 +184,8 @@ def _run_single(
     threshold: float,
     quick: bool,
 ) -> dict:
-    from src.training.trainer import VariantTrainer
     import src.config.settings as _cfg_mod
+    from src.training.trainer import VariantTrainer
 
     reset_settings()
     cfg = load_settings(config_path)
@@ -256,10 +272,7 @@ def _build_pdr_table(results: list[dict]) -> str:
             onem, name_md = "🟠 Önemli", r["name"]
         else:
             onem, name_md = "🟢 Minimal", r["name"]
-        rows.append(
-            f"| {name_md} | {r['description']} "
-            f"| {f1:.4f} | {mcc:.4f} | {delta_str} | {onem} |"
-        )
+        rows.append(f"| {name_md} | {r['description']} | {f1:.4f} | {mcc:.4f} | {delta_str} | {onem} |")
     return header + "\n".join(rows)
 
 
@@ -276,9 +289,7 @@ def run_ablation(
     logger.info("Veri: %s | Config: %s", data_path, config_path)
 
     X, y, feature_names = _load_data(data_path)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, stratify=y, random_state=seed
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=seed)
 
     results = []
     baseline_f1 = None
@@ -286,10 +297,7 @@ def run_ablation(
     for spec in ABLATION_SPECS:
         logger.info("--- Ablation: %-25s %s", spec["name"], spec["description"])
         try:
-            res = _run_single(
-                spec, X_train, y_train, X_test, y_test,
-                config_path, threshold, quick
-            )
+            res = _run_single(spec, X_train, y_train, X_test, y_test, config_path, threshold, quick)
             if spec["name"] == "baseline":
                 baseline_f1 = res["binary_f1"]
             elif baseline_f1 is not None:

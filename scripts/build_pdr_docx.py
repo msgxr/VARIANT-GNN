@@ -5,12 +5,14 @@ scripts/build_pdr_docx.py
 reports/PDR_VARIANT_GNN_2026.md  ->  reports/PDR_VARIANT_GNN_2026.docx
 
 TASLAK donusturucu. python-docx ile baslik/paragraf/tablo/madde/figur-gomme +
-TEKNOFEST format hedefi (Aptos 11pt, 1.15 satir, justified, 2.5 cm marj).
+TEKNOFEST format hedefi (Aptos 12pt govde / 14pt baslik, 1.15 satir, justified,
+ust 2.8 cm / diger 2.5 cm marj).
 
 UYARI: Bu bir TASLAK uretir. Resmi sablona birebir uyum, <=10 sayfa siniri ve
 gorsel yerlesim Word'de MANUEL dogrulanmalidir. Tablolar/figurler sayfa tasirsa
 elle ayarlanir. Aptos sistemde yoksa Word ikame font kullanir.
 """
+
 from __future__ import annotations
 
 import re
@@ -35,13 +37,13 @@ PNG_RE = re.compile(r"(reports/figures/[\w/]+\.png)")
 def _set_base_style(doc):
     st = doc.styles["Normal"]
     st.font.name = FONT
-    st.font.size = Pt(11)
+    st.font.size = Pt(12)
     pf = st.paragraph_format
     pf.line_spacing = 1.15
-    pf.space_after = Pt(6)
+    pf.space_after = Pt(4)
     pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     for sec in doc.sections:
-        sec.top_margin = Cm(2.5)
+        sec.top_margin = Cm(2.8)
         sec.bottom_margin = Cm(2.5)
         sec.left_margin = Cm(2.5)
         sec.right_margin = Cm(2.5)
@@ -68,7 +70,7 @@ def _heading(doc, text, level):
     run = p.add_run(text.strip())
     run.bold = True
     run.font.name = FONT
-    run.font.size = Pt({0: 16, 1: 14, 2: 12, 3: 11}.get(level, 11))
+    run.font.size = Pt({0: 16, 1: 14, 2: 13, 3: 12}.get(level, 12))
     run.font.color.rgb = RGBColor(0x1F, 0x49, 0x7D)
 
 
@@ -98,7 +100,7 @@ def _figure(doc, path_str, caption):
     if not img.exists():
         return False
     try:
-        doc.add_picture(str(img), width=Inches(6.0))
+        doc.add_picture(str(img), width=Inches(4.5))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         if caption:
             cap = doc.add_paragraph()

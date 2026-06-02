@@ -20,6 +20,7 @@ Checks:
      per-panel %20 F1) == reports/competition_jury_f1.json.
   7. Canonical panel_test_metrics binary_f1 == reports/cv_report.json panel_metrics.
 """
+
 from __future__ import annotations
 
 import json
@@ -35,9 +36,23 @@ TOL = 0.005
 # Second block: the pre-2026-06-02 balanced-OOF θ=0.6831 retrain headline
 # (test F1 0.8969 / MCC 0.5863 / balanced-jury 0.8134 / official 0.6063 / cal-θ 0.8514),
 # superseded by the %20-prior θ=0.8415 canonical. Allowed only on withdraw/supersede lines.
-WITHDRAWN = ["0.8980", "0.9269", "0.5356", "0.722088", "0.7221",
-             "0.8668", "0.5313", "θ=0.241", "θ = 0.241",
-             "0.8969", "0.6831", "0.8514", "0.8134", "0.5863", "0.6063"]
+WITHDRAWN = [
+    "0.8980",
+    "0.9269",
+    "0.5356",
+    "0.722088",
+    "0.7221",
+    "0.8668",
+    "0.5313",
+    "θ=0.241",
+    "θ = 0.241",
+    "0.8969",
+    "0.6831",
+    "0.8514",
+    "0.8134",
+    "0.5863",
+    "0.6063",
+]
 # Per-line guard: a withdrawn number is tolerated only when the SAME line marks it as
 # superseded/historical. Covers EN/TR withdrawal vocabulary plus changelog conventions
 # ('stale', 'iddia edilemez', and the '→' / '->' change-from arrow that records history).
@@ -48,12 +63,23 @@ WITHDRAW_MARKERS = (
 )
 # Every jury/governance-facing doc — drift here is the exact failure mode that
 # nearly sank the project (leakage-inflated numbers surviving in metadata files).
-JURY_DOCS = ["README.md", "MODEL_CARD.md", "PROJECT_STATUS.md", "CLAUDE.md",
-             "REPRODUCE.md", "CITATION.cff", "CODE_OF_CONDUCT.md", "DATA_CARD.md",
-             "RELEASE_NOTES.md", "ROADMAP.md", "models/README.md",
-             "submission/SUBMISSION_CHECKLIST.md",
-             "reports/PDR_VARIANT_GNN_2026.md", "reports/mcc_analysis.md",
-             "CHANGELOG.md"]
+JURY_DOCS = [
+    "README.md",
+    "MODEL_CARD.md",
+    "PROJECT_STATUS.md",
+    "CLAUDE.md",
+    "REPRODUCE.md",
+    "CITATION.cff",
+    "CODE_OF_CONDUCT.md",
+    "DATA_CARD.md",
+    "RELEASE_NOTES.md",
+    "ROADMAP.md",
+    "models/README.md",
+    "submission/SUBMISSION_CHECKLIST.md",
+    "reports/PDR_VARIANT_GNN_2026.md",
+    "reports/mcc_analysis.md",
+    "CHANGELOG.md",
+]
 
 
 def fail(msg: str) -> None:
@@ -157,8 +183,12 @@ def main() -> int:
     rivals = ["0.3367", "0.3104", "0.2562", "0.4456", "θ=0.241", "0.6831", "0.8514"]
     canon_txt = canon_path.read_text(encoding="utf-8")
     for ln in canon_txt.splitlines():
-        if any(r in ln for r in rivals) and "panel" not in ln.lower() and "0.764" not in ln \
-                and not re.search(r"önceki|geçersiz|withdraw|supersed|geri çek|eski", ln, re.I):
+        if (
+            any(r in ln for r in rivals)
+            and "panel" not in ln.lower()
+            and "0.764" not in ln
+            and not re.search(r"önceki|geçersiz|withdraw|supersed|geri çek|eski", ln, re.I)
+        ):
             fail(f"RESULTS_CANONICAL.json: rival threshold in '{ln.strip()[:70]}'")
             errors += 1
     if errors == 0:

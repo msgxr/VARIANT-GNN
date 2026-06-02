@@ -12,6 +12,7 @@ Output columns per variant:
   - High_Risk           (bool: calibrated_risk ≥ threshold)
   - <all original metadata columns>
 """
+
 from __future__ import annotations
 
 import logging
@@ -96,19 +97,17 @@ def _build_safe_sequence_tensors(
 
     # Tüm sekanslar yok ya da uzunluk eşleşmiyor → zero padding
     nuc_seqs_safe: list[str] = []
-    aa_seqs_safe:  list[str] = []
+    aa_seqs_safe: list[str] = []
 
     if nuc_sequences is None or len(nuc_sequences) != n_samples:
         if nuc_sequences is None:
-            logger.warning(
-                "TD-006 fail-safe: Nuc_Context yok — multimodal model padding "
-                "tokenları kullanacak."
-            )
+            logger.warning("TD-006 fail-safe: Nuc_Context yok — multimodal model padding tokenları kullanacak.")
         else:
             logger.warning(
                 "TD-006 fail-safe: Nuc_Context uzunluğu (%d) feature satır "
                 "sayısından (%d) farklı — eksik satırlar padlenecek.",
-                len(nuc_sequences), n_samples,
+                len(nuc_sequences),
+                n_samples,
             )
         nuc_seqs_safe = [""] * n_samples
     else:
@@ -116,10 +115,7 @@ def _build_safe_sequence_tensors(
 
     if aa_sequences is None or len(aa_sequences) != n_samples:
         if aa_sequences is None:
-            logger.warning(
-                "TD-006 fail-safe: AA_Context yok — multimodal model padding "
-                "tokenları kullanacak."
-            )
+            logger.warning("TD-006 fail-safe: AA_Context yok — multimodal model padding tokenları kullanacak.")
         aa_seqs_safe = [""] * n_samples
     else:
         aa_seqs_safe = [str(s) if s is not None else "" for s in aa_sequences]
@@ -130,8 +126,8 @@ def _build_safe_sequence_tensors(
         nuc_ids = torch.tensor(nuc_arr, dtype=torch.long).to(device)
     except Exception as exc:
         logger.warning(
-            "TD-006 fail-safe: Nuc tokenization başarısız (%s) — "
-            "zero-padding tensor kullanılacak.", exc,
+            "TD-006 fail-safe: Nuc tokenization başarısız (%s) — zero-padding tensor kullanılacak.",
+            exc,
         )
         nuc_ids = torch.zeros(n_samples, NUC_SEQ_LEN, dtype=torch.long, device=device)
 
@@ -140,8 +136,8 @@ def _build_safe_sequence_tensors(
         aa_ids = torch.tensor(aa_arr, dtype=torch.long).to(device)
     except Exception as exc:
         logger.warning(
-            "TD-006 fail-safe: AA tokenization başarısız (%s) — "
-            "zero-padding tensor kullanılacak.", exc,
+            "TD-006 fail-safe: AA tokenization başarısız (%s) — zero-padding tensor kullanılacak.",
+            exc,
         )
         aa_ids = torch.zeros(n_samples, AA_SEQ_LEN, dtype=torch.long, device=device)
 
@@ -171,7 +167,7 @@ class InferencePipeline:
 
     def load(self) -> InferencePipeline:
         """Load all model artefacts from disk."""
-        self._preprocessor, self._ensemble, self._calibrator = self.store.load_all() # type: ignore
+        self._preprocessor, self._ensemble, self._calibrator = self.store.load_all()  # type: ignore
         self._loaded = True
         logger.info("InferencePipeline loaded from %s", self.store.model_dir)
         self._check_provenance()
@@ -180,6 +176,7 @@ class InferencePipeline:
     def _check_provenance(self) -> None:
         """PROVENANCE.json varsa oku; sentetik veriyle eğitilmişse uyar."""
         import json as _json
+
         prov_path = self.store.model_dir / "PROVENANCE.json"
         if not prov_path.exists():
             return
@@ -212,22 +209,22 @@ class InferencePipeline:
 
         # ── Build sequence tensors for multimodal GNN (TD-006 fail-safe) ──
         from src.core.models.gnn import VariantGATv2GNN
+
         nuc_ids = None
         aa_ids = None
 
-        is_multimodal = (
-            isinstance(self._ensemble.gnn, VariantGATv2GNN)
-            and getattr(self._ensemble.gnn, "use_multimodal", False)
+        is_multimodal = isinstance(self._ensemble.gnn, VariantGATv2GNN) and getattr(
+            self._ensemble.gnn, "use_multimodal", False
         )
 
         if is_multimodal:
             nuc_ids, aa_ids = _build_safe_sequence_tensors(
-                gnn_model     = self._ensemble.gnn,
-                n_samples     = X_scaled.shape[0],
-                nuc_sequences = dataset.nuc_sequences,
-                aa_sequences  = dataset.aa_sequences,
+                gnn_model=self._ensemble.gnn,
+                n_samples=X_scaled.shape[0],
+                nuc_sequences=dataset.nuc_sequences,
+                aa_sequences=dataset.aa_sequences,
             )
-        
+
         # Load F1-optimal threshold saved during training (TEKNOFEST §7.3)
         # Falls back to config value (0.50) when no saved threshold exists.
         threshold = self.store.load_threshold(default=cfg.thresholds.classification)
@@ -239,8 +236,11 @@ class InferencePipeline:
         if isinstance(self._ensemble.gnn, VariantGATv2GNN):
             # MC-Dropout ile belirsizlik tahmini (multimodal token'lar dahil)
             preds, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
-                X_scaled, n_iter=10, threshold=threshold,
-                nuc_ids=nuc_ids, aa_ids=aa_ids,
+                X_scaled,
+                n_iter=10,
+                threshold=threshold,
+                nuc_ids=nuc_ids,
+                aa_ids=aa_ids,
             )
             # NaN uncertainty koruması
             if np.isnan(uncertainty).any():
@@ -251,8 +251,10 @@ class InferencePipeline:
         else:
             # Klasik tahmin (GATv2 olmayan path)
             preds, raw_proba = self._ensemble.predict(
-                X_scaled, threshold=threshold,
-                nuc_ids=nuc_ids, aa_ids=aa_ids,
+                X_scaled,
+                threshold=threshold,
+                nuc_ids=nuc_ids,
+                aa_ids=aa_ids,
             )
             confidence = (np.max(raw_proba, axis=1) * 100).round(2)
             conf_frac = np.max(raw_proba, axis=1)
@@ -283,18 +285,19 @@ class InferencePipeline:
                 .values
             )
             preds = (proba_pathogenic >= row_thr).astype(int)
-            logger.info("Panel-aware eşik (opt-in) uygulandı: %s",
-                        {k: round(float(v), 3) for k, v in panel_thresholds.items()})
+            logger.info(
+                "Panel-aware eşik (opt-in) uygulandı: %s", {k: round(float(v), 3) for k, v in panel_thresholds.items()}
+            )
 
         # Çıktı DataFrame
         result: pd.DataFrame = dataset.metadata.copy()
-        result["Prediction"]    = np.where(preds == 1, "Pathogenic", "Benign")
-        result["Probability"]   = raw_proba[:, 1].round(4)
+        result["Prediction"] = np.where(preds == 1, "Pathogenic", "Benign")
+        result["Probability"] = raw_proba[:, 1].round(4)
         result["Calibrated_Risk"] = cal_risk
-        result["Confidence"]    = confidence
+        result["Confidence"] = confidence
         # F1-optimal threshold'u kullan (eğitimde kayıt edilen) — config sabit değeri değil.
         # HAM olasılık kullanılır (θ HAM uzayda türetildi → Prediction ile tutarlı; calibrated DEĞİL).
-        result["High_Risk"]     = raw_proba[:, 1] >= threshold
+        result["High_Risk"] = raw_proba[:, 1] >= threshold
         result["Clinical_Flag"] = clinical_flag
 
         # ── OOD Tespiti — eğitim dağılımından sapma kontrolü ─────────────────
@@ -302,14 +305,14 @@ class InferencePipeline:
         # Yoksa devre dışı — inference verisiyle fit etmek YANLIŞTIR (tüm noktalar
         # kendi dağılımında olur → anlamsız skor).
         try:
-            from src.scientific.ood_detector import OODDetector
             _ood_path = self.store.model_dir / "ood_detector.pkl"
             if _ood_path.exists():
                 import joblib as _jl
+
                 _ood_det = _jl.load(str(_ood_path))
                 _ood_out = _ood_det.detect(X_scaled)
                 result["OOD_Score"] = _ood_out["ood_scores"].round(3)
-                result["OOD_Flag"]  = _ood_out["ood_flags"]
+                result["OOD_Flag"] = _ood_out["ood_flags"]
             else:
                 logger.info(
                     "OOD dedektörü bulunamadı (%s). "
@@ -318,14 +321,14 @@ class InferencePipeline:
                     _ood_path,
                 )
                 result["OOD_Score"] = np.nan
-                result["OOD_Flag"]  = False
+                result["OOD_Flag"] = False
         except Exception as _ood_exc:
             logger.warning(
                 "OOD tespiti basarisiz (OOD_Score/OOD_Flag kolonlari olmayacak): %s",
                 _ood_exc,
             )
             result["OOD_Score"] = np.nan
-            result["OOD_Flag"]  = False
+            result["OOD_Flag"] = False
 
         return result
 
@@ -344,7 +347,7 @@ class InferencePipeline:
         """
         cfg = self.cfg
         if self._ensemble is None or self._preprocessor is None:
-             raise RuntimeError("Pipeline must be loaded first.")
+            raise RuntimeError("Pipeline must be loaded first.")
 
         # ── Panel one-hot encoding ──
         KNOWN_PANELS = ["General", "Hereditary_Cancer", "PAH", "CFTR"]
@@ -356,14 +359,18 @@ class InferencePipeline:
                     df[col] = (panel_series == panel_name).astype(float)
 
         try:
-            expected_features: Optional[List[str]] = self._ensemble.xgb.get_booster().feature_names if self._ensemble.xgb is not None else None
-            expected_n: int = len(expected_features) if expected_features else self._preprocessor._imputer.n_features_in_ # type: ignore
+            expected_features: Optional[List[str]] = (
+                self._ensemble.xgb.get_booster().feature_names if self._ensemble.xgb is not None else None
+            )
+            expected_n: int = (
+                len(expected_features) if expected_features else self._preprocessor._imputer.n_features_in_
+            )  # type: ignore
         except Exception:
-            expected_n = self._preprocessor._imputer.n_features_in_ # type: ignore
+            expected_n = self._preprocessor._imputer.n_features_in_  # type: ignore
             expected_features = None
 
         # Separate metadata cols
-        non_feature_cols: List[str] = getattr(cfg.schema, 'non_feature_columns', [])
+        non_feature_cols: List[str] = getattr(cfg.schema, "non_feature_columns", [])
         id_cols: List[str] = [c for c in cfg.schema.id_columns if c in df.columns]
 
         drop_cols: List[str] = list(id_cols)
@@ -385,7 +392,7 @@ class InferencePipeline:
             if feature_df.shape[1] != expected_n:
                 raise ValueError(f"X has {feature_df.shape[1]} features, model expects {expected_n}")
         else:
-            feature_df = df.drop(columns=drop_cols, errors='ignore').select_dtypes(include=[np.number])
+            feature_df = df.drop(columns=drop_cols, errors="ignore").select_dtypes(include=[np.number])
             if feature_df.shape[1] != expected_n:
                 raise ValueError(
                     f"predict_from_dataframe: DataFrame'de {feature_df.shape[1]} sayısal "
@@ -397,18 +404,12 @@ class InferencePipeline:
             feature_df = feature_df[expected_features]
 
         dummy_dataset = LoadedDataset(
-            features = feature_df,
-            labels = None,
-            metadata = metadata,
-            feature_columns = list(feature_df.columns),
+            features=feature_df,
+            labels=None,
+            metadata=metadata,
+            feature_columns=list(feature_df.columns),
             # Multimodal GNN için sekans kolonları varsa pas et
-            nuc_sequences = (
-                df["Nuc_Context"].astype(str).tolist()
-                if "Nuc_Context" in df.columns else None
-            ),
-            aa_sequences = (
-                df["AA_Context"].astype(str).tolist()
-                if "AA_Context" in df.columns else None
-            ),
+            nuc_sequences=(df["Nuc_Context"].astype(str).tolist() if "Nuc_Context" in df.columns else None),
+            aa_sequences=(df["AA_Context"].astype(str).tolist() if "AA_Context" in df.columns else None),
         )
         return self.predict_from_dataset(dummy_dataset)

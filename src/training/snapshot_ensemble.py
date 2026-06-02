@@ -36,6 +36,7 @@ TEKNOFEST 2026 motivasyonu:
   - Ensemble inference: predict_proba'yı tüm snapshot'lar üzerinden ortala
   - Disk persistence: her snapshot ayrı .pth dosyası
 """
+
 from __future__ import annotations
 
 import logging
@@ -71,18 +72,18 @@ class CosineAnnealingCyclicLR:
 
     def __init__(
         self,
-        optimizer:    torch.optim.Optimizer,
-        cycle_length: int   = 5,
-        lr_min:       float = 1e-6,
-        lr_max:       float = 1e-2,
+        optimizer: torch.optim.Optimizer,
+        cycle_length: int = 5,
+        lr_min: float = 1e-6,
+        lr_max: float = 1e-2,
     ) -> None:
         if cycle_length < 1:
             raise ValueError("cycle_length must be >= 1")
-        self.optimizer    = optimizer
+        self.optimizer = optimizer
         self.cycle_length = cycle_length
-        self.lr_min       = lr_min
-        self.lr_max       = lr_max
-        self._epoch       = 0
+        self.lr_min = lr_min
+        self.lr_max = lr_max
+        self._epoch = 0
 
     def step(self, epoch: Optional[int] = None) -> float:
         """Update optimizer LR for the given epoch (or auto-increment)."""
@@ -127,12 +128,12 @@ class SnapshotBuffer:
     def __init__(
         self,
         cycle_length: int = 5,
-        n_snapshots:  int = 5,
-        save_dir:     Optional[Path] = None,
+        n_snapshots: int = 5,
+        save_dir: Optional[Path] = None,
     ) -> None:
         self.cycle_length = cycle_length
-        self.n_snapshots  = n_snapshots
-        self.save_dir     = Path(save_dir) if save_dir else None
+        self.n_snapshots = n_snapshots
+        self.save_dir = Path(save_dir) if save_dir else None
         if self.save_dir is not None:
             self.save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -163,13 +164,15 @@ class SnapshotBuffer:
             torch.save(sd, str(path))
             logger.info(
                 "SnapshotEnsemble: snapshot %d saved at epoch %d → %s",
-                snapshot_idx, epoch + 1, path,
+                snapshot_idx,
+                epoch + 1,
+                path,
             )
         else:
             logger.info(
-                "SnapshotEnsemble: snapshot %d collected at epoch %d "
-                "(in-memory only).",
-                snapshot_idx, epoch + 1,
+                "SnapshotEnsemble: snapshot %d collected at epoch %d (in-memory only).",
+                snapshot_idx,
+                epoch + 1,
             )
 
         return True
@@ -217,15 +220,15 @@ class SnapshotEnsemblePredictor:
 
     def __init__(
         self,
-        model_factory:  Callable[[], nn.Module],
-        snapshots:      List[Dict[str, torch.Tensor]],
-        device:         torch.device,
+        model_factory: Callable[[], nn.Module],
+        snapshots: List[Dict[str, torch.Tensor]],
+        device: torch.device,
     ) -> None:
         if not snapshots:
             raise ValueError("SnapshotEnsemblePredictor requires ≥ 1 snapshot.")
         self.model_factory = model_factory
-        self.snapshots     = snapshots
-        self.device        = device
+        self.snapshots = snapshots
+        self.device = device
 
     @torch.no_grad()
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
@@ -249,7 +252,7 @@ class SnapshotEnsemblePredictor:
             model.load_state_dict(sd)
             model.eval()
             logits = model(x_tensor)
-            probs  = torch.softmax(logits, dim=1)
+            probs = torch.softmax(logits, dim=1)
             accumulator += probs
 
         accumulator /= len(self.snapshots)
@@ -260,7 +263,7 @@ class SnapshotEnsemblePredictor:
         self,
         data: Any,
         nuc_ids: Optional[torch.Tensor] = None,
-        aa_ids:  Optional[torch.Tensor] = None,
+        aa_ids: Optional[torch.Tensor] = None,
     ) -> np.ndarray:
         """
         Snapshot-ensemble predict for a PyG Data graph.
@@ -281,7 +284,7 @@ class SnapshotEnsemblePredictor:
             if aa_ids is not None:
                 kwargs["aa_ids"] = aa_ids.to(self.device)
             logits = model(data.x, data.edge_index, **kwargs)
-            probs  = torch.softmax(logits, dim=1)
+            probs = torch.softmax(logits, dim=1)
             accumulator += probs
 
         accumulator /= len(self.snapshots)

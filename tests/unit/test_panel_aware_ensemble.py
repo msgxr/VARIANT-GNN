@@ -1,4 +1,5 @@
 """tests/unit/test_panel_aware_ensemble.py"""
+
 from __future__ import annotations
 
 import json
@@ -8,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.ensemble.panel_aware_ensemble import PanelAwareEnsemble, KNOWN_PANELS
+from src.ensemble.panel_aware_ensemble import KNOWN_PANELS, PanelAwareEnsemble
 
 
 def _synthetic_data(n: int = 200, n_models: int = 4, seed: int = 0):
@@ -105,9 +106,7 @@ def test_save_load_roundtrip(tmp_path):
     np.testing.assert_allclose(loaded._global_weights, ens._global_weights, atol=1e-9)
     for panel in KNOWN_PANELS:
         if panel in ens._panel_weights:
-            np.testing.assert_allclose(
-                loaded._panel_weights[panel], ens._panel_weights[panel], atol=1e-9
-            )
+            np.testing.assert_allclose(loaded._panel_weights[panel], ens._panel_weights[panel], atol=1e-9)
 
 
 def test_load_nonexistent_raises():

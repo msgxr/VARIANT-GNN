@@ -18,6 +18,7 @@ Kullanım:
 Çıktı:
     reports/seed_stability.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,22 +33,21 @@ warnings.filterwarnings("ignore", message=".*BaseEstimator._validate_data.*", ca
 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost.*")
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.*")
 
-import numpy as np
+import numpy as np  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.config import get_settings, reset_settings
-from src.data.loader import load_csv
-from src.training.trainer import VariantTrainer
-from src.utils.seeds import set_global_seed
+from src.config import get_settings, reset_settings  # noqa: E402
+from src.data.loader import load_csv  # noqa: E402
+from src.training.trainer import VariantTrainer  # noqa: E402
+from src.utils.seeds import set_global_seed  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None,
-                 groups=None, panels=None) -> dict:
+def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None, groups=None, panels=None) -> dict:
     """Tek seed ile crossval çalıştır, F1 sonuçlarını döndür.
     groups/panels geçilirse production pipeline ile birebir aynı (sızıntısız
     group-aware split + Domain-Adversarial DNN)."""
@@ -59,8 +59,7 @@ def run_one_seed(seed: int, X, y, nuc_seqs=None, aa_seqs=None,
     set_global_seed(seed)
 
     trainer = VariantTrainer()
-    result = trainer.train(X, y, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs,
-                           groups=groups, panels=panels)
+    result = trainer.train(X, y, nuc_seqs=nuc_seqs, aa_seqs=aa_seqs, groups=groups, panels=panels)
 
     return {
         "seed": seed,
@@ -74,7 +73,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default=str(REPO_ROOT / "data" / "train_variants.csv"))
     parser.add_argument("--seeds", nargs="+", type=int, default=[42, 123, 456, 789, 2026])
-    parser.add_argument("--out",  default=str(REPO_ROOT / "reports" / "seed_stability.json"))
+    parser.add_argument("--out", default=str(REPO_ROOT / "reports" / "seed_stability.json"))
     args = parser.parse_args()
 
     print(f"Veri: {args.data}")
@@ -97,11 +96,10 @@ def main() -> int:
 
     results = []
     for i, seed in enumerate(args.seeds, 1):
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"  [{i}/{len(args.seeds)}] Seed = {seed}")
-        print(f"{'='*60}")
-        res = run_one_seed(seed, X, y, ds.nuc_sequences, ds.aa_sequences,
-                           groups=groups, panels=panels)
+        print(f"{'=' * 60}")
+        res = run_one_seed(seed, X, y, ds.nuc_sequences, ds.aa_sequences, groups=groups, panels=panels)
         results.append(res)
         print(f"  → CV F1 = {res['cv_mean_f1']:.4f} ± {res['cv_std_f1']:.4f}")
         print(f"    Fold F1'leri: {[f'{f:.4f}' for f in res['fold_f1s']]}")
@@ -109,15 +107,15 @@ def main() -> int:
 
     all_cv_means = [r["cv_mean_f1"] for r in results]
     summary = {
-        "seeds":            args.seeds,
-        "individual_runs":  results,
-        "overall_mean_f1":  float(np.mean(all_cv_means)),
-        "overall_std_f1":   float(np.std(all_cv_means)),
+        "seeds": args.seeds,
+        "individual_runs": results,
+        "overall_mean_f1": float(np.mean(all_cv_means)),
+        "overall_std_f1": float(np.std(all_cv_means)),
         "inter_seed_std_f1": float(np.std(all_cv_means)),  # alias (test contract)
-        "overall_min_f1":   float(np.min(all_cv_means)),
-        "overall_max_f1":   float(np.max(all_cv_means)),
-        "n_seeds":          len(args.seeds),
-        "data_file":        args.data,
+        "overall_min_f1": float(np.min(all_cv_means)),
+        "overall_max_f1": float(np.max(all_cv_means)),
+        "n_seeds": len(args.seeds),
+        "data_file": args.data,
     }
 
     out_path = Path(args.out)
@@ -125,9 +123,9 @@ def main() -> int:
     with open(out_path, "w") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  ÖZET — {len(args.seeds)} Seed Kararlılık Testi")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Ortalama CV F1: {summary['overall_mean_f1']:.4f}")
     print(f"  Std            : ±{summary['overall_std_f1']:.4f}")
     print(f"  Min / Max      : {summary['overall_min_f1']:.4f} / {summary['overall_max_f1']:.4f}")

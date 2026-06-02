@@ -67,7 +67,7 @@ Mevcut literatürde eksik olan yönler şunlardır: (i) varyantlar arası ilişk
 Temel hedef, TEKNOFEST 2026 şartnamesinin birincil metriği olan Binary F1 (§7.3, pos_label=1=Patojenik) değerini dört ayrı hastalık panelinde maksimize etmektir. Özgün teknik katkılar şu başlıklarda özetlenebilir:
 
 - **ColumnAligner:** Kolon isimleri gizlenmiş varyant profillerini isim-tabanlı hizalama (exact → case-insensitive → fuzzy difflib ≥0.85 → positional) ile referans şemaya oturtan özgün modül; §3.2 anonim-kolon kısıtlamasını tam uyumla karşılar
-- **Hibrit Graf Ensemble:** XGBoost + LightGBM + VariantGATv2GNN + DNN kombinasyonu; stacking meta-öğrenici ile birleştirilmiş, Nelder-Mead ile optimize edilmiş
+- **Hibrit Graf Ensemble:** XGBoost [5] + LightGBM [6] + VariantGATv2GNN + DNN kombinasyonu; stacking meta-öğrenici ile birleştirilmiş, Nelder-Mead ile optimize edilmiş
 - **Kalibrasyon Setinde Eşik Türetimi:** Karar eşiği, group-aware held-out calibration set üzerinde resmi test prior'ına (%20-patojenik) F1-optimal olacak biçimde HAM olasılıkta türetilir (global **θ=0.8415**); türetim ve çıkarım aynı dağılımda yapılır (derivation==inference). Panel-spesifik eşikler opt-in tutulur
 - **MC Dropout Belirsizlik Ölçümü:** Epistemik belirsizliği klinik güven kategorilerine dönüştüren mekanizma
 - **Domain-Adversarial DNN (DANN):** Gradient-reversal ile panel-invariant temsil; Leave-One-Panel-Out doğrulamada ortalama +2.17 pp genelleme kazancı
@@ -80,7 +80,7 @@ Temel hedef, TEKNOFEST 2026 şartnamesinin birincil metriği olan Binary F1 (§7
 
 **Veri Seti Tanımı**
 
-TEKNOFEST 2026 yarışma çerçevesinde sağlanan veri seti, dört hastalık panelinde ACMG/AMP rehberlerine göre etiketlenmiş missense varyantları içermektedir. Veri 14 Mayıs 2026'da alınmış; model 2 Haziran 2026'da gerçek yarışma verisi üzerinde **sızıntısız (group-aware, Variant_ID)** protokolle eğitilmiştir. Etiketler ClinVar Expert Panel onaylı (3–4 yıldız) kayıtlara dayanmakta; "Pathogenic"/"Likely Pathogenic" → 1, "Benign"/"Likely Benign" → 0 birleştirme mantığı izlenmektedir. VUS etiketli varyantlar analizden çıkarılmıştır.
+TEKNOFEST 2026 yarışma çerçevesinde sağlanan veri seti, dört hastalık panelinde ACMG/AMP rehberlerine göre etiketlenmiş missense varyantları içermektedir. Veri 14 Mayıs 2026'da alınmış; model 2 Haziran 2026'da gerçek yarışma verisi üzerinde **sızıntısız (group-aware, Variant_ID)** protokolle eğitilmiştir. Etiketler ClinVar [4] Expert Panel onaylı (3–4 yıldız) kayıtlara dayanmakta; "Pathogenic"/"Likely Pathogenic" → 1, "Benign"/"Likely Benign" → 0 birleştirme mantığı izlenmektedir. VUS etiketli varyantlar analizden çıkarılmıştır.
 
 **Tablo 1: Yarışma Veri Seti Kompozisyonu**
 
@@ -189,7 +189,7 @@ Yarışma veri setinde kolon isimleri anonim olduğundan açıklanabilirlik öze
 
 **SHAP Analizi — Global Özellik Grubu Katkıları**
 
-XGBoost ve LightGBM için deterministik TreeSHAP; GNN ve DNN için model-agnostik KernelSHAP (200 örnek arka plan) kullanılmıştır. TreeSHAP ve KernelSHAP global özellik sıralama Spearman korelasyonu ρ=0.96 (p<0.001).
+XGBoost ve LightGBM için deterministik TreeSHAP [7]; GNN ve DNN için model-agnostik KernelSHAP (200 örnek arka plan) kullanılmıştır. TreeSHAP ve KernelSHAP global özellik sıralama Spearman korelasyonu ρ=0.96 (p<0.001).
 
 **Tablo 4: SHAP Özellik Grubu Katkıları — Global ve Panel Bazlı**
 
@@ -281,7 +281,7 @@ F1 patojenik-odaklıdır (pos_label=1); resmi test setinde patojenik **azınlık
 | **Gerçek: Benign (0)** | FP ≈ 36 | **TN ≈ 155** | ≈ 191 |
 | **Toplam** | ≈ 472 | ≈ 290 | 762 |
 
-*Yorum: Değerler canonical precision/recall'dan türetilen yaklaşık dağılımdır (kesin matris: `reports/figures/pdr/04_confusion_matrix_panel.png`). Yüksek eşik (θ=0.8415) precision'ı (0.9241) yükselterek FP'yi 36'ya kadar sınırlar; bedeli recall'ın 0.7644'e düşmesi, yani FN'in (kaçırılan patojenik) artmasıdır. FN klinik açıdan en kritik hata tipidir; MC Dropout bu örnekleri yüksek σ ile işaretleyerek "Uzman Değerlendirmesi Gerekli" bayrağı üretir. Eşik yüksek-precision/%20-prior'a kalibre edildiğinden bu denge bilinçli bir tercihtir.*
+*Yorum: Değerler canonical precision/recall'dan türetilen yaklaşık dağılımdır (kesin matris: Şekil 4). Yüksek eşik (θ=0.8415) precision'ı (0.9241) yükselterek FP'yi 36'ya kadar sınırlar; bedeli recall'ın 0.7644'e düşmesi, yani FN'in (kaçırılan patojenik) artmasıdır. FN klinik açıdan en kritik hata tipidir; MC Dropout bu örnekleri yüksek σ ile işaretleyerek "Uzman Değerlendirmesi Gerekli" bayrağı üretir. Eşik yüksek-precision/%20-prior'a kalibre edildiğinden bu denge bilinçli bir tercihtir.*
 
 **Şekil 2:** ROC Eğrileri (4 panel) — *reports/figures/pdr/05_roc_curves.png*
 **Şekil 3:** PR Eğrisi (Genel) — *reports/figures/pdr/06_pr_curves.png*

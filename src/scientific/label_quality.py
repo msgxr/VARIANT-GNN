@@ -22,6 +22,7 @@ Algoritma:
 
 Hiçbir dış bağımlılık yok (sklearn + numpy); opsiyonel cleanlab uyumlu çıktı.
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,29 +45,28 @@ logger = logging.getLogger(__name__)
 class LabelQualityReport:
     """Gürültülü etiket analizi sonucu."""
 
-    n_samples:          int
-    n_flagged:          int
-    estimated_noise_rate: float           # Toplam tahmini gürültü oranı [0, 1]
+    n_samples: int
+    n_flagged: int
+    estimated_noise_rate: float  # Toplam tahmini gürültü oranı [0, 1]
 
-    flagged_indices:    List[int]         # Şüpheli örnek indisleri
-    noise_matrix:       np.ndarray        # 2×2 normalize gürültü matrisi
-    confidence_scores:  np.ndarray        # Her örnek için güven skoru [0, 1]
-    label_quality_scores: np.ndarray      # Yüksek → temiz etiket
+    flagged_indices: List[int]  # Şüpheli örnek indisleri
+    noise_matrix: np.ndarray  # 2×2 normalize gürültü matrisi
+    confidence_scores: np.ndarray  # Her örnek için güven skoru [0, 1]
+    label_quality_scores: np.ndarray  # Yüksek → temiz etiket
 
     # Sınıf başına gürültü oranları
-    class_noise_rates:  Dict[int, float] = field(default_factory=dict)
+    class_noise_rates: Dict[int, float] = field(default_factory=dict)
 
     def summary(self) -> str:
         lines = [
             "=== Label Quality Report ===",
             f"  Toplam örnek         : {self.n_samples}",
-            f"  Şüpheli etiket       : {self.n_flagged}  "
-            f"({100*self.n_flagged/max(1,self.n_samples):.1f} %)",
-            f"  Tahmini gürültü oranı: {100*self.estimated_noise_rate:.2f} %",
+            f"  Şüpheli etiket       : {self.n_flagged}  ({100 * self.n_flagged / max(1, self.n_samples):.1f} %)",
+            f"  Tahmini gürültü oranı: {100 * self.estimated_noise_rate:.2f} %",
         ]
         for cls, rate in self.class_noise_rates.items():
             name = "Pathogenic" if cls == 1 else "Benign"
-            lines.append(f"  Gürültü ({name:12s}): {100*rate:.2f} %")
+            lines.append(f"  Gürültü ({name:12s}): {100 * rate:.2f} %")
         return "\n".join(lines)
 
     def log(self) -> None:
@@ -87,8 +87,8 @@ class LabelQualityReport:
 
 def _compute_calibrated_thresholds(
     prob_matrix: np.ndarray,
-    labels:      np.ndarray,
-    n_classes:   int = 2,
+    labels: np.ndarray,
+    n_classes: int = 2,
 ) -> np.ndarray:
     """
     Her sınıf k için eşik t_k = mean_{i: y_i=k} P̂(y=k | x_i).
@@ -108,9 +108,9 @@ def _compute_calibrated_thresholds(
 
 def _build_confident_joint(
     prob_matrix: np.ndarray,
-    labels:      np.ndarray,
-    thresholds:  np.ndarray,
-    n_classes:   int = 2,
+    labels: np.ndarray,
+    thresholds: np.ndarray,
+    n_classes: int = 2,
 ) -> np.ndarray:
     """
     Güven matrisi C[ŷ, y]:
@@ -134,7 +134,7 @@ def _build_confident_joint(
 
 def _label_quality_score(
     prob_matrix: np.ndarray,
-    labels:      np.ndarray,
+    labels: np.ndarray,
     noise_matrix: np.ndarray,
 ) -> np.ndarray:
     """
@@ -148,7 +148,7 @@ def _label_quality_score(
     scores = np.zeros(n, dtype=float)
     # Sınıf frekansları (prior)
     class_counts = np.bincount(labels.astype(int), minlength=2).astype(float)
-    class_prior  = class_counts / class_counts.sum()
+    class_prior = class_counts / class_counts.sum()
 
     for i in range(n):
         y = int(labels[i])
@@ -193,10 +193,10 @@ class ConfidentLearner:
         self,
         noise_threshold: float = 0.45,
         cv_folds: int = 5,
-        base_estimator = None,
+        base_estimator=None,
     ) -> None:
         self.noise_threshold = noise_threshold
-        self.cv_folds        = cv_folds
+        self.cv_folds = cv_folds
         self._base_estimator = base_estimator
 
     # ------------------------------------------------------------------
@@ -215,7 +215,7 @@ class ConfidentLearner:
         -------
         prob_matrix : (N, 2) array of [P(Benign), P(Pathogenic)]
         """
-        n_classes   = 2
+        n_classes = 2
         prob_matrix = np.zeros((len(X), n_classes), dtype=float)
         skf = StratifiedKFold(n_splits=self.cv_folds, shuffle=True, random_state=42)
 
@@ -238,17 +238,25 @@ class ConfidentLearner:
         """Return a fresh copy of the base estimator."""
         if self._base_estimator is not None:
             from sklearn.base import clone
+
             return clone(self._base_estimator)
         # Default: lightweight XGBoost
         try:
             import xgboost as xgb
+
             return xgb.XGBClassifier(
-                n_estimators=100, max_depth=4, learning_rate=0.1,
-                subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-                n_jobs=-1, verbosity=0,
+                n_estimators=100,
+                max_depth=4,
+                learning_rate=0.1,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                eval_metric="logloss",
+                n_jobs=-1,
+                verbosity=0,
             )
         except ImportError:
             from sklearn.ensemble import RandomForestClassifier
+
             return RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42)
 
     # ------------------------------------------------------------------
@@ -277,7 +285,8 @@ class ConfidentLearner:
         """
         logger.info(
             "ConfidentLearner: %d örnek üzerinde %d-fold OOF çalışıyor …",
-            len(X), self.cv_folds,
+            len(X),
+            self.cv_folds,
         )
 
         # 1. OOF olasılıkları
@@ -285,8 +294,7 @@ class ConfidentLearner:
 
         # 2. Kalibre eşikler
         thresholds = _compute_calibrated_thresholds(prob_matrix, y)
-        logger.debug("Calibrated thresholds: Benign=%.3f  Pathogenic=%.3f",
-                     thresholds[0], thresholds[1])
+        logger.debug("Calibrated thresholds: Benign=%.3f  Pathogenic=%.3f", thresholds[0], thresholds[1])
 
         # 3. Güven matrisi
         cj = _build_confident_joint(prob_matrix, y, thresholds)
@@ -311,18 +319,17 @@ class ConfidentLearner:
         if panel_labels is not None:
             self._log_panel_noise(lqs, y, panel_labels)
 
-        estimated_noise = float(sum(noise_matrix[j, k]
-                                    for j in range(2) for k in range(2) if j != k))
+        estimated_noise = float(sum(noise_matrix[j, k] for j in range(2) for k in range(2) if j != k))
 
         report = LabelQualityReport(
-            n_samples            = len(X),
-            n_flagged            = len(flagged),
-            estimated_noise_rate = estimated_noise,
-            flagged_indices      = flagged,
-            noise_matrix         = noise_matrix,
-            confidence_scores    = prob_matrix.max(axis=1),
-            label_quality_scores = lqs,
-            class_noise_rates    = class_noise,
+            n_samples=len(X),
+            n_flagged=len(flagged),
+            estimated_noise_rate=estimated_noise,
+            flagged_indices=flagged,
+            noise_matrix=noise_matrix,
+            confidence_scores=prob_matrix.max(axis=1),
+            label_quality_scores=lqs,
+            class_noise_rates=class_noise,
         )
         report.log()
         return report
@@ -335,13 +342,16 @@ class ConfidentLearner:
     ) -> None:
         """Panel bazlı düşük kaliteli örnek oranını logla."""
         for panel in np.unique(panel_labels):
-            mask  = panel_labels == panel
-            n_p   = int(mask.sum())
+            mask = panel_labels == panel
+            n_p = int(mask.sum())
             n_bad = int((lqs[mask] < self.noise_threshold).sum())
             if n_p > 0:
                 logger.info(
                     "Panel %-22s | n=%4d | düşük kalite=%3d (%5.1f %%)",
-                    panel, n_p, n_bad, 100 * n_bad / n_p,
+                    panel,
+                    n_p,
+                    n_bad,
+                    100 * n_bad / n_p,
                 )
 
     # ------------------------------------------------------------------
@@ -367,7 +377,9 @@ class ConfidentLearner:
         clean_indices = np.where(mask)[0]
         logger.info(
             "ConfidentLearner: %d → %d örnek (%d şüpheli çıkarıldı, %.1f %% loss).",
-            len(X), int(mask.sum()), report.n_flagged,
+            len(X),
+            int(mask.sum()),
+            report.n_flagged,
             100 * report.n_flagged / max(len(X), 1),
         )
         return X[clean_indices], y[clean_indices], clean_indices

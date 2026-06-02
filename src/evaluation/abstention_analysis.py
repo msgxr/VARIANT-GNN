@@ -5,6 +5,7 @@ Analysis of abstention / triage performance.
 Reports per-flag statistics and how well uncertainty correlates with
 prediction errors.  Never trains or fits on blind data.
 """
+
 from __future__ import annotations
 
 import logging

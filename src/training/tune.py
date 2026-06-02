@@ -3,6 +3,7 @@ src/training/tune.py
 Optuna-based hyperparameter optimisation for XGBoost.
 Preprocessing runs inside each Optuna trial to avoid leakage.
 """
+
 from __future__ import annotations
 
 import logging
@@ -30,24 +31,24 @@ def _objective(
     seed: int,
 ) -> float:
     params = {
-        "objective":        "binary:logistic",
-        "eval_metric":      "logloss",
-        "max_depth":        trial.suggest_int("max_depth", 3, 10),
-        "learning_rate":    trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-        "subsample":        trial.suggest_float("subsample", 0.5, 1.0),
+        "objective": "binary:logistic",
+        "eval_metric": "logloss",
+        "max_depth": trial.suggest_int("max_depth", 3, 10),
+        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+        "subsample": trial.suggest_float("subsample", 0.5, 1.0),
         "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
-        "n_estimators":     trial.suggest_int("n_estimators", 50, 300),
+        "n_estimators": trial.suggest_int("n_estimators", 50, 300),
         "min_child_weight": trial.suggest_int("min_child_weight", 1, 10),
-        "gamma":            trial.suggest_float("gamma", 0.0, 5.0),
-        "reg_alpha":        trial.suggest_float("reg_alpha", 1e-5, 10.0, log=True),
-        "reg_lambda":       trial.suggest_float("reg_lambda", 1e-5, 10.0, log=True),
+        "gamma": trial.suggest_float("gamma", 0.0, 5.0),
+        "reg_alpha": trial.suggest_float("reg_alpha", 1e-5, 10.0, log=True),
+        "reg_lambda": trial.suggest_float("reg_lambda", 1e-5, 10.0, log=True),
         "use_label_encoder": False,
-        "n_jobs":           -1,
-        "random_state":     seed,
+        "n_jobs": -1,
+        "random_state": seed,
     }
 
-    skf    = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=seed)
-    f1s    = []
+    skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=seed)
+    f1s = []
     for fold_idx, (tr_idx, val_idx) in enumerate(skf.split(X, y), start=1):
         set_global_seed(seed + fold_idx)
         X_tr, X_val = X[tr_idx], X[val_idx]
@@ -57,7 +58,7 @@ def _objective(
         # Disable autoencoder during tuning for speed
         preprocessor.use_autoencoder = False
         X_tr_p, y_tr_r = preprocessor.fit_resample_train(X_tr, y_tr)
-        X_val_p        = preprocessor.transform(X_val)
+        X_val_p = preprocessor.transform(X_val)
 
         model = xgb.XGBClassifier(**params)
         model.fit(X_tr_p, y_tr_r)
@@ -77,10 +78,10 @@ class ModelTuner:
         n_trials: int = 30,
         cv_folds: Optional[int] = None,
     ) -> None:
-        self.X        = X
-        self.y        = y
+        self.X = X
+        self.y = y
         self.n_trials = n_trials
-        self.cfg      = get_settings()
+        self.cfg = get_settings()
         self.cv_folds = cv_folds or self.cfg.training.cv_folds
 
     def optimise_xgboost(self) -> Dict[str, Any]:
@@ -88,9 +89,7 @@ class ModelTuner:
         set_global_seed(self.cfg.seed)
         study = optuna.create_study(direction="maximize")
         study.optimize(
-            lambda trial: _objective(
-                trial, self.X, self.y, self.cv_folds, self.cfg.seed
-            ),
+            lambda trial: _objective(trial, self.X, self.y, self.cv_folds, self.cfg.seed),
             n_trials=self.n_trials,
             show_progress_bar=False,
         )

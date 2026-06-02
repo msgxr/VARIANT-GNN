@@ -5,6 +5,7 @@ Centralised reproducibility setup for TEKNOFEST 2026.
 Call ``setup_reproducibility(seed, deterministic_torch)`` at the start of
 any training or inference script to guarantee identical outputs across runs.
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,6 +35,7 @@ def setup_reproducibility(
 
     try:
         import torch
+
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(seed)
@@ -64,6 +66,7 @@ def snapshot_environment() -> dict:
     dict with Python version, platform, and seed-relevant env vars.
     """
     import platform
+
     return {
         "python_version": platform.python_version(),
         "platform": platform.platform(),

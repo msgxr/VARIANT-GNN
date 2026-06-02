@@ -22,6 +22,7 @@ kaydedilen dosya yolunu (Path) döndürür.
 
 Renk paleti: TEKNOFEST 2026 marka renkleri (#e63946 kırmızı, #2563eb mavi)
 """
+
 from __future__ import annotations
 
 import json
@@ -51,29 +52,29 @@ logger = logging.getLogger(__name__)
 # Stil sabitleri
 # ---------------------------------------------------------------------------
 
-_RED    = "#e63946"   # Pathogenic / kritik
-_BLUE   = "#2563eb"   # Benign / güvenli
-_ORANGE = "#f4a261"   # Uyarı / orta risk
-_GREEN  = "#2a9d8f"   # İyi kalibrasyon
-_GRAY   = "#6b7280"   # Referans çizgisi
-_TEKNO  = "#1e3a5f"   # TEKNOFEST koyu lacivert
+_RED = "#e63946"  # Pathogenic / kritik
+_BLUE = "#2563eb"  # Benign / güvenli
+_ORANGE = "#f4a261"  # Uyarı / orta risk
+_GREEN = "#2a9d8f"  # İyi kalibrasyon
+_GRAY = "#6b7280"  # Referans çizgisi
+_TEKNO = "#1e3a5f"  # TEKNOFEST koyu lacivert
 
 _PANEL_COLORS = {
-    "General":           "#2563eb",
+    "General": "#2563eb",
     "Hereditary_Cancer": "#e63946",
-    "PAH":               "#f4a261",
-    "CFTR":              "#2a9d8f",
+    "PAH": "#f4a261",
+    "CFTR": "#2a9d8f",
 }
 
-_FONT_TITLE  = {"fontsize": 13, "fontweight": "bold", "color": _TEKNO}
-_FONT_LABEL  = {"fontsize": 11, "color": "#374151"}
-_FONT_TICK   = {"fontsize": 9}
-_GRID_KW     = {"alpha": 0.25, "linestyle": "--", "color": "#9ca3af"}
+_FONT_TITLE = {"fontsize": 13, "fontweight": "bold", "color": _TEKNO}
+_FONT_LABEL = {"fontsize": 11, "color": "#374151"}
+_FONT_TICK = {"fontsize": 9}
+_GRID_KW = {"alpha": 0.25, "linestyle": "--", "color": "#9ca3af"}
 
-_DPI    = 150
-_FIG_SQ = (6, 5)   # kare grafik boyutu
-_FIG_W  = (9, 5)   # geniş grafik boyutu
-_FIG_L  = (10, 6)  # büyük grafik boyutu
+_DPI = 150
+_FIG_SQ = (6, 5)  # kare grafik boyutu
+_FIG_W = (9, 5)  # geniş grafik boyutu
+_FIG_L = (10, 6)  # büyük grafik boyutu
 
 
 def _save(fig: plt.Figure, path: Path, tight: bool = True) -> Path:
@@ -100,6 +101,7 @@ def _tekno_header(ax: plt.Axes, title: str) -> None:
 # 1. Karışıklık Matrisi
 # ===========================================================================
 
+
 def plot_confusion_matrix(
     report: EvaluationReport,
     output_path: Union[str, Path] = "reports/confusion_matrix.png",
@@ -116,19 +118,20 @@ def plot_confusion_matrix(
         logger.warning("Karışıklık matrisi yok — atlıyor.")
         return Path(output_path)
 
-    path   = Path(output_path)
+    path = Path(output_path)
     labels = labels or ["Benign\n(0)", "Pathogenic\n(1)"]
-    cm     = report.conf_matrix.astype(float)
-    cm_n   = cm / (cm.sum(axis=1, keepdims=True) + 1e-10)
+    cm = report.conf_matrix.astype(float)
+    cm_n = cm / (cm.sum(axis=1, keepdims=True) + 1e-10)
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 5))
 
     for ax, data, fmt, cmap, title_sfx in [
-        (axes[0], cm,   "d",      "Blues",  "Ham Sayılar"),
-        (axes[1], cm_n, ".2%",    "RdYlGn", "Normalize"),
+        (axes[0], cm, "d", "Blues", "Ham Sayılar"),
+        (axes[1], cm_n, ".2%", "RdYlGn", "Normalize"),
     ]:
         im = ax.imshow(data, cmap=cmap, vmin=0, vmax=(1 if "%" in fmt else None))
-        ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
+        ax.set_xticks([0, 1])
+        ax.set_yticks([0, 1])
         ax.set_xticklabels(labels, **_FONT_LABEL)
         ax.set_yticklabels(labels, **_FONT_LABEL, rotation=90, va="center")
         ax.set_xlabel("Tahmin", **_FONT_LABEL)
@@ -139,14 +142,15 @@ def plot_confusion_matrix(
                 val = data[i, j]
                 text = f"{int(val)}" if "d" in fmt else f"{val:.1%}"
                 color = "white" if (val > 0.6 and "%" in fmt) or (val > cm.max() * 0.6 and "d" in fmt) else "black"
-                ax.text(j, i, text, ha="center", va="center",
-                        fontsize=14, fontweight="bold", color=color)
+                ax.text(j, i, text, ha="center", va="center", fontsize=14, fontweight="bold", color=color)
         plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
     fig.suptitle(
-        f"TEKNOFEST 2026 | F1={report.binary_f1:.4f}  "
-        f"Precision={report.precision:.4f}  Recall={report.recall:.4f}",
-        fontsize=11, color=_TEKNO, fontweight="bold", y=1.01,
+        f"TEKNOFEST 2026 | F1={report.binary_f1:.4f}  Precision={report.precision:.4f}  Recall={report.recall:.4f}",
+        fontsize=11,
+        color=_TEKNO,
+        fontweight="bold",
+        y=1.01,
     )
     return _save(fig, path)
 
@@ -154,6 +158,7 @@ def plot_confusion_matrix(
 # ===========================================================================
 # 2. ROC Eğrisi
 # ===========================================================================
+
 
 def plot_roc_curve(
     y_true: np.ndarray,
@@ -175,7 +180,7 @@ def plot_roc_curve(
 
     # Global ROC
     fpr, tpr, _ = roc_curve(y_true, p1)
-    roc_auc      = auc(fpr, tpr)
+    roc_auc = auc(fpr, tpr)
     ax.plot(fpr, tpr, lw=2.5, color=_BLUE, label=f"Global (AUC={roc_auc:.4f})", zorder=5)
 
     # Panel bazlı ROC (opsiyonel)
@@ -186,12 +191,12 @@ def plot_roc_curve(
             fpr_p, tpr_p, _ = roc_curve(y_true[mask], p1[mask])
             auc_p = auc(fpr_p, tpr_p)
             color = _PANEL_COLORS.get(pname, _GRAY)
-            ax.plot(fpr_p, tpr_p, lw=1.5, linestyle="--", color=color,
-                    label=f"{pname} (AUC={auc_p:.4f})", alpha=0.85)
+            ax.plot(fpr_p, tpr_p, lw=1.5, linestyle="--", color=color, label=f"{pname} (AUC={auc_p:.4f})", alpha=0.85)
 
     ax.plot([0, 1], [0, 1], color=_GRAY, lw=1, linestyle=":", label="Rastlantısal")
     ax.fill_between(fpr, tpr, alpha=0.08, color=_BLUE)
-    ax.set_xlim(-0.02, 1.02); ax.set_ylim(-0.02, 1.02)
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(-0.02, 1.02)
     ax.set_xlabel("Yanlış Pozitif Oranı (FPR)", **_FONT_LABEL)
     ax.set_ylabel("Doğru Pozitif Oranı (TPR)", **_FONT_LABEL)
     _tekno_header(ax, "ROC Eğrisi — TEKNOFEST 2026 §7.3")
@@ -199,14 +204,16 @@ def plot_roc_curve(
 
     # Optimal threshold noktası (Youden J)
     j_idx = np.argmax(tpr - fpr)
-    ax.plot(fpr[j_idx], tpr[j_idx], "o", color=_RED, markersize=9, zorder=6,
-            label=f"Optimal (thr≈{_:=})" if False else "")
+    ax.plot(
+        fpr[j_idx], tpr[j_idx], "o", color=_RED, markersize=9, zorder=6, label=f"Optimal (thr≈{_:=})" if False else ""
+    )
     ax.annotate(
         f"J-Optimal\n(FPR={fpr[j_idx]:.2f}, TPR={tpr[j_idx]:.2f})",
         xy=(fpr[j_idx], tpr[j_idx]),
         xytext=(fpr[j_idx] + 0.1, tpr[j_idx] - 0.12),
         arrowprops=dict(arrowstyle="->", color=_RED),
-        fontsize=8, color=_RED,
+        fontsize=8,
+        color=_RED,
     )
 
     return _save(fig, path)
@@ -215,6 +222,7 @@ def plot_roc_curve(
 # ===========================================================================
 # 3. Precision-Recall Eğrisi
 # ===========================================================================
+
 
 def plot_pr_curve(
     y_true: np.ndarray,
@@ -239,8 +247,7 @@ def plot_pr_curve(
 
     # Baseline: sınıf dengesi
     baseline = y_true.mean()
-    ax.axhline(y=baseline, color=_GRAY, linestyle=":", lw=1.2,
-               label=f"Baseline (P(pos)={baseline:.2f})")
+    ax.axhline(y=baseline, color=_GRAY, linestyle=":", lw=1.2, label=f"Baseline (P(pos)={baseline:.2f})")
 
     # F1 eğrisi üzerinde optimal nokta
     f1_arr = np.where(
@@ -250,13 +257,13 @@ def plot_pr_curve(
     )
     if len(f1_arr) > 0:
         best_idx = np.argmax(f1_arr)
-        ax.plot(rec[best_idx], prec[best_idx], "o", markersize=10,
-                color=_BLUE, zorder=6)
+        ax.plot(rec[best_idx], prec[best_idx], "o", markersize=10, color=_BLUE, zorder=6)
         ax.annotate(
             f"F1={f1_arr[best_idx]:.4f}\nthr={thresholds[best_idx]:.3f}",
             xy=(rec[best_idx], prec[best_idx]),
             xytext=(rec[best_idx] - 0.18, prec[best_idx] - 0.12),
-            fontsize=8, color=_BLUE,
+            fontsize=8,
+            color=_BLUE,
             arrowprops=dict(arrowstyle="->", color=_BLUE),
         )
 
@@ -264,6 +271,7 @@ def plot_pr_curve(
         # Seçilen threshold'u P-R düzleminde işaretle
         thr_preds = (p1 >= optimal_threshold).astype(int)
         from sklearn.metrics import precision_score, recall_score
+
         p_thr = precision_score(y_true, thr_preds, zero_division=0)
         r_thr = recall_score(y_true, thr_preds, zero_division=0)
         ax.plot(r_thr, p_thr, "^", markersize=11, color=_ORANGE, zorder=7)
@@ -271,7 +279,8 @@ def plot_pr_curve(
             f"Seçilen eşik={optimal_threshold:.3f}\nP={p_thr:.3f}, R={r_thr:.3f}",
             xy=(r_thr, p_thr),
             xytext=(r_thr + 0.05, p_thr - 0.1),
-            fontsize=8, color=_ORANGE,
+            fontsize=8,
+            color=_ORANGE,
             arrowprops=dict(arrowstyle="->", color=_ORANGE),
         )
 
@@ -287,6 +296,7 @@ def plot_pr_curve(
 # ===========================================================================
 # 4. F1 Skoru vs Eşik
 # ===========================================================================
+
 
 def plot_f1_threshold(
     y_true: np.ndarray,
@@ -313,29 +323,33 @@ def plot_f1_threshold(
         precs.append(precision_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
         recs.append(recall_score(y_true, preds, average="binary", pos_label=1, zero_division=0))
 
-    f1s   = np.array(f1s)
+    f1s = np.array(f1s)
     precs = np.array(precs)
-    recs  = np.array(recs)
+    recs = np.array(recs)
 
     best_idx = np.argmax(f1s)
     best_thr = float(thresholds[best_idx])
-    best_f1  = float(f1s[best_idx])
+    best_f1 = float(f1s[best_idx])
 
     fig, ax = plt.subplots(figsize=_FIG_W)
-    ax.plot(thresholds, f1s,   lw=2.5, color=_RED,    label="F1 (Pathogenic)")
-    ax.plot(thresholds, precs, lw=1.8, color=_BLUE,   label="Precision", linestyle="--")
-    ax.plot(thresholds, recs,  lw=1.8, color=_GREEN,  label="Recall",    linestyle="--")
+    ax.plot(thresholds, f1s, lw=2.5, color=_RED, label="F1 (Pathogenic)")
+    ax.plot(thresholds, precs, lw=1.8, color=_BLUE, label="Precision", linestyle="--")
+    ax.plot(thresholds, recs, lw=1.8, color=_GREEN, label="Recall", linestyle="--")
 
     # Optimal threshold dikey çizgisi
-    ax.axvline(best_thr, color=_RED, lw=1.5, linestyle=":",
-               label=f"Optimal eşik={best_thr:.3f}  F1={best_f1:.4f}")
+    ax.axvline(best_thr, color=_RED, lw=1.5, linestyle=":", label=f"Optimal eşik={best_thr:.3f}  F1={best_f1:.4f}")
     ax.plot(best_thr, best_f1, "o", markersize=10, color=_RED, zorder=6)
 
     # Kullanıcı tarafından seçilen threshold (eğer farklıysa)
     if optimal_threshold is not None and abs(optimal_threshold - best_thr) > 1e-3:
         idx_sel = np.argmin(np.abs(thresholds - optimal_threshold))
-        ax.axvline(optimal_threshold, color=_ORANGE, lw=1.5, linestyle="-.",
-                   label=f"Seçilen eşik={optimal_threshold:.3f}  F1={f1s[idx_sel]:.4f}")
+        ax.axvline(
+            optimal_threshold,
+            color=_ORANGE,
+            lw=1.5,
+            linestyle="-.",
+            label=f"Seçilen eşik={optimal_threshold:.3f}  F1={f1s[idx_sel]:.4f}",
+        )
 
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1.05)
@@ -352,6 +366,7 @@ def plot_f1_threshold(
 # 5. Kalibrasyon (Güvenilirlik Diyagramı)
 # ===========================================================================
 
+
 def plot_calibration(
     report: EvaluationReport,
     output_path: Union[str, Path] = "reports/calibration.png",
@@ -367,35 +382,37 @@ def plot_calibration(
       - Gri kesikli: mükemmel kalibrasyon
       - Alt panel  : histogram (tahmin dağılımı)
     """
-    path  = Path(output_path)
-    fig   = plt.figure(figsize=(7, 8))
-    gs    = gridspec.GridSpec(2, 1, height_ratios=[3, 1], hspace=0.1)
-    ax_c  = fig.add_subplot(gs[0])
-    ax_h  = fig.add_subplot(gs[1])
+    path = Path(output_path)
+    fig = plt.figure(figsize=(7, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], hspace=0.1)
+    ax_c = fig.add_subplot(gs[0])
+    ax_h = fig.add_subplot(gs[1])
 
     ax_c.plot([0, 1], [0, 1], "k--", lw=1.2, label="Mükemmel kalibrasyon", zorder=1)
 
     # Kalibrasyondan önce
-    if (
-        report.calibration_fraction_pos is not None
-        and len(report.calibration_fraction_pos) > 0
-    ):
+    if report.calibration_fraction_pos is not None and len(report.calibration_fraction_pos) > 0:
         ax_c.plot(
             report.calibration_mean_pred,
             report.calibration_fraction_pos,
-            "o-", color=_BLUE, lw=1.8, markersize=6,
+            "o-",
+            color=_BLUE,
+            lw=1.8,
+            markersize=6,
             label=f"Kalibrasyondan önce (ECE={report.ece:.4f})",
         )
         ax_c.fill_between(
             report.calibration_mean_pred,
             report.calibration_fraction_pos,
             report.calibration_mean_pred,
-            alpha=0.06, color=_BLUE,
+            alpha=0.06,
+            color=_BLUE,
         )
 
     # Kalibrasyondan sonra
     if cal_frac_pos is not None and len(cal_frac_pos) > 0 and cal_mean_pred is not None:
         from sklearn.metrics import brier_score_loss
+
         if y_true is not None and y_prob_cal is not None:
             p_cal = y_prob_cal[:, 1] if y_prob_cal.ndim == 2 else y_prob_cal
             ece_after = report.ece  # gerçek hesaplama yoksa rapordan al
@@ -404,8 +421,13 @@ def plot_calibration(
         else:
             label_after = "Kalibrasyondan sonra"
         ax_c.plot(
-            cal_mean_pred, cal_frac_pos,
-            "s--", color=_ORANGE, lw=1.8, markersize=6, label=label_after,
+            cal_mean_pred,
+            cal_frac_pos,
+            "s--",
+            color=_ORANGE,
+            lw=1.8,
+            markersize=6,
+            label=label_after,
         )
 
     ax_c.set_xlim(-0.02, 1.02)
@@ -420,13 +442,13 @@ def plot_calibration(
         ax_h.bar(
             report.calibration_mean_pred,
             report.calibration_fraction_pos,
-            width=0.08, color=_BLUE, alpha=0.6, label="Önce"
+            width=0.08,
+            color=_BLUE,
+            alpha=0.6,
+            label="Önce",
         )
     if cal_mean_pred is not None and len(cal_mean_pred) > 0 and cal_frac_pos is not None:
-        ax_h.bar(
-            cal_mean_pred, cal_frac_pos,
-            width=0.05, color=_ORANGE, alpha=0.6, label="Sonra"
-        )
+        ax_h.bar(cal_mean_pred, cal_frac_pos, width=0.05, color=_ORANGE, alpha=0.6, label="Sonra")
     ax_h.set_xlim(-0.02, 1.02)
     ax_h.set_xlabel("Ortalama Tahmin Olasılığı", **_FONT_LABEL)
     ax_h.set_ylabel("Sayı", **_FONT_LABEL)
@@ -442,6 +464,7 @@ def plot_calibration(
 # 6. Panel F1 Karşılaştırma Barı
 # ===========================================================================
 
+
 def plot_panel_f1_bar(
     panel_reports: Dict[str, EvaluationReport],
     output_path: Union[str, Path] = "reports/panel_f1_bar.png",
@@ -455,33 +478,37 @@ def plot_panel_f1_bar(
         logger.warning("Panel raporu yok — panel_f1_bar atlandı.")
         return Path(output_path)
 
-    path   = Path(output_path)
+    path = Path(output_path)
     panels = list(panel_reports.keys())
-    n      = len(panels)
+    n = len(panels)
 
     metrics_data = {
-        "Binary F1":  [panel_reports[p].binary_f1  for p in panels],
-        "Precision":  [panel_reports[p].precision  for p in panels],
-        "Recall":     [panel_reports[p].recall      for p in panels],
-        "MCC":        [(panel_reports[p].mcc + 1) / 2 for p in panels],  # normalise [-1,1]→[0,1]
+        "Binary F1": [panel_reports[p].binary_f1 for p in panels],
+        "Precision": [panel_reports[p].precision for p in panels],
+        "Recall": [panel_reports[p].recall for p in panels],
+        "MCC": [(panel_reports[p].mcc + 1) / 2 for p in panels],  # normalise [-1,1]→[0,1]
     }
     metric_colors = [_RED, _BLUE, _GREEN, _ORANGE]
 
-    x     = np.arange(n)
+    x = np.arange(n)
     width = 0.18
     n_met = len(metrics_data)
     offsets = np.linspace(-(n_met - 1) / 2 * width, (n_met - 1) / 2 * width, n_met)
 
     fig, ax = plt.subplots(figsize=(max(9, n * 2.5), 6))
     for (mname, vals), color, offset in zip(metrics_data.items(), metric_colors, offsets):
-        bars = ax.bar(x + offset, vals, width=width, label=mname, color=color, alpha=0.85,
-                      edgecolor="white", linewidth=0.5)
+        bars = ax.bar(
+            x + offset, vals, width=width, label=mname, color=color, alpha=0.85, edgecolor="white", linewidth=0.5
+        )
         for bar, val in zip(bars, vals):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 0.01,
                 f"{val:.3f}",
-                ha="center", va="bottom", fontsize=8, fontweight="bold",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
             )
 
     ax.set_xticks(x)
@@ -503,6 +530,7 @@ def plot_panel_f1_bar(
 # ===========================================================================
 # 7. GNN Öğrenme Eğrisi
 # ===========================================================================
+
 
 def plot_learning_curve(
     learning_curve_json: Union[str, Path, List[dict]],
@@ -539,16 +567,17 @@ def plot_learning_curve(
         logger.warning("Seçilen run'da epoch verisi yok.")
         return path
 
-    epochs    = [e["epoch"]    for e in epochs_data]
+    epochs = [e["epoch"] for e in epochs_data]
     train_f1s = [e.get("train_f1", 0.0) for e in epochs_data]
-    val_f1s   = [e.get("val_f1",   None) for e in epochs_data]
-    losses    = [e.get("loss",     None) for e in epochs_data]
+    val_f1s = [e.get("val_f1", None) for e in epochs_data]
+    losses = [e.get("loss", None) for e in epochs_data]
 
-    has_val  = any(v is not None for v in val_f1s)
+    has_val = any(v is not None for v in val_f1s)
     has_loss = any(l is not None for l in losses)
 
     fig, axes = plt.subplots(
-        1, 2 if has_loss else 1,
+        1,
+        2 if has_loss else 1,
         figsize=(_FIG_L if has_loss else _FIG_W),
         squeeze=False,
     )
@@ -557,14 +586,12 @@ def plot_learning_curve(
     ax_f1.plot(epochs, train_f1s, lw=2.5, color=_BLUE, label="Eğitim F1 (Pathogenic)")
     if has_val:
         val_plot = [v if v is not None else np.nan for v in val_f1s]
-        ax_f1.plot(epochs, val_plot, lw=2.0, color=_RED, linestyle="--",
-                   label="Doğrulama F1 (Pathogenic)")
+        ax_f1.plot(epochs, val_plot, lw=2.0, color=_RED, linestyle="--", label="Doğrulama F1 (Pathogenic)")
 
     # Erken durdurma noktası
     for e in epochs_data:
         if e.get("early_stop"):
-            ax_f1.axvline(e["epoch"], color=_GRAY, lw=1.5, linestyle=":",
-                          label=f"Erken Durdurma (epoch {e['epoch']})")
+            ax_f1.axvline(e["epoch"], color=_GRAY, lw=1.5, linestyle=":", label=f"Erken Durdurma (epoch {e['epoch']})")
             break
 
     # En iyi val F1
@@ -575,8 +602,12 @@ def plot_learning_curve(
     )
     if best_entry and has_val:
         ax_f1.plot(
-            best_entry["epoch"], best_entry.get("val_f1", 0.0),
-            "*", markersize=14, color=_GREEN, zorder=7,
+            best_entry["epoch"],
+            best_entry.get("val_f1", 0.0),
+            "*",
+            markersize=14,
+            color=_GREEN,
+            zorder=7,
             label=f"En İyi Val F1={best_entry.get('val_f1', 0.0):.4f}",
         )
 
@@ -603,6 +634,7 @@ def plot_learning_curve(
 # 8. Feature Importance (XGBoost gain)
 # ===========================================================================
 
+
 def plot_feature_importance(
     feature_names: Sequence[str],
     importance_values: Sequence[float],
@@ -622,7 +654,7 @@ def plot_feature_importance(
     """
     path = Path(output_path)
 
-    names  = list(feature_names)[:top_n]
+    names = list(feature_names)[:top_n]
     values = list(importance_values)[:top_n]
     if not names:
         logger.warning("Özellik önem verisi yok.")
@@ -630,28 +662,56 @@ def plot_feature_importance(
 
     # Sırala (artan — horizontal bar için)
     sorted_pairs = sorted(zip(values, names), key=lambda t: t[0])
-    vals_sorted  = [p[0] for p in sorted_pairs]
+    vals_sorted = [p[0] for p in sorted_pairs]
     names_sorted = [p[1] for p in sorted_pairs]
 
     # Renk haritalama (şartname §3.2 özellik kategorileri)
-    _evo_keys   = {"gerp", "phylop", "phastcons", "siphy", "phylo_diversity", "conserv"}
-    _score_keys = {"cadd", "revel", "sift", "polyphen", "mutpred", "vest", "provean",
-                   "mutationtaster", "metasvm", "metalr", "mcap", "in_silico"}
-    _pop_keys   = {"gnomad", "exac", "af_", "_af", "allele_freq", "maf"}
-    _bio_keys   = {"aa_", "protein", "delta", "solvent", "hydro", "polarity",
-                   "mol_weight", "size_diff", "grantham", "blosum", "secondary"}
-    _seq_keys   = {"gc_content", "cpg", "motif", "nuc", "codon", "splice"}
+    _evo_keys = {"gerp", "phylop", "phastcons", "siphy", "phylo_diversity", "conserv"}
+    _score_keys = {
+        "cadd",
+        "revel",
+        "sift",
+        "polyphen",
+        "mutpred",
+        "vest",
+        "provean",
+        "mutationtaster",
+        "metasvm",
+        "metalr",
+        "mcap",
+        "in_silico",
+    }
+    _pop_keys = {"gnomad", "exac", "af_", "_af", "allele_freq", "maf"}
+    _bio_keys = {
+        "aa_",
+        "protein",
+        "delta",
+        "solvent",
+        "hydro",
+        "polarity",
+        "mol_weight",
+        "size_diff",
+        "grantham",
+        "blosum",
+        "secondary",
+    }
+    _seq_keys = {"gc_content", "cpg", "motif", "nuc", "codon", "splice"}
 
-    default_color   = _GRAY
+    default_color = _GRAY
     group_colors_map = group_colors or {}
 
     def _get_color(name: str) -> str:
         nl = name.lower()
-        if any(k in nl for k in _evo_keys):   return _BLUE
-        if any(k in nl for k in _score_keys): return _RED
-        if any(k in nl for k in _pop_keys):   return _ORANGE
-        if any(k in nl for k in _bio_keys):   return _GREEN
-        if any(k in nl for k in _seq_keys):   return "#7c3aed"  # mor
+        if any(k in nl for k in _evo_keys):
+            return _BLUE
+        if any(k in nl for k in _score_keys):
+            return _RED
+        if any(k in nl for k in _pop_keys):
+            return _ORANGE
+        if any(k in nl for k in _bio_keys):
+            return _GREEN
+        if any(k in nl for k in _seq_keys):
+            return "#7c3aed"  # mor
         return group_colors_map.get(name, default_color)
 
     colors = [_get_color(n) for n in names_sorted]
@@ -659,11 +719,16 @@ def plot_feature_importance(
     fig_height = max(7, len(names_sorted) * 0.35)
     fig, ax = plt.subplots(figsize=(10, fig_height))
 
-    bars = ax.barh(names_sorted, vals_sorted, color=colors, edgecolor="white",
-                   linewidth=0.4, alpha=0.88)
+    bars = ax.barh(names_sorted, vals_sorted, color=colors, edgecolor="white", linewidth=0.4, alpha=0.88)
     for bar, val in zip(bars, vals_sorted):
-        ax.text(val + max(vals_sorted) * 0.01, bar.get_y() + bar.get_height() / 2,
-                f"{val:.2f}", va="center", ha="left", fontsize=7.5)
+        ax.text(
+            val + max(vals_sorted) * 0.01,
+            bar.get_y() + bar.get_height() / 2,
+            f"{val:.2f}",
+            va="center",
+            ha="left",
+            fontsize=7.5,
+        )
 
     ax.set_xlabel("Özellik Önemi (Gain)", **_FONT_LABEL)
     _tekno_header(ax, f"Özellik Önemi — En Önemli {top_n} Özellik (XGBoost Gain)")
@@ -672,12 +737,12 @@ def plot_feature_importance(
 
     # Renk göstergesi (şartname §3.2 kategorileri)
     legend_patches = [
-        mpatches.Patch(color=_BLUE,    label="Evrimsel Korunmuşluk"),
-        mpatches.Patch(color=_RED,     label="In-Silico Risk Skorları"),
-        mpatches.Patch(color=_ORANGE,  label="Popülasyon Verileri"),
-        mpatches.Patch(color=_GREEN,   label="Biyokimyasal/Yapısal"),
-        mpatches.Patch(color="#7c3aed",label="Sekans Bağlamı"),
-        mpatches.Patch(color=_GRAY,    label="Diğer"),
+        mpatches.Patch(color=_BLUE, label="Evrimsel Korunmuşluk"),
+        mpatches.Patch(color=_RED, label="In-Silico Risk Skorları"),
+        mpatches.Patch(color=_ORANGE, label="Popülasyon Verileri"),
+        mpatches.Patch(color=_GREEN, label="Biyokimyasal/Yapısal"),
+        mpatches.Patch(color="#7c3aed", label="Sekans Bağlamı"),
+        mpatches.Patch(color=_GRAY, label="Diğer"),
     ]
     ax.legend(handles=legend_patches, fontsize=8, loc="lower right")
 
@@ -687,6 +752,7 @@ def plot_feature_importance(
 # ===========================================================================
 # 9. SHAP Waterfall (tek örnek)
 # ===========================================================================
+
 
 def plot_shap_waterfall(
     shap_values: np.ndarray,
@@ -701,13 +767,13 @@ def plot_shap_waterfall(
     Tek bir varyant için SHAP waterfall açıklama grafiği.
     """
     path = Path(output_path)
-    shap_arr  = np.array(shap_values)
-    feat_arr  = list(feature_names)
+    shap_arr = np.array(shap_values)
+    feat_arr = list(feature_names)
 
     # En etkili top_n özelliği seç
-    order     = np.argsort(np.abs(shap_arr))[::-1][:top_n]
-    shap_top  = shap_arr[order]
-    feat_top  = [feat_arr[i] for i in order]
+    order = np.argsort(np.abs(shap_arr))[::-1][:top_n]
+    shap_top = shap_arr[order]
+    feat_top = [feat_arr[i] for i in order]
 
     # Kümülatif sum için artan sıra
     pairs_sorted = sorted(zip(shap_top, feat_top), key=lambda t: t[0])
@@ -726,9 +792,13 @@ def plot_shap_waterfall(
     for y, val in zip(y_pos, vals):
         ax.text(
             val + (0.002 if val >= 0 else -0.002),
-            y, f"{val:+.4f}",
-            va="center", ha="left" if val >= 0 else "right",
-            fontsize=8, color=_RED if val > 0 else _BLUE, fontweight="bold",
+            y,
+            f"{val:+.4f}",
+            va="center",
+            ha="left" if val >= 0 else "right",
+            fontsize=8,
+            color=_RED if val > 0 else _BLUE,
+            fontweight="bold",
         )
 
     ax.set_xlabel("SHAP Değeri (log-odds değişimi)", **_FONT_LABEL)
@@ -737,7 +807,7 @@ def plot_shap_waterfall(
         f"SHAP Açıklaması — {variant_id}  →  {prediction}  (baz={base_value:.3f})",
     )
     legend_patches = [
-        mpatches.Patch(color=_RED,  label="Patojeniği artırıyor"),
+        mpatches.Patch(color=_RED, label="Patojeniği artırıyor"),
         mpatches.Patch(color=_BLUE, label="Patojeniği azaltıyor"),
     ]
     ax.legend(handles=legend_patches, fontsize=9)
@@ -749,6 +819,7 @@ def plot_shap_waterfall(
 # 10. Çoklu Panel ROC (4 panel üst üste)
 # ===========================================================================
 
+
 def plot_multi_panel_roc(
     y_true_dict: Dict[str, np.ndarray],
     y_prob_dict: Dict[str, np.ndarray],
@@ -758,9 +829,9 @@ def plot_multi_panel_roc(
     4 TEKNOFEST paneli için ROC eğrilerini 2x2 ızgara üzerinde çizer.
     Şartname §3.2: General / Hereditary_Cancer / PAH / CFTR
     """
-    path   = Path(output_path)
+    path = Path(output_path)
     panels = list(y_true_dict.keys())
-    n_pan  = len(panels)
+    n_pan = len(panels)
     if n_pan == 0:
         return path
 
@@ -769,18 +840,18 @@ def plot_multi_panel_roc(
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows), squeeze=False)
 
     for idx, panel in enumerate(panels):
-        ax  = axes[idx // n_cols][idx % n_cols]
-        yt  = y_true_dict[panel]
-        yp  = y_prob_dict[panel]
-        p1  = yp[:, 1] if yp.ndim == 2 else yp
+        ax = axes[idx // n_cols][idx % n_cols]
+        yt = y_true_dict[panel]
+        yp = y_prob_dict[panel]
+        p1 = yp[:, 1] if yp.ndim == 2 else yp
 
         if len(np.unique(yt)) < 2:
             ax.set_visible(False)
             continue
 
         fpr, tpr, _ = roc_curve(yt, p1)
-        roc_auc      = auc(fpr, tpr)
-        color        = _PANEL_COLORS.get(panel, _BLUE)
+        roc_auc = auc(fpr, tpr)
+        color = _PANEL_COLORS.get(panel, _BLUE)
 
         ax.plot(fpr, tpr, lw=2.5, color=color, label=f"AUC={roc_auc:.4f}")
         ax.plot([0, 1], [0, 1], color=_GRAY, lw=1, linestyle=":")
@@ -806,6 +877,7 @@ def plot_multi_panel_roc(
 # ===========================================================================
 # Ana orkestratör: save_all_plots()
 # ===========================================================================
+
 
 def save_all_plots(
     report: EvaluationReport,
@@ -843,7 +915,7 @@ def save_all_plots(
     -------
     Dict[plot_name → saved_path]
     """
-    d   = Path(output_dir)
+    d = Path(output_dir)
     fig_dir = d / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
@@ -856,33 +928,37 @@ def save_all_plots(
             logger.warning("Grafik üretilemedi [%s]: %s", name, exc)
 
     # 1. Karışıklık matrisi
-    _try("confusion_matrix",
-         plot_confusion_matrix, report, fig_dir / "confusion_matrix.png")
+    _try("confusion_matrix", plot_confusion_matrix, report, fig_dir / "confusion_matrix.png")
 
     # 2. ROC eğrisi
-    _try("roc_curve",
-         plot_roc_curve, y_true, y_prob, fig_dir / "roc_curve.png",
-         panel_masks=panel_masks)
+    _try("roc_curve", plot_roc_curve, y_true, y_prob, fig_dir / "roc_curve.png", panel_masks=panel_masks)
 
     # 3. PR eğrisi
-    _try("pr_curve",
-         plot_pr_curve, y_true, y_prob, fig_dir / "pr_curve.png",
-         optimal_threshold=optimal_threshold)
+    _try("pr_curve", plot_pr_curve, y_true, y_prob, fig_dir / "pr_curve.png", optimal_threshold=optimal_threshold)
 
     # 4. F1 vs eşik
-    _try("f1_threshold",
-         plot_f1_threshold, y_true, y_prob, fig_dir / "f1_threshold.png",
-         optimal_threshold=optimal_threshold)
+    _try(
+        "f1_threshold",
+        plot_f1_threshold,
+        y_true,
+        y_prob,
+        fig_dir / "f1_threshold.png",
+        optimal_threshold=optimal_threshold,
+    )
 
     # 5. Kalibrasyon
-    _try("calibration",
-         plot_calibration, report, fig_dir / "calibration.png",
-         cal_frac_pos=cal_frac_pos, cal_mean_pred=cal_mean_pred)
+    _try(
+        "calibration",
+        plot_calibration,
+        report,
+        fig_dir / "calibration.png",
+        cal_frac_pos=cal_frac_pos,
+        cal_mean_pred=cal_mean_pred,
+    )
 
     # 6. Panel F1 barı
     if panel_reports:
-        _try("panel_f1_bar",
-             plot_panel_f1_bar, panel_reports, fig_dir / "panel_f1_bar.png")
+        _try("panel_f1_bar", plot_panel_f1_bar, panel_reports, fig_dir / "panel_f1_bar.png")
 
     # 7. GNN öğrenme eğrisi
     if learning_curve_json_path is None:
@@ -891,19 +967,22 @@ def save_all_plots(
             learning_curve_json_path = _default_lc
 
     if learning_curve_json_path is not None:
-        _try("learning_curve",
-             plot_learning_curve, learning_curve_json_path,
-             fig_dir / "gnn_learning_curve.png")
+        _try("learning_curve", plot_learning_curve, learning_curve_json_path, fig_dir / "gnn_learning_curve.png")
 
     # 8. Feature importance
     if feature_names is not None and feature_importances is not None:
-        _try("feature_importance",
-             plot_feature_importance, feature_names, feature_importances,
-             fig_dir / "feature_importance.png")
+        _try(
+            "feature_importance",
+            plot_feature_importance,
+            feature_names,
+            feature_importances,
+            fig_dir / "feature_importance.png",
+        )
 
     logger.info(
         "save_all_plots: %d grafik üretildi → %s",
-        len(saved), fig_dir,
+        len(saved),
+        fig_dir,
     )
 
     # Kısa özet satırı

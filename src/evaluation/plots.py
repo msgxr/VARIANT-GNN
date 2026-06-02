@@ -3,6 +3,7 @@ src/evaluation/plots.py
 Evaluation visualisation: confusion matrix, ROC, PR, calibration.
 All plots are saved to disk (no GUI dependency).
 """
+
 from __future__ import annotations
 
 import logging
@@ -38,12 +39,16 @@ def plot_confusion_matrix(
         return
 
     labels = labels or ["Benign (0)", "Pathogenic (1)"]
-    path   = _ensure_dir(Path(output_path))
+    path = _ensure_dir(Path(output_path))
 
     plt.figure(figsize=(6, 5))
     sns.heatmap(
-        report.conf_matrix, annot=True, fmt="d", cmap="Blues",
-        xticklabels=labels, yticklabels=labels,
+        report.conf_matrix,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=labels,
+        yticklabels=labels,
     )
     plt.title("Confusion Matrix")
     plt.xlabel("Predicted")
@@ -62,8 +67,9 @@ def plot_roc_curve(
 ) -> None:
     path = _ensure_dir(Path(output_path))
     from sklearn.metrics import auc as _sk_auc
+
     fpr, tpr, _ = roc_curve(y_true, y_prob[:, 1])
-    auc_val      = _sk_auc(fpr, tpr)
+    auc_val = _sk_auc(fpr, tpr)
 
     plt.figure(figsize=(6, 5))
     plt.plot(fpr, tpr, label=f"ROC (AUC={auc_val:.3f})", color="steelblue")
@@ -85,9 +91,10 @@ def plot_pr_curve(
     output_path: str | Path = "reports/pr_curve.png",
 ) -> None:
     from sklearn.metrics import average_precision_score
-    path     = _ensure_dir(Path(output_path))
+
+    path = _ensure_dir(Path(output_path))
     prec, rec, _ = precision_recall_curve(y_true, y_prob[:, 1])
-    pr_auc   = average_precision_score(y_true, y_prob[:, 1])
+    pr_auc = average_precision_score(y_true, y_prob[:, 1])
 
     plt.figure(figsize=(6, 5))
     plt.plot(rec, prec, color="darkorange", label=f"PR (AUC={pr_auc:.3f})")
@@ -117,20 +124,22 @@ def plot_calibration(
     plt.figure(figsize=(6, 5))
     plt.plot([0, 1], [0, 1], "k--", lw=0.8, label="Perfect calibration")
 
-    if (
-        report.calibration_fraction_pos is not None
-        and len(report.calibration_fraction_pos) > 0
-    ):
+    if report.calibration_fraction_pos is not None and len(report.calibration_fraction_pos) > 0:
         plt.plot(
             report.calibration_mean_pred,
             report.calibration_fraction_pos,
-            "o-", color="steelblue", label="Before calibration",
+            "o-",
+            color="steelblue",
+            label="Before calibration",
         )
 
     if cal_frac_pos is not None and len(cal_frac_pos) > 0:
         plt.plot(
-            cal_mean_pred, cal_frac_pos,
-            "s--", color="darkorange", label="After calibration",
+            cal_mean_pred,
+            cal_frac_pos,
+            "s--",
+            color="darkorange",
+            label="After calibration",
         )
 
     plt.xlabel("Mean Predicted Probability")
@@ -156,5 +165,5 @@ def save_all_plots(
     d = Path(output_dir)
     plot_confusion_matrix(report, d / "confusion_matrix.png")
     plot_roc_curve(y_true, y_prob, d / "roc_curve.png")
-    plot_pr_curve(y_true, y_prob,  d / "pr_curve.png")
+    plot_pr_curve(y_true, y_prob, d / "pr_curve.png")
     plot_calibration(report, d / "calibration.png", cal_frac_pos, cal_mean_pred)

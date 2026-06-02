@@ -39,27 +39,25 @@ def set_inference_mode(active: bool) -> None:
     global _INFERENCE_MODE  # noqa: PLW0603
     _INFERENCE_MODE = active
     if active:
-        _logger.info(
-            "ClinVar API LOCKED — inference/training mode active. "
-            "No external label data will be fetched."
-        )
+        _logger.info("ClinVar API LOCKED — inference/training mode active. No external label data will be fetched.")
+
 
 NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-ESEARCH   = f"{NCBI_BASE}/esearch.fcgi"
-ESUMMARY  = f"{NCBI_BASE}/esummary.fcgi"
+ESEARCH = f"{NCBI_BASE}/esearch.fcgi"
+ESUMMARY = f"{NCBI_BASE}/esummary.fcgi"
 
 # ClinVar API'sinin etkin olup olmadığını kontrol eden bayrak
 CLINVAR_API_ENABLED = True
 
 # ClinVar klinik anlam renk/ikon eşlemesi
 SIGNIFICANCE_MAP: dict[str, tuple[str, str]] = {
-    "pathogenic":              ("🔴", "#fc8181"),
-    "likely pathogenic":       ("🟠", "#f6ad55"),
-    "uncertain significance":  ("🟡", "#faf089"),
-    "likely benign":           ("🟢", "#9ae6b4"),
-    "benign":                  ("🟢", "#68d391"),
-    "not provided":            ("⚪", "#94a3b8"),
-    "conflicting":             ("🔵", "#63b3ed"),
+    "pathogenic": ("🔴", "#fc8181"),
+    "likely pathogenic": ("🟠", "#f6ad55"),
+    "uncertain significance": ("🟡", "#faf089"),
+    "likely benign": ("🟢", "#9ae6b4"),
+    "benign": ("🟢", "#68d391"),
+    "not provided": ("⚪", "#94a3b8"),
+    "conflicting": ("🔵", "#63b3ed"),
 }
 
 
@@ -67,8 +65,7 @@ def _clinvar_search(term: str, retmax: int = 1) -> list[str]:
     """NCBI ClinVar'da arama yapar, UID listesi döner."""
     resp = requests.get(
         ESEARCH,
-        params={"db": "clinvar", "term": term, "retmax": retmax,
-                "retmode": "json", "usehistory": "n"},
+        params={"db": "clinvar", "term": term, "retmax": retmax, "retmode": "json", "usehistory": "n"},
         timeout=8,
     )
     resp.raise_for_status()
@@ -153,8 +150,7 @@ def fetch_clinvar_info(query: str) -> dict:
         # Klinik anlam
         germline_class = summary.get("germline_classification", {})
         significance_raw = (
-            germline_class.get("description", "")
-            or summary.get("clinical_significance", {}).get("description", "")
+            germline_class.get("description", "") or summary.get("clinical_significance", {}).get("description", "")
         ).lower()
 
         emoji, color = ("⚪", "#94a3b8")
@@ -173,21 +169,20 @@ def fetch_clinvar_info(query: str) -> dict:
         title = summary.get("title", query)
         uid_str = str(uid)
 
-        base_result.update({
-            "found": True,
-            "uid": uid_str,
-            "title": title,
-            "clinical_significance": significance_raw.title() if significance_raw else "Bilinmiyor",
-            "significance_emoji": emoji,
-            "significance_color": color,
-            "review_status": (
-                germline_class.get("review_status", "")
-                or summary.get("review_status", "")
-            ),
-            "conditions": conditions[:5],          # En fazla 5 durum
-            "last_evaluated": germline_class.get("last_evaluated", ""),
-            "url": f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{uid_str}/",
-        })
+        base_result.update(
+            {
+                "found": True,
+                "uid": uid_str,
+                "title": title,
+                "clinical_significance": significance_raw.title() if significance_raw else "Bilinmiyor",
+                "significance_emoji": emoji,
+                "significance_color": color,
+                "review_status": (germline_class.get("review_status", "") or summary.get("review_status", "")),
+                "conditions": conditions[:5],  # En fazla 5 durum
+                "last_evaluated": germline_class.get("last_evaluated", ""),
+                "url": f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{uid_str}/",
+            }
+        )
 
     except requests.exceptions.Timeout:
         base_result["error"] = "ClinVar API isteği zaman aşımına uğradı (8 sn). İnternet bağlantısını kontrol edin."

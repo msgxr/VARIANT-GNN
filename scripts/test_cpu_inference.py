@@ -20,6 +20,7 @@ Beklenen çıktı:
     [OK] CFTR          — 22 tahmin, F1=0.952, süre=X.Xs
     === Tüm paneller CPU'da başarıyla çalıştı ===
 """
+
 from __future__ import annotations
 
 import os
@@ -34,10 +35,10 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import numpy as np
-import pandas as pd
-import torch
-from sklearn.metrics import f1_score
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import torch  # noqa: E402
+from sklearn.metrics import f1_score  # noqa: E402
 
 PANEL_FILES = {
     "General": "data/synthetic/test_general.csv",
@@ -55,25 +56,39 @@ PANEL_THRESHOLDS = {
 }
 
 LABEL_MAP = {
-    "pathogenic": 1, "likely pathogenic": 1,
+    "pathogenic": 1,
+    "likely pathogenic": 1,
     "pathogenic/likely pathogenic": 1,
-    "benign": 0, "likely benign": 0,
+    "benign": 0,
+    "likely benign": 0,
     "benign/likely benign": 0,
-    "1": 1, "1.0": 1, "0": 0, "0.0": 0,
+    "1": 1,
+    "1.0": 1,
+    "0": 0,
+    "0.0": 0,
 }
 
 NON_FEATURE_COLS = {
-    "Variant_ID", "Panel", "Nuc_Context", "AA_Context",
-    "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type",
-    "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic",
-    "OMIM_Disease_Gene", "Secondary_Structure_Disruption",
+    "Variant_ID",
+    "Panel",
+    "Nuc_Context",
+    "AA_Context",
+    "Ref_Nucleotide",
+    "Alt_Nucleotide",
+    "Codon_Change_Type",
+    "AA_Polarity_Change",
+    "In_Critical_Protein_Domain",
+    "Is_Exonic",
+    "OMIM_Disease_Gene",
+    "Secondary_Structure_Disruption",
 }
 
 
 def _assert_cpu():
     """GPU olmadığını doğrula."""
-    assert not torch.cuda.is_available() or os.environ.get("CUDA_VISIBLE_DEVICES") == "", \
+    assert not torch.cuda.is_available() or os.environ.get("CUDA_VISIBLE_DEVICES") == "", (
         "GPU aktif — CUDA_VISIBLE_DEVICES='' ile çalıştırın"
+    )
     print(f"[INFO] PyTorch device: CPU ({'CUDA kapalı' if not torch.cuda.is_available() else 'CUDA gizlendi'})")
 
 
@@ -99,6 +114,7 @@ def _load_test_data(csv_path: Path) -> tuple[np.ndarray, np.ndarray, list[str]]:
 def _load_models():
     """Tüm model ağırlıklarını CPU'ya yükle."""
     from src.inference.artifact_loader import ArtifactLoader
+
     loader = ArtifactLoader(models_dir=ROOT / "models", device="cpu")
     return loader.load_ensemble()
 
@@ -115,6 +131,7 @@ def run_cpu_test():
     print("\n[INFO] Model dosyaları yükleniyor (CPU)...")
     try:
         from src.inference.pipeline import InferencePipeline
+
         pipeline = InferencePipeline(device="cpu")
     except Exception as exc:
         print(f"[WARN] InferencePipeline yüklenemedi: {exc}")
@@ -143,9 +160,11 @@ def run_cpu_test():
             else:
                 # Basit fallback: preprocessor + ensemble
                 import pickle
+
                 with open(ROOT / "models/preprocessor.pkl", "rb") as f:
                     preprocessor = pickle.load(f)
                 from src.core.ensemble import HybridEnsemble
+
                 ensemble = HybridEnsemble.load(ROOT / "models", device="cpu")
                 X_proc = preprocessor.transform(X)
                 preds, probs = ensemble.predict(X_proc, threshold=threshold)
@@ -156,36 +175,42 @@ def run_cpu_test():
                 f1 = f1_score(y, preds, average="binary", pos_label=1, zero_division=0)
                 status = "OK" if f1 > 0.80 else "WARN"
                 print(f"[{status}] {panel:<20} — {len(preds):4d} tahmin | F1={f1:.3f} | {elapsed:.1f}s")
-                results.append({
-                    "panel": panel,
-                    "n_predictions": len(preds),
-                    "binary_f1": f1,
-                    "elapsed_s": elapsed,
-                    "passed": f1 > 0.80,
-                })
+                results.append(
+                    {
+                        "panel": panel,
+                        "n_predictions": len(preds),
+                        "binary_f1": f1,
+                        "elapsed_s": elapsed,
+                        "passed": f1 > 0.80,
+                    }
+                )
                 if f1 <= 0.80:
                     all_passed = False
             else:
                 print(f"[OK] {panel:<20} — {len(preds):4d} tahmin | F1=N/A (etiket yok) | {elapsed:.1f}s")
-                results.append({
-                    "panel": panel,
-                    "n_predictions": len(preds),
-                    "binary_f1": None,
-                    "elapsed_s": elapsed,
-                    "passed": True,
-                })
+                results.append(
+                    {
+                        "panel": panel,
+                        "n_predictions": len(preds),
+                        "binary_f1": None,
+                        "elapsed_s": elapsed,
+                        "passed": True,
+                    }
+                )
 
         except Exception as exc:
             elapsed = time.time() - t_start
             print(f"[FAIL] {panel:<20} — HATA: {exc}")
-            results.append({
-                "panel": panel,
-                "n_predictions": 0,
-                "binary_f1": None,
-                "elapsed_s": elapsed,
-                "passed": False,
-                "error": str(exc),
-            })
+            results.append(
+                {
+                    "panel": panel,
+                    "n_predictions": 0,
+                    "binary_f1": None,
+                    "elapsed_s": elapsed,
+                    "passed": False,
+                    "error": str(exc),
+                }
+            )
             all_passed = False
 
     total_time = time.time() - t0
@@ -194,7 +219,7 @@ def run_cpu_test():
     if all_passed:
         print(f"✅ TÜM PANELLER CPU'DA BAŞARIYLA ÇALIŞTI ({total_time:.1f}s toplam)")
     else:
-        print(f"❌ BAZI PANELLER BAŞARISIZ — logları inceleyin")
+        print("❌ BAZI PANELLER BAŞARISIZ — logları inceleyin")
     print("=" * 60)
 
     return results, all_passed

@@ -13,6 +13,7 @@ PSR'da bildirilen 6 biyolojik kategori ve katkı oranları:
 Bu modül, anonim sütunlara ColumnAligner kategorilerini uygular ve
 gruba göre SHAP katkılarını toplar → PDR açıklanabilirlik kanıtı üretir.
 """
+
 from __future__ import annotations
 
 import json
@@ -29,50 +30,99 @@ BIOLOGICAL_GROUPS: Dict[str, Dict] = {
     "in_silico_risk": {
         "label_tr": "In Silico Risk Skorları",
         "keywords": [
-            "cadd", "revel", "dann", "fathmm", "vest", "metasvm", "metalr",
-            "primateai", "spliceai", "sift", "polyphen", "provean",
-            "mut_taster", "mut_assessor", "score", "risk",
+            "cadd",
+            "revel",
+            "dann",
+            "fathmm",
+            "vest",
+            "metasvm",
+            "metalr",
+            "primateai",
+            "spliceai",
+            "sift",
+            "polyphen",
+            "provean",
+            "mut_taster",
+            "mut_assessor",
+            "score",
+            "risk",
         ],
         "expected_contribution": 0.38,  # PSR §4.4 referans
     },
     "evolutionary_conservation": {
         "label_tr": "Evrimsel Korunmuşluk",
         "keywords": [
-            "phylop", "phastcons", "gerp", "conservation", "cons",
-            "siphy", "lrt", "fitcons",
+            "phylop",
+            "phastcons",
+            "gerp",
+            "conservation",
+            "cons",
+            "siphy",
+            "lrt",
+            "fitcons",
         ],
         "expected_contribution": 0.27,
     },
     "population_data": {
         "label_tr": "Popülasyon Verileri",
         "keywords": [
-            "af", "freq", "allele", "gnomad", "exac", "maf", "1000g",
-            "population", "esp", "topmed",
+            "af",
+            "freq",
+            "allele",
+            "gnomad",
+            "exac",
+            "maf",
+            "1000g",
+            "population",
+            "esp",
+            "topmed",
         ],
         "expected_contribution": 0.18,
     },
     "biochemical_structural": {
         "label_tr": "Biyokimyasal/Yapısal",
         "keywords": [
-            "hydrophobic", "polar", "charge", "weight", "volume",
-            "grantham", "blosum", "aa_change", "amino", "missense",
-            "polarity", "struct", "domain",
+            "hydrophobic",
+            "polar",
+            "charge",
+            "weight",
+            "volume",
+            "grantham",
+            "blosum",
+            "aa_change",
+            "amino",
+            "missense",
+            "polarity",
+            "struct",
+            "domain",
         ],
         "expected_contribution": 0.10,
     },
     "sequence_context": {
         "label_tr": "Sekans Bağlamı",
         "keywords": [
-            "gc_content", "cpg", "codon", "transition", "transversion",
-            "nuc_context", "aa_context", "sequence",
+            "gc_content",
+            "cpg",
+            "codon",
+            "transition",
+            "transversion",
+            "nuc_context",
+            "aa_context",
+            "sequence",
         ],
         "expected_contribution": 0.05,
     },
     "local_sequence": {
         "label_tr": "Yerel Sekans Özellikleri",
         "keywords": [
-            "ref", "alt", "nucleotide", "context_5", "upstream",
-            "downstream", "flanking", "local",
+            "ref",
+            "alt",
+            "nucleotide",
+            "context_5",
+            "upstream",
+            "downstream",
+            "flanking",
+            "local",
         ],
         "expected_contribution": 0.02,
     },
@@ -211,7 +261,7 @@ def group_shap_report(
         [
             {
                 "group_key": k,
-                "label_tr":  BIOLOGICAL_GROUPS[k]["label_tr"],
+                "label_tr": BIOLOGICAL_GROUPS[k]["label_tr"],
                 "contribution_pct": contributions[k],
                 "expected_pct": BIOLOGICAL_GROUPS[k]["expected_contribution"] * 100,
             }
@@ -237,7 +287,9 @@ def group_shap_report(
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(
                 {"group_contributions_pct": contributions, "ranked": ranked},
-                fh, indent=2, ensure_ascii=False,
+                fh,
+                indent=2,
+                ensure_ascii=False,
             )
         result["json_path"] = str(json_path)
         logger.info("Group SHAP JSON → %s", json_path)
@@ -246,6 +298,7 @@ def group_shap_report(
         if plot:
             try:
                 import matplotlib
+
                 matplotlib.use("Agg")
                 import matplotlib.pyplot as plt
 
@@ -258,15 +311,18 @@ def group_shap_report(
 
                 for bar, val in zip(bars, values[::-1]):
                     ax.text(
-                        bar.get_width() + 0.3, bar.get_y() + bar.get_height() / 2,
-                        f"%{val:.1f}", va="center", fontsize=9,
+                        bar.get_width() + 0.3,
+                        bar.get_y() + bar.get_height() / 2,
+                        f"%{val:.1f}",
+                        va="center",
+                        fontsize=9,
                     )
 
                 ax.set_xlabel("Ortalama |SHAP| Katkısı (%)", fontsize=11)
                 ax.set_title(
-                    "Özellik Grubu Katkı Oranları (SHAP Analizi)\n"
-                    "VARIANT-GNN — PSR §4.4",
-                    fontsize=12, fontweight="bold",
+                    "Özellik Grubu Katkı Oranları (SHAP Analizi)\nVARIANT-GNN — PSR §4.4",
+                    fontsize=12,
+                    fontweight="bold",
                 )
                 ax.set_xlim(0, max(values) * 1.15)
                 plt.tight_layout()
@@ -282,8 +338,9 @@ def group_shap_report(
     # Log özet
     logger.info("=== SHAP Grup Katkıları ===")
     for r in ranked:
-        logger.info("  %-35s: %5.1f%%  (PSR beklenti: %5.1f%%)",
-                    r["label_tr"], r["contribution_pct"], r["expected_pct"])
+        logger.info(
+            "  %-35s: %5.1f%%  (PSR beklenti: %5.1f%%)", r["label_tr"], r["contribution_pct"], r["expected_pct"]
+        )
 
     return result
 
@@ -310,15 +367,15 @@ def instance_shap_table(
     """
     vals = shap_values_instance.flatten()
 
-    group_abs:  Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
-    group_sum:  Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
+    group_abs: Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
+    group_sum: Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
 
     for i, fname in enumerate(feature_names):
         if i >= len(vals):
             break
         g = assign_feature_group(fname)
-        group_abs[g]  = group_abs.get(g, 0.0)  + abs(float(vals[i]))
-        group_sum[g]  = group_sum.get(g, 0.0)  + float(vals[i])
+        group_abs[g] = group_abs.get(g, 0.0) + abs(float(vals[i]))
+        group_sum[g] = group_sum.get(g, 0.0) + float(vals[i])
 
     total_abs = sum(group_abs.values()) or 1.0
 
@@ -326,14 +383,16 @@ def instance_shap_table(
     for g in sorted(group_abs, key=lambda k: group_abs[k], reverse=True):
         s = group_sum[g]
         direction = "Patojenik" if s > 0.01 else ("Benign" if s < -0.01 else "Nötr")
-        rows.append({
-            "group_key":        g,
-            "group_label_tr":   BIOLOGICAL_GROUPS[g]["label_tr"],
-            "mean_abs_shap":    round(group_abs[g], 4),
-            "contribution_pct": round(group_abs[g] / total_abs * 100, 1),
-            "signed_shap":      round(s, 4),
-            "direction":        direction,
-        })
+        rows.append(
+            {
+                "group_key": g,
+                "group_label_tr": BIOLOGICAL_GROUPS[g]["label_tr"],
+                "mean_abs_shap": round(group_abs[g], 4),
+                "contribution_pct": round(group_abs[g] / total_abs * 100, 1),
+                "signed_shap": round(s, 4),
+                "direction": direction,
+            }
+        )
 
     for rank, row in enumerate(rows, 1):
         row["rank"] = rank
@@ -384,11 +443,11 @@ def lime_shap_concordance(
         return {"spearman_rho": float("nan"), "p_value": float("nan"), "n_instances": 0}
 
     rng = np.random.default_rng(random_state)
-    n   = min(n_samples, len(X_test))
+    n = min(n_samples, len(X_test))
     idx = rng.choice(len(X_test), size=n, replace=False)
 
     shap_global = compute_group_contributions(shap_values, feature_names)
-    shap_order  = [g for g, _ in sorted(shap_global.items(), key=lambda x: x[1], reverse=True)]
+    shap_order = [g for g, _ in sorted(shap_global.items(), key=lambda x: x[1], reverse=True)]
 
     lime_accum: Dict[str, float] = {g: 0.0 for g in BIOLOGICAL_GROUPS}
     valid = 0
@@ -414,7 +473,7 @@ def lime_shap_concordance(
 
     shap_ranks = {g: r for r, g in enumerate(shap_order)}
     lime_ranks = {g: r for r, g in enumerate(lime_order)}
-    groups     = list(BIOLOGICAL_GROUPS.keys())
+    groups = list(BIOLOGICAL_GROUPS.keys())
 
     shap_vec = [shap_ranks.get(g, len(groups)) for g in groups]
     lime_vec = [lime_ranks.get(g, len(groups)) for g in groups]
@@ -429,12 +488,12 @@ def lime_shap_concordance(
         interp = "Düşük uyum — yöntem seçimi sıralamayı etkiliyor."
 
     return {
-        "spearman_rho":        round(float(rho),  4),
-        "p_value":             round(float(pval), 6),
-        "n_instances":         valid,
-        "shap_group_ranking":  shap_order,
-        "lime_group_ranking":  lime_order,
-        "interpretation":      interp,
+        "spearman_rho": round(float(rho), 4),
+        "p_value": round(float(pval), 6),
+        "n_instances": valid,
+        "shap_group_ranking": shap_order,
+        "lime_group_ranking": lime_order,
+        "interpretation": interp,
     }
 
 
@@ -462,26 +521,26 @@ def instance_explanation_tr(
         top_rows = rows[:top_n]
 
     group_phrases = {
-        "in_silico_risk":            "yüksek in-silico risk skorları",
+        "in_silico_risk": "yüksek in-silico risk skorları",
         "evolutionary_conservation": "güçlü evrimsel korunmuşluk",
-        "population_data":           "düşük popülasyon frekansı",
-        "biochemical_structural":    "olumsuz biyokimyasal/yapısal etkiler",
-        "sequence_context":          "kritik sekans bağlamı değişimi",
-        "local_sequence":            "yerel sekans özellikleri",
+        "population_data": "düşük popülasyon frekansı",
+        "biochemical_structural": "olumsuz biyokimyasal/yapısal etkiler",
+        "sequence_context": "kritik sekans bağlamı değişimi",
+        "local_sequence": "yerel sekans özellikleri",
     }
 
     def _phrase(row: Dict) -> str:
-        base   = group_phrases.get(row["group_key"], row["group_label_tr"])
-        sign   = "+" if row["direction"] == "Patojenik" else "-"
+        base = group_phrases.get(row["group_key"], row["group_label_tr"])
+        sign = "+" if row["direction"] == "Patojenik" else "-"
         return f"{base} (katkı: {sign}%{row['contribution_pct']:.0f})"
 
-    reasons    = [_phrase(r) for r in top_rows]
+    reasons = [_phrase(r) for r in top_rows]
     reason_str = ", ".join(reasons[:-1]) + (f" ve {reasons[-1]}" if len(reasons) > 1 else reasons[0])
 
-    pred_tr    = "patojenik" if prediction.lower() in ("pathogenic", "patojenik") else "benign"
+    pred_tr = "patojenik" if prediction.lower() in ("pathogenic", "patojenik") else "benign"
     conf_label = "Yüksek" if probability > 0.80 else ("Orta" if probability > 0.60 else "Düşük")
-    unc_str    = f", belirsizlik σ: {uncertainty:.2f}" if uncertainty > 0 else ""
-    vid        = f"{variant_id} varyantı" if variant_id else "Bu varyant"
+    unc_str = f", belirsizlik σ: {uncertainty:.2f}" if uncertainty > 0 else ""
+    vid = f"{variant_id} varyantı" if variant_id else "Bu varyant"
     expert_str = " Uzman onayı önerilir." if uncertainty > 0.30 else ""
 
     return (

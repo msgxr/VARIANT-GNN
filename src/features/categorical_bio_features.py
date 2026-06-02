@@ -33,6 +33,7 @@ Doğrulama: 5-seed × 5-fold ablasyonda tek-model Binary F1 +0.7pp
 (reports/bio_feature_ablation.json). Universal biyokimya olduğu için iç bölmeye
 değil, dağılım-bağımsız sinyale dayanır → harici doğrulamada (final metriği) sağlamdır.
 """
+
 from __future__ import annotations
 
 import logging
@@ -51,13 +52,26 @@ logger = logging.getLogger(__name__)
 # Grantham mesafesini vermez (R→W≈16 üretir, gerçek değer≈101). Jüri savunabilirliği
 # için burada Grantham mesafesini doğru formül + doğru değerlerle hesaplıyoruz.
 _GRANTHAM_CPV = {
-    "S": (1.42, 9.2, 32), "R": (0.65, 10.5, 124), "L": (0.00, 4.9, 111),
-    "P": (0.39, 8.0, 32.5), "T": (0.71, 8.6, 61), "A": (0.00, 8.1, 31),
-    "V": (0.00, 5.9, 84), "G": (0.74, 9.0, 3), "I": (0.00, 5.2, 111),
-    "F": (0.00, 5.2, 132), "Y": (0.20, 6.2, 136), "C": (2.75, 5.5, 55),
-    "H": (0.58, 10.4, 96), "Q": (0.89, 10.5, 85), "N": (1.33, 11.6, 56),
-    "K": (0.33, 11.3, 119), "D": (1.38, 13.0, 54), "E": (0.92, 12.3, 83),
-    "M": (0.00, 5.7, 105), "W": (0.13, 5.4, 170),
+    "S": (1.42, 9.2, 32),
+    "R": (0.65, 10.5, 124),
+    "L": (0.00, 4.9, 111),
+    "P": (0.39, 8.0, 32.5),
+    "T": (0.71, 8.6, 61),
+    "A": (0.00, 8.1, 31),
+    "V": (0.00, 5.9, 84),
+    "G": (0.74, 9.0, 3),
+    "I": (0.00, 5.2, 111),
+    "F": (0.00, 5.2, 132),
+    "Y": (0.20, 6.2, 136),
+    "C": (2.75, 5.5, 55),
+    "H": (0.58, 10.4, 96),
+    "Q": (0.89, 10.5, 85),
+    "N": (1.33, 11.6, 56),
+    "K": (0.33, 11.3, 119),
+    "D": (1.38, 13.0, 54),
+    "E": (0.92, 12.3, 83),
+    "M": (0.00, 5.7, 105),
+    "W": (0.13, 5.4, 170),
 }
 _GRANTHAM_ALPHA, _GRANTHAM_BETA, _GRANTHAM_GAMMA = 1.833, 0.1018, 0.000399
 # Yayımlanan Grantham matrisine ölçek sabiti (R↔W=101, L↔I=5, G↔W=184 ile kalibre).
@@ -73,11 +87,7 @@ def get_grantham_score(ref: str, alt: str) -> float:
         return 100.0
     c1, p1, v1 = _GRANTHAM_CPV[r]
     c2, p2, v2 = _GRANTHAM_CPV[a]
-    raw = (
-        _GRANTHAM_ALPHA * (c1 - c2) ** 2
-        + _GRANTHAM_BETA * (p1 - p2) ** 2
-        + _GRANTHAM_GAMMA * (v1 - v2) ** 2
-    ) ** 0.5
+    raw = (_GRANTHAM_ALPHA * (c1 - c2) ** 2 + _GRANTHAM_BETA * (p1 - p2) ** 2 + _GRANTHAM_GAMMA * (v1 - v2) ** 2) ** 0.5
     return raw * _GRANTHAM_SCALE
 
 
@@ -86,22 +96,72 @@ GRANTHAM_PROPS = _GRANTHAM_CPV  # geriye dönük alias
 # ── Amino asit fizikokimyasal tabloları ─────────────────────────────────────
 # Kyte-Doolittle hidropati
 _HYDROPATHY = {
-    "A": 1.8, "R": -4.5, "N": -3.5, "D": -3.5, "C": 2.5, "Q": -3.5, "E": -3.5,
-    "G": -0.4, "H": -3.2, "I": 4.5, "L": 3.8, "K": -3.9, "M": 1.9, "F": 2.8,
-    "P": -1.6, "S": -0.8, "T": -0.7, "W": -0.9, "Y": -1.3, "V": 4.2,
+    "A": 1.8,
+    "R": -4.5,
+    "N": -3.5,
+    "D": -3.5,
+    "C": 2.5,
+    "Q": -3.5,
+    "E": -3.5,
+    "G": -0.4,
+    "H": -3.2,
+    "I": 4.5,
+    "L": 3.8,
+    "K": -3.9,
+    "M": 1.9,
+    "F": 2.8,
+    "P": -1.6,
+    "S": -0.8,
+    "T": -0.7,
+    "W": -0.9,
+    "Y": -1.3,
+    "V": 4.2,
 }
 # Yan zincir hacmi (Å³)
 _VOLUME = {
-    "A": 88.6, "R": 173.4, "N": 114.1, "D": 111.1, "C": 108.5, "Q": 143.8,
-    "E": 138.4, "G": 60.1, "H": 153.2, "I": 166.7, "L": 166.7, "K": 168.6,
-    "M": 162.9, "F": 189.9, "P": 112.7, "S": 89.0, "T": 116.1, "W": 227.8,
-    "Y": 193.6, "V": 140.0,
+    "A": 88.6,
+    "R": 173.4,
+    "N": 114.1,
+    "D": 111.1,
+    "C": 108.5,
+    "Q": 143.8,
+    "E": 138.4,
+    "G": 60.1,
+    "H": 153.2,
+    "I": 166.7,
+    "L": 166.7,
+    "K": 168.6,
+    "M": 162.9,
+    "F": 189.9,
+    "P": 112.7,
+    "S": 89.0,
+    "T": 116.1,
+    "W": 227.8,
+    "Y": 193.6,
+    "V": 140.0,
 }
 # Moleküler ağırlık (Da)
 _MW = {
-    "A": 89, "R": 174, "N": 132, "D": 133, "C": 121, "Q": 146, "E": 147, "G": 75,
-    "H": 155, "I": 131, "L": 131, "K": 146, "M": 149, "F": 165, "P": 115, "S": 105,
-    "T": 119, "W": 204, "Y": 181, "V": 117,
+    "A": 89,
+    "R": 174,
+    "N": 132,
+    "D": 133,
+    "C": 121,
+    "Q": 146,
+    "E": 147,
+    "G": 75,
+    "H": 155,
+    "I": 131,
+    "L": 131,
+    "K": 146,
+    "M": 149,
+    "F": 165,
+    "P": 115,
+    "S": 105,
+    "T": 119,
+    "W": 204,
+    "Y": 181,
+    "V": 117,
 }
 # Net yük (fizyolojik pH)
 _CHARGE = {"D": -1.0, "E": -1.0, "K": 1.0, "R": 1.0, "H": 0.5}
@@ -157,8 +217,7 @@ class CategoricalBioFeaturizer(BaseEstimator, TransformerMixin):
             self.insilico_cols = cand
         # Fit-time median'ları öğren (leakage-free NaN doldurma için)
         raw = self._compute(X)
-        self.fill_values_ = {c: float(np.nanmedian(raw[c])) if raw[c].notna().any() else 0.0
-                             for c in raw.columns}
+        self.fill_values_ = {c: float(np.nanmedian(raw[c])) if raw[c].notna().any() else 0.0 for c in raw.columns}
         self.feature_names_ = list(raw.columns)
         return self
 
@@ -184,12 +243,8 @@ class CategoricalBioFeaturizer(BaseEstimator, TransformerMixin):
             alt = X[self.AA_ALT].map(_aa1)
             alt_raw = X[self.AA_ALT].astype(str).str.strip()
 
-            feats["bio_grantham"] = [
-                get_grantham_score(r, a) if (r and a) else 100.0 for r, a in zip(ref, alt)
-            ]
-            feats["bio_blosum62"] = [
-                get_blosum62_score(r, a) if (r and a) else -4 for r, a in zip(ref, alt)
-            ]
+            feats["bio_grantham"] = [get_grantham_score(r, a) if (r and a) else 100.0 for r, a in zip(ref, alt)]
+            feats["bio_blosum62"] = [get_blosum62_score(r, a) if (r and a) else -4 for r, a in zip(ref, alt)]
             feats["bio_d_hydropathy"] = self._delta(ref, alt, _HYDROPATHY)
             feats["bio_d_volume"] = self._delta(ref, alt, _VOLUME)
             feats["bio_d_mw"] = self._delta(ref, alt, _MW)
@@ -206,16 +261,14 @@ class CategoricalBioFeaturizer(BaseEstimator, TransformerMixin):
                 1.0 if ("G" in (r or "")) or ("G" in (a or "")) else 0.0 for r, a in zip(ref, alt)
             ]
             feats["bio_stop_gain"] = (alt_raw == "*").astype(float)
-            feats["bio_same_aa"] = [
-                1.0 if (r is not None and r == a) else 0.0 for r, a in zip(ref, alt)
-            ]
+            feats["bio_same_aa"] = [1.0 if (r is not None and r == a) else 0.0 for r, a in zip(ref, alt)]
 
         # 2) Popülasyon genişliği (BA1/BS1 benign kanıtı): ne kadar çok DB/popülasyonda
         for c in self.POP_COLS:
             if c in X.columns:
                 feats[f"pop_breadth_{c}"] = (
-                    X[c].astype(str).str.count("&").fillna(0) + 1
-                ).where(X[c].notna(), 0).astype(float)
+                    (X[c].astype(str).str.count("&").fillna(0) + 1).where(X[c].notna(), 0).astype(float)
+                )
 
         # 3) Genomik bölge bağlamı (haritalanabilirlik / düşük güvenilirlik)
         if self.REGION_COL in X.columns:

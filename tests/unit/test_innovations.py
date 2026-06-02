@@ -11,12 +11,12 @@ Regression test suite for the 6 TEKNOFEST 2026 cutting-edge innovations:
   6. Reproducibility Manifest   (§7.5 jury re-run)
   7. Anonymous Inference Adapter (§3.2 column-name-free)
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # 1. Conformal Prediction
@@ -104,6 +104,7 @@ class TestConformalPrediction:
 class TestSAM:
     def test_sam_two_step_actually_updates_weights(self):
         import torch
+
         from src.training.sam import SAM
 
         torch.manual_seed(0)
@@ -128,6 +129,7 @@ class TestSAM:
 
     def test_sam_step_with_closure(self):
         import torch
+
         from src.training.sam import SAM
 
         model = torch.nn.Linear(3, 2)
@@ -170,8 +172,12 @@ class TestMixup:
         X = np.random.randn(100, 5)
         y = np.array([0] * 50 + [1] * 50)
         X_aug, y_aug = mixup_numpy(
-            X, y, alpha=1.0, n_synthetic=20,
-            same_class_only=True, seed=0,
+            X,
+            y,
+            alpha=1.0,
+            n_synthetic=20,
+            same_class_only=True,
+            seed=0,
         )
         # Synthetic samples should still be in {0, 1}
         synth_labels = y_aug[100:]
@@ -179,6 +185,7 @@ class TestMixup:
 
     def test_mixup_torch_data_shapes(self):
         import torch
+
         from src.training.mixup import mixup_data
 
         X = torch.randn(20, 8)
@@ -211,6 +218,7 @@ class TestDANN:
 
     def test_panel_discriminator_forward_shape(self):
         import torch
+
         from src.training.domain_adversarial import PanelDiscriminator
 
         disc = PanelDiscriminator(input_dim=32, hidden_dim=16, n_panels=4)
@@ -220,6 +228,7 @@ class TestDANN:
 
     def test_grad_reverse_inverts_gradient(self):
         import torch
+
         from src.training.domain_adversarial import grad_reverse
 
         x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
@@ -231,7 +240,7 @@ class TestDANN:
         assert torch.allclose(x.grad, torch.tensor([-2.0, -2.0, -2.0]))
 
     def test_encode_panels_canonical_order(self):
-        from src.training.domain_adversarial import encode_panels, KNOWN_PANELS_ORDER
+        from src.training.domain_adversarial import KNOWN_PANELS_ORDER, encode_panels
 
         panels = ["PAH", "Hereditary_Cancer", "General", "CFTR", "UnknownPanel"]
         encoded, order = encode_panels(panels)
@@ -248,6 +257,7 @@ class TestDANN:
 class TestSnapshotEnsemble:
     def test_cyclic_lr_produces_min_at_cycle_end(self):
         import torch
+
         from src.training.snapshot_ensemble import CosineAnnealingCyclicLR
 
         opt = torch.optim.SGD([torch.nn.Parameter(torch.zeros(1))], lr=1e-2)
@@ -262,6 +272,7 @@ class TestSnapshotEnsemble:
 
     def test_snapshot_buffer_collects_at_cycle_ends(self):
         import torch
+
         from src.training.snapshot_ensemble import SnapshotBuffer
 
         model = torch.nn.Linear(4, 2)
@@ -273,6 +284,7 @@ class TestSnapshotEnsemble:
 
     def test_snapshot_buffer_evicts_oldest_when_full(self):
         import torch
+
         from src.training.snapshot_ensemble import SnapshotBuffer
 
         model = torch.nn.Linear(4, 2)
@@ -300,7 +312,8 @@ class TestReproducibilityManifest:
 
     def test_manifest_roundtrip_json(self, tmp_path):
         from src.utils.reproducibility_manifest import (
-            ManifestBuilder, ReproducibilityManifest,
+            ManifestBuilder,
+            ReproducibilityManifest,
         )
 
         path = tmp_path / "manifest.json"
@@ -312,7 +325,8 @@ class TestReproducibilityManifest:
 
     def test_manifest_verify_after_save(self, tmp_path):
         from src.utils.reproducibility_manifest import (
-            ManifestBuilder, ReproducibilityManifest,
+            ManifestBuilder,
+            ReproducibilityManifest,
         )
 
         path = tmp_path / "manifest.json"
@@ -331,20 +345,24 @@ class TestAnonymousInference:
     def test_detect_panel_column(self):
         from src.inference.anonymous_inference import detect_panel_column
 
-        df = pd.DataFrame({
-            "X1": ["General", "CFTR", "PAH", "Hereditary_Cancer"],
-            "X2": [1.0, 2.0, 3.0, 4.0],
-        })
+        df = pd.DataFrame(
+            {
+                "X1": ["General", "CFTR", "PAH", "Hereditary_Cancer"],
+                "X2": [1.0, 2.0, 3.0, 4.0],
+            }
+        )
         assert detect_panel_column(df) == "X1"
 
     def test_detect_sequence_columns(self):
         from src.inference.anonymous_inference import detect_sequence_columns
 
-        df = pd.DataFrame({
-            "S1": ["ACGTACGTACG", "TTGCAACGTAC", "GGGCATAGCTA", "CCCATAGGCTT"],
-            "S2": ["AILVMSTHKQR", "ARNDCEQGHIL", "MFPSTWYVALK", "GHISTANCREP"],
-            "X1": [1.0, 2.0, 3.0, 4.0],
-        })
+        df = pd.DataFrame(
+            {
+                "S1": ["ACGTACGTACG", "TTGCAACGTAC", "GGGCATAGCTA", "CCCATAGGCTT"],
+                "S2": ["AILVMSTHKQR", "ARNDCEQGHIL", "MFPSTWYVALK", "GHISTANCREP"],
+                "X1": [1.0, 2.0, 3.0, 4.0],
+            }
+        )
         nuc, aa = detect_sequence_columns(df)
         assert nuc == "S1"
         assert aa == "S2"
@@ -352,13 +370,15 @@ class TestAnonymousInference:
     def test_anonymous_adapter_expected_shape(self):
         from src.inference.anonymous_inference import AnonymousDataAdapter
 
-        df = pd.DataFrame({
-            "Col_0": ["VAR_001", "VAR_002", "VAR_003"],
-            "Col_1": ["General", "PAH", "CFTR"],
-            "Col_2": [0.5, 0.3, 0.8],
-            "Col_3": [1.2, 0.9, 1.5],
-            "Col_4": [10.0, 20.0, 30.0],
-        })
+        df = pd.DataFrame(
+            {
+                "Col_0": ["VAR_001", "VAR_002", "VAR_003"],
+                "Col_1": ["General", "PAH", "CFTR"],
+                "Col_2": [0.5, 0.3, 0.8],
+                "Col_3": [1.2, 0.9, 1.5],
+                "Col_4": [10.0, 20.0, 30.0],
+            }
+        )
         adapter = AnonymousDataAdapter(expected_n_features=3)
         feat, meta, nuc, aa = adapter.adapt(df)
 
@@ -380,14 +400,17 @@ class TestMultimodalFailSafe:
     def test_build_safe_tensors_with_none(self):
         """nuc/aa = None → returns valid zero-padded tensors of correct shape."""
         import torch
+
         from src.api.pipeline import _build_safe_sequence_tensors
         from src.models.dnn_model import VariantDNN  # cheap module on CPU
 
         # Use a simple module for device extraction
         dummy = VariantDNN(input_dim=10, hidden_dim=16)
         nuc_ids, aa_ids = _build_safe_sequence_tensors(
-            gnn_model=dummy, n_samples=4,
-            nuc_sequences=None, aa_sequences=None,
+            gnn_model=dummy,
+            n_samples=4,
+            nuc_sequences=None,
+            aa_sequences=None,
         )
         assert nuc_ids.shape == (4, 11)
         assert aa_ids.shape == (4, 11)
@@ -403,7 +426,8 @@ class TestMultimodalFailSafe:
 
         dummy = VariantDNN(input_dim=10, hidden_dim=16)
         nuc_ids, aa_ids = _build_safe_sequence_tensors(
-            gnn_model=dummy, n_samples=3,
+            gnn_model=dummy,
+            n_samples=3,
             nuc_sequences=[None, "ACGT", float("nan")],
             aa_sequences=["ALK", None, ""],
         )
@@ -417,7 +441,8 @@ class TestMultimodalFailSafe:
 
         dummy = VariantDNN(input_dim=10, hidden_dim=16)
         nuc_ids, aa_ids = _build_safe_sequence_tensors(
-            gnn_model=dummy, n_samples=2,
+            gnn_model=dummy,
+            n_samples=2,
             nuc_sequences=[42, 3.14],
             aa_sequences=[0, 1],
         )
@@ -432,7 +457,8 @@ class TestMultimodalFailSafe:
         dummy = VariantDNN(input_dim=10, hidden_dim=16)
         # n_samples=5 but only 2 sequences
         nuc_ids, aa_ids = _build_safe_sequence_tensors(
-            gnn_model=dummy, n_samples=5,
+            gnn_model=dummy,
+            n_samples=5,
             nuc_sequences=["ACGT", "TTAG"],
             aa_sequences=["ALK", "VRP"],
         )

@@ -3,6 +3,7 @@ src/config/settings.py
 Centralised configuration loader — reads configs/default.yaml and
 exposes a frozen Settings dataclass.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -36,12 +37,12 @@ class PathSettings:
     calibrator_path: Path = field(init=False)
 
     def __post_init__(self) -> None:
-        self.xgb_model_path   = self.models_dir / "xgb_model.json"
-        self.gnn_model_path   = self.models_dir / "gnn_model.pth"
-        self.dnn_model_path   = self.models_dir / "dnn_model.pth"
+        self.xgb_model_path = self.models_dir / "xgb_model.json"
+        self.gnn_model_path = self.models_dir / "gnn_model.pth"
+        self.dnn_model_path = self.models_dir / "dnn_model.pth"
         self.autoencoder_path = self.models_dir / "autoencoder.pth"
         self.preprocessor_path = self.models_dir / "preprocessor.pkl"
-        self.calibrator_path  = self.models_dir / "calibrator.pkl"
+        self.calibrator_path = self.models_dir / "calibrator.pkl"
 
     def create_dirs(self) -> None:
         for d in (self.data_dir, self.models_dir, self.reports_dir):
@@ -55,11 +56,11 @@ class GNNSettings:
     lr: float = 0.001
     weight_decay: float = 1e-4
     use_gat: bool = True
-    knn_k: int = 10                   # PSR §3.3: cosine k-NN k=10
-    early_stopping_patience: int = 20 # PSR §4.5
-    use_multimodal: bool = False      # Nuc_Context/AA_Context varsa True; yoksa crash önlenir
-    seq_enc_dim: int = 32             # SequenceEncoder output_dim (cnn_channels*2)
-    model_type: str = "gatv2"         # used for MLflow run naming in trainer.py
+    knn_k: int = 10  # PSR §3.3: cosine k-NN k=10
+    early_stopping_patience: int = 20  # PSR §4.5
+    use_multimodal: bool = False  # Nuc_Context/AA_Context varsa True; yoksa crash önlenir
+    seq_enc_dim: int = 32  # SequenceEncoder output_dim (cnn_channels*2)
+    model_type: str = "gatv2"  # used for MLflow run naming in trainer.py
 
 
 @dataclass
@@ -68,8 +69,8 @@ class DNNSettings:
     epochs: int = 20
     lr: float = 0.001
     weight_decay: float = 1e-4
-    use_dann: bool = False        # Domain-Adversarial (panel-invariant DNN). LOPO +2.17pp.
-    dann_gamma: float = 10.0      # λ schedule sharpness (Ganin 2015)
+    use_dann: bool = False  # Domain-Adversarial (panel-invariant DNN). LOPO +2.17pp.
+    dann_gamma: float = 10.0  # λ schedule sharpness (Ganin 2015)
 
 
 @dataclass
@@ -107,6 +108,7 @@ class XGBSettings:
 @dataclass
 class LGBMSettings:
     """LightGBM classifier settings (4th ensemble member)."""
+
     objective: str = "binary"
     num_leaves: int = 63
     max_depth: int = -1
@@ -152,12 +154,12 @@ class PreprocessingSettings:
     use_autoencoder: bool = True
     autoencoder_encoding_dim: int = 16
     autoencoder_epochs: int = 10
-    use_feature_selection: bool = True   # YAML default: VarianceThreshold + SelectKBest
-    k_best_features: int = 35            # YAML default: k=35
-    smote_enabled: bool = False          # YAML default: TEKNOFEST §3.2 dengeli veri
-    use_bio_scoring: bool = False        # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
-    use_acmg_proxy: bool = False         # §3.2: yarışma kolon adları anonim → CADD/REVEL gibi adlar yok
-    use_categorical_bio: bool = False    # AA_1→AA_2 + CAT_* sinyalini kurtar (CategoricalBioFeaturizer)
+    use_feature_selection: bool = True  # YAML default: VarianceThreshold + SelectKBest
+    k_best_features: int = 35  # YAML default: k=35
+    smote_enabled: bool = False  # YAML default: TEKNOFEST §3.2 dengeli veri
+    use_bio_scoring: bool = False  # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
+    use_acmg_proxy: bool = False  # §3.2: yarışma kolon adları anonim → CADD/REVEL gibi adlar yok
+    use_categorical_bio: bool = False  # AA_1→AA_2 + CAT_* sinyalini kurtar (CategoricalBioFeaturizer)
 
 
 @dataclass
@@ -186,7 +188,21 @@ class SchemaSettings:
     target_column: str = "Label"
     id_columns: List[str] = field(default_factory=lambda: ["Variant_ID"])
     non_feature_columns: List[str] = field(
-        default_factory=lambda: ["Panel", "Nuc_Context", "AA_Context", "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type", "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic", "OMIM_Disease_Gene", "Secondary_Structure_Disruption", "Variant_type", "Variant_Type"]
+        default_factory=lambda: [
+            "Panel",
+            "Nuc_Context",
+            "AA_Context",
+            "Ref_Nucleotide",
+            "Alt_Nucleotide",
+            "Codon_Change_Type",
+            "AA_Polarity_Change",
+            "In_Critical_Protein_Domain",
+            "Is_Exonic",
+            "OMIM_Disease_Gene",
+            "Secondary_Structure_Disruption",
+            "Variant_type",
+            "Variant_Type",
+        ]
     )
     label_mapping: Dict[str, int] = field(
         default_factory=lambda: {
@@ -205,6 +221,7 @@ class SchemaSettings:
 @dataclass
 class PanelSettings:
     """Per-panel variant counts (TEKNOFEST 2026 Şartname Bölüm 3.2)."""
+
     train_pathogenic: int = 0
     train_benign: int = 0
     test_pathogenic: int = 0
@@ -214,9 +231,7 @@ class PanelSettings:
 @dataclass
 class ExternalValidationSettings:
     enabled: bool = True
-    metrics: List[str] = field(
-        default_factory=lambda: ["f1", "roc_auc", "brier_score", "precision", "recall"]
-    )
+    metrics: List[str] = field(default_factory=lambda: ["f1", "roc_auc", "brier_score", "precision", "recall"])
     export_predictions: bool = True
 
 
@@ -236,9 +251,7 @@ class Settings:
     thresholds: ThresholdSettings
     schema: SchemaSettings
     panels: Dict[str, PanelSettings] = field(default_factory=dict)
-    external_validation: ExternalValidationSettings = field(
-        default_factory=ExternalValidationSettings
-    )
+    external_validation: ExternalValidationSettings = field(default_factory=ExternalValidationSettings)
 
     def __post_init__(self) -> None:
         """Validation logic can be added here if needed."""
@@ -263,11 +276,13 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     # Fail-fast Pydantic doğrulama (TD-011)
     try:
         from src.config.schema import validate_config_dict
+
         validate_config_dict(raw)
     except Exception as exc:
         # ConfigValidationError veya import hatasında konfigürasyona devam et
         # ama uyarı logla. Asıl hata: ConfigValidationError → re-raise.
         from src.config.schema import ConfigValidationError as _CVE
+
         if isinstance(exc, _CVE):
             raise
 
@@ -275,106 +290,106 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
     raw_paths = raw.get("paths", {})
     paths = PathSettings(
-        data_dir   = base_dir / raw_paths.get("data_dir", "data"),
-        models_dir = base_dir / raw_paths.get("models_dir", "models"),
-        reports_dir= base_dir / raw_paths.get("reports_dir", "reports"),
+        data_dir=base_dir / raw_paths.get("data_dir", "data"),
+        models_dir=base_dir / raw_paths.get("models_dir", "models"),
+        reports_dir=base_dir / raw_paths.get("reports_dir", "reports"),
     )
 
     raw_gnn = raw.get("gnn", {})
     gnn = GNNSettings(
-        hidden_dim               = raw_gnn.get("hidden_dim", 128),
-        epochs                   = raw_gnn.get("epochs", 50),
-        lr                       = raw_gnn.get("lr", 0.001),
-        weight_decay             = raw_gnn.get("weight_decay", 1e-4),
-        use_gat                  = raw_gnn.get("use_gat", True),
-        knn_k                    = raw_gnn.get("knn_k", 10),
-        early_stopping_patience  = raw_gnn.get("early_stopping_patience", 20),
-        use_multimodal           = raw_gnn.get("use_multimodal", True),
-        seq_enc_dim              = raw_gnn.get("seq_enc_dim", 32),
-        model_type               = raw_gnn.get("model_type", "gatv2"),
+        hidden_dim=raw_gnn.get("hidden_dim", 128),
+        epochs=raw_gnn.get("epochs", 50),
+        lr=raw_gnn.get("lr", 0.001),
+        weight_decay=raw_gnn.get("weight_decay", 1e-4),
+        use_gat=raw_gnn.get("use_gat", True),
+        knn_k=raw_gnn.get("knn_k", 10),
+        early_stopping_patience=raw_gnn.get("early_stopping_patience", 20),
+        use_multimodal=raw_gnn.get("use_multimodal", True),
+        seq_enc_dim=raw_gnn.get("seq_enc_dim", 32),
+        model_type=raw_gnn.get("model_type", "gatv2"),
     )
 
     raw_dnn = raw.get("dnn", {})
     dnn = DNNSettings(
-        hidden_dim   = raw_dnn.get("hidden_dim", 128),
-        epochs       = raw_dnn.get("epochs", 20),
-        lr           = raw_dnn.get("lr", 0.001),
-        weight_decay = raw_dnn.get("weight_decay", 1e-4),
-        use_dann     = raw_dnn.get("use_dann", False),
-        dann_gamma   = raw_dnn.get("dann_gamma", 10.0),
+        hidden_dim=raw_dnn.get("hidden_dim", 128),
+        epochs=raw_dnn.get("epochs", 20),
+        lr=raw_dnn.get("lr", 0.001),
+        weight_decay=raw_dnn.get("weight_decay", 1e-4),
+        use_dann=raw_dnn.get("use_dann", False),
+        dann_gamma=raw_dnn.get("dann_gamma", 10.0),
     )
 
     raw_xgb = raw.get("xgb", {})
     xgb = XGBSettings(
-        objective        = raw_xgb.get("objective", "binary:logistic"),
-        eval_metric      = raw_xgb.get("eval_metric", "logloss"),
-        max_depth        = raw_xgb.get("max_depth", 6),
-        learning_rate    = raw_xgb.get("learning_rate", 0.05),
-        subsample        = raw_xgb.get("subsample", 0.8),
-        colsample_bytree = raw_xgb.get("colsample_bytree", 0.8),
-        n_estimators     = raw_xgb.get("n_estimators", 200),
-        n_jobs           = raw_xgb.get("n_jobs", -1),
-        min_child_weight = raw_xgb.get("min_child_weight", 3),
-        reg_alpha        = raw_xgb.get("reg_alpha", 0.05),
-        reg_lambda       = raw_xgb.get("reg_lambda", 1.0),
-        random_state     = raw.get("seed", 42),
+        objective=raw_xgb.get("objective", "binary:logistic"),
+        eval_metric=raw_xgb.get("eval_metric", "logloss"),
+        max_depth=raw_xgb.get("max_depth", 6),
+        learning_rate=raw_xgb.get("learning_rate", 0.05),
+        subsample=raw_xgb.get("subsample", 0.8),
+        colsample_bytree=raw_xgb.get("colsample_bytree", 0.8),
+        n_estimators=raw_xgb.get("n_estimators", 200),
+        n_jobs=raw_xgb.get("n_jobs", -1),
+        min_child_weight=raw_xgb.get("min_child_weight", 3),
+        reg_alpha=raw_xgb.get("reg_alpha", 0.05),
+        reg_lambda=raw_xgb.get("reg_lambda", 1.0),
+        random_state=raw.get("seed", 42),
     )
 
     raw_lgbm = raw.get("lgbm", {})
     lgbm = LGBMSettings(
-        num_leaves       = raw_lgbm.get("num_leaves", 63),
-        max_depth        = raw_lgbm.get("max_depth", -1),
-        learning_rate    = raw_lgbm.get("learning_rate", 0.05),
-        n_estimators     = raw_lgbm.get("n_estimators", 300),
-        subsample        = raw_lgbm.get("subsample", 0.8),
-        colsample_bytree = raw_lgbm.get("colsample_bytree", 0.8),
-        reg_alpha        = raw_lgbm.get("reg_alpha", 0.1),
-        reg_lambda       = raw_lgbm.get("reg_lambda", 1.0),
-        min_child_samples= raw_lgbm.get("min_child_samples", 10),
-        n_jobs           = raw_lgbm.get("n_jobs", -1),
-        verbose          = raw_lgbm.get("verbose", -1),
-        random_state     = raw.get("seed", 42),
+        num_leaves=raw_lgbm.get("num_leaves", 63),
+        max_depth=raw_lgbm.get("max_depth", -1),
+        learning_rate=raw_lgbm.get("learning_rate", 0.05),
+        n_estimators=raw_lgbm.get("n_estimators", 300),
+        subsample=raw_lgbm.get("subsample", 0.8),
+        colsample_bytree=raw_lgbm.get("colsample_bytree", 0.8),
+        reg_alpha=raw_lgbm.get("reg_alpha", 0.1),
+        reg_lambda=raw_lgbm.get("reg_lambda", 1.0),
+        min_child_samples=raw_lgbm.get("min_child_samples", 10),
+        n_jobs=raw_lgbm.get("n_jobs", -1),
+        verbose=raw_lgbm.get("verbose", -1),
+        random_state=raw.get("seed", 42),
     )
 
     raw_ens = raw.get("ensemble", {})
     ensemble = EnsembleSettings(
-        weights          = raw_ens.get("weights", [0.30, 0.30, 0.25, 0.15]),
-        optimize_weights = raw_ens.get("optimize_weights", True),
+        weights=raw_ens.get("weights", [0.30, 0.30, 0.25, 0.15]),
+        optimize_weights=raw_ens.get("optimize_weights", True),
     )
 
     raw_pre = raw.get("preprocessing", {})
     preprocessing = PreprocessingSettings(
-        corr_threshold          = raw_pre.get("corr_threshold", 0.25),
-        use_autoencoder         = raw_pre.get("use_autoencoder", True),
-        autoencoder_encoding_dim= raw_pre.get("autoencoder_encoding_dim", 16),
-        autoencoder_epochs      = raw_pre.get("autoencoder_epochs", 10),
-        use_feature_selection   = raw_pre.get("use_feature_selection", False),
-        k_best_features         = raw_pre.get("k_best_features", 30),
-        smote_enabled           = raw_pre.get("smote_enabled", True),
-        use_bio_scoring         = raw_pre.get("use_bio_scoring", False),
-        use_acmg_proxy          = raw_pre.get("use_acmg_proxy", False),
-        use_categorical_bio     = raw_pre.get("use_categorical_bio", False),
+        corr_threshold=raw_pre.get("corr_threshold", 0.25),
+        use_autoencoder=raw_pre.get("use_autoencoder", True),
+        autoencoder_encoding_dim=raw_pre.get("autoencoder_encoding_dim", 16),
+        autoencoder_epochs=raw_pre.get("autoencoder_epochs", 10),
+        use_feature_selection=raw_pre.get("use_feature_selection", False),
+        k_best_features=raw_pre.get("k_best_features", 30),
+        smote_enabled=raw_pre.get("smote_enabled", True),
+        use_bio_scoring=raw_pre.get("use_bio_scoring", False),
+        use_acmg_proxy=raw_pre.get("use_acmg_proxy", False),
+        use_categorical_bio=raw_pre.get("use_categorical_bio", False),
     )
 
     raw_cal = raw.get("calibration", {})
     calibration = CalibrationSettings(
-        enabled = raw_cal.get("enabled", True),
-        method  = raw_cal.get("method", "isotonic"),
+        enabled=raw_cal.get("enabled", True),
+        method=raw_cal.get("method", "isotonic"),
     )
 
     raw_tr = raw.get("training", {})
     training = TrainingSettings(
-        test_size     = raw_tr.get("test_size", 0.2),
-        cv_folds      = raw_tr.get("cv_folds", 5),
-        batch_size    = raw_tr.get("batch_size", 32),
-        loss_function = raw_tr.get("loss_function", "weighted_bce"),
-        focal_gamma   = raw_tr.get("focal_gamma", 2.0),
+        test_size=raw_tr.get("test_size", 0.2),
+        cv_folds=raw_tr.get("cv_folds", 5),
+        batch_size=raw_tr.get("batch_size", 32),
+        loss_function=raw_tr.get("loss_function", "weighted_bce"),
+        focal_gamma=raw_tr.get("focal_gamma", 2.0),
     )
 
     raw_thr = raw.get("thresholds", {})
     thresholds = ThresholdSettings(
-        classification = raw_thr.get("classification", 0.5),
-        high_risk      = raw_thr.get("high_risk", 0.7),
+        classification=raw_thr.get("classification", 0.5),
+        high_risk=raw_thr.get("high_risk", 0.7),
     )
 
     raw_sch = raw.get("schema", {})
@@ -383,10 +398,27 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         {"pathogenic": 1, "likely pathogenic": 1, "benign": 0, "likely benign": 0},
     )
     schema = SchemaSettings(
-        target_column = raw_sch.get("target_column", "Label"),
-        id_columns    = raw_sch.get("id_columns", ["Variant_ID"]),
-        non_feature_columns = raw_sch.get("non_feature_columns", ["Panel", "Nuc_Context", "AA_Context", "Ref_Nucleotide", "Alt_Nucleotide", "Codon_Change_Type", "AA_Polarity_Change", "In_Critical_Protein_Domain", "Is_Exonic", "OMIM_Disease_Gene", "Secondary_Structure_Disruption", "Variant_type", "Variant_Type"]),
-        label_mapping = {str(k): int(v) for k, v in label_map_raw.items()},
+        target_column=raw_sch.get("target_column", "Label"),
+        id_columns=raw_sch.get("id_columns", ["Variant_ID"]),
+        non_feature_columns=raw_sch.get(
+            "non_feature_columns",
+            [
+                "Panel",
+                "Nuc_Context",
+                "AA_Context",
+                "Ref_Nucleotide",
+                "Alt_Nucleotide",
+                "Codon_Change_Type",
+                "AA_Polarity_Change",
+                "In_Critical_Protein_Domain",
+                "Is_Exonic",
+                "OMIM_Disease_Gene",
+                "Secondary_Structure_Disruption",
+                "Variant_type",
+                "Variant_Type",
+            ],
+        ),
+        label_mapping={str(k): int(v) for k, v in label_map_raw.items()},
     )
 
     # ── Panel tanımları ───────────────────────────────────────────
@@ -394,36 +426,36 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     panels: Dict[str, PanelSettings] = {}
     for panel_name, panel_data in raw_panels.items():
         panels[panel_name] = PanelSettings(
-            train_pathogenic = panel_data.get("train_pathogenic", 0),
-            train_benign     = panel_data.get("train_benign", 0),
-            test_pathogenic  = panel_data.get("test_pathogenic", 0),
-            test_benign      = panel_data.get("test_benign", 0),
+            train_pathogenic=panel_data.get("train_pathogenic", 0),
+            train_benign=panel_data.get("train_benign", 0),
+            test_pathogenic=panel_data.get("test_pathogenic", 0),
+            test_benign=panel_data.get("test_benign", 0),
         )
 
     # ── External validation ───────────────────────────────────────
     raw_ev = raw.get("external_validation", {})
     external_validation = ExternalValidationSettings(
-        enabled           = raw_ev.get("enabled", True),
-        metrics           = raw_ev.get("metrics", ["f1", "roc_auc", "brier_score"]),
-        export_predictions = raw_ev.get("export_predictions", True),
+        enabled=raw_ev.get("enabled", True),
+        metrics=raw_ev.get("metrics", ["f1", "roc_auc", "brier_score"]),
+        export_predictions=raw_ev.get("export_predictions", True),
     )
 
     return Settings(
-        seed                = raw.get("seed", 42),
-        device              = raw.get("device", "auto"),
-        paths               = paths,
-        gnn                 = gnn,
-        dnn                 = dnn,
-        xgb                 = xgb,
-        lgbm                = lgbm,
-        ensemble            = ensemble,
-        preprocessing       = preprocessing,
-        calibration         = calibration,
-        training            = training,
-        thresholds          = thresholds,
-        schema              = schema,
-        panels              = panels,
-        external_validation = external_validation,
+        seed=raw.get("seed", 42),
+        device=raw.get("device", "auto"),
+        paths=paths,
+        gnn=gnn,
+        dnn=dnn,
+        xgb=xgb,
+        lgbm=lgbm,
+        ensemble=ensemble,
+        preprocessing=preprocessing,
+        calibration=calibration,
+        training=training,
+        thresholds=thresholds,
+        schema=schema,
+        panels=panels,
+        external_validation=external_validation,
     )
 
 

@@ -19,6 +19,7 @@ Yapılandırma uyumu:
   "Yarışma veri setinde varyantların genomik adres bilgileri tamamen
    gizlenmiştir."  →  Yalnızca biyolojik/hesaplamalı özellikler kullanılır.
 """
+
 from __future__ import annotations
 
 import logging
@@ -77,18 +78,18 @@ class CorrelationGraphBuilder(GraphBuilder):
     """
 
     def __init__(self, corr_threshold: float = 0.25) -> None:
-        self.corr_threshold   = corr_threshold
+        self.corr_threshold = corr_threshold
         self._edge_index: Optional[torch.Tensor] = None
-        self._edge_attr:  Optional[torch.Tensor] = None
+        self._edge_attr: Optional[torch.Tensor] = None
         self._n_features: int = 0
 
     def fit(self, X_train: np.ndarray) -> "CorrelationGraphBuilder":
         corr = np.corrcoef(X_train, rowvar=False)
         corr = np.nan_to_num(corr, nan=0.0)
-        n    = X_train.shape[1]
+        n = X_train.shape[1]
 
-        edges:   List[List[int]] = []
-        weights: List[float]     = []
+        edges: List[List[int]] = []
+        weights: List[float] = []
 
         for i in range(n):
             for j in range(n):
@@ -98,15 +99,17 @@ class CorrelationGraphBuilder(GraphBuilder):
 
         if edges:
             self._edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-            self._edge_attr  = torch.tensor(weights, dtype=torch.float)
+            self._edge_attr = torch.tensor(weights, dtype=torch.float)
         else:
             self._edge_index = torch.empty((2, 0), dtype=torch.long)
-            self._edge_attr  = torch.empty((0,), dtype=torch.float)
+            self._edge_attr = torch.empty((0,), dtype=torch.float)
 
         self._n_features = n
         logger.info(
             "CorrelationGraph: %d özellik düğümü, %d yönlü kenar (eşik=%.2f)",
-            n, len(edges), self.corr_threshold,
+            n,
+            len(edges),
+            self.corr_threshold,
         )
         return self
 
@@ -114,10 +117,10 @@ class CorrelationGraphBuilder(GraphBuilder):
         x_t = torch.tensor(x_row, dtype=torch.float).unsqueeze(1)  # [N_feats, 1]
         y_t = torch.tensor([label], dtype=torch.long) if label is not None else None
         return Data(
-            x          = x_t,
-            edge_index = self._edge_index,
-            edge_attr  = self._edge_attr,
-            y          = y_t,
+            x=x_t,
+            edge_index=self._edge_index,
+            edge_attr=self._edge_attr,
+            y=y_t,
         )
 
     @property
@@ -150,7 +153,7 @@ class KNNGraphBuilder(GraphBuilder):
     def __init__(self, k: int = 10) -> None:
         self.k = k
         self._edge_index: Optional[torch.Tensor] = None
-        self._edge_attr:  Optional[torch.Tensor] = None
+        self._edge_attr: Optional[torch.Tensor] = None
 
     def fit(self, X_train: np.ndarray) -> "KNNGraphBuilder":
         from sklearn.neighbors import NearestNeighbors
@@ -159,8 +162,8 @@ class KNNGraphBuilder(GraphBuilder):
         nn.fit(X_train)
         distances, indices = nn.kneighbors(X_train)
 
-        edges:   List[Tuple[int, int]] = []
-        weights: List[float]           = []
+        edges: List[Tuple[int, int]] = []
+        weights: List[float] = []
 
         for i, (dists, nbrs) in enumerate(zip(distances, indices)):
             for dist, j in zip(dists[1:], nbrs[1:]):
@@ -170,14 +173,16 @@ class KNNGraphBuilder(GraphBuilder):
 
         if edges:
             self._edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-            self._edge_attr  = torch.tensor(weights, dtype=torch.float)
+            self._edge_attr = torch.tensor(weights, dtype=torch.float)
         else:
             self._edge_index = torch.empty((2, 0), dtype=torch.long)
-            self._edge_attr  = torch.empty((0,), dtype=torch.float)
+            self._edge_attr = torch.empty((0,), dtype=torch.float)
 
         logger.info(
             "KNNGraph: %d örnek, k=%d, %d kenar",
-            len(X_train), self.k, len(edges),
+            len(X_train),
+            self.k,
+            len(edges),
         )
         return self
 
@@ -229,9 +234,9 @@ class SampleKNNGraphBuilder:
 
     def __init__(
         self,
-        k:                int   = 10,
-        cosine_threshold: float = 0.0,   # 0.0 = budama yok
-        add_self_loops:   bool  = False,
+        k: int = 10,
+        cosine_threshold: float = 0.0,  # 0.0 = budama yok
+        add_self_loops: bool = False,
     ) -> None:
         """
         Parameters
@@ -243,9 +248,9 @@ class SampleKNNGraphBuilder:
                            Önerilen: 0.30 (default.yaml gnn.knn_threshold).
         add_self_loops   : Her düğüme kendi kendine döngü ekle (True/False).
         """
-        self.k                = k
+        self.k = k
         self.cosine_threshold = cosine_threshold
-        self.add_self_loops   = add_self_loops
+        self.add_self_loops = add_self_loops
 
     # ------------------------------------------------------------------
     def build(
@@ -273,14 +278,14 @@ class SampleKNNGraphBuilder:
         N = X.shape[0]
         if N < 2:
             # Tek örnek: boş kenar indexi ile oluştur
-            x_t  = torch.tensor(X, dtype=torch.float)
-            y_t  = torch.tensor(y, dtype=torch.long) if y is not None else None
+            x_t = torch.tensor(X, dtype=torch.float)
+            y_t = torch.tensor(y, dtype=torch.long) if y is not None else None
             return Data(
-                x          = x_t,
-                edge_index = torch.empty((2, 0), dtype=torch.long),
-                edge_attr  = torch.empty((0,),   dtype=torch.float),
-                y          = y_t,
-                num_nodes  = N,
+                x=x_t,
+                edge_index=torch.empty((2, 0), dtype=torch.long),
+                edge_attr=torch.empty((0,), dtype=torch.float),
+                y=y_t,
+                num_nodes=N,
             )
 
         x_tensor = torch.tensor(X, dtype=torch.float)
@@ -290,16 +295,16 @@ class SampleKNNGraphBuilder:
 
         # Kosinüs eşiği ile budama
         if self.cosine_threshold > 0.0 and edge_index.shape[1] > 0:
-            keep_mask  = cos_sim >= self.cosine_threshold
+            keep_mask = cos_sim >= self.cosine_threshold
             edge_index = edge_index[:, keep_mask]
-            cos_sim    = cos_sim[keep_mask]
+            cos_sim = cos_sim[keep_mask]
 
         # Self-loop ekleme (opsiyonel)
         if self.add_self_loops:
-            self_idx   = torch.arange(N, dtype=torch.long).unsqueeze(0).expand(2, -1)
-            self_sim   = torch.ones(N, dtype=torch.float)
+            self_idx = torch.arange(N, dtype=torch.long).unsqueeze(0).expand(2, -1)
+            self_sim = torch.ones(N, dtype=torch.float)
             edge_index = torch.cat([edge_index, self_idx], dim=1)
-            cos_sim    = torch.cat([cos_sim, self_sim], dim=0)
+            cos_sim = torch.cat([cos_sim, self_sim], dim=0)
 
         y_tensor: Optional[torch.Tensor] = None
         if y is not None:
@@ -307,15 +312,18 @@ class SampleKNNGraphBuilder:
 
         logger.debug(
             "SampleKNNGraph: N=%d, k=%d, eşik=%.2f, kenar=%d",
-            N, k_actual, self.cosine_threshold, edge_index.shape[1],
+            N,
+            k_actual,
+            self.cosine_threshold,
+            edge_index.shape[1],
         )
 
         return Data(
-            x          = x_tensor,
-            edge_index = edge_index,
-            edge_attr  = cos_sim,
-            y          = y_tensor,
-            num_nodes  = N,
+            x=x_tensor,
+            edge_index=edge_index,
+            edge_attr=cos_sim,
+            y=y_tensor,
+            num_nodes=N,
         )
 
     # ------------------------------------------------------------------
@@ -338,10 +346,11 @@ class SampleKNNGraphBuilder:
         # ── Yol 1: torch_geometric.nn.knn_graph (tercih edilen) ─────────
         try:
             from torch_geometric.nn import knn_graph as _knn_graph
-            edge_index = _knn_graph(x, k=k, cosine=True)   # (2, N*k) — yönlü
-            src, dst   = edge_index
-            x_norm     = F.normalize(x, p=2, dim=1)
-            cos_sim    = (x_norm[src] * x_norm[dst]).sum(dim=1).clamp(-1.0, 1.0)
+
+            edge_index = _knn_graph(x, k=k, cosine=True)  # (2, N*k) — yönlü
+            src, dst = edge_index
+            x_norm = F.normalize(x, p=2, dim=1)
+            cos_sim = (x_norm[src] * x_norm[dst]).sum(dim=1).clamp(-1.0, 1.0)
             return edge_index, cos_sim
 
         except (ImportError, RuntimeError):
@@ -351,29 +360,25 @@ class SampleKNNGraphBuilder:
         # Tam kosinüs benzerlik matrisi: (N, N)
         _LARGE_N = 10_000
         if x.shape[0] > _LARGE_N:
-            _mem_gb = x.shape[0] ** 2 * 4 / (1024 ** 3)
+            _mem_gb = x.shape[0] ** 2 * 4 / (1024**3)
             logger.warning(
                 "Buyuk veri seti (%d ornek): k-NN graf O(N^2) matris hesapliyor "
                 "(tahmini ~%.1f GB bellek). Bellek hatasi olusabilir.",
-                x.shape[0], _mem_gb,
+                x.shape[0],
+                _mem_gb,
             )
-        x_norm  = F.normalize(x, p=2, dim=1)
-        sim_mat = x_norm @ x_norm.t()           # (N, N)
+        x_norm = F.normalize(x, p=2, dim=1)
+        sim_mat = x_norm @ x_norm.t()  # (N, N)
         # Self-loop'ları dışla: köşegen −∞
         sim_mat.fill_diagonal_(float("-inf"))
 
         N = x.shape[0]
-        topk_sim, topk_idx = sim_mat.topk(k, dim=1)   # (N, k)
+        topk_sim, topk_idx = sim_mat.topk(k, dim=1)  # (N, k)
 
-        src = (
-            torch.arange(N, dtype=torch.long)
-            .unsqueeze(1)
-            .expand(-1, k)
-            .reshape(-1)
-        )
-        dst        = topk_idx.reshape(-1)
-        edge_index = torch.stack([src, dst], dim=0)    # (2, N*k)
-        cos_sim    = topk_sim.reshape(-1).clamp(-1.0, 1.0)
+        src = torch.arange(N, dtype=torch.long).unsqueeze(1).expand(-1, k).reshape(-1)
+        dst = topk_idx.reshape(-1)
+        edge_index = torch.stack([src, dst], dim=0)  # (2, N*k)
+        cos_sim = topk_sim.reshape(-1).clamp(-1.0, 1.0)
 
         return edge_index, cos_sim
 
@@ -386,10 +391,7 @@ class SampleKNNGraphBuilder:
         return self
 
     def row_to_graph(self, x_row: np.ndarray, label: Optional[int] = None) -> Data:
-        raise NotImplementedError(
-            "SampleKNNGraphBuilder tam örnek matrisi üzerinde çalışır. "
-            "build(X, y) kullanın."
-        )
+        raise NotImplementedError("SampleKNNGraphBuilder tam örnek matrisi üzerinde çalışır. build(X, y) kullanın.")
 
     @property
     def edge_index(self) -> torch.Tensor:
@@ -427,7 +429,4 @@ def get_graph_builder(strategy: str = "sample_knn", **kwargs) -> "GraphBuilder |
         return CorrelationGraphBuilder(**kwargs)
     if s == "knn":
         return KNNGraphBuilder(**kwargs)
-    raise ValueError(
-        f"Bilinmeyen graf stratejisi: {strategy!r}. "
-        f"Desteklenenler: 'sample_knn', 'correlation', 'knn'"
-    )
+    raise ValueError(f"Bilinmeyen graf stratejisi: {strategy!r}. Desteklenenler: 'sample_knn', 'correlation', 'knn'")

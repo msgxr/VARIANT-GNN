@@ -11,6 +11,7 @@ The test:
   5. Runs a dummy forward pass and verifies output shape.
   6. Confirms saved vs loaded state_dicts are identical.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,8 +27,8 @@ import torch
 # ---------------------------------------------------------------------------
 
 NUM_FEATURES = 10
-HIDDEN_DIM   = 32
-BATCH_SIZE   = 6
+HIDDEN_DIM = 32
+BATCH_SIZE = 6
 
 
 def _make_edge_index(n: int) -> torch.Tensor:
@@ -49,6 +50,7 @@ def _dummy_x() -> torch.Tensor:
 # Minimal preprocessor mock
 # ---------------------------------------------------------------------------
 
+
 def _mock_preprocessor(n_features: int = NUM_FEATURES):
     pp = MagicMock()
     pp.n_output_features = n_features
@@ -60,6 +62,7 @@ def _mock_preprocessor(n_features: int = NUM_FEATURES):
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def tmp_model_dir():
     with tempfile.TemporaryDirectory() as d:
@@ -70,6 +73,7 @@ def tmp_model_dir():
 # Tests
 # ---------------------------------------------------------------------------
 
+
 class TestGNNRoundtrip:
     """Save → load round-trip for VariantGATv2GNN."""
 
@@ -79,18 +83,18 @@ class TestGNNRoundtrip:
 
         cls = VariantSAGEGNN if cls_name == "VariantSAGEGNN" else VariantGATv2GNN
         gnn = cls(
-            numeric_dim    = NUM_FEATURES,
-            hidden_dim     = HIDDEN_DIM,
-            use_multimodal = False,
+            numeric_dim=NUM_FEATURES,
+            hidden_dim=HIDDEN_DIM,
+            use_multimodal=False,
         )
         gnn.eval()
 
         # Build a minimal HybridEnsemble mock
         ensemble = MagicMock()
-        ensemble.xgb  = None
+        ensemble.xgb = None
         ensemble.lgbm = None
-        ensemble.gnn  = gnn
-        ensemble.dnn  = None
+        ensemble.gnn = gnn
+        ensemble.dnn = None
         ensemble.weights = [0.35, 0.30, 0.25, 0.10]
         ensemble.meta_learner = None
 
@@ -146,17 +150,14 @@ class TestGNNRoundtrip:
         _, arch = self._load_gnn_from_arch(tmp_model_dir)
         _cls = VariantSAGEGNN if cls_name == "VariantSAGEGNN" else VariantGATv2GNN
         gnn_loaded = _cls(
-            numeric_dim    = arch["numeric_dim"],
-            hidden_dim     = arch["hidden_dim"],
-            use_multimodal = arch.get("use_multimodal", False),
+            numeric_dim=arch["numeric_dim"],
+            hidden_dim=arch["hidden_dim"],
+            use_multimodal=arch.get("use_multimodal", False),
         )
-        state = torch.load(str(tmp_model_dir / "gnn_model.pth"), map_location="cpu",
-                           weights_only=True)
+        state = torch.load(str(tmp_model_dir / "gnn_model.pth"), map_location="cpu", weights_only=True)
         gnn_loaded.load_state_dict(state)
 
-        for (k_orig, v_orig), (k_load, v_load) in zip(
-            gnn_orig.state_dict().items(), gnn_loaded.state_dict().items()
-        ):
+        for (k_orig, v_orig), (k_load, v_load) in zip(gnn_orig.state_dict().items(), gnn_loaded.state_dict().items()):
             assert k_orig == k_load
             assert torch.allclose(v_orig, v_load), f"Mismatch at key: {k_orig}"
 
@@ -166,26 +167,21 @@ class TestGNNRoundtrip:
         from src.core.models.gnn import VariantGATv2GNN, VariantSAGEGNN
 
         _, store = self._build_and_save(tmp_model_dir, cls_name)
-        _, arch  = self._load_gnn_from_arch(tmp_model_dir)
+        _, arch = self._load_gnn_from_arch(tmp_model_dir)
 
         _cls = VariantSAGEGNN if cls_name == "VariantSAGEGNN" else VariantGATv2GNN
         gnn = _cls(
-            numeric_dim    = arch["numeric_dim"],
-            hidden_dim     = arch["hidden_dim"],
-            use_multimodal = arch.get("use_multimodal", False),
+            numeric_dim=arch["numeric_dim"],
+            hidden_dim=arch["hidden_dim"],
+            use_multimodal=arch.get("use_multimodal", False),
         )
-        gnn.load_state_dict(
-            torch.load(str(tmp_model_dir / "gnn_model.pth"),
-                       map_location="cpu", weights_only=True)
-        )
+        gnn.load_state_dict(torch.load(str(tmp_model_dir / "gnn_model.pth"), map_location="cpu", weights_only=True))
         gnn.eval()
 
-        x          = _dummy_x()
+        x = _dummy_x()
         edge_index = _make_edge_index(BATCH_SIZE)
 
         with torch.no_grad():
             out = gnn(x, edge_index)
 
-        assert out.shape == (BATCH_SIZE, 2), (
-            f"Expected ({BATCH_SIZE}, 2), got {out.shape}"
-        )
+        assert out.shape == (BATCH_SIZE, 2), f"Expected ({BATCH_SIZE}, 2), got {out.shape}"

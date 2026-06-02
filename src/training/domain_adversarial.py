@@ -39,6 +39,7 @@ TEKNOFEST 2026 motivasyonu:
   - Domain discriminator: 2-3 katmanlı MLP head
   - Multi-task loss: L = L_y - λ·L_d
 """
+
 from __future__ import annotations
 
 import logging
@@ -124,10 +125,10 @@ class PanelDiscriminator(nn.Module):
 
     def __init__(
         self,
-        input_dim:  int,
+        input_dim: int,
         hidden_dim: int = 64,
-        n_panels:   int = 4,
-        dropout:    float = 0.3,
+        n_panels: int = 4,
+        dropout: float = 0.3,
     ) -> None:
         super().__init__()
         self.net = nn.Sequential(
@@ -153,12 +154,12 @@ class PanelDiscriminator(nn.Module):
 
 def dann_multitask_loss(
     variant_logits: torch.Tensor,
-    panel_logits:   torch.Tensor,
+    panel_logits: torch.Tensor,
     variant_labels: torch.Tensor,
-    panel_labels:   torch.Tensor,
-    lambda_:        float = 1.0,
+    panel_labels: torch.Tensor,
+    lambda_: float = 1.0,
     variant_criterion: Optional[nn.Module] = None,
-    panel_criterion:   Optional[nn.Module] = None,
+    panel_criterion: Optional[nn.Module] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Compute combined classification + domain adversarial loss.
@@ -173,8 +174,8 @@ def dann_multitask_loss(
         panel_criterion = nn.CrossEntropyLoss()
 
     L_variant = variant_criterion(variant_logits, variant_labels)
-    L_panel   = panel_criterion(panel_logits, panel_labels)
-    L_total   = L_variant + lambda_ * L_panel
+    L_panel = panel_criterion(panel_logits, panel_labels)
+    L_total = L_variant + lambda_ * L_panel
     return L_total, L_variant, L_panel
 
 
@@ -207,18 +208,18 @@ class DANNWrapper(nn.Module):
     def __init__(
         self,
         feature_extractor: nn.Module,
-        variant_head:      nn.Module,
-        feat_dim:          int,
-        n_panels:          int = 4,
-        disc_hidden:       int = 64,
+        variant_head: nn.Module,
+        feat_dim: int,
+        n_panels: int = 4,
+        disc_hidden: int = 64,
     ) -> None:
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.variant_head      = variant_head
-        self.discriminator     = PanelDiscriminator(
-            input_dim  = feat_dim,
-            hidden_dim = disc_hidden,
-            n_panels   = n_panels,
+        self.variant_head = variant_head
+        self.discriminator = PanelDiscriminator(
+            input_dim=feat_dim,
+            hidden_dim=disc_hidden,
+            n_panels=n_panels,
         )
 
     def forward(
@@ -227,9 +228,9 @@ class DANNWrapper(nn.Module):
         lambda_: float = 1.0,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Return (variant_logits, panel_logits)."""
-        feats          = self.feature_extractor(x)
+        feats = self.feature_extractor(x)
         variant_logits = self.variant_head(feats)
-        panel_logits   = self.discriminator(feats, lambda_=lambda_)
+        panel_logits = self.discriminator(feats, lambda_=lambda_)
         return variant_logits, panel_logits
 
     def predict_variant(self, x: torch.Tensor) -> torch.Tensor:
@@ -244,7 +245,10 @@ class DANNWrapper(nn.Module):
 
 
 KNOWN_PANELS_ORDER: List[str] = [
-    "General", "Hereditary_Cancer", "PAH", "CFTR",
+    "General",
+    "Hereditary_Cancer",
+    "PAH",
+    "CFTR",
 ]
 
 

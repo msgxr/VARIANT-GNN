@@ -1,4 +1,5 @@
 """tests/unit/test_leakage_firewall.py"""
+
 from __future__ import annotations
 
 import json
@@ -8,13 +9,13 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from src.data.competition_sanitizer import CompetitionSanitizer
 from src.data.leakage_firewall import (
     COORDINATE_COLUMNS,
     LABEL_COLUMNS,
     LeakageFirewall,
     LeakageReport,
 )
-from src.data.competition_sanitizer import CompetitionSanitizer
 from src.data.schema_guard import SchemaGuard
 
 
@@ -88,7 +89,7 @@ def test_label_column_allowed_in_training(tmp_path):
 
 def test_variant_id_overlap_detected(tmp_path):
     train = _make_df()  # Variant_IDs: V1, V2, V3
-    test = _make_df()   # same IDs
+    test = _make_df()  # same IDs
     fw = LeakageFirewall(competition_mode=True, strict_leakage=False, reports_dir=tmp_path)
     _, report = fw.check_and_sanitize(test, train_df=train)
     assert report.variant_id_overlaps == 3

@@ -5,6 +5,7 @@ Fixed output schema for competition submission predictions.
 All inference output DataFrames must conform to this schema before being
 written to disk.  Column order is canonical and enforced.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -68,8 +69,9 @@ def build_prediction_frame(
     pd.DataFrame with exactly PREDICTION_COLUMNS columns.
     """
     n = len(variant_ids)
-    if not (len(panels) == len(pathogenic_prob) == len(calibrated_risk)
-            == len(uncertainty) == len(clinical_flags) == n):
+    if not (
+        len(panels) == len(pathogenic_prob) == len(calibrated_risk) == len(uncertainty) == len(clinical_flags) == n
+    ):
         raise ValueError("All input arrays must have the same length.")
 
     pathogenic_prob = np.clip(np.asarray(pathogenic_prob, dtype=float), 0.0, 1.0)
@@ -77,7 +79,9 @@ def build_prediction_frame(
     calibrated_risk = np.clip(np.asarray(calibrated_risk, dtype=float), 0.0, 1.0)
     uncertainty = np.clip(np.asarray(uncertainty, dtype=float), 0.0, 1.0)
 
-    _ood_scores = np.round(np.asarray(ood_scores, dtype=float), 4) if ood_scores is not None else np.zeros(n, dtype=float)
+    _ood_scores = (
+        np.round(np.asarray(ood_scores, dtype=float), 4) if ood_scores is not None else np.zeros(n, dtype=float)
+    )
     _ood_flags = np.asarray(ood_flags, dtype=bool) if ood_flags is not None else np.zeros(n, dtype=bool)
 
     predictions = np.where(pathogenic_prob >= threshold, "Pathogenic", "Benign")

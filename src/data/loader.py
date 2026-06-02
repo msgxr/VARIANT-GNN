@@ -10,6 +10,7 @@ Changes (2026-03-12):
   - load_predict_csv() now delegates column alignment to ColumnAligner instead
     of the unsafe brute-force [:34] fallback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -51,14 +52,14 @@ class LoadedDataset:
         metadata: pd.DataFrame,
         feature_columns: List[str],
         nuc_sequences: Optional[List[str]] = None,
-        aa_sequences:  Optional[List[str]] = None,
+        aa_sequences: Optional[List[str]] = None,
     ) -> None:
-        self.features        = features
-        self.labels          = labels
-        self.metadata        = metadata
+        self.features = features
+        self.labels = labels
+        self.metadata = metadata
         self.feature_columns = feature_columns
-        self.nuc_sequences   = nuc_sequences   # raw strings for SequenceEncoder
-        self.aa_sequences    = aa_sequences    # raw strings for SequenceEncoder
+        self.nuc_sequences = nuc_sequences  # raw strings for SequenceEncoder
+        self.aa_sequences = aa_sequences  # raw strings for SequenceEncoder
 
     def __len__(self) -> int:
         return len(self.features)
@@ -109,9 +110,9 @@ def load_csv(
         ValueError: if schema validation fails with errors.
     """
     cfg = get_settings()
-    target_column       = target_column or cfg.schema.target_column
-    id_columns          = id_columns    or cfg.schema.id_columns
-    label_mapping       = label_mapping or cfg.schema.label_mapping
+    target_column = target_column or cfg.schema.target_column
+    id_columns = id_columns or cfg.schema.id_columns
+    label_mapping = label_mapping or cfg.schema.label_mapping
     non_feature_columns = getattr(cfg.schema, "non_feature_columns", [])
 
     path = Path(csv_path)
@@ -128,6 +129,7 @@ def load_csv(
     if sanitize in ("train", "inference"):
         try:
             from src.data.competition_sanitizer import CompetitionSanitizer
+
             _san = CompetitionSanitizer(reports_dir=str(get_settings().paths.reports_dir))
             if sanitize == "inference":
                 df, _lr = _san.sanitize_inference(df)
@@ -154,6 +156,7 @@ def load_csv(
     # TEKNOFEST Feature Category Validation
     try:
         from src.features.feature_validator import validate_features
+
         validate_features(df)
     except ImportError:
         pass
@@ -161,38 +164,34 @@ def load_csv(
     # Build metadata frame (preserve original id columns + non-feature cols)
     meta_cols = [c for c in (id_columns + non_feature_columns) if c in df.columns]
     meta_cols = list(dict.fromkeys(meta_cols))  # deduplicate preserving order
-    metadata  = df[meta_cols].reset_index(drop=True) if meta_cols else pd.DataFrame(index=df.index)
+    metadata = df[meta_cols].reset_index(drop=True) if meta_cols else pd.DataFrame(index=df.index)
 
     # Feature matrix
     feature_df = df[result.numeric_feature_columns].reset_index(drop=True)
 
     # Extract sequence context strings before any row-dropping
-    nuc_sequences: Optional[List[str]] = (
-        df["Nuc_Context"].astype(str).tolist() if "Nuc_Context" in df.columns else None
-    )
-    aa_sequences: Optional[List[str]] = (
-        df["AA_Context"].astype(str).tolist() if "AA_Context" in df.columns else None
-    )
+    nuc_sequences: Optional[List[str]] = df["Nuc_Context"].astype(str).tolist() if "Nuc_Context" in df.columns else None
+    aa_sequences: Optional[List[str]] = df["AA_Context"].astype(str).tolist() if "AA_Context" in df.columns else None
 
     # Labels
     labels: Optional[np.ndarray] = None
-    label_valid_mask: Optional[pd.Series] = None   # kept for panel encoding alignment
+    label_valid_mask: Optional[pd.Series] = None  # kept for panel encoding alignment
     if result.label_column is not None:
         raw_labels = df[result.label_column].astype(str).str.strip().str.lower()
         mapped = raw_labels.map(label_mapping)
         unmapped = mapped.isna().sum()
         if unmapped:
             logger.warning("%d rows have unmappable labels — set to NaN then dropped.", unmapped)
-            valid_mask      = ~mapped.isna()
-            valid_idx       = valid_mask[valid_mask].index.tolist()
-            feature_df      = feature_df[valid_mask].reset_index(drop=True)
-            metadata        = metadata[valid_mask].reset_index(drop=True) if len(metadata) else metadata
-            mapped          = mapped[valid_mask]
+            valid_mask = ~mapped.isna()
+            valid_idx = valid_mask[valid_mask].index.tolist()
+            feature_df = feature_df[valid_mask].reset_index(drop=True)
+            metadata = metadata[valid_mask].reset_index(drop=True) if len(metadata) else metadata
+            mapped = mapped[valid_mask]
             label_valid_mask = valid_mask
             if nuc_sequences is not None:
                 nuc_sequences = [nuc_sequences[i] for i in valid_idx]
             if aa_sequences is not None:
-                aa_sequences  = [aa_sequences[i] for i in valid_idx]
+                aa_sequences = [aa_sequences[i] for i in valid_idx]
         labels = mapped.astype(int).values
 
     logger.info(
@@ -224,6 +223,7 @@ def load_csv(
     if getattr(getattr(cfg, "preprocessing", None), "use_categorical_bio", False):
         try:
             from src.features.categorical_bio_features import CategoricalBioFeaturizer
+
             bio_src = (df.loc[label_valid_mask] if label_valid_mask is not None else df).reset_index(drop=True)
             eng = CategoricalBioFeaturizer(append=False).fit(bio_src).transform(bio_src)
             for c in eng.columns:
@@ -233,12 +233,12 @@ def load_csv(
             logger.warning("CategoricalBioFeaturizer atlandı (non-fatal): %s", _bio_exc)
 
     return LoadedDataset(
-        features        = feature_df,
-        labels          = labels,
-        metadata        = metadata,
-        feature_columns = list(feature_df.columns),
-        nuc_sequences   = nuc_sequences,
-        aa_sequences    = aa_sequences,
+        features=feature_df,
+        labels=labels,
+        metadata=metadata,
+        feature_columns=list(feature_df.columns),
+        nuc_sequences=nuc_sequences,
+        aa_sequences=aa_sequences,
     )
 
 
@@ -264,15 +264,14 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
 
     try:
         from src.utils.serialization import ModelStore
+
         store = ModelStore(cfg.paths.models_dir)
         try:
-            xgb_model   = store.load_xgb()
-            feat_names  = xgb_model.get_booster().feature_names
+            xgb_model = store.load_xgb()
+            feat_names = xgb_model.get_booster().feature_names
             if feat_names:
                 expected_features = list(feat_names)
-                logger.debug(
-                    "ColumnAligner: using %d feature names from XGBoost booster", len(expected_features)
-                )
+                logger.debug("ColumnAligner: using %d feature names from XGBoost booster", len(expected_features))
         except Exception:
             pass
 
@@ -305,9 +304,9 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
     from src.data.column_aligner import ColumnAligner
 
     aligner = ColumnAligner(
-        expected_columns = expected_features,
-        fuzzy_threshold  = 0.85,
-        allow_positional = True,
+        expected_columns=expected_features,
+        fuzzy_threshold=0.85,
+        allow_positional=True,
     )
 
     # Auto-load training-time distributional signatures so the
@@ -315,6 +314,7 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
     # jury column names — see TEKNOFEST §3.2 (genomic addresses hidden).
     try:
         from src.utils.serialization import ModelStore as _MS
+
         _store = _MS(cfg.paths.models_dir)
         _preproc = _store.load_preprocessor() if hasattr(_store, "load_preprocessor") else None
         _sigs = getattr(_preproc, "feature_signatures", None) if _preproc is not None else None
@@ -330,13 +330,13 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
 
     # Use robust_apply to handle all 8 jury scenarios (OOM, single-row, etc.)
     aligned_features, report = aligner.robust_apply(dataset.features)
-    
+
     # Optional Pydantic validation for predict input
     try:
         validate_dataframe(dataset.metadata, PredictInput)
     except Exception as e:
         logger.warning("Pydantic validasyonu (metadata): %s", e)
 
-    dataset.features        = aligned_features
+    dataset.features = aligned_features
     dataset.feature_columns = list(aligned_features.columns)
     return dataset

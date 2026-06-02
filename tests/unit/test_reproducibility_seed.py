@@ -6,6 +6,7 @@ Jury may re-run code and expect identical results.
 Tests verify: same seed → same output, different seed → different output,
 inter-seed std is within documented bounds (±0.0013).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -13,10 +14,10 @@ import pytest
 
 from src.utils.reproducibility import setup_reproducibility
 
-
 # ---------------------------------------------------------------------------
 # Seed stability: same seed → identical output
 # ---------------------------------------------------------------------------
+
 
 class TestSeedDeterminism:
     def test_numpy_same_seed_identical(self):
@@ -38,6 +39,7 @@ class TestSeedDeterminism:
     def test_torch_same_seed_identical(self):
         """torch.rand with same seed must produce identical tensors."""
         import torch
+
         setup_reproducibility(seed=42)
         a = torch.rand(50)
         setup_reproducibility(seed=42)
@@ -47,6 +49,7 @@ class TestSeedDeterminism:
     def test_torch_different_seed_different(self):
         """torch.rand with different seeds must produce different tensors."""
         import torch
+
         setup_reproducibility(seed=42)
         a = torch.rand(50)
         setup_reproducibility(seed=7)
@@ -55,8 +58,9 @@ class TestSeedDeterminism:
 
     def test_sklearn_split_deterministic(self):
         """StratifiedKFold with fixed random_state must produce same splits."""
-        from sklearn.model_selection import StratifiedKFold
         import numpy as np
+        from sklearn.model_selection import StratifiedKFold
+
         X = np.random.rand(200, 5)
         y = np.array([0] * 100 + [1] * 100)
         kf1 = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -69,6 +73,7 @@ class TestSeedDeterminism:
 # ---------------------------------------------------------------------------
 # Inter-seed stability — documented std=±0.0013
 # ---------------------------------------------------------------------------
+
 
 class TestInterSeedStability:
     DOCUMENTED_STD = 0.0013
@@ -108,6 +113,7 @@ class TestInterSeedStability:
         """seed_stability.json must declare inter_seed_std within bounds."""
         import json
         from pathlib import Path
+
         path = Path("reports/seed_stability.json")
         if not path.exists():
             pytest.skip("seed_stability.json not generated yet")
@@ -125,10 +131,12 @@ class TestInterSeedStability:
 # Reproducibility manifest — §7.5
 # ---------------------------------------------------------------------------
 
+
 class TestReproducibilityManifest:
     def test_manifest_saves_and_loads(self, tmp_path):
         """Manifest must be saveable and loadable with correct keys."""
-        from src.utils.artifact_manifest import build_manifest, save_manifest, load_manifest
+        from src.utils.artifact_manifest import build_manifest, load_manifest, save_manifest
+
         path = save_manifest(
             model_dir=tmp_path,
             config={"seed": 42, "cv_folds": 5},
@@ -143,6 +151,7 @@ class TestReproducibilityManifest:
     def test_manifest_config_hash_changes_with_seed(self, tmp_path):
         """Changing seed must change config hash in manifest."""
         from src.utils.artifact_manifest import build_manifest
+
         m42 = build_manifest(tmp_path, config={"seed": 42})
         m99 = build_manifest(tmp_path, config={"seed": 99})
         assert m42["config_hash"] != m99["config_hash"]
@@ -151,6 +160,7 @@ class TestReproducibilityManifest:
         """models/PROVENANCE.json must exist and contain real_data_received."""
         import json
         from pathlib import Path
+
         path = Path("models/PROVENANCE.json")
         assert path.exists(), "models/PROVENANCE.json missing"
         with open(path, encoding="utf-8") as f:
@@ -163,6 +173,7 @@ class TestReproducibilityManifest:
         """PROVENANCE.json must declare CV F1 and Test F1 in valid range."""
         import json
         from pathlib import Path
+
         with open("models/PROVENANCE.json", encoding="utf-8") as f:
             data = json.load(f)
         cv_f1 = data["cv_f1_mean"]

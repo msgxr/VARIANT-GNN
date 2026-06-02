@@ -7,19 +7,20 @@ Referans:
   Machine Learning, 51(2), 181–207.
   Brown et al. (2005). Managing Diversity in Regression Ensembles. JMLR 6:1621–1650.
 """
+
 from __future__ import annotations
 
 import itertools
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Yardımcı fonksiyonlar
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def pearson_diversity_matrix(fold_f1s: Dict[str, List[float]]) -> Dict[str, float]:
     """
@@ -44,14 +45,12 @@ def ambiguity_decomposition(fold_f1s: Dict[str, List[float]]) -> Dict[str, float
 
     Burada F1 skorları üzerinden fold bazlı yaklaşım kullanılır.
     """
-    model_means = {m: np.mean(v) for m, v in fold_f1s.items()}
     all_f1s = np.array(list(fold_f1s.values()))  # (n_models, n_folds)
 
     ensemble_f1_per_fold = np.mean(all_f1s, axis=0)  # simple average ensemble
-    base_error_per_fold = np.mean(all_f1s, axis=0)   # same as ensemble mean
 
     # Ambiguity = Var among models per fold, averaged over folds
-    ambiguity_per_fold = np.var(all_f1s, axis=0)     # variance across models per fold
+    ambiguity_per_fold = np.var(all_f1s, axis=0)  # variance across models per fold
     mean_ambiguity = float(np.mean(ambiguity_per_fold))
 
     ensemble_mean_f1 = float(np.mean(ensemble_f1_per_fold))
@@ -75,10 +74,11 @@ def diversity_gain(fold_f1s: Dict[str, List[float]], ensemble_f1: float) -> floa
     Pozitif = ensemble gerçekten katkı sağlıyor.
     """
     base_weighted = (
-        fold_f1s.get("XGBoost", [0]) and np.mean(fold_f1s["XGBoost"]) * 0.30 +
-        np.mean(fold_f1s.get("LightGBM", [0])) * 0.30 +
-        np.mean(fold_f1s.get("GATv2GNN", [0])) * 0.25 +
-        np.mean(fold_f1s.get("DNN", [0])) * 0.15
+        fold_f1s.get("XGBoost", [0])
+        and np.mean(fold_f1s["XGBoost"]) * 0.30
+        + np.mean(fold_f1s.get("LightGBM", [0])) * 0.30
+        + np.mean(fold_f1s.get("GATv2GNN", [0])) * 0.25
+        + np.mean(fold_f1s.get("DNN", [0])) * 0.15
     )
     return round(ensemble_f1 - float(base_weighted), 4)
 
@@ -107,6 +107,7 @@ def q_statistic_from_correlations(corr_dict: Dict[str, float]) -> Dict[str, str]
 # Ana rapor üreticisi
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def generate_diversity_report(
     cv_report_path: Path = Path("reports/cv_report.json"),
     output_path: Path = Path("reports/ensemble_diversity.json"),
@@ -117,22 +118,22 @@ def generate_diversity_report(
         cv = json.load(fh)
 
     fold_f1s: Dict[str, List[float]] = {
-        "XGBoost":  [f["xgb_f1"] for f in cv["folds"]],
+        "XGBoost": [f["xgb_f1"] for f in cv["folds"]],
         "LightGBM": [f["lgbm_f1"] for f in cv["folds"]],
         "GATv2GNN": [f["gnn_f1"] for f in cv["folds"]],
-        "DNN":      [f["dnn_f1"] for f in cv["folds"]],
+        "DNN": [f["dnn_f1"] for f in cv["folds"]],
     }
 
     corr = pearson_diversity_matrix(fold_f1s)
-    amb  = ambiguity_decomposition(fold_f1s)
+    amb = ambiguity_decomposition(fold_f1s)
     q_interp = q_statistic_from_correlations(corr)
     gain = diversity_gain(fold_f1s, ensemble_test_f1)
 
     per_model_stats = {
         m: {
             "mean_cv_f1": round(float(np.mean(v)), 4),
-            "std_cv_f1":  round(float(np.std(v)), 4),
-            "weight":     {"XGBoost": 0.30, "LightGBM": 0.30, "GATv2GNN": 0.25, "DNN": 0.15}[m],
+            "std_cv_f1": round(float(np.std(v)), 4),
+            "weight": {"XGBoost": 0.30, "LightGBM": 0.30, "GATv2GNN": 0.25, "DNN": 0.15}[m],
         }
         for m, v in fold_f1s.items()
     }

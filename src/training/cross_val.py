@@ -6,6 +6,7 @@ Delegates per-fold train/eval to the existing VariantTrainer._cross_validate,
 keeping a single source of truth for the training logic. This module provides
 a convenience wrapper that can be called both programmatically and from main.py.
 """
+
 from __future__ import annotations
 
 import logging
@@ -52,6 +53,8 @@ def leakage_free_cross_validate(
 
     logger.info(
         "Cross-validation complete: Binary F1 (Pathogenic §7.3) = %.4f ± %.4f (%d folds)",
-        summary["mean_f1"], summary["std_f1"], len(f1_scores),
+        summary["mean_f1"],
+        summary["std_f1"],
+        len(f1_scores),
     )
     return summary

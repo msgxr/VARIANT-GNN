@@ -5,6 +5,7 @@ Deterministic seed management.
 Call ``set_global_seed(seed)`` before any stochastic operation to ensure
 reproducibility across NumPy, Python ``random``, PyTorch CPU and CUDA.
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,5 +35,5 @@ def set_global_seed(seed: int = 42) -> None:
         torch.cuda.manual_seed_all(seed)
         # Sacrifice some speed for full determinism on CUDA
         torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark     = False
+        torch.backends.cudnn.benchmark = False
     logger.debug("Global seed set to %d", seed)

@@ -1,11 +1,12 @@
 """src/cli/modes/predict.py — predict mode (jury inference)."""
+
 from __future__ import annotations
 
 import logging
 import sys
 
+from src.api.export import JURY_COLUMNS, export_predictions
 from src.api.pipeline import InferencePipeline
-from src.api.export import export_predictions, JURY_COLUMNS
 
 
 def mode_predict(args, cfg):
@@ -37,17 +38,17 @@ def mode_predict(args, cfg):
 
     try:
         if use_tta:
-            from src.inference.tta import tta_predict_dataframe
-            from src.data.loader import load_predict_csv
             import pandas as pd
+
+            from src.data.loader import load_predict_csv
+            from src.inference.tta import tta_predict_dataframe
+
             ds = load_predict_csv(args.test_file)
             df_result = pipeline.predict_from_dataset(ds)
             df_result = tta_predict_dataframe(
                 pipeline._ensemble,
                 pipeline._preprocessor,
-                df_result.join(
-                    pd.DataFrame(ds.features.values, columns=ds.feature_columns)
-                ),
+                df_result.join(pd.DataFrame(ds.features.values, columns=ds.feature_columns)),
                 feature_columns=ds.feature_columns,
                 n_augmentations=tta_k,
                 seed=cfg.seed,
@@ -65,7 +66,8 @@ def mode_predict(args, cfg):
     submission_path = getattr(args, "output", None) or "submission/predictions.csv"
 
     paths = export_predictions(
-        df_result, cfg.paths.reports_dir,
+        df_result,
+        cfg.paths.reports_dir,
         prefix="predictions",
         submission_path=submission_path,
     )

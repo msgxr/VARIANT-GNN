@@ -18,6 +18,7 @@ Kullanım:
     articles = rag.fetch(gene="BRCA1", n_results=3)
     snippet  = rag.fetch_for_variant(variant_id="BRCA1-c.5266dup", gene="BRCA1")
 """
+
 from __future__ import annotations
 
 import json
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 _NCBI_KEY = os.environ.get("NCBI_API_KEY", "")
-_DELAY    = 0.35 if _NCBI_KEY else 1.0   # Rate limit
+_DELAY = 0.35 if _NCBI_KEY else 1.0  # Rate limit
 
 
 def _ncbi_get(url: str, timeout: int = 8) -> Optional[dict]:
@@ -53,7 +54,7 @@ def _extract_key_sentence(abstract: str, keywords: List[str]) -> str:
     if not abstract:
         return ""
     sentences = [s.strip() for s in abstract.replace("\n", " ").split(".") if s.strip()]
-    kw_lower  = [k.lower() for k in keywords]
+    kw_lower = [k.lower() for k in keywords]
 
     scored = []
     for sent in sentences:
@@ -76,7 +77,7 @@ class PubMedRAG:
     """
 
     def __init__(self, cache_ttl: int = 3600) -> None:
-        self._cache: Dict[str, tuple] = {}   # query → (timestamp, result)
+        self._cache: Dict[str, tuple] = {}  # query → (timestamp, result)
         self._cache_ttl = cache_ttl
 
     def _cached(self, key: str):
@@ -109,7 +110,7 @@ class PubMedRAG:
             f"?db=pubmed&term={urllib.parse.quote(query)}"
             f"&retmax={n}&retmode=json&sort=relevance"
         )
-        data  = _ncbi_get(url)
+        data = _ncbi_get(url)
         pmids = []
         if data:
             pmids = data.get("esearchresult", {}).get("idlist", [])
@@ -130,11 +131,8 @@ class PubMedRAG:
         if cached is not None:
             return cached
 
-        url = (
-            f"{_BASE_URL}/esummary.fcgi"
-            f"?db=pubmed&id={','.join(pmids)}&retmode=json"
-        )
-        data    = _ncbi_get(url)
+        url = f"{_BASE_URL}/esummary.fcgi?db=pubmed&id={','.join(pmids)}&retmode=json"
+        data = _ncbi_get(url)
         results = []
 
         if data:
@@ -145,18 +143,20 @@ class PubMedRAG:
                     continue
                 authors = rec.get("authors", [])
                 first_author = authors[0].get("name", "") if authors else "?"
-                results.append({
-                    "pmid":    pmid,
-                    "title":   rec.get("title", "").rstrip("."),
-                    "year":    rec.get("pubdate", "")[:4],
-                    "journal": rec.get("source", ""),
-                    "authors": f"{first_author} et al." if len(authors) > 1 else first_author,
-                    "url":     f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
-                    "doi":     next(
-                        (art.get("value","") for art in rec.get("articleids",[])
-                         if art.get("idtype") == "doi"), ""
-                    ),
-                })
+                results.append(
+                    {
+                        "pmid": pmid,
+                        "title": rec.get("title", "").rstrip("."),
+                        "year": rec.get("pubdate", "")[:4],
+                        "journal": rec.get("source", ""),
+                        "authors": f"{first_author} et al." if len(authors) > 1 else first_author,
+                        "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                        "doi": next(
+                            (art.get("value", "") for art in rec.get("articleids", []) if art.get("idtype") == "doi"),
+                            "",
+                        ),
+                    }
+                )
 
         time.sleep(_DELAY)
         self._store(cache_key, results)
@@ -172,10 +172,7 @@ class PubMedRAG:
         if cached is not None:
             return cached
 
-        url = (
-            f"{_BASE_URL}/efetch.fcgi"
-            f"?db=pubmed&id={','.join(pmids)}&rettype=abstract&retmode=text"
-        )
+        url = f"{_BASE_URL}/efetch.fcgi?db=pubmed&id={','.join(pmids)}&rettype=abstract&retmode=text"
         try:
             with urllib.request.urlopen(url, timeout=10) as r:  # nosec B310
                 raw = r.read().decode("utf-8")
@@ -199,7 +196,7 @@ class PubMedRAG:
     # ── Yüksek Seviye API ────────────────────────────────────────────────────
     def fetch(
         self,
-        gene:    str,
+        gene: str,
         variant: Optional[str] = None,
         n_results: int = 3,
         keywords: Optional[List[str]] = None,
@@ -218,7 +215,7 @@ class PubMedRAG:
             query_parts.extend(keywords[:2])
         query = " ".join(query_parts)
 
-        pmids     = self.search_pmids(query, n=n_results)
+        pmids = self.search_pmids(query, n=n_results)
         if not pmids:
             logger.info("PubMed sonuç bulunamadı: %s", query)
             return []
@@ -231,20 +228,22 @@ class PubMedRAG:
         for s in summaries:
             pmid = s["pmid"]
             abs_text = abstracts.get(pmid, "")
-            snippet  = _extract_key_sentence(abs_text, kws)
+            snippet = _extract_key_sentence(abs_text, kws)
             results.append({**s, "abstract_snippet": snippet})
 
         logger.info(
             "PubMed: '%s' → %d makale getirildi (PMID: %s)",
-            query, len(results), [r["pmid"] for r in results],
+            query,
+            len(results),
+            [r["pmid"] for r in results],
         )
         return results
 
     def fetch_for_variant(
         self,
         variant_id: str,
-        gene:       Optional[str] = None,
-        n_results:  int = 3,
+        gene: Optional[str] = None,
+        n_results: int = 3,
     ) -> List[dict]:
         """
         Varyant ID ve gen adına göre PubMed makale çek.
@@ -252,10 +251,10 @@ class PubMedRAG:
         """
         gene_name = gene or variant_id.split("-")[0].split("_")[0]
         return self.fetch(
-            gene     = gene_name,
-            variant  = variant_id,
-            n_results = n_results,
-            keywords = ["clinical significance", "pathogenic"],
+            gene=gene_name,
+            variant=variant_id,
+            n_results=n_results,
+            keywords=["clinical significance", "pathogenic"],
         )
 
     def format_for_pdf(self, articles: List[dict]) -> str:
@@ -267,9 +266,9 @@ class PubMedRAG:
         lines = []
         for i, a in enumerate(articles, 1):
             lines.append(
-                f"[{i}] {a.get('authors','?')} ({a.get('year','?')}). "
-                f"{a.get('title','?')}. {a.get('journal','?')}. "
-                f"PMID:{a.get('pmid','?')}"
+                f"[{i}] {a.get('authors', '?')} ({a.get('year', '?')}). "
+                f"{a.get('title', '?')}. {a.get('journal', '?')}. "
+                f"PMID:{a.get('pmid', '?')}"
             )
             if a.get("abstract_snippet"):
                 lines.append(f"    → {a['abstract_snippet']}")
