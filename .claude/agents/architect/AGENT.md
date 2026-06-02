@@ -50,11 +50,11 @@ configs/
   pdr.yaml        ← PDR-specific config
   final.yaml      ← competition final config
   panels.yaml     ← panel-specific settings
-  thresholds.yaml ← decision thresholds (CANONICAL global θ=0.6831; panel opt-in: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
+  thresholds.yaml ← decision thresholds (CANONICAL global θ=0.8514; panel opt-in: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
   inference.yaml  ← inference config
   evaluation.yaml ← eval config
 ```
-**Rule:** Karar eşiğinin tek doğruluk kaynağı `models/threshold.json` (canonical θ=0.6831). `configs/pdr.yaml`'nin yarışma senaryosunda çalıştığını ve `optimize_metric: binary_f1` olduğunu doğrula.
+**Rule:** Karar eşiğinin tek doğruluk kaynağı `models/threshold.json` (canonical θ=0.8514). `configs/pdr.yaml`'nin yarışma senaryosunda çalıştığını ve `optimize_metric: binary_f1` olduğunu doğrula.
 
 ### Entry Points
 ```

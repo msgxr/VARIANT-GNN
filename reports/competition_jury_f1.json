@@ -1,0 +1,8 @@
+{
+  "competition_jury_f1": 0.6063,
+  "competition_jury_f1_std": 0.0338,
+  "test_pos_rate": 0.2,
+  "threshold": 0.8514,
+  "holdout_f1_75pct_pos": 0.833,
+  "_note": "competition_jury_f1 = TEKNOFEST RESMİ test prior'i (%20 patojenik/%80 benign) held-out resample (300x) F1 — GERCEK beklenen yarisma skoru. holdout_f1 = %75-poz ic hold-out (ayrim gucu, juri skoru DEGIL)."
+}

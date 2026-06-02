@@ -25,7 +25,7 @@
 - [ ] Accuracy tek başına ana metrik olarak sunulmadı
 - [ ] MCC ve PR-AUC destekleyici metrik olarak mevcut
 - [ ] Her panel için ayrı F1 skoru raporlandı
-- [ ] GLOBAL karar eşiği θ=0.6831 (canonical, models/threshold.json); panel eşikleri opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
+- [ ] GLOBAL karar eşiği θ=0.8514 (canonical, models/threshold.json); panel eşikleri opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
 - [ ] Eşik değerleri uygulandıktan SONRA metrik hesaplandı
 
 **FAIL tetikleyici:** Yanlış F1 formülü, Accuracy birincil, eksik panel metriği

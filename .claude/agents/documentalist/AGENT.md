@@ -37,8 +37,8 @@ Activate when:
 Mapping of claims to verification sources:
 | Document Claim | Must Verify In |
 |---|---|
-| "Binary F1: 0.8969" / "CV F1: 0.8936" | `RESULTS_CANONICAL.json` → `reports/cv_report.json` |
-| "Global threshold: 0.6831" | `models/threshold.json` (canonical) |
+| "Binary F1: 0.833" / "CV F1: 0.8936" | `RESULTS_CANONICAL.json` → `reports/cv_report.json` |
+| "Global threshold: 0.8514" | `models/threshold.json` (canonical) |
 | "VariantGATv2GNN" | `src/core/gnn.py` — class name |
 | "CategoricalBioFeaturizer" | `src/features/categorical_bio_features.py` |
 | "SelectKBest/AutoEncoder REMOVED" | `configs/pdr.yaml` (use_feature_selection/use_autoencoder=false) |
@@ -116,8 +116,8 @@ CONTENT:
 [ ] Purpose: competition research only
 [ ] Input format: anonymous feature vector
 [ ] Output: probability + binary prediction (Pathogenic=1/Benign=0)
-[ ] Global threshold θ=0.6831 (canonical); panel-specific opt-in (jüri kullanmaz)
-[ ] Performance: F1=0.8969 test, CV F1=0.8936±0.0004, jüri dengeli F1=0.8134, all panel breakdown
+[ ] Global threshold θ=0.8514 (canonical); panel-specific opt-in (jüri kullanmaz)
+[ ] Performance: F1=0.833 test, CV F1=0.8936±0.0004, jüri dengeli F1=0.6063, all panel breakdown
 [ ] NOT TO BE USED FOR: clinical diagnosis, treatment decisions
 [ ] Requires: physician oversight for any clinical interpretation
 [ ] Architecture: full ensemble description with weights
@@ -148,8 +148,8 @@ CONTENT:
 - "Can be used in clinical practice" → FORBIDDEN
 
 ### Required Precision Patterns
-- Metric: always report as "F1=0.8969 (iç hold-out, θ=0.6831); jüri beklentisi dengeli F1=0.8134"
-- Comparison: "Ensemble CV F1=0.8936 vs en güçlü tek model XGBoost CV F1=0.8865"
+- Metric: always report as "F1=0.833 (iç hold-out, θ=0.8514); jüri beklentisi dengeli F1=0.6063"
+- Comparison: "Ensemble CV F1=0.8936 vs en güçlü tek model XGBoost CV F1=0.8145"
 - Limitation: "PAH panel MCC=0.39 (n_benign=62 küçük-n); CFTR MCC tanımsız (n=18)"
 - Claim: pair every claim with its evidence source
 

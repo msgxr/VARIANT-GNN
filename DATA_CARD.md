@@ -9,7 +9,7 @@
 | **Veri türü** | Missense genetik varyant anotasyon profilleri |
 | **Etiket** | Patojenik (1) / Benign (0) |
 | **Mevcut veri durumu** | ✅ Gerçek TEKNOFEST 2026 yarışma verisi (14 Mayıs 2026 alındı) |
-| **Yarışma verisi durumu** | ✅ Model 2 Haziran 2026'da sızıntısız (group-aware) protokolle yeniden eğitildi — CV F1 = 0.8936 ± 0.0004, Test F1 = 0.8969 |
+| **Yarışma verisi durumu** | ✅ Model 2 Haziran 2026'da sızıntısız (group-aware) protokolle yeniden eğitildi — CV F1 = 0.8936 ± 0.0004, Test F1 = 0.833 |
 | **Gizlilik** | KVKK/GDPR ve TEKNOFEST NDA bağlamında; genomik adres bilgileri gizlenmiş, ham hasta verisi içermez |
 | **Format** | CSV (nümerik özellikler + isteğe bağlı sekans bağlamı) |
 

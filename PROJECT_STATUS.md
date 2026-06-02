@@ -12,7 +12,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 
 > ✅ Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alınmıştır.
 > Model 1 Haziran 2026'da **sızıntısız (leakage-free, group-aware) protokol** ile yeniden eğitilmiştir.
-> CV F1 = **0.8936 ± 0.0004** | Test F1 = **0.8969** | MCC = 0.5863 *(precision/recall, binary_f1'i birebir üretir)*
+> CV F1 = **0.8936 ± 0.0004** | Test F1 = **0.833** | MCC = 0.5863 *(precision/recall, binary_f1'i birebir üretir)*
 > ⚠️ Önceki 0.8980/0.9269 sayıları geri çekildi — satır-bazlı split sızıntısıyla şişikti (RESULTS_CANONICAL.json).
 
 ## Olgunluk Seviyesi
@@ -22,10 +22,10 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | Boyut | Durum | Kanıt |
 |---|---|---|
 | **Model mimarisi** | ✅ Stabil | XGB(30%) + LGB(30%) + GATv2GNN(25%) + DNN(15%), stacking LogReg |
-| **Eğitim — sızıntısız, gerçek veri** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-06-01, group-aware, Test F1=0.8969 |
+| **Eğitim — sızıntısız, gerçek veri** | ✅ Tamamlandı | `models/PROVENANCE.json` → 2026-06-01, group-aware, Test F1=0.833 |
 | **5-fold CV — group-aware** | ✅ Tamamlandı | `reports/cv_report.json` → CV F1=0.8936±0.0004 (StratifiedGroupKFold) |
 | **Leakage guard** | ✅ Geçti | 0 Variant_ID train/test'i çaprazlamıyor (`src/cli/modes/train.py`) |
-| **Panel bazlı metrikler (test)** | ✅ Tamamlandı | General=0.8865 · KANSER=0.944 · PAH=0.9077 · CFTR=0.9412 |
+| **Panel bazlı metrikler (test)** | ✅ Tamamlandı | General=0.8145 · KANSER=0.906 · PAH=0.878 · CFTR=0.8387 |
 | **Eğitim pipeline (kod)** | ✅ Çalışıyor | `python main.py --mode train --config configs/pdr.yaml` |
 | **Inference pipeline** | ✅ Çalışıyor | Batch + tekli tahmin, belirsizlik desteği |
 | **Açıklanabilirlik** | ✅ Çalışıyor | SHAP, LIME, GNNExplainer, Türkçe rapor |
@@ -40,7 +40,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | **CI pipeline** | ✅ Çalışıyor | GitHub Actions: lint, typecheck, test, security |
 | **Docker** | ✅ Mevcut | CPU ve GPU destekli |
 | **Test altyapısı** | ✅ 444/444 test | Smoke, unit, integration testler (2 Haziran 2026) |
-| **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, GLOBAL cal-türevli eşik θ=0.6831 (canonical; panel-spesifik test'te daha kötü, opt-in) |
+| **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, GLOBAL cal-türevli eşik θ=0.8514 (canonical; panel-spesifik test'te daha kötü, opt-in) |
 | **PDR belge hataları** | ✅ Tümü kapatıldı | BUG-01..12 CLOSED (24 Mayıs 2026) |
 | **Bağımsız klinik validasyon** | ❌ Kapsam dışı | Araştırma prototipi; kasıtlı kapsam dışı |
 | **VUS sınıflandırma** | ❌ Yok | Etiketli VUS verisi gerektirir |

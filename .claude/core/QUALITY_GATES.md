@@ -54,7 +54,7 @@
 ### G4: Tekrar Üretilebilirlik
 **Gereksinim:** Pipeline değişikliğinden sonra seed=42 hâlâ tutarlı çıktı üretmeli  
 **Kim:** verifier  
-**Başarısızlık:** Non-deterministik sonuçlar → jüri için F1=0.8969 yeniden üretilemiyor
+**Başarısızlık:** Non-deterministik sonuçlar → jüri için F1=0.833 yeniden üretilemiyor
 
 ### G5: Yarışma Uyumu
 **Gereksinim:** Değişiklik PDR skoru, jüri izlenimi veya şartname uyumunu olumsuz etkilememeli  

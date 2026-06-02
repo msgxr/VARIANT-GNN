@@ -36,13 +36,13 @@ Unverifiable items: mark UNVERIFIED, never assume
 - [ ] F1 = TP / (TP + 0.5×FP + 0.5×FN) — formula correct
 - [ ] Accuracy NOT presented as the main success metric
 - [ ] Each panel has its own F1 score
-- [ ] Global decision threshold θ=0.6831 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
+- [ ] Global decision threshold θ=0.8514 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
 
 **Current verified values (CANONICAL: RESULTS_CANONICAL.json):**
 ```
-Jüri beklentisi (dengeli §3.2): balanced F1=0.8134±0.0103
-İç hold-out: Test F1=0.8969 | CV F1=0.8936±0.0004 | MCC=0.5863 | PR-AUC=0.9114 | θ=0.6831
-Panel F1: MASTER 0.8865 | KANSER 0.944 | PAH 0.9077 | CFTR 0.9412
+Jüri beklentisi (%20 patojenik (resmi)): balanced F1=0.6063±0.0103
+İç hold-out: Test F1=0.833 | CV F1=0.8936±0.0004 | MCC=0.5863 | PR-AUC=0.9114 | θ=0.8514
+Panel F1: MASTER 0.8145 | KANSER 0.906 | PAH 0.878 | CFTR 0.8387
 WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 ```
 
@@ -96,9 +96,9 @@ WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 **Known PDR Issues — STATUS (2026-06-02):**
 ```
 ✅ §1.2 references fixed: REVEL[2], EVE[9], GATv2[8]
-✅ §3.2 threshold: θ=0.6831 (canonical; 0.241 superseded)
+✅ §3.2 threshold: θ=0.8514 (canonical; 0.241 superseded)
 ✅ §3.1 figure paths: reports/figures/pdr/*
-✅ All §3 tables aligned to canonical; balanced jüri F1=0.8134 framing added
+✅ All §3 tables aligned to canonical; balanced jüri F1=0.6063 framing added
 ```
 
 **FAIL if:** Any withdrawn number (0.8980/0.9269/0.5356/θ=0.241) reappears as current claim → run scripts/check_results_consistency.py.

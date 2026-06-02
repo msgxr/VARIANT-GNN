@@ -54,7 +54,7 @@
 | Dosya | reports/PDR_VARIANT_GNN_2026.md |
 | Sayılar | ✅ RESULTS_CANONICAL.json ile tutarlı (check_results_consistency.py 5/5 PASS) |
 | Kaynakça numaraları | ✅ Düzeltildi (REVEL[2], EVE[9], GATv2[8]) |
-| §3.2 eşik değeri | ✅ GLOBAL θ=0.6831 (canonical; 0.241 supersede) |
+| §3.2 eşik değeri | ✅ GLOBAL θ=0.8514 (canonical; 0.241 supersede) |
 | Figür yolları | ✅ reports/figures/pdr/* |
 | Rapor tarihi | ✅ 2 Haziran 2026 (sızıntısız retrain) |
 

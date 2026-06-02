@@ -22,7 +22,7 @@
     "seed": 42,
     "cv_f1_mean": 0.8779,
     "cv_f1_std": 0.0062,
-    "test_f1": 0.8969,
+    "test_f1": 0.833,
     "test_mcc": 0.5863,
     "test_recall": 0.9354,
     "test_roc_auc": 0.8485,
@@ -117,6 +117,6 @@
       }
     ]
   },
-  "notes": "SHA256 1 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8779±0.0062, Test F1=0.8969 (hold-out) / balanced_jury_f1=0.8134. NDA verisi lokal kaldı.",
-  "balanced_jury_f1": 0.8134
+  "notes": "SHA256 1 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8779±0.0062, Test F1=0.833 (hold-out) / competition_jury_f1=0.6063. NDA verisi lokal kaldı.",
+  "competition_jury_f1": 0.6063
 }

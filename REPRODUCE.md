@@ -9,9 +9,9 @@ için gereken kesin adımları içerir. Tüm sonuçlar tek bir kaynaktan gelir:
 | Metrik | Değer | Protokol |
 |---|---|---|
 | **CV Binary F1** | **0.8936 ± 0.0004** | StratifiedGroupKFold (Variant_ID), 5 fold |
-| **Test Binary F1** | **0.8969** | Group-aware 80/20 hold-out |
+| **Test Binary F1** | **0.833** | Group-aware 80/20 hold-out |
 | Test MCC | 0.5863 | precision/recall, binary_f1'i birebir üretir |
-| Panel F1 (test) | General 0.8865 · KANSER 0.944 · PAH 0.9077 · CFTR 0.9412 | |
+| Panel F1 (test) | General 0.8145 · KANSER 0.906 · PAH 0.878 · CFTR 0.8387 | |
 
 > **Sızıntısızlık garantisi:** Eğitim, `Variant_ID`'ye göre **grup-farkında** bölme
 > kullanır; aynı varyant asla hem train hem test'te yer almaz. Eğitim çıktısında
@@ -39,7 +39,7 @@ python main.py --mode predict --test_file <jury_test.csv>
 # Çıktı: reports/predictions_full.csv (panel-aware eşik otomatik uygulanır)
 ```
 
-GLOBAL eşik θ=0.6831 (canonical, models/threshold.json) inference'ta otomatik
+GLOBAL eşik θ=0.8514 (canonical, models/threshold.json) inference'ta otomatik
 yüklenir ve her satıra `Panel`'ine göre uygulanır.
 
 ## 3. Sıfırdan eğitim (NDA verisine sahip olanlar için)
@@ -53,7 +53,7 @@ Group-aware splitting ON: 3802 rows → 3224 unique variants
 CV: StratifiedGroupKFold (group-aware)
 Cross-validation complete: Binary F1 (§7.3) = 0.8936 ± 0.0004
 Leakage guard PASSED: 0 variants straddle train/test
-[TEST] [§7.3 PRIMARY] Binary F1 : 0.8969
+[TEST] [§7.3 PRIMARY] Binary F1 : 0.833
 ```
 `seed=42` deterministiktir; her çalıştırma aynı sonucu verir.
 

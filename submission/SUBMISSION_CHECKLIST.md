@@ -12,7 +12,7 @@
 |---|---|---|
 | Gerçek yarışma verisi alındı (14 Mayıs 2026) | ✅ Tamamlandı | `data/raw/YARISMA_TRAIN_*.csv` (4 panel) |
 | Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `train_log.txt`, `reports/cv_report.json` |
-| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8969, MCC=0.5863 |
+| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.833, MCC=0.5863 |
 | train_log.txt gerçek veri eğitimini gösteriyor | ✅ Tamamlandı | 48 KB log, 5-fold CV + test metrikleri |
 | Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
 
@@ -38,7 +38,7 @@
 
 | Görev | Durum | Kanıt |
 |---|---|---|
-| `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.8969 |
+| `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.833 |
 | `submission/teknofest/artifact_manifest.json` güncel | ✅ Tamamlandı | Gerçek SHA256, 2026-05-21 tarihi |
 | `submission/teknofest/checksums.json` güncel | ✅ Tamamlandı | SHA256 hash'leri doğrulandı |
 | `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED, 7 zorunlu kolon |
@@ -63,7 +63,7 @@
 | sklearn deprecation warning suppress | ✅ Tamamlandı | `warnings.filterwarnings()` |
 | tests/unit/ testler mevcut | ✅ Tamamlandı | 444/444 test geçiyor (2 Haziran 2026) |
 | prediction_schema OOD_Score/OOD_Flag | ✅ Tamamlandı | PREDICTION_COLUMNS güncellendi; build_prediction_frame destekliyor |
-| models/threshold.json | ✅ Tamamlandı | θ=0.6831 (global F1-optimal) |
+| models/threshold.json | ✅ Tamamlandı | θ=0.8514 (global F1-optimal) |
 | models/panel_thresholds.json | ✅ Tamamlandı | 4 panel eşik değerleri |
 | models/manifest.json | ✅ Tamamlandı | v1.0.0, model_version, tüm metrikler |
 

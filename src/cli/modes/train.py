@@ -162,70 +162,76 @@ def mode_train(args, cfg):
     cal_test_proba = calibrator.transform(raw_tst_proba)
 
     cal_cal_proba = calibrator.transform(raw_cal_proba)
-    # KARAR EŞİĞİ — §3.2 jüri/test seti SINIF-DENGELİ (50/50), train ise ~%74 poz.
-    # Eşiği %74-poz dağılımda türetmek dengeli sette +3.2pp F1 KAYBETTİRİR (ölçüldü:
-    # θ=0.337 → balanced-F1 0.764 vs balanced-θ≈0.56 → 0.796; A→B çapraz-doğrulandı,
-    # overfit YOK). Çözüm: eşiği TAM group-aware OOF'ta (n≈3040), KALİBRE ve SINIF-
-    # DENGELİ resample üzerinde türet (25x medyan → sağlam). 238-satır cal seti
-    # gürültülüdür ve dengeli-θ'yı kaçırır.
+    # KARAR EŞİĞİ — TEKNOFEST RESMİ Q&A (2026-06-02): gerçek test seti ~%20 PATOJENİK /
+    # %80 benign (eğitimin TERSİ; 50/50 dengeli ESKİ şartnameydi, GEÇERSİZ). F1 patojenik-
+    # odaklı (pos_label=1) ve patojenik artık AZINLIK sınıf. Eşik %20-patojenik prior'da
+    # türetilir; %74-poz/50-50'de türetmek bu sette F1 KAYBETTİRİR (ölçüldü: θ=0.6831→0.55
+    # vs θ≈0.84→0.60). Tam group-aware OOF'ta %20-patojenik resample, 25x medyan F1-optimal.
+    _TEST_POS = 0.20
     best_thr = None
     try:
         _oofz2 = np.load(cfg.paths.reports_dir / "oof_per_model.npz")
         _meta = getattr(ensemble, "meta_learner", None)
         if _meta is not None:
-            _oof_fs = _meta.predict_proba(_oofz2["oof"])          # full-stack raw OOF proba
-            _oof_cal = calibrator.transform(_oof_fs)[:, 1]        # test ile aynı kalibrasyon
+            # HAM full-stack OOF proba — inference (ExternalValidationRunner) etiketi
+            # HAM olasılıkta verir (kalibrasyon yalnız 'calibrated_risk' GÖSTERİMİ için),
+            # bu yüzden eşik de HAM'da türetilir → derivation==inference tutarlılığı.
+            _oof_pr = _meta.predict_proba(_oofz2["oof"])[:, 1]
             _yoof = _oofz2["labels"].astype(int)
             _po = np.where(_yoof == 1)[0]
             _ne = np.where(_yoof == 0)[0]
-            _k = min(len(_po), len(_ne))
+            # %20-patojenik: pozitif azınlık → pos = neg * (0.20/0.80) = neg/4
+            _npos = max(1, int(round(len(_ne) * _TEST_POS / (1 - _TEST_POS))))
             _ths = []
             for _s in range(25):
                 _rr = np.random.RandomState(cfg.seed + _s)
-                _bi = np.concatenate([_rr.choice(_po, _k, replace=False),
-                                      _rr.choice(_ne, _k, replace=False)])
-                _t, _ = find_best_threshold(_yoof[_bi], _oof_cal[_bi], metric="f1")
+                _sub = _rr.choice(_po, min(_npos, len(_po)), replace=False)
+                _bi = np.concatenate([_sub, _ne])
+                _t, _ = find_best_threshold(_yoof[_bi], _oof_pr[_bi], metric="f1")
                 _ths.append(_t)
             best_thr = float(np.median(_ths))
-            logging.info("Threshold from BALANCED full OOF (n=%d dengeli, 25x medyan, §3.2 jüri 50/50): %.4f",
-                         2 * _k, best_thr)
+            logging.info("Threshold from %d%%-PATOJENİK OOF resample (25x medyan, TEKNOFEST resmi test prior): %.4f",
+                         int(_TEST_POS * 100), best_thr)
     except Exception as _thr_exc:
-        logging.warning("Balanced-OOF eşik atlandı, cal-set'e düşülüyor: %s", _thr_exc)
+        logging.warning("%20-patojenik OOF eşik atlandı, cal-set'e düşülüyor: %s", _thr_exc)
     if best_thr is None:
         best_thr, _ = find_best_threshold(y_cal, cal_cal_proba[:, 1], metric="f1")
         logging.info("Threshold from calibration set (fallback, n=%d): %.4f", len(y_cal), best_thr)
 
-    report = evaluate(y_test, cal_test_proba, threshold=best_thr)
+    report = evaluate(y_test, raw_tst_proba, threshold=best_thr)  # inference HAM'da karar verir
 
-    # GERÇEK yarışma metriği — dengeli (50/50) jüri prior'ında F1 (held-out resample,
-    # 300x). Headline'daki 0.90+ %75-poz hold-out'tadır; jüri seti dengeli olduğundan
-    # asıl beklenen skor budur (§III.9 dürüstlük). reports/balanced_jury_f1.json.
+    # GERÇEK yarışma metriği — %20-patojenik (TEKNOFEST resmi test prior) F1 (held-out
+    # resample, 300x). Headline'daki hold-out F1 %75-poz iç settedir, jüri skoru DEĞİL.
+    # reports/competition_jury_f1.json (§III.9 dürüstlük).
     try:
-        _ptst = cal_test_proba[:, 1]
+        _ptst = raw_tst_proba[:, 1]  # inference ile ayni: HAM olasilik
         _pp = np.where(y_test == 1)[0]; _nn = np.where(y_test == 0)[0]
-        _m = min(len(_pp), len(_nn))
+        _npos_t = max(1, int(round(len(_nn) * _TEST_POS / (1 - _TEST_POS))))
         _bf = []
         for _s in range(300):
             _rr = np.random.RandomState(_s)
-            _bi = np.concatenate([_rr.choice(_pp, _m, replace=False), _nn])
+            _sub = _rr.choice(_pp, min(_npos_t, len(_pp)), replace=False)
+            _bi = np.concatenate([_sub, _nn])
             _yy = y_test[_bi]; _qq = _ptst[_bi]
             _yp = (_qq >= best_thr).astype(int)
             _tp = int(((_yp == 1) & (_yy == 1)).sum()); _fp = int(((_yp == 1) & (_yy == 0)).sum())
             _fn = int(((_yp == 0) & (_yy == 1)).sum())
             _bf.append(2 * _tp / (2 * _tp + _fp + _fn) if (2 * _tp + _fp + _fn) else 0.0)
-        _bal_f1 = float(np.mean(_bf))
-        logging.info("BALANCED jüri-prior F1 (gerçek yarışma beklentisi) = %.4f ± %.4f @ θ=%.4f",
-                     _bal_f1, float(np.std(_bf)), best_thr)
-        json.dump({"balanced_jury_f1": round(_bal_f1, 4),
-                   "balanced_jury_f1_std": round(float(np.std(_bf)), 4),
+        _cj = float(np.mean(_bf))
+        logging.info("%d%%-PATOJENİK jüri-prior F1 (GERÇEK yarışma beklentisi) = %.4f ± %.4f @ θ=%.4f",
+                     int(_TEST_POS * 100), _cj, float(np.std(_bf)), best_thr)
+        json.dump({"competition_jury_f1": round(_cj, 4),
+                   "competition_jury_f1_std": round(float(np.std(_bf)), 4),
+                   "test_pos_rate": _TEST_POS,
                    "threshold": round(best_thr, 4),
                    "holdout_f1_75pct_pos": round(report.binary_f1, 4),
-                   "_note": "balanced_jury_f1 = %50/50 dengeli held-out resample (300x) — §3.2 jüri "
-                            "dağılımında GERÇEK beklenen F1. holdout_f1 = %75-poz iç hold-out (ayrım gücü)."},
-                  open(cfg.paths.reports_dir / "balanced_jury_f1.json", "w"),
+                   "_note": "competition_jury_f1 = TEKNOFEST RESMİ test prior'i (%20 patojenik/%80 benign) "
+                            "held-out resample (300x) F1 — GERCEK beklenen yarisma skoru. holdout_f1 = "
+                            "%75-poz ic hold-out (ayrim gucu, juri skoru DEGIL)."},
+                  open(cfg.paths.reports_dir / "competition_jury_f1.json", "w"),
                   indent=2, ensure_ascii=False)
     except Exception as _bexc:
-        logging.warning("Balanced-jury F1 raporu atlandı: %s", _bexc)
+        logging.warning("Competition-jury F1 raporu atlandı: %s", _bexc)
     report.log(prefix="TEST")
 
     store = ModelStore(cfg.paths.models_dir)
@@ -251,7 +257,7 @@ def mode_train(args, cfg):
 
     if "Panel" in ds.metadata.columns:
         test_panels = ds.metadata["Panel"].values[test_indices]
-        panel_reports = evaluate_per_panel(y_test, cal_test_proba, test_panels,
+        panel_reports = evaluate_per_panel(y_test, raw_tst_proba, test_panels,
                                            threshold=best_thr)
         for pname, prep in panel_reports.items():
             prep.log(prefix=f"PANEL_{pname}")

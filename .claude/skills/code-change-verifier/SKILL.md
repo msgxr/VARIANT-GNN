@@ -34,11 +34,11 @@ If the change touches: data loading, preprocessing, training, inference, or metr
 [ ] Does the change maintain seed=42 determinism?
 [ ] Does the change preserve SMOTE-only-on-train guarantee?
 [ ] Does the change preserve scaler-fit-on-train-only?
-[ ] Does the change maintain correct F1 computation (binary, GLOBAL threshold θ=0.6831)?
+[ ] Does the change maintain correct F1 computation (binary, GLOBAL threshold θ=0.8514)?
 [ ] Does the change preserve group-aware split (Variant_ID; 0 straddle)?
 [ ] Does the change maintain 4-panel evaluation structure?
 [ ] Does the change affect submission.csv output format?
-[ ] Does the change affect the threshold (global=0.6831 canonical; panel opt-in: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)?
+[ ] Does the change affect the threshold (global=0.8514 canonical; panel opt-in: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)?
 ```
 
 ### Phase 4: Regression Risk Assessment (for any non-trivial change)
@@ -106,7 +106,7 @@ MUST VERIFY:
 ```
 MUST VERIFY:
 - f1_score called with average='binary'
-- global threshold θ=0.6831 (canonical) still applied; panel thresholds opt-in from panel_thresholds.json
+- global threshold θ=0.8514 (canonical) still applied; panel thresholds opt-in from panel_thresholds.json
 - confusion_matrix still computed
 - Panel-level metrics computed separately
 ```

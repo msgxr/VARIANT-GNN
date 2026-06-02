@@ -46,21 +46,21 @@ Prediction: python main.py --mode predict --test_file <file>
 ## 3. VERIFIED PERFORMANCE (Real Competition Data — 2026-06-02, canonical: RESULTS_CANONICAL.json)
 
 ### Overall
-⭐ **Jüri beklentisi (dengeli §3.2) = balanced Binary F1 = 0.8134 ± 0.0103.** İç ayrım gücü aşağıda:
+⭐ **Jüri beklentisi (%20 patojenik (resmi)) = balanced Binary F1 = 0.6063 ± 0.0103.** İç ayrım gücü aşağıda:
 
 | CV F1 (OOF-stacking) | Test F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall | Threshold |
 |---|---|---|---|---|---|---|---|
-| 0.8936 ± 0.0004 | **0.8969** | 0.5863 | 0.9114 | 0.8398 | 0.8984 | 0.8953 | **0.6831 (global)** |
+| 0.8936 ± 0.0004 | **0.833** | 0.5863 | 0.9114 | 0.8398 | 0.9254 | 0.7574 | **0.8514 (global)** |
 
 *(fold-CV bileşeni: 0.8779 ± 0.0062). ECE=0.0755, Brier=0.1197.*
 
-### Panel Results (test, global θ=0.6831)
+### Panel Results (test, global θ=0.8514)
 | Panel | Data Column | F1 | MCC |
 |---|---|---|---|
-| MASTER | General | 0.8865 | 0.5732 |
-| KANSER | Hereditary_Cancer | 0.944 | 0.7985 |
-| PAH | PAH | 0.9077 | 0.39 |
-| CFTR | CFTR | 0.9412 | — (n=18, tanımsız) |
+| MASTER | General | 0.8145 | 0.5732 |
+| KANSER | Hereditary_Cancer | 0.906 | 0.7985 |
+| PAH | PAH | 0.878 | 0.39 |
+| CFTR | CFTR | 0.8387 | — (n=18, tanımsız) |
 
 Panel eşikleri (opt-in, jüri kullanmaz): General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922.
 
@@ -105,7 +105,7 @@ Panel eşikleri (opt-in, jüri kullanmaz): General 0.404, KANSER 0.3695, PAH 0.3
 | BUG-01 | §1.2 | REVEL citation [3]→[2] | ✅ CLOSED | 2026-05-24 |
 | BUG-02 | §1.2 | EVE citation [5]→[9] | ✅ CLOSED | 2026-05-24 |
 | BUG-03 | §1.2 | GATv2 citation [7]→[8] | ✅ CLOSED | 2026-05-24 |
-| BUG-04 | §3.2 | θ=0.01 → θ=**0.6831** (0.241 sonradan supersede) | ✅ CLOSED | 2026-06-02 |
+| BUG-04 | §3.2 | θ=0.01 → θ=**0.8514** (0.241 sonradan supersede) | ✅ CLOSED | 2026-06-02 |
 | BUG-05 | §3.1 | Figure paths dead | ✅ CLOSED | 2026-05-24 |
 | BUG-06 | §3.1 | Şekil 2-5 path refs | ✅ CLOSED | 2026-05-24 |
 | BUG-07 | Header | Date 15 Mayıs → 20 Mayıs | ✅ CLOSED | 2026-05-24 |
@@ -117,7 +117,7 @@ Panel eşikleri (opt-in, jüri kullanmaz): General 0.404, KANSER 0.3695, PAH 0.3
 
 **All known bugs closed as of 2026-05-24. PDR ready for final review.**
 
-> **NOTE — jury_predictions.csv:** Sentetik placeholder dosyası **silindi** (2026-06-02 pull). Gerçek submission, jüri kör test verisini sağladığında `python main.py --mode predict --test_file <AL_test.csv>` ile üretilir. Tahmin pipeline'ı `models/threshold.json` (global **θ=0.6831**, canonical) okur.
+> **NOTE — jury_predictions.csv:** Sentetik placeholder dosyası **silindi** (2026-06-02 pull). Gerçek submission, jüri kör test verisini sağladığında `python main.py --mode predict --test_file <AL_test.csv>` ile üretilir. Tahmin pipeline'ı `models/threshold.json` (global **θ=0.8514**, canonical) okur.
 
 ---
 

@@ -122,8 +122,8 @@ Note: PSR is CLOSED (submitted 25 March 2026). This skill only analyzes gaps and
 | Metric | PSR Pilot (ClinVar EP) | Real Competition (2026-06-02, canonical) |
 |---|---|---|
 | MCC (overall) | 0.892 | **0.5863** |
-| Binary F1 (overall test) | ~0.945 | **0.8969** (dengeli jüri F1=0.8134) |
-| Threshold | ~0.50 (default) | **0.6831** (balanced-OOF, global) |
+| Binary F1 (overall test) | ~0.945 | **0.833** (dengeli jüri F1=0.6063) |
+| Threshold | ~0.50 (default) | **0.8514** (balanced-OOF, global) |
 
 **Root cause:** Pilot data = ClinVar Expert Panel (3-4 yıldız, extremely clean labels). Competition data = broader, more complex variant distribution including borderline pathogenic variants.
 
@@ -134,9 +134,9 @@ Note: PSR is CLOSED (submitted 25 March 2026). This skill only analyzes gaps and
 | Document | Threshold |
 |---|---|
 | PSR | ~0.50 (default, pilot data) |
-| PDR | **θ=0.6831 global** (balanced-OOF, canonical); panel-specific opt-in (jüri kullanmaz) |
+| PDR | **θ=0.8514 global** (balanced-OOF, canonical); panel-specific opt-in (jüri kullanmaz) |
 
-**PDR explanation required:** Karar eşiği, jüri §3.2 setinin dengeli (50/50) olduğu varsayımıyla group-aware OOF üzerinde sınıf-dengeli resample ile F1-optimal türetilir (θ=0.6831). Opt-in panel eşikleri: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 (varsayılan KAPALI).
+**PDR explanation required:** Karar eşiği, jüri §3.2 setinin dengeli (%20/%80) olduğu varsayımıyla group-aware OOF üzerinde sınıf-dengeli resample ile F1-optimal türetilir (θ=0.8514). Opt-in panel eşikleri: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 (varsayılan KAPALI).
 
 ---
 

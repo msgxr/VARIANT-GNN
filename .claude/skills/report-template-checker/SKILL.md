@@ -105,7 +105,7 @@ Rejection: Lise/EKG templates, 2024 templates, third-party PDR guides, blog summ
 | BUG-01 | §1.2 Kaynakça | REVEL citation is [3] | Should be **[2]** | ❌ Open |
 | BUG-02 | §1.2 Kaynakça | EVE citation is [5] | Should be **[9]** | ❌ Open |
 | BUG-03 | §1.2 Kaynakça | GATv2 citation is [7] | Should be **[8]** | ❌ Open |
-| BUG-04 | §3.2 Threshold | θ = 0.01 written in text | θ = **0.6831** (canonical; 0.241 superseded) | ✅ Closed |
+| BUG-04 | §3.2 Threshold | θ = 0.01 written in text | θ = **0.8514** (canonical; 0.241 superseded) | ✅ Closed |
 | BUG-05 | §3.1 Figure paths | `reports/roc_curves.png` | `reports/figures/pdr/05_roc_curves.png` | ✅ Closed |
 | BUG-06 | §3.1 Şekil 2-5 | All figure paths dead | Verify each path under `reports/figures/pdr/` | ✅ Closed |
 | BUG-07 | Header/Cover | Training date | **2 Haziran 2026** (sızıntısız retrain) | ✅ Closed |
@@ -163,11 +163,11 @@ For each bug:
 
 ### Step 5 — Panel Completeness Check
 ```
-□ MASTER: F1=0.8865, MCC=0.5732, PR-AUC=0.9102 — all reported?
-□ KANSER: F1=0.944, MCC=0.7985, PR-AUC=0.9393 — all reported?
-□ PAH: F1=0.9077, MCC=0.39, PR-AUC=0.8843 — all reported?
-□ CFTR: F1=0.9412, MCC=— (n=18 tanımsız), PR-AUC=1.0 — all reported?
-□ Global θ=0.6831 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
+□ MASTER: F1=0.8145, MCC=0.5732, PR-AUC=0.9102 — all reported?
+□ KANSER: F1=0.906, MCC=0.7985, PR-AUC=0.9393 — all reported?
+□ PAH: F1=0.878, MCC=0.39, PR-AUC=0.8843 — all reported?
+□ CFTR: F1=0.8387, MCC=— (n=18 tanımsız), PR-AUC=1.0 — all reported?
+□ Global θ=0.8514 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
 ```
 
 ### Step 6 — PSR Bridge Check

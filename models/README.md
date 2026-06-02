@@ -11,7 +11,7 @@ bu artefaktlarla tahmin üretebilir. Yalnızca ham NDA verisi (`data/raw/`) giti
 > **Durum (2026-06-02, canonical):** Gerçek TEKNOFEST yarışma verisi (3.802 örnek, 3.224 tekil
 > varyant, 343 anonim kolon) kullanılarak **sızıntısız (group-aware, Variant_ID)** protokolle
 > eğitim tamamlanmıştır. **CV Binary F1 = 0.8936 ± 0.0004** (OOF-stacking nested-CV; bileşen
-> fold-CV = 0.8779 ± 0.0062), **Test F1 = 0.8969**, MCC = 0.5863. Tüm sayılar
+> fold-CV = 0.8779 ± 0.0062), **Test F1 = 0.833**, MCC = 0.5863. Tüm sayılar
 > [`../RESULTS_CANONICAL.json`](../RESULTS_CANONICAL.json) ile tutarlıdır.
 > Model artefaktları Şeyma'nın Mac'inde üretilmiş ve bu dizine taşınmıştır.
 > Tahminler yalnızca yarışma/araştırma amaçlıdır — klinik tanı için kullanılamaz.
@@ -46,7 +46,7 @@ python main.py --mode crossval --data_file data/train_variants.csv
 | `ensemble.pkl` / `ensemble_config.json` | Ensemble nesnesi / optimize ağırlıklar |
 | `calibrator.pkl` | EnsembleCalibrator (isotonik olasılık kalibrasyonu) |
 | `ood_detector.pkl` | OOD dedektörü (train-fit; inference'ta sadece `detect()`) |
-| `threshold.json` | Global F1-optimal sınıflandırma eşiği θ=0.6831 (canonical) |
+| `threshold.json` | Global F1-optimal sınıflandırma eşiği θ=0.8514 (canonical) |
 | `panel_thresholds.json` | 4 panel × opt-in eşik (varsayılan KAPALI; jüri global θ kullanır) |
 | `metadata.json` / `manifest.json` | SHA256 + versiyon + artifact manifesti |
 | `PROVENANCE.json` | Eğitim verisi kaynağı ve durum belgesi |

@@ -8,7 +8,7 @@ description: Use when preparing for the TEKNOFEST 2026 final jury defense. Simul
 ## Official Source Boundary
 
 Jüri soruları yalnızca gerçek yarışma verisi sonuçlarına (2026-06-02 sızıntısız retrain, canonical) dayanarak cevaplanır.  
-PSR pilot sonuçları (MCC=0.892) gerçek veri sonucu (MCC=0.5863) gibi savunulmaz. Jüri beklentisi dengeli §3.2 setinde F1=0.8134.  
+PSR pilot sonuçları (MCC=0.892) gerçek veri sonucu (MCC=0.5863) gibi savunulmaz. Jüri beklentisi %20 patojenik (resmi) setinde F1=0.6063.  
 Şartnamenin açıkça belirtmediği jüri kriterleri UNVERIFIED olarak işaretlenir.  
 Kaynak: TEKNOFEST 2026 Şartname + PDR §4.2 (PSR-PDR fark açıklaması).
 

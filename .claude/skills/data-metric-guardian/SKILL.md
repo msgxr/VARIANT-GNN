@@ -54,34 +54,34 @@ Monitor official announcements for any metric change before PDR submission.
 
 ### Overall Test Set
 
-⭐ **Jüri beklentisi (dengeli §3.2) = balanced Binary F1 = 0.8134 ± 0.0103.** Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür (jüri skoru değil).
+⭐ **Jüri beklentisi (%20 patojenik (resmi)) = balanced Binary F1 = 0.6063 ± 0.0103.** Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür (jüri skoru değil).
 
 | Metric | Value | Status |
 |---|---|---|
 | CV F1 (OOF-stacking nested) | **0.8936 ± 0.0004** | Primary declared metric |
 | CV F1 (fold-CV component) | 0.8779 ± 0.0062 | Auxiliary |
 | CV std (5 seeds) | ±0.0034 | Stability confirmed (0.8738 mean) |
-| Test F1 (hold-out) | **0.8969** | Internal discrimination |
+| Test F1 (hold-out) | **0.833** | Internal discrimination |
 | MCC | **0.5863** | Overall (P/R ile tutarlı) |
 | PR-AUC | **0.9114** | |
 | ROC-AUC | **0.8398** | |
-| Precision / Recall | **0.8984 / 0.8953** | Balanced |
+| Precision / Recall | **0.9254 / 0.7574** | Balanced |
 | Brier / ECE | **0.1197 / 0.0755** | |
-| Global threshold | **0.6831** | balanced-OOF F1-optimal (canonical) |
+| Global threshold | **0.8514** | balanced-OOF F1-optimal (canonical) |
 
 > ⚠️ WITHDRAWN: 0.8980/0.9269, MCC 0.5356, θ=0.241 were leakage-inflated → retracted (reports/leakage_quantification.json).
 
-### Panel-Specific Results (Test Set, global θ=0.6831)
+### Panel-Specific Results (Test Set, global θ=0.8514)
 
 | Panel | Label in Data | F1 | MCC | PR-AUC | Opt-in θ | Risk Notes |
 |---|---|---|---|---|---|---|
-| MASTER | General | **0.8865** | 0.5732 | 0.9102 | 0.404 | Class imbalance 2.75:1 |
-| KANSER | Hereditary_Cancer | **0.944** | 0.7985 | 0.9393 | 0.3695 | En dengeli, en iyi MCC |
-| PAH | PAH | **0.9077** | 0.39 | 0.8843 | 0.3203 | n_benign=62 → MCC küçük-n etkisi |
-| CFTR | CFTR | **0.9412** | — | 1.0 | 0.1922 | n=18 test → MCC/ROC tanımsız |
+| MASTER | General | **0.8145** | 0.5732 | 0.9102 | 0.404 | Class imbalance 2.75:1 |
+| KANSER | Hereditary_Cancer | **0.906** | 0.7985 | 0.9393 | 0.3695 | En dengeli, en iyi MCC |
+| PAH | PAH | **0.878** | 0.39 | 0.8843 | 0.3203 | n_benign=62 → MCC küçük-n etkisi |
+| CFTR | CFTR | **0.8387** | — | 1.0 | 0.1922 | n=18 test → MCC/ROC tanımsız |
 
 **⚠️ If any claimed metric value differs from this table → READ RESULTS_CANONICAL.json FIRST before proceeding.**  
-Source: `reports/cv_report.json` → `RESULTS_CANONICAL.json` (2026-06-02). Panel eşikleri opt-in; jüri global θ=0.6831 kullanır.
+Source: `reports/cv_report.json` → `RESULTS_CANONICAL.json` (2026-06-02). Panel eşikleri opt-in; jüri global θ=0.8514 kullanır.
 
 ### CFTR Sensitivity Warning
 Test hold-out n=18 → 1 prediction error = large F1 swing; MCC/ROC-AUC tanımsız (degenerate). F1/precision/recall anlamlıdır.
