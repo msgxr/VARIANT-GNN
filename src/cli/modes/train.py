@@ -263,6 +263,42 @@ def mode_train(args, cfg):
             prep.log(prefix=f"PANEL_{pname}")
             panel_reports_dict[pname] = prep.as_dict()
 
+        # RESMİ SKORLAMA (TEKNOFEST Q&A): her panel kendi %20-patojenik test setinde
+        # ayrı F1, sonra 4-panel ORTALAMASI = nihai yarışma skoru. Genel %20-F1'den farklı.
+        try:
+            _off = {}
+            for _pn in np.unique(test_panels):
+                _m = (test_panels == _pn)
+                _yp = y_test[_m]; _pr = raw_tst_proba[_m, 1]
+                _po = np.where(_yp == 1)[0]; _ne = np.where(_yp == 0)[0]
+                if len(_po) == 0 or len(_ne) == 0:
+                    _off[str(_pn)] = None; continue
+                _np20 = max(1, int(round(len(_ne) * 0.20 / 0.80)))
+                _fs = []
+                for _s in range(300):
+                    _rr = np.random.RandomState(_s)
+                    _sub = _rr.choice(_po, min(_np20, len(_po)), replace=False)
+                    _bi = np.concatenate([_sub, _ne])
+                    _yy = _yp[_bi]; _yhat = (_pr[_bi] >= best_thr).astype(int)
+                    _tp = int(((_yhat == 1) & (_yy == 1)).sum()); _fp = int(((_yhat == 1) & (_yy == 0)).sum())
+                    _fn = int(((_yhat == 0) & (_yy == 1)).sum())
+                    _fs.append(2 * _tp / (2 * _tp + _fp + _fn) if (2 * _tp + _fp + _fn) else 0.0)
+                _off[str(_pn)] = round(float(np.mean(_fs)), 4)
+            _valid = [v for v in _off.values() if v is not None]
+            _official = round(float(np.mean(_valid)), 4) if _valid else None
+            logging.info("RESMİ SKOR (4-panel %%20-patojenik F1 ortalaması) = %s | paneller=%s",
+                         _official, _off)
+            _cjp = cfg.paths.reports_dir / "competition_jury_f1.json"
+            if _cjp.exists():
+                _cj = json.load(open(_cjp, encoding="utf-8"))
+                _cj["official_per_panel_f1_20pct"] = _off
+                _cj["official_competition_score"] = _official
+                _cj["_official_note"] = ("TEKNOFEST RESMİ skorlama: her panel %20-patojenik test'inde "
+                                         "ayrı F1, sonra 4-panel ORTALAMASI. CFTR küçük-n → gürültülü.")
+                json.dump(_cj, open(_cjp, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        except Exception as _offexc:
+            logging.warning("Resmi per-panel skor atlandı: %s", _offexc)
+
         cal_panels = np.array([])
         if len(ds.metadata) == len(X):
             # Reuse the exact group-aware calibration indices computed above.

@@ -4,5 +4,13 @@
   "test_pos_rate": 0.2,
   "threshold": 0.8514,
   "holdout_f1_75pct_pos": 0.833,
-  "_note": "competition_jury_f1 = TEKNOFEST RESMİ test prior'i (%20 patojenik/%80 benign) held-out resample (300x) F1 — GERCEK beklenen yarisma skoru. holdout_f1 = %75-poz ic hold-out (ayrim gucu, juri skoru DEGIL)."
+  "_note": "competition_jury_f1 = TEKNOFEST RESMİ test prior'i (%20 patojenik/%80 benign) held-out resample (300x) F1 — GERCEK beklenen yarisma skoru. holdout_f1 = %75-poz ic hold-out (ayrim gucu, juri skoru DEGIL).",
+  "official_per_panel_f1_20pct": {
+    "CFTR": null,
+    "General": 0.6071,
+    "Hereditary_Cancer": 0.7331,
+    "PAH": 0.4755
+  },
+  "official_competition_score": 0.6052,
+  "_official_note": "TEKNOFEST RESMİ skorlama: her panel %20-patojenik test'inde ayrı F1, sonra 4-panel ORTALAMASI. CFTR küçük-n → gürültülü."
 }
