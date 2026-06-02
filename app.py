@@ -73,7 +73,7 @@ def main() -> None:
                 "show_waterfall":opts.get("show_waterfall", True),
                 "show_lime":     opts.get("show_lime", False),
                 "variant_index": opts.get("variant_index", 0),
-                "threshold":     opts.get("threshold", 0.241),
+                "threshold":     opts.get("threshold", 0.8415),
             }
             render_xai(pipeline, df_raw[feat_cols] if feat_cols else pd.DataFrame(), xai_opts)
 

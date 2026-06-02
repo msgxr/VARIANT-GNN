@@ -113,7 +113,7 @@ ilerlemenin insanlığın yararına kullanılması"** ilkesine uyum gösterilir:
 
 VARIANT-GNN bu dengeyi koruyacak şekilde:
 - Class-balanced loss (Weighted BCE / Focal)
-- SMOTE şartname gereği kapalı (50/50 zaten dengeli)
+- SMOTE yalnızca eğitim bölmesinde uygulanır (train-only); test/jüri setine asla dokunulmaz (jüri test seti %20-patojenik)
 - Stratified k-fold splitler
 
 ### 5.2 Panel-Invariant Öğrenme

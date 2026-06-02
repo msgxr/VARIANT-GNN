@@ -4,6 +4,10 @@ scripts/generate_pdr_figures.py
 PDR icin gerekli tum gorselleri uretir.
 
 Ciktilar: reports/figures/pdr/
+
+NOT: fig_06 (PR egrisi) ve fig_07 (Kalibrasyon) GERCEK OOF olasiliklari
+kullanir (reports/oof_probs.npz).  PNG'lerin yeniden uretilmesi icin
+matplotlib + numpy yuklu bir ortamda bu scripti calistirin.
 """
 from __future__ import annotations
 import json
@@ -209,7 +213,7 @@ def fig_05():
         k   = 3.5 + auc * 4
         tpr = fpr**k / (fpr**k + (1-fpr)**k + 1e-9)
         # AUC'yu gercek deger ile eslestirelim
-        tpr = np.clip(tpr / (np.trapz(tpr, fpr) / auc + 1e-9), 0, 1)
+        tpr = np.clip(tpr / (np.trapezoid(tpr, fpr) / auc + 1e-9), 0, 1)
         ax.plot(fpr, tpr, linewidth=2.5, color=C[p],
                 label=f"{PANEL_TR[p].replace(chr(10),' ')} (AUC={auc:.3f})")
     ax.plot([0,1],[0,1], "k--", linewidth=1, alpha=0.5, label="Rastgele (AUC=0.5)")
@@ -228,87 +232,109 @@ def fig_05():
 
 
 # ── 6. PR ─────────────────────────────────────────────────────────────────────
+# GERCEK VERI: reports/oof_probs.npz dosyasindan yüklenir.
+# oof_probs.npz anahtarlari: test_labels, test_proba, test_panels (test hold-out) + oof_tree_blend/oof_labels (OOF).
+# PNG'yi yeniden uretmek icin matplotlib + numpy yuklu bir ortamda calistirin.
+# TODO: oof_probs.npz yoksa bu fonksiyon uyari verir ve figür uretmez.
 def fig_06():
+    from sklearn.metrics import precision_recall_curve, average_precision_score
+
+    oof_path = ROOT / "reports" / "oof_probs.npz"
+    if not oof_path.exists():
+        print("06 SKIP — reports/oof_probs.npz bulunamadi.")
+        print("         PNG uretmek icin: src/cli/modes/train.py calistirip oof_probs.npz kaydedin.")
+        return
+
+    data = np.load(str(oof_path), allow_pickle=True)
+    y_oof     = data["test_labels"].astype(int)
+    score_oof = data["test_proba"].astype(float)
+    # panel bilgisi varsa kullan, yoksa hepsini General say
+    panel_oof = data["test_panels"].astype(str) if "test_panels" in data.files else np.array(["General"] * len(y_oof))
+
+    # Test prior: %20-patojenik (canonical)
+    total_pos_ratio = 0.20
+
     fig, ax = plt.subplots(figsize=(7.5, 6.5))
 
-    # Gercekci PR egrisi: yuksek recall bolgesi (0.6-1.0) arasi gercek precision dugusunu goster
-    # Her panel icin precision@recall=1.0 gercek deger, oradan geriye interpolasyon
     for p in PANEL_ORDER:
-        pm    = panel_metrics[p]
-        prauc = pm["pr_auc"]
-        prec0 = pm["precision"]   # optimal noktadaki precision
-        rec1  = pm["recall"]      # optimal noktadaki recall
-
-        # PR egrisini 3 bolumde insa et:
-        # [0, 0.5]  : precision ~1.0 (cok az recall'da cok secici)
-        # [0.5, rec1]: precision prec0'a dogru dusuyor
-        # [rec1, 1.0]: precision daha da dusuyor (fazla recall = daha fazla FP)
-        r_pts = np.array([0.0, 0.3, 0.5, 0.65, rec1, min(rec1+0.05, 1.0), 1.0])
-        p_pts = np.array([
-            1.0,
-            1.0 - (1 - prec0) * 0.05,
-            1.0 - (1 - prec0) * 0.2,
-            1.0 - (1 - prec0) * 0.55,
-            prec0,
-            prec0 - (1 - prec0) * 0.3,
-            max(prec0 - (1 - prec0) * 0.8, 0.2),
-        ])
-        # Monoton yumusatma
-        from numpy.polynomial import polynomial as Poly
-        recall_vals = np.linspace(0, 1, 300)
-        # Kübik spline yerine numpy interpolation
-        precision_vals = np.interp(recall_vals, r_pts, p_pts)
-        precision_vals = np.clip(precision_vals, 0.1, 1.0)
-
-        ax.plot(recall_vals, precision_vals, linewidth=2.5, color=C[p],
+        mask = (panel_oof == p)
+        if mask.sum() < 10:
+            print(f"  fig_06: {p} icin yeterli OOF ornegi yok ({mask.sum()}), atlanıyor.")
+            continue
+        precision, recall, _ = precision_recall_curve(y_oof[mask], score_oof[mask], pos_label=1)
+        prauc = average_precision_score(y_oof[mask], score_oof[mask])
+        # sklearn cikarimi: precision[0]=1, recall[0]=0 (basta) — ters siradan ciz
+        ax.plot(recall, precision, linewidth=2.5, color=C[p],
                 label=f"{PANEL_TR[p].replace(chr(10),' ')} (PR-AUC={prauc:.3f})")
+        # Canonical karar noktasi @ θ=0.8415
+        pm    = panel_metrics[p]
+        rec1  = pm["recall"]
+        prec0 = pm["precision"]
         ax.scatter([rec1], [prec0], color=C[p], s=80, zorder=6,
                    marker="D", edgecolors="white", linewidths=1)
 
-    # Rastgele tahmin cizgisi (oransal)
-    total_pos_ratio = 0.74   # yaklasik Patojenik orani
     ax.axhline(total_pos_ratio, color="gray", linestyle=":", alpha=0.6,
-               linewidth=1.2, label=f"Rastgele ({total_pos_ratio:.2f})")
+               linewidth=1.2, label=f"Rastgele (test prior={total_pos_ratio:.2f})")
 
     ax.set_xlabel("Recall (Duyarlilik)")
     ax.set_ylabel("Precision (Kesinlik)")
-    ax.set_title("Precision-Recall Egrisi — Panel Bazli\n(karo = F1-optimal karar noktasi)")
+    ax.set_title(
+        "Precision-Recall Egrisi — Panel Bazli\n"
+        "(karo = θ=0.8415 karar noktasi; gercek test hold-out verisi)"
+    )
     ax.legend(fontsize=10, loc="lower left")
     ax.set_xlim(-0.01, 1.01)
-    ax.set_ylim(0.15, 1.02)
+    ax.set_ylim(0.0, 1.02)
     ax.yaxis.grid(True, alpha=0.3)
     ax.xaxis.grid(True, alpha=0.3)
     fig.tight_layout()
     fig.savefig(OUT_DIR / "06_pr_curves.png")
     plt.close(fig)
-    print("06 OK")
+    print("06 OK (gercek OOF verisinden)")
 
 
 # ── 7. Kalibrasyon ────────────────────────────────────────────────────────────
+# GERCEK VERI: reports/oof_probs.npz dosyasindan yüklenir.
+# oof_probs.npz anahtarlari: test_labels, test_proba (test hold-out).
+# PNG'yi yeniden uretmek icin matplotlib + numpy yuklu bir ortamda calistirin.
+# TODO: oof_probs.npz yoksa bu fonksiyon uyari verir ve figür uretmez.
 def fig_07():
+    from sklearn.calibration import calibration_curve
+
+    oof_path = ROOT / "reports" / "oof_probs.npz"
+    if not oof_path.exists():
+        print("07 SKIP — reports/oof_probs.npz bulunamadi.")
+        print("         PNG uretmek icin: src/cli/modes/train.py calistirip oof_probs.npz kaydedin.")
+        return
+
+    data      = np.load(str(oof_path), allow_pickle=True)
+    y_oof     = data["test_labels"].astype(int)
+    score_oof = data["test_proba"].astype(float)
+
+    # Canonical ECE = 0.0291 (RESULTS_CANONICAL.json)
+    ece = test_metrics.get("ece", 0.0291)
+
+    prob_true, prob_pred = calibration_curve(y_oof, score_oof, n_bins=10, strategy="uniform")
+
     fig, ax = plt.subplots(figsize=(6.5, 6.5))
     ax.plot([0,1],[0,1], "k--", linewidth=1.5, label="Mukemmel Kalibrasyon", alpha=0.7)
+    ax.plot(prob_pred, prob_true, "o-", color=C["ensemble"], linewidth=2.2,
+            markersize=7, label=f"Model (ECE={ece:.4f})", zorder=5)
+    ax.fill_between(prob_pred,
+                    np.clip(prob_pred - ece, 0, 1),
+                    np.clip(prob_pred + ece, 0, 1),
+                    alpha=0.12, color=C["ensemble"], label=f"+-ECE bandi ({ece:.4f})")
 
-    bins  = np.array([0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95])
-    ece   = test_metrics["ece"]
-    rng   = np.random.RandomState(42)
-    noise = rng.uniform(-ece*0.8, ece*0.8, len(bins))
-    calib = np.clip(bins + noise, 0, 1)
-    calib = np.sort(calib)
-
-    ax.plot(bins, calib, "o-", color=C["ensemble"], linewidth=2.2,
-            markersize=7, label=f"Model (ECE={ece:.3f})", zorder=5)
-    ax.fill_between(bins, np.clip(bins - ece, 0, 1), np.clip(bins + ece, 0, 1),
-                    alpha=0.12, color=C["ensemble"], label=f"+-ECE bandi ({ece:.3f})")
-
-    # ECE yazi
-    ax.text(0.65, 0.18, f"ECE = {ece:.3f}\n(iyi kalibre)", ha="center",
+    ax.text(0.65, 0.18, f"ECE = {ece:.4f}\n(iyi kalibre)", ha="center",
             fontsize=11, color=C["ensemble"],
             bbox=dict(boxstyle="round,pad=0.3", facecolor="#EFF6FF", edgecolor=C["ensemble"]))
 
     ax.set_xlabel("Ortalama Tahmin Olasiligi")
     ax.set_ylabel("Gercek Frekans")
-    ax.set_title("Kalibrasyon Egrisi\n(Isotonik Regresyon Sonrasi)")
+    ax.set_title(
+        "Kalibrasyon Egrisi\n"
+        "(Isotonik Regresyon Sonrasi; gercek test hold-out verisi, ECE=0.0291)"
+    )
     ax.legend(fontsize=9)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1.02)
@@ -317,7 +343,7 @@ def fig_07():
     fig.tight_layout()
     fig.savefig(OUT_DIR / "07_calibration_curve.png")
     plt.close(fig)
-    print("07 OK")
+    print("07 OK (gercek OOF verisinden)")
 
 
 # ── 8. SHAP ───────────────────────────────────────────────────────────────────

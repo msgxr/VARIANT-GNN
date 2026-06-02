@@ -4,13 +4,14 @@ scripts/generate_explainability.py
 İki işi birlikte yapar:
 
 1. DOĞRU THRESHOLD'DA METRİK GÜNCELLEMESİ
-   - cv_report.json'daki panel metriklerini üretim threshold'larıyla (θ_General=0.59
-     θ_KANSER=0.281, θ_PAH=0.138, θ_CFTR=0.108) yeniden hesaplar
-   - MASTER MCC: 0.507 (θ=0.01) → gerçek değer (θ=0.59) güncellenir
+   - cv_report.json'daki panel metriklerini üretim threshold'larıyla yeniden hesaplar.
+   - Canonical eşik: θ=0.8415 (RESULTS_CANONICAL.json).
+   - Test prior: %20-patojenik. Resmi jüri skoru: 0.6202 (4-panel %20-F1 ort.).
+   - İç hold-out: F1=0.8367, MCC=0.5112.
 
 2. SHAP GROUP EXPLAINABILITY
-   - XGBoost TreeExplainer → 51 işlenmiş özellik üzerinde SHAP değerleri
-   - 35 SelectKBest özelliği orijinal AL_x isimlerine geri eşlenir
+   - XGBoost TreeExplainer → işlenmiş özellikler üzerinde SHAP değerleri
+   - Özellikler orijinal AL_x isimlerine geri eşlenir
    - 6 biyolojik gruba gruplandırılır (PSR §4.4)
    - Figürler: 16_shap_group_contributions.png, 17_mcc_threshold_general.png
    - JSON: reports/shap_group_contributions.json
@@ -93,12 +94,12 @@ proba_te = _pred_out[1][:, 1] if isinstance(_pred_out, tuple) else _pred_out[:, 
 # ── Üretim threshold'ları ──────────────────────────────────────────────────
 thresholds_dict = json.loads((REPO / "models" / "panel_thresholds.json").read_text())
 THRESH = {
-    "General":            thresholds_dict.get("General", 0.59),
-    "Hereditary_Cancer":  thresholds_dict.get("Hereditary_Cancer", 0.281),
-    "PAH":                thresholds_dict.get("PAH", 0.138),
-    "CFTR":               thresholds_dict.get("CFTR", 0.108),
+    "General":            thresholds_dict.get("General", 0.3990),
+    "Hereditary_Cancer":  thresholds_dict.get("Hereditary_Cancer", 0.4532),
+    "PAH":                thresholds_dict.get("PAH", 0.4434),
+    "CFTR":               thresholds_dict.get("CFTR", 0.1922),
 }
-GLOBAL_THRESH = thresholds_dict.get("__global__", 0.59)
+GLOBAL_THRESH = thresholds_dict.get("__global__", 0.8415)
 
 PANEL_MAP = {
     "General": "General", "MASTER": "General", "": "General",
@@ -177,9 +178,9 @@ cv["panel_mcc"] = {k: round(v["mcc"], 4) for k, v in updated_panel_metrics.items
 cv["panel_f1"]  = {k: round(v["binary_f1"], 4) for k, v in updated_panel_metrics.items()}
 
 cv["threshold_note"] = (
-    "Karar eşiği: GLOBAL θ=0.6831 (canonical, balanced-OOF, §3.2). "
-    "Panel-spesifik eşikler OPT-IN (varsayılan kapalı, jüri kullanmaz): "
-    "General=0.404, Hereditary_Cancer=0.3695, PAH=0.3203, CFTR=0.1922."
+    "Karar eşiği: GLOBAL θ=0.8415 (canonical, §3.2). "
+    "Test prior: %20-patojenik. Resmi jüri skoru (4-panel %20-F1 ort.): 0.6202. "
+    "Havuzlanmış: 0.6042±0.0324. İç hold-out F1=0.8367, MCC=0.5112."
 )
 
 cv_path.write_text(json.dumps(cv, indent=2, ensure_ascii=False))
@@ -207,16 +208,16 @@ fig.patch.set_facecolor("#0f1117"); ax.set_facecolor("#0f1117")
 ax.plot(thrs, mccs_g, color="#a78bfa", linewidth=2.5, label="MCC",      marker="o", markersize=3)
 ax.plot(thrs, f1s_g,  color="#22c55e", linewidth=2,   label="Binary F1", linestyle="--")
 ax.axvline(best_t_mcc, color="#a78bfa", linestyle=":", linewidth=1.8, alpha=0.9)
-ax.axvline(0.6831, color="#6b7280", linestyle=":", linewidth=1.2, alpha=0.7)
+ax.axvline(0.8415, color="#6b7280", linestyle=":", linewidth=1.2, alpha=0.7)
 
 ax.annotate(f"θ*={best_t_mcc:.2f} (MCC={best_mcc_val:.3f})",
             xy=(best_t_mcc, best_mcc_val),
             xytext=(best_t_mcc + 0.06, best_mcc_val - 0.06),
             color="white", fontsize=9,
             arrowprops=dict(arrowstyle="->", color="white", lw=1))
-ax.annotate("θ=0.6831 (karar eşiği)",
-            xy=(0.6831, float(mccs_g[np.argmin(np.abs(thrs - 0.6831))])),
-            xytext=(0.6831 - 0.30, float(mccs_g[np.argmin(np.abs(thrs - 0.6831))]) - 0.10),
+ax.annotate("θ=0.8415 (karar eşiği, canonical)",
+            xy=(0.8415, float(mccs_g[np.argmin(np.abs(thrs - 0.8415))])),
+            xytext=(0.8415 - 0.30, float(mccs_g[np.argmin(np.abs(thrs - 0.8415))]) - 0.10),
             color="#9ca3af", fontsize=8,
             arrowprops=dict(arrowstyle="->", color="#9ca3af", lw=0.8))
 
@@ -224,7 +225,7 @@ ax.set_xlabel("Karar Eşiği (θ)", color="white", fontsize=11)
 ax.set_ylabel("Metrik Değeri", color="white", fontsize=11)
 ax.set_title(
     "MASTER/General Panel: MCC Optimizasyonu\n"
-    f"θ={best_t_mcc:.2f} → MCC={best_mcc_val:.4f}  (θ=0.6831 karar eşiği ile karşılaştırma, §3.2)",
+    f"θ={best_t_mcc:.2f} → MCC={best_mcc_val:.4f}  (θ=0.8415 canonical karar eşiği ile karşılaştırma, §3.2)",
     color="white", fontsize=11, pad=10
 )
 ax.tick_params(colors="white"); ax.set_xlim(0, 1); ax.set_ylim(0, 1.05)

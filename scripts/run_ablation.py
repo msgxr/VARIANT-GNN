@@ -269,7 +269,7 @@ def run_ablation(
     config_path: Path,
     test_size: float = 0.20,
     seed: int = 42,
-    threshold: float = 0.24145,
+    threshold: float = 0.8415,
     quick: bool = False,
 ) -> dict:
     logger.info("=== ABLATION ANALİZİ BAŞLIYOR — PDR §4.5 ===")
@@ -361,7 +361,7 @@ def main() -> None:
     parser.add_argument("--config", type=Path, default=Path("configs/psr.yaml"))
     parser.add_argument("--test-size", type=float, default=0.20)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--threshold", type=float, default=0.24145)
+    parser.add_argument("--threshold", type=float, default=0.8415)
     parser.add_argument("--quick", action="store_true", help="Hızlı test modu (cv_folds=2, epoch=3)")
     args = parser.parse_args()
 

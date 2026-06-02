@@ -9,7 +9,7 @@
     "leakage_free": true,
     "leakage_guard": "PASSED — 0 Variant_IDs straddle train/test",
     "seed": 42,
-    "threshold_strategy": "Global F1-optimal, %20-patojenik (resmi test prior) üzerinde türetilir (§3.2 jüri prior'ına robust). θ=0.8415.",
+    "threshold_strategy": "Global F1-optimal, %20-patojenik (resmi test prior) üzerinde türetilir; group-aware HELD-OUT calibration set'te, HAM olasılıkta (derivation==inference). Üreten pipeline: src/cli/modes/train.py (threshold_source=calibration_set). θ=0.8415.",
     "calibration": "Isotonic regression",
     "data": "data/train_variants.csv (3802 rows, 3224 unique variants, 4 panels)",
     "config": "configs/pdr.yaml",
@@ -18,17 +18,19 @@
   "headline": {
     "cv_binary_f1": 0.8812,
     "cv_binary_f1_std": 0.0113,
+    "cv_binary_f1_production_oof_stacking": 0.8936,
+    "cv_binary_f1_production_std": 0.0004,
     "test_binary_f1": 0.8367,
     "test_mcc": 0.5112,
     "test_precision": 0.9241,
     "test_recall": 0.7644,
-    "test_pr_auc": 0.9114,
-    "test_roc_auc": 0.8398,
-    "test_brier": 0.1197,
-    "test_ece": 0.0755,
+    "test_pr_auc": 0.9267,
+    "test_roc_auc": 0.8538,
+    "test_brier": 0.1115,
+    "test_ece": 0.0291,
     "test_binary_f1_holdout_75pct": 0.8367,
     "competition_jury_f1": 0.6042,
-    "competition_jury_f1_std": 0.0338,
+    "competition_jury_f1_std": 0.0324,
     "test_pos_rate_official": 0.2,
     "official_competition_score_4panel_avg": 0.6202,
     "official_per_panel_f1_20pct": {
@@ -37,10 +39,10 @@
       "Hereditary_Cancer": 0.7301,
       "PAH": 0.5299
     },
-    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6052 (CFTR hold-out'ta n cok kucuk, tahmin edilemedi; gercek yarismada kendi seti olacak). Genel %20-F1=0.6063 ile tutarli.",
+    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6202 (CFTR hariç; hold-out'ta n çok küçük, ölçülemedi — gerçek yarışmada kendi seti olacak). Ortalama = (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299) / 3.",
     "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json).",
     "roc_auc": 0.8538,
-    "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812, RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp), PAH 0.476→0.530 (+5.4pp). reports/missing_indicator_ablation.json"
+    "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812 (fold) / 0.8936 (OOF-stacking), RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp), PAH 0.476→0.530 (+5.4pp). reports/missing_indicator_ablation.json"
   },
   "panel_test_metrics": {
     "CFTR": {
@@ -69,27 +71,27 @@
     }
   },
   "panel_thresholds": {
-    "__global__": 0.404,
-    "General": 0.404,
-    "Hereditary_Cancer": 0.3695,
-    "PAH": 0.3203,
+    "__global__": 0.399,
+    "General": 0.399,
+    "Hereditary_Cancer": 0.4532,
+    "PAH": 0.4434,
     "CFTR": 0.1922,
-    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Bu panel esikleri shipped models/panel_thresholds.json ile birebir; jurinin kullandigi degil."
+    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Bu panel esikleri shipped models/panel_thresholds.json ile birebir (reports/cv_report.json panel_thresholds); jurinin kullandigi degil."
   },
   "global_threshold": 0.8415,
   "cv_fold_f1": [
-    0.8717,
-    0.8817,
-    0.8785,
-    0.8872,
-    0.8706
+    0.8673,
+    0.8852,
+    0.8783,
+    0.9007,
+    0.8744
   ],
   "integrity_note": {
     "previous_reported_f1_0.8980_or_0.9269": "WITHDRAWN — those were leakage-inflated (augmentation near-twins + panel-overlap straddled the row-wise split). See reports/leakage_quantification.json.",
-    "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680 by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). 0.8680 is now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
-    "self_consistency": "test precision/recall reproduce test binary_f1 exactly."
+    "honest_recovery": "CV F1 recovered from honest-but-crippled 0.8316 to 0.8680+ by removing the SelectKBest(35)+AutoEncoder bottleneck (reports/preprocessing_diagnostic.json). Now leakage-free AND internally consistent (2PR/(P+R)==binary_f1).",
+    "self_consistency": "test precision/recall reproduce test binary_f1 exactly: 2*0.9241*0.7644/(0.9241+0.7644)=0.8367."
   },
-  "headline_note": "OOF-stacking (Wolpert): meta-learner genuine OOF üzerinde fit → Test F1 0.8963→0.9069 (+1.06pp), MCC 0.5313→0.5639, General 0.8842→0.8985. Önceki 0.8963 inner-val stacking idi.",
+  "headline_note": "OOF-stacking (Wolpert): meta-learner genuine OOF üzerinde fit (reports/stacking_improvement.json). Bu modelin %75-poz hold-out'taki ARGMAX-eşik ayırt etme tavanı F1=0.9069'a kadar çıkar; ANCAK SHIPPED KARAR EŞİĞİ θ=0.8415 (%20-prior'a kalibre, yüksek-precision) → test F1=0.8367. 0.9069 jüri/shipped skoru DEĞİL, ayrım tavanıdır.",
   "seed_stability": {
     "n_seeds": 5,
     "seeds": [
@@ -103,12 +105,16 @@
     "inter_seed_std": 0.00344,
     "min": 0.87,
     "max": 0.8802,
-    "note": "5-seed CV F1 mean 0.8738 ± 0.0034 (group-aware + bio + DANN). Shipped model (cv_report, seed 42) = 0.8779; neural components (GNN/DNN/DANN) add minor run-variance, tree members (60% weight) deterministic. Model is seed-stable."
+    "note": "5-seed CV F1 mean 0.8738 ± 0.0034 (group-aware + bio + DANN). Shipped model (cv_report, seed 42) fold-CV = 0.8812; neural components (GNN/DNN/DANN) add minor run-variance, tree members (60% weight) deterministic. Model is seed-stable."
   },
-  "threshold_strategy": "CANONICAL θ=0.8415 — TAM group-aware OOF'ta %20-PATOJENİK (resmi test prior) resample üzerinde 25x medyan F1-optimal, HAM olasılıkta (inference ExternalValidationRunner etiketi HAM'da verir → derivation==inference). %74-poz/50-50'de türetmek bu sette F1 kaybettirir.",
-  "cv_note": "cv_binary_f1=0.8936 PRODUCTION OOF-stacking nested-CV (5-seed, std≈0). Weighted-avg fold CV=0.8779 (bileşen metrik, production path değil). reports/stacking_improvement.json",
+  "threshold_strategy": "CANONICAL θ=0.8415 — group-aware HELD-OUT calibration set'te %20-PATOJENİK (resmi test prior) F1-optimal, HAM olasılıkta (inference ExternalValidationRunner/InferencePipeline etiketi HAM'da verir → derivation==inference). Üreten: src/cli/modes/train.py (threshold_source=calibration_set). %74-poz/50-50'de türetmek bu sette F1 kaybettirir. NOT: scripts/train_pdr.py legacy/kullanılmayan yoldur (tam-veri sweep); shipped artefaktları üretmez.",
+  "cv_note": "Production model = OOF-stacking meta-learner → nested group-aware CV F1 = 0.8936 ± 0.0004 (reports/stacking_improvement.json, headline.cv_binary_f1_production_oof_stacking). headline.cv_binary_f1=0.8812 ± 0.0113 = reports/cv_report.json mean_cv_binary_f1, fixed-weight fold-CV blend (bileşen/yardımcı metrik). Legacy 0.8779 ağırlıklı-blend de yardımcı.",
   "notes": {
-    "cv_f1_clarification": "headline.cv_binary_f1=0.8936 = OOF-stacking meta-learner nested group-aware CV (üretim modeli). reports/cv_report.json mean_cv_binary_f1=0.8779±0.0062 = legacy fixed-weight blend fold-CV @ argmax — bileşen/yardımcı metrik, headline değil."
+    "cv_f1_clarification": "İKİ CV sayısı vardır ve ikisi de geçerlidir: (1) PRODUCTION = OOF-stacking nested group-aware CV = 0.8936 ± 0.0004 (üretim modeli, stacking_improvement.json). (2) COMPONENT = fixed-weight fold-CV = 0.8812 ± 0.0113 (cv_report.json mean_cv_binary_f1). Dokümanlar headline olarak 0.8936'yı kullanır, bileşen olarak 0.8812'yi belirtir."
   },
-  "primary_metric_note": "YARIŞMA BEKLENTİSİ = competition_jury_f1=0.6063 (TEKNOFEST RESMİ test prior'i %20 patojenik/%80 benign, θ=0.8415 HAM-olasılık türevli). test_binary_f1=0.8330 sadece %75-poz iç hold-out'taki AYRIM gücüdür, jüri skoru DEĞİL. F1 patojenik-odaklı (pos_label=1); test'te patojenik AZINLIK olduğu için doğal olarak ~0.60. Resmi Q&A 2026-06-02: 50/50 ESKİ şartnameydi, geçersiz."
+  "provenance_unverified": {
+    "test_prior_20pct": "UNVERIFIED — 'test seti %20-patojenik/%80-benign (resmi Q&A 2026-06-02)' iddiası ekip beyanıdır; repoda doğrulanabilir resmi Q&A artefaktı (ekran görüntüsü/URL/metin) YOK ve .claude/context/01_official_source_map.md'de listeli değil. Belirsizlik günlüğü U-008 açık. Resmi artefakt eklenene kadar %20-prior ve buna bağlı 4-panel-ortalama skorlaması MODELLEME VARSAYIMI olarak işaretlenir (CLAUDE.md §III.1, official-source-guardian).",
+    "official_4panel_averaging": "UNVERIFIED — 'TEKNOFEST per-panel F1 sonra 4-panel ortalama' skorlama kuralı da resmi kaynakta doğrulanmadı; §7.3 yalnızca F1=TP/FP/FN tanımlar. Varsayım olarak işaretli."
+  },
+  "primary_metric_note": "YARIŞMA BEKLENTİSİ = RESMİ 4-panel %20-patojenik F1 ortalaması = 0.6202 (headline). Havuzlanmış %20-resample jüri-F1 tahmini = 0.6042 ± 0.0324 (reports/competition_jury_f1.json). test_binary_f1=0.8367 sadece %75-poz iç hold-out AYRIM gücüdür, jüri skoru DEĞİL. F1 patojenik-odaklı (pos_label=1); test'te patojenik AZINLIK olduğu için doğal olarak ~0.60. NOT: %20-prior dayanağı UNVERIFIED (bkz. provenance_unverified); 50/50 ESKİ varsayımdı, geçersiz sayıldı."
 }

@@ -1,11 +1,11 @@
 # configs/thresholds.yaml — Karar eşiği ve risk sınıflandırma ayarları
 
 decision_threshold:
-  default: 0.241
+  default: 0.8415   # CANONICAL global θ (models/threshold.json; %20-patojenik calibration-set F1-optimal)
   optimize: true
   optimize_metric: binary_f1
-  search_range: [0.1, 0.5]
-  search_steps: 60
+  search_range: [0.01, 0.99]
+  search_steps: 100
 
 risk_categories:
   high_risk:
@@ -32,15 +32,17 @@ uncertainty_thresholds:
   medium_uncertainty: 0.20
 
 panel_specific_thresholds:
+  # OPT-IN (varsayılan KAPALI — use_panel_thresholds=false); jüri global θ=0.8415 kullanır.
+  # Değerler shipped models/panel_thresholds.json / reports/cv_report.json ile birebir.
   MASTER:
-    decision_threshold: 0.241
-    notes: "Genel panel; optimize edilmiş binary F1 eşiği"
+    decision_threshold: 0.3990
+    notes: "Genel panel; opt-in (jüri kullanmaz). reports/cv_report.json panel_thresholds.General"
   Hereditary_Cancer:
-    decision_threshold: 0.281
-    notes: "Yüksek klinik öneme sahip panel; optimize eşik"
+    decision_threshold: 0.4532
+    notes: "Yüksek klinik öneme sahip panel; opt-in (jüri kullanmaz)"
   PAH:
-    decision_threshold: 0.138
-    notes: "Küçük panel; yüksek recall öncelikli"
+    decision_threshold: 0.4434
+    notes: "Küçük panel; opt-in (jüri kullanmaz)"
   CFTR:
-    decision_threshold: 0.108
-    notes: "En küçük panel (30 test örneği); maksimum hassasiyet"
+    decision_threshold: 0.1922
+    notes: "En küçük panel (n=18 test); opt-in (jüri kullanmaz)"

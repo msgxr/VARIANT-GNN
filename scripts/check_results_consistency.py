@@ -9,10 +9,16 @@ from the shipped model, leaving multiple contradictory numbers a §7.5 jury re-r
 would catch. Run in CI; non-zero exit on any mismatch.
 
 Checks:
-  1. RESULTS_CANONICAL.json headline == reports/cv_report.json test_metrics.
+  1. RESULTS_CANONICAL.json headline == reports/cv_report.json test_metrics
+     (binary_f1, mcc, precision, recall, roc_auc, pr_auc, brier, ece; macro_f1 if present).
   2. Internal consistency: test 2*P*R/(P+R) == test binary_f1.
-  3. No WITHDRAWN/leaky numbers (0.8980, 0.9269, 0.5356) appear in jury-visible docs.
+  3. No WITHDRAWN/leaky/superseded numbers appear unguarded in jury-visible docs
+     (incl. reports/PDR_VARIANT_GNN_2026.md, reports/mcc_analysis.md, CHANGELOG.md).
   4. No 'sentetik proxy' / 'synthetic proxy' language in jury-visible reports.
+  5. Threshold single source of truth (shipped == canonical, no rival θ).
+  6. Canonical jury-F1 headline (competition_jury_f1[_std], 4-panel official avg,
+     per-panel %20 F1) == reports/competition_jury_f1.json.
+  7. Canonical panel_test_metrics binary_f1 == reports/cv_report.json panel_metrics.
 """
 from __future__ import annotations
 
@@ -26,14 +32,28 @@ TOL = 0.005
 
 # Numbers that were withdrawn as leakage-inflated / superseded — must not reappear
 # as a current claim (allowed only on lines that explicitly withdraw/supersede them).
+# Second block: the pre-2026-06-02 balanced-OOF θ=0.6831 retrain headline
+# (test F1 0.8969 / MCC 0.5863 / balanced-jury 0.8134 / official 0.6063 / cal-θ 0.8514),
+# superseded by the %20-prior θ=0.8415 canonical. Allowed only on withdraw/supersede lines.
 WITHDRAWN = ["0.8980", "0.9269", "0.5356", "0.722088", "0.7221",
-             "0.8668", "0.5313", "θ=0.241", "θ = 0.241"]
+             "0.8668", "0.5313", "θ=0.241", "θ = 0.241",
+             "0.8969", "0.6831", "0.8514", "0.8134", "0.5863", "0.6063"]
+# Per-line guard: a withdrawn number is tolerated only when the SAME line marks it as
+# superseded/historical. Covers EN/TR withdrawal vocabulary plus changelog conventions
+# ('stale', 'iddia edilemez', and the '→' / '->' change-from arrow that records history).
+# A genuine *live* claim ("Test F1 = 0.8969") carries none of these and is still caught.
+WITHDRAW_MARKERS = (
+    r"geri çek|withdraw|supersed|şişik|leaky|leakage|ÖNCE|previous|GERİ ÇEK|"
+    r"eski|önceki|geçersiz|stale|iddia edilemez|artık|→|->"
+)
 # Every jury/governance-facing doc — drift here is the exact failure mode that
 # nearly sank the project (leakage-inflated numbers surviving in metadata files).
 JURY_DOCS = ["README.md", "MODEL_CARD.md", "PROJECT_STATUS.md", "CLAUDE.md",
              "REPRODUCE.md", "CITATION.cff", "CODE_OF_CONDUCT.md", "DATA_CARD.md",
              "RELEASE_NOTES.md", "ROADMAP.md", "models/README.md",
-             "submission/SUBMISSION_CHECKLIST.md"]
+             "submission/SUBMISSION_CHECKLIST.md",
+             "reports/PDR_VARIANT_GNN_2026.md", "reports/mcc_analysis.md",
+             "CHANGELOG.md"]
 
 
 def fail(msg: str) -> None:
@@ -57,8 +77,31 @@ def main() -> int:
     print("1. RESULTS_CANONICAL.json vs reports/cv_report.json")
     if cv_path.exists():
         tm = json.loads(cv_path.read_text(encoding="utf-8"))["test_metrics"]
-        for key, cvkey in [("test_binary_f1", "binary_f1"), ("test_mcc", "mcc"),
-                           ("test_precision", "precision"), ("test_recall", "recall")]:
+        # (canonical headline key, cv_report test_metrics key, required?)
+        headline_map = [
+            ("test_binary_f1", "binary_f1", True),
+            ("test_mcc", "mcc", True),
+            ("test_precision", "precision", True),
+            ("test_recall", "recall", True),
+            # discrimination + calibration: same failure mode (docs drifting off the
+            # shipped model) just on the secondary metrics the jury also re-runs.
+            ("test_roc_auc", "roc_auc", True),
+            ("test_pr_auc", "pr_auc", True),
+            ("test_brier", "brier_score", True),
+            ("test_ece", "ece", True),
+            # macro F1 is auxiliary — validate only if the canonical headline carries it.
+            ("test_macro_f1", "macro_f1", False),
+        ]
+        for key, cvkey, required in headline_map:
+            if key not in h:
+                if required:
+                    fail(f"{key}: missing from RESULTS_CANONICAL.json headline")
+                    errors += 1
+                continue
+            if cvkey not in tm:
+                fail(f"{cvkey}: missing from cv_report test_metrics")
+                errors += 1
+                continue
             if abs(h[key] - round(tm[cvkey], 4)) > TOL:
                 fail(f"{key}: canonical {h[key]} != cv_report {tm[cvkey]:.4f}")
                 errors += 1
@@ -84,9 +127,7 @@ def main() -> int:
         for bad in WITHDRAWN:
             # allow it only on lines that explicitly withdraw/supersede it
             for ln in text.splitlines():
-                if bad in ln and not re.search(
-                    r"geri çek|withdraw|supersed|şişik|leaky|leakage|ÖNCE|previous|GERİ ÇEK", ln, re.I
-                ):
+                if bad in ln and not re.search(WITHDRAW_MARKERS, ln, re.I):
                     fail(f"{doc}: withdrawn number {bad} still claimed → '{ln.strip()[:80]}'")
                     errors += 1
 
@@ -120,6 +161,62 @@ def main() -> int:
                 and not re.search(r"önceki|geçersiz|withdraw|supersed|geri çek|eski", ln, re.I):
             fail(f"RESULTS_CANONICAL.json: rival threshold in '{ln.strip()[:70]}'")
             errors += 1
+    if errors == 0:
+        print("   ok")
+
+    # 6. canonical jury-F1 block == reports/competition_jury_f1.json
+    #    The official-score headline (4-panel %20-prior avg + pooled jury F1) is the
+    #    number the jury actually scores on; it must trace 1:1 to its source artefact.
+    print("6. Canonical jury-F1 headline vs reports/competition_jury_f1.json")
+    jf1_path = ROOT / "reports" / "competition_jury_f1.json"
+    if jf1_path.exists():
+        jf1 = json.loads(jf1_path.read_text(encoding="utf-8"))
+        # (canonical headline key, jury-json key)
+        scalar_map = [
+            ("competition_jury_f1", "competition_jury_f1"),
+            ("competition_jury_f1_std", "competition_jury_f1_std"),
+            ("official_competition_score_4panel_avg", "official_competition_score"),
+        ]
+        for ckey, jkey in scalar_map:
+            cval, jval = h.get(ckey), jf1.get(jkey)
+            if cval is None or jval is None:
+                fail(f"{ckey}: missing (canonical={cval}, jury_json[{jkey}]={jval})")
+                errors += 1
+            elif abs(cval - jval) > TOL:
+                fail(f"{ckey}: canonical {cval} != competition_jury_f1.json {jval}")
+                errors += 1
+        # per-panel official F1 at the 20% prior — allow None==null (e.g. CFTR small-n)
+        cpanel = h.get("official_per_panel_f1_20pct", {})
+        jpanel = jf1.get("official_per_panel_f1_20pct", {})
+        for panel in sorted(set(cpanel) | set(jpanel)):
+            cv, jv = cpanel.get(panel), jpanel.get(panel)
+            if cv is None and jv is None:
+                continue
+            if cv is None or jv is None:
+                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != jury_json {jv}")
+                errors += 1
+            elif abs(cv - jv) > TOL:
+                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != jury_json {jv}")
+                errors += 1
+    if errors == 0:
+        print("   ok")
+
+    # 7. canonical panel_test_metrics == reports/cv_report.json panel_metrics (binary_f1)
+    #    Per-panel F1 is §7.3-mandated reporting; per CLAUDE.md §VII the four panels are
+    #    never one block, so each panel headline is pinned to its source.
+    print("7. Canonical panel_test_metrics vs reports/cv_report.json panel_metrics")
+    if cv_path.exists():
+        pm = json.loads(cv_path.read_text(encoding="utf-8")).get("panel_metrics", {})
+        cpm = canon.get("panel_test_metrics", {})
+        for panel in sorted(set(cpm) | set(pm)):
+            cf1 = cpm.get(panel, {}).get("binary_f1") if isinstance(cpm.get(panel), dict) else None
+            jf1v = pm.get(panel, {}).get("binary_f1") if isinstance(pm.get(panel), dict) else None
+            if cf1 is None or jf1v is None:
+                fail(f"panel_test_metrics[{panel}].binary_f1: canonical {cf1} != cv_report {jf1v}")
+                errors += 1
+            elif abs(cf1 - jf1v) > TOL:
+                fail(f"panel_test_metrics[{panel}].binary_f1: canonical {cf1} != cv_report {jf1v:.4f}")
+                errors += 1
     if errors == 0:
         print("   ok")
 

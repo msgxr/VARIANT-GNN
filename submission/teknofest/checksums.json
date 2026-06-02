@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-01",
-  "_note": "OOF-stacking modeli. jury_predictions.csv KALDIRILDI (stale, tüm-etiket=1 bozuk orphan; gerçek deliverable = submission/predict.py). Eşik dengeli-cal türevli (§3.2 50/50 jüri prior).",
+  "generated_at": "2026-06-02",
+  "_note": "OOF-stacking modeli. jury_predictions.csv KALDIRILDI (stale, tüm-etiket=1 bozuk orphan; gerçek deliverable = submission/predict.py). Eşik dengeli-cal türevli (%20-patojenik (resmi prior); global θ=0.8415).",
   "models/xgb_model.json": "1574a2b1667152bfa90cf9ba00b960720a65f305396d3089d6a9adecdcae78cf",
-  "models/lgbm_model.txt": "587278aae99b4035505f42df5127fa4d8fb4730260afde489043731d6f5406a8",
+  "models/lgbm_model.txt": "0d4fe7945287ef9082f55b9088be1a5f4a508665732d0b0cd75b24f38b165129",
   "models/gnn_model.pth": "cd459f4bf40b05879bd92024cfe2eacd9f68ec330c939b13f02104e04568e357",
   "models/dnn_model.pth": "0c28924bfd668dc58ee66f99405ab20471b334cc66be20a777af992207fdad00",
   "models/preprocessor.pkl": "cae62b7b96e81c00eb2c41bf2ffed4891b70a001c743443cc149c9b1dd1b0cc0",
@@ -11,5 +11,5 @@
   "models/meta_learner.pkl": "287dfb352c982d06e750755f4f1d039bde85e76fd6001e89009544ca4645c55e",
   "models/ood_detector.pkl": "134f1024a3b034d72d2d046aa478b7e896859835e9f16fd107ceb5eb8b8896c7",
   "models/threshold.json": "dfe7e914dfd41dd3592043458981afa1c7a136dcb5d8b30acb429d09da21e5ad",
-  "models/panel_thresholds.json": "3bde70b4bd5f4e6db91f3d1206b8ada1680271877ca5a9b6ac5fefa928b7c904"
+  "models/panel_thresholds.json": "cfe2eeb6634b119d1dcfc1b3f47c6cc4e86fd6f550d91df9f23993c985d59b49"
 }

@@ -66,9 +66,9 @@ Mevcut literatürde eksik olan yönler şunlardır: (i) varyantlar arası ilişk
 
 Temel hedef, TEKNOFEST 2026 şartnamesinin birincil metriği olan Binary F1 (§7.3, pos_label=1=Patojenik) değerini dört ayrı hastalık panelinde maksimize etmektir. Özgün teknik katkılar şu başlıklarda özetlenebilir:
 
-- **ColumnAligner:** Kolon isimleri gizlenmiş varyant profillerini dağılımsal imza eşleşmesiyle hizalayan özgün modül; §3.2 anonim-kolon kısıtlamasını tam uyumla karşılar
+- **ColumnAligner:** Kolon isimleri gizlenmiş varyant profillerini isim-tabanlı hizalama (exact → case-insensitive → fuzzy difflib ≥0.85 → positional) ile referans şemaya oturtan özgün modül; §3.2 anonim-kolon kısıtlamasını tam uyumla karşılar
 - **Hibrit Graf Ensemble:** XGBoost + LightGBM + VariantGATv2GNN + DNN kombinasyonu; stacking meta-öğrenici ile birleştirilmiş, Nelder-Mead ile optimize edilmiş
-- **Balanced-OOF Eşik Türetimi:** Jüri §3.2 setinin dengeli (50/50) olduğu varsayımıyla, karar eşiği group-aware OOF üzerinde sınıf-dengeli resample ile türetilir (global **θ=0.6831**); panel-spesifik eşikler opt-in tutulur
+- **Kalibrasyon Setinde Eşik Türetimi:** Karar eşiği, group-aware held-out calibration set üzerinde resmi test prior'ına (%20-patojenik) F1-optimal olacak biçimde HAM olasılıkta türetilir (global **θ=0.8415**); türetim ve çıkarım aynı dağılımda yapılır (derivation==inference). Panel-spesifik eşikler opt-in tutulur
 - **MC Dropout Belirsizlik Ölçümü:** Epistemik belirsizliği klinik güven kategorilerine dönüştüren mekanizma
 - **Domain-Adversarial DNN (DANN):** Gradient-reversal ile panel-invariant temsil; Leave-One-Panel-Out doğrulamada ortalama +2.17 pp genelleme kazancı
 
@@ -110,7 +110,7 @@ Veri kümesine dış kaynaklardan yeni örnek eklenmemiştir. Yarışma şartnam
 
 Tüm adımlar yalnızca eğitim fold'unda fit edilmiş; test/doğrulama setine transform-only biçimde uygulanmıştır:
 
-1. **ColumnAligner:** Her kolonun dtype, IQR, çeyrekler ve dağılım istatistiklerini referans eğitim şemasıyla karşılaştırarak anonim kolonları hizalar. Yarışma formatındaki kolon isimsiz ortamda kesintisiz çalışmayı garanti eder.
+1. **ColumnAligner:** Gelen kolon adlarını referans eğitim şemasına çok aşamalı isim eşleştirmesiyle (`src/data/column_aligner.py`: exact → case-insensitive → fuzzy difflib ≥0.85 → positional fallback) hizalar. Yarışma formatındaki anonim-kolon ortamında kolon sırası/adı farkları olsa bile kesintisiz çalışmayı garanti eder.
 2. **CategoricalBioFeaturizer:** `AA_1→AA_2` (Grantham/BLOSUM62, Δhidropati/hacim/MW/polarite/yük), `CAT_*` (popülasyon genişliği, genomik bölge), `EK_*` (in-silico uzlaşı/uzlaşmazlık) kolonlarından ACMG-hizalı 22 yorumlanabilir öznitelik türetir — satır-bazlı deterministik (sızıntı imkânsız). Ablasyon: +0.38 pp Binary F1 (`reports/bio_feature_ablation.json`).
 3. **SimpleImputer (Median):** Eksik değerler eğitim seti medyanı ile doldurulur; medyan değerleri test setine eğitimden aktarılarak sızıntı önlenir.
 4. **RobustScaler (IQR):** Geniş değer aralıklı in-silico skorlardaki aykırı değerlerin etkisini baskılar.
@@ -155,7 +155,7 @@ Bireysel model olasılıkları iki aşamalı stratejiyle birleştirilir: (1) Nel
 
 **Isotonic Kalibrasyon**
 
-Kalibre edilmemiş olasılık çıktıları isotonic regresyon ile gerçek risk olasılıklarına dönüştürülür. Kalibrasyon seti eğitim verisinin bağımsız %15'lik diliminden oluşturulmuştur (test seti dahil değildir). Sonuç: ECE=0.0755, Brier=0.1197.
+Kalibre edilmemiş olasılık çıktıları isotonic regresyon ile gerçek risk olasılıklarına dönüştürülür. Kalibrasyon seti eğitim verisinin bağımsız %15'lik diliminden oluşturulmuştur (test seti dahil değildir). Sonuç: ECE=0.0291, Brier=0.1115.
 
 ### 2.3 Doğrulama Protokolü
 
@@ -181,11 +181,11 @@ Deterministik sonuç üretimi için random_state=42, torch.manual_seed(42), np.r
 | 6 | **OOF-stacking (Wolpert)** | sabit-ağırlık blend | +0.59 pp nested-CV (overfit-safe) |
 | 7 | SWA (son %25 epoch) | tek checkpoint | kararlılık ↑ |
 | 8 | 5-seed stabilite testi | — | CV F1 = 0.8738 ± 0.0034 (tohum-kararlı) |
-| 9 | balanced-OOF eşik türetimi | %74-poz cal eşiği | dengeli §3.2 setinde +5 pp kurtarım (θ=0.6831) |
+| 9 | kalibrasyon-setinde %20-prior eşik türetimi | %74-poz cal eşiği | held-out cal set'te %20-patojenik F1-optimal, HAM olasılıkta (θ=0.8415, derivation==inference) |
 
 ### 2.4 Açıklanabilirlik Yaklaşımı
 
-Yarışma veri setinde kolon isimleri anonim olduğundan açıklanabilirlik özellik grubu düzeyinde kurulmuştur. ColumnAligner'ın distribüsyonel imza atamasıyla oluşturulan biyolojik kategoriler üzerinden dört tamamlayıcı yöntem uygulanmıştır.
+Yarışma veri setinde kolon isimleri anonim olduğundan açıklanabilirlik özellik grubu düzeyinde kurulmuştur. Özniteliklerin biyolojik gruplara atanması, kolon önek/ad örüntülerine dayalı gösterge (heuristik) niteliğinde bir eşlemedir — kesin biyolojik doğrulamadan türetilmemiştir. Bu eşleme üzerinden dört tamamlayıcı yöntem uygulanmıştır.
 
 **SHAP Analizi — Global Özellik Grubu Katkıları**
 
@@ -201,7 +201,7 @@ XGBoost ve LightGBM için deterministik TreeSHAP; GNN ve DNN için model-agnosti
 | Sekans/Aminoasit Değişimi | %12 | %10 | %13 | %15 | %12 |
 | Biyokimyasal/Yapısal | %5 | %5 | %5 | %6 | %5 |
 
-*Not: Kolon-grup eşlemesi distribüsyonel imza analizi ile gerçekleştirilmiştir; anonim kolon kısıtlaması nedeniyle kesin biyolojik doğrulama yapılamamaktadır.*
+*Not: Kolon-grup eşlemesi, kolon önek/ad örüntülerine dayalı gösterge (heuristik) niteliğindedir; anonim kolon kısıtlaması nedeniyle kesin biyolojik doğrulama yapılamamaktadır.*
 
 **Bireysel SHAP Waterfall Örnekleri (Şekil 6 — reports/figures/pdr/08_shap_importance.png)**
 
@@ -232,48 +232,56 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 ### 3.1 Genel Test Performansı
 
-**İki sayıyı ayırmak (dürüst raporlama):** Şartname §3.2 jüri/test seti **sınıf-dengelidir (50/50)**. Beklenen yarışma skoru **balanced Binary F1 = 0.8134 ± 0.0103** (θ=0.6831 balanced-OOF, 300× resample; `reports/balanced_jury_f1.json`). İç %75-pozitif hold-out'taki **0.8969** değeri modelin *ayrım gücüdür*, jüri skoru değildir. Eşiği %74-poz dağılımda türetmek %20-test'te düşük F1'e düşürürdü (−5 pp); balanced-OOF eşik bu kaybı kurtarır.
+**İki sayıyı ayırmak (dürüst raporlama):** Resmi TEKNOFEST test seti **patojenik-azınlık** (≈%20 patojenik / %80 benign) prior'ına dayanmaktadır.¹ Bu nedenle iki ayrı sayı raporlanmalıdır:
 
-**Tablo 5: Genel Test Seti Sonuçları — Group-Aware Hold-Out %20, θ=0.6831**
+- **RESMİ JÜRİ BEKLENTİSİ = 4-panel %20-patojenik F1 ortalaması = 0.6202** (HEADLINE; `reports/competition_jury_f1.json`). Per-panel: General 0.6006, Hereditary_Cancer 0.7301, PAH 0.5299; CFTR hold-out'ta n çok küçük olduğundan ölçülemez (gerçek yarışmada kendi seti olacak). Ortalama = (0.6006 + 0.7301 + 0.5299) / 3. Havuzlanmış jüri-F1 tahmini = **0.6042 ± 0.0324** (300× %20-resample).
+- **İç ayrım gücü (jüri skoru DEĞİL) = Test F1 = 0.8367** — %75-pozitif iç hold-out'ta modelin *sınıf ayırt etme* kapasitesidir.
+
+F1 patojenik-odaklıdır (pos_label=1); resmi test setinde patojenik **azınlık** olduğundan jüri F1'inin ~0.60 düzeyinde olması bu metrik tanımının doğal sonucudur, model zayıflığı değildir. Karar eşiği bu %20-prior'a kalibre edilmiştir (θ=0.8415, yüksek-precision).
+
+> ¹ Test dağılımının ≈%20-patojenik olduğu varsayımı ekip beyanı olup resmi Q&A'ya dayandırılmaktadır; repoda doğrulanabilir resmi artefakt (ekran görüntüsü/URL) henüz eklenmemiştir — **UNVERIFIED** (belirsizlik günlüğü U-008). Resmi artefakt eklenene kadar %20-prior ve buna bağlı 4-panel-ortalama skorlaması modelleme varsayımı olarak işaretlenir.
+
+**Tablo 5: Genel Test Seti Sonuçları — Group-Aware Hold-Out, θ=0.8415**
 
 | Metrik | Değer | Açıklama |
 |:-------|:-----:|:---------|
-| 🎯 **Jüri F1 (beklenen, dengeli §3.2)** | **0.8134 ± 0.0103** | Dengeli 50/50 jüri prior'ı — GERÇEK beklenen yarışma skoru |
-| **Binary F1 (iç hold-out, §7.3)** | **0.8969** | 2·TP/(2·TP+FP+FN), pos_label=1 — %75-poz iç ayrım gücü |
-| MCC | 0.5863 | precision/recall ile birebir tutarlı |
-| PR-AUC | 0.9114 | Eşik bağımsız ayırt edicilik |
-| ROC-AUC | 0.8398 | Genel sınıf ayrımı |
-| Precision | 0.8984 | Patojenik sınıf hassasiyeti |
-| Recall | 0.8953 | Patojenik sınıf duyarlılığı |
-| Brier Skoru | 0.1197 | Kalibrasyon kalitesi |
-| ECE | 0.0755 | Kalibrasyon sapması |
-| CV F1 (OOF-stacking nested) | 0.8936 ± 0.0004 | Üretim çapraz doğrulama (fold-CV bileşeni: 0.8779 ± 0.0062) |
+| 🎯 **Resmi jüri skoru (4-panel %20-F1 ort.)** | **0.6202** | HEADLINE — resmi test prior'ında (%20-patojenik) beklenen yarışma skoru |
+| Havuzlanmış jüri-F1 tahmini | 0.6042 ± 0.0324 | 300× %20-resample (`competition_jury_f1.json`) |
+| **Binary F1 (iç hold-out, §7.3)** | **0.8367** | 2·TP/(2·TP+FP+FN), pos_label=1 — %75-poz iç ayrım gücü (jüri skoru DEĞİL) |
+| MCC | 0.5112 | precision/recall ile birebir tutarlı |
+| PR-AUC | 0.9267 | Eşik bağımsız ayırt edicilik |
+| ROC-AUC | 0.8538 | Genel sınıf ayrımı |
+| Precision | 0.9241 | Patojenik sınıf hassasiyeti |
+| Recall | 0.7644 | Patojenik sınıf duyarlılığı |
+| Brier Skoru | 0.1115 | Kalibrasyon kalitesi |
+| ECE | 0.0291 | Kalibrasyon sapması |
+| CV F1 (OOF-stacking nested) | 0.8936 ± 0.0004 | Üretim çapraz doğrulama (fixed-weight fold-CV bileşeni: 0.8812 ± 0.0113) |
 
 **Tablo 6: Model Karşılaştırması — 5-Katlı CV (Binary F1) ve Test**
 
 | Model | CV Ort. | Std | F1-1 | F1-2 | F1-3 | F1-4 | F1-5 | Ağırlık |
 |:------|:-------:|:---:|:----:|:----:|:----:|:----:|:----:|:-------:|
-| XGBoost | 0.8865 | ±0.0066 | 0.8784 | 0.8901 | 0.8800 | 0.8963 | 0.8877 | %30 |
-| LightGBM | 0.8778 | ±0.0077 | 0.8706 | 0.8790 | 0.8778 | 0.8915 | 0.8702 | %30 |
-| VariantGATv2GNN | 0.7802 | ±0.0342 | 0.7209 | 0.8186 | 0.8086 | 0.7728 | 0.7802 | %25 |
-| VariantDNN (DANN) | 0.7288 | ±0.0458 | 0.6718 | 0.6883 | 0.7964 | 0.7271 | 0.7606 | %15 |
-| **Hibrit (fold-CV)** | **0.8779** | ±0.0062 | 0.8717 | 0.8817 | 0.8785 | 0.8872 | 0.8706 | — |
+| XGBoost | 0.8875 | ±0.0048 | 0.8826 | 0.8830 | 0.8867 | 0.8951 | 0.8904 | %30 |
+| LightGBM | 0.8828 | ±0.0086 | 0.8741 | 0.8825 | 0.8795 | 0.8983 | 0.8795 | %30 |
+| VariantGATv2GNN | 0.8114 | ±0.0234 | 0.7959 | 0.8401 | 0.8252 | 0.8202 | 0.7757 | %25 |
+| VariantDNN (DANN) | 0.7596 | ±0.0438 | 0.8073 | 0.8121 | 0.7354 | 0.6969 | 0.7462 | %15 |
+| **Hibrit (fold-CV)** | **0.8812** | ±0.0113 | 0.8673 | 0.8852 | 0.8783 | 0.9007 | 0.8744 | — |
 | **Hibrit (OOF-stacking)** | **0.8936** | ±0.0004 | — | — | — | — | — | üretim |
 | Baseline (LogReg) | ~0.740 | — | — | — | — | — | — | — |
 
-*Kaynak: `reports/cv_report.json`. Ağırlıklar (0.30/0.30/0.25/0.15) tam olarak group-aware CV performans sıralamasını izler (`reports/ensemble_weight_justification.json`). Tek başına zayıf olan GNN/DNN, ağaç üyeleriyle düşük korelasyonları sayesinde çeşitlilik katkısı sağlar; OOF-stacking bunu fold-CV'ye göre +0.59 pp'ye dönüştürür. Hold-out test Binary F1 = 0.8969.*
+*Kaynak: `reports/cv_report.json` (folds). Ağırlıklar (0.30/0.30/0.25/0.15) tam olarak group-aware CV performans sıralamasını izler (`reports/ensemble_weight_justification.json`). Tek başına zayıf olan GNN/DNN, ağaç üyeleriyle düşük korelasyonları sayesinde çeşitlilik katkısı sağlar; OOF-stacking (üretim, 0.8936) hem fixed-weight fold-CV bileşenini (0.8812) hem de legacy ağırlıklı-blend'i nested-CV'de +0.59 pp aşar (`stacking_improvement.json`). Hold-out test Binary F1 = 0.8367 (iç ayrım gücü, jüri skoru değil).*
 
-**Tablo 5b: Karmaşıklık Matrisi — Group-Aware Hold-Out (N=762, θ=0.6831)**
+**Tablo 5b: Karmaşıklık Matrisi — Group-Aware Hold-Out (N=762, θ=0.8415)**
 
-θ=0.6831 ve canonical precision=0.8984 / recall=0.8953 ile (test ~%75 pozitif) yaklaşık dağılım:
+θ=0.8415 ve canonical precision=0.9241 / recall=0.7644 ile (iç hold-out ~%75 pozitif) yaklaşık dağılım:
 
 | | **Tahmin: Patojenik (1)** | **Tahmin: Benign (0)** | **Toplam** |
 |:---|:---:|:---:|:---:|
-| **Gerçek: Patojenik (1)** | **TP ≈ 511** | FN ≈ 60 | ≈ 571 |
-| **Gerçek: Benign (0)** | FP ≈ 58 | **TN ≈ 133** | ≈ 191 |
-| **Toplam** | ≈ 569 | ≈ 193 | 762 |
+| **Gerçek: Patojenik (1)** | **TP ≈ 436** | FN ≈ 135 | ≈ 571 |
+| **Gerçek: Benign (0)** | FP ≈ 36 | **TN ≈ 155** | ≈ 191 |
+| **Toplam** | ≈ 472 | ≈ 290 | 762 |
 
-*Yorum: Değerler canonical precision/recall'dan türetilen yaklaşık dağılımdır (kesin matris: `reports/figures/Sekil_1_Confusion_Matrices.png`). FN (kaçırılan patojenik) klinik açıdan en kritik hata tipidir; MC Dropout bu örnekleri yüksek σ ile işaretler. θ=0.6831 yüksek eşiği precision'ı (0.8984) yükselterek FP'yi sınırlar.*
+*Yorum: Değerler canonical precision/recall'dan türetilen yaklaşık dağılımdır (kesin matris: `reports/figures/pdr/04_confusion_matrix_panel.png`). Yüksek eşik (θ=0.8415) precision'ı (0.9241) yükselterek FP'yi 36'ya kadar sınırlar; bedeli recall'ın 0.7644'e düşmesi, yani FN'in (kaçırılan patojenik) artmasıdır. FN klinik açıdan en kritik hata tipidir; MC Dropout bu örnekleri yüksek σ ile işaretleyerek "Uzman Değerlendirmesi Gerekli" bayrağı üretir. Eşik yüksek-precision/%20-prior'a kalibre edildiğinden bu denge bilinçli bir tercihtir.*
 
 **Şekil 2:** ROC Eğrileri (4 panel) — *reports/figures/pdr/05_roc_curves.png*
 **Şekil 3:** PR Eğrisi (Genel) — *reports/figures/pdr/06_pr_curves.png*
@@ -286,23 +294,27 @@ GNNExplainer [12] (Ying ve ark., 2019), test setindeki 200 yüksek güvenilirlik
 
 | Panel | F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall | Brier | ECE |
 |:------|:--:|:---:|:------:|:-------:|:---------:|:------:|:-----:|:---:|
-| MASTER (General) | 0.8865 | 0.5732 | 0.9102 | 0.8416 | 0.8960 | 0.8773 | 0.1242 | 0.0752 |
-| KANSER (Hered.) | 0.9440 | **0.7985** | 0.9393 | 0.9161 | 0.9219 | 0.9672 | 0.0802 | 0.0861 |
-| PAH | 0.9077 | 0.3900 | 0.8843 | 0.7051 | 0.8676 | 0.9516 | 0.1414 | 0.1123 |
-| CFTR | 0.9412 | — | 1.0000 | — | 1.0000 | 0.8889 | 0.0698 | 0.1264 |
-| **Tüm Test** | **0.8969** | **0.5863** | **0.9114** | **0.8398** | **0.8984** | **0.8953** | **0.1197** | **0.0755** |
+| MASTER (General) | 0.8185 | 0.4951 | 0.9271 | 0.8546 | 0.9217 | 0.7361 | 0.1174 | 0.0328 |
+| KANSER (Hered.) | 0.9060 | **0.7135** | 0.9743 | 0.9449 | 0.9464 | 0.8689 | 0.0747 | 0.0612 |
+| PAH | 0.9120 | 0.5053 | 0.8908 | 0.7016* | 0.9048 | 0.9194 | 0.1205 | 0.0849 |
+| CFTR | 0.7143 | —† | 1.0000 | —† | 1.0000 | 0.5556 | 0.0594 | 0.1899 |
+| **Tüm Test** | **0.8367** | **0.5112** | **0.9267** | **0.8538** | **0.9241** | **0.7644** | **0.1115** | **0.0291** |
 
-*Tüm değerler θ=0.6831 global eşikte, `reports/cv_report.json` panel_metrics'ten.*
+*Tüm değerler θ=0.8415 global eşikte, `reports/cv_report.json` panel_metrics'ten.*
+*\* PAH ROC-AUC=0.7016 hold-out küçük-örneklem (76 satır) gürültüsüdür; OOF-robust (503 satır) gerçek değer ≈0.789 (`reports/pah_analysis.json`).*
+*† CFTR test fold'unda negatif sınıf dejenere olduğundan (n=18) MCC tanımsız (0) ve ROC-AUC=NaN'dır; anlamlı metrikler F1/precision/recall'dır.*
 
 **Panel Bulgularının Yorumu**
 
-*KANSER (MCC=0.7985, en iyi denge):* BRCA1/2 ve Lynch sendromu gibi iyi karakterize edilmiş patojenik varyantların belirgin biyomoleküler profilleri model tarafından başarıyla öğrenilmiştir; en dengeli panel olduğundan (2.23:1) MCC en yüksektir. ROC-AUC=0.9161, PR-AUC=0.9393, F1=0.944 (panel-ler arası en yüksek F1).
+*KANSER (Hereditary_Cancer; MCC=0.7135, en iyi denge):* BRCA1/2 ve Lynch sendromu gibi iyi karakterize edilmiş patojenik varyantların belirgin biyomoleküler profilleri model tarafından başarıyla öğrenilmiştir; en dengeli panel olduğundan (2.23:1) MCC en yüksektir. ROC-AUC=0.9449, PR-AUC=0.9743, hold-out F1=0.9060. **Resmi %20-prior F1 = 0.7301** (4-panel ortalamasına en güçlü katkıyı veren panel).
 
-*CFTR (F1=0.9412, Precision=1.000):* Toplam 111 örneklik küçük panel; test hold-out n=18. Yüksek F1 ve tam precision (hiç FP yok) elde edilmiştir. Ancak test fold'unda negatif sınıf dejenere olduğundan **MCC ve ROC-AUC tanımsızdır** (cv_report → NaN); anlamlı metrikler F1/precision/recall'dır.
+*CFTR (hold-out F1=0.7143, Precision=1.000):* Toplam 111 örneklik küçük panel; test hold-out n=18. Tam precision (hiç FP yok) elde edilmiş ancak recall=0.5556 düşüktür. Test fold'unda negatif sınıf dejenere olduğundan **MCC tanımsız (0) ve ROC-AUC NaN'dır**; anlamlı metrikler F1/precision/recall'dır. Resmi %20-prior F1 hold-out'ta ölçülemez (n çok küçük); gerçek yarışmada panelin kendi test seti olacaktır.
 
-*PAH (F1=0.9077, MCC=0.39 en düşük):* Recall=0.9516 yüksek ama Benign örnek sayısı çok az (n=62) olduğundan birkaç FP bile MCC'yi sertçe baskılar; ROC-AUC=0.7051 ile en düşük ayrım — küçük-n etkisi.
+*PAH (hold-out F1=0.9120, MCC=0.5053):* Recall=0.9194, precision=0.9048 dengelidir; hold-out ROC-AUC=0.7016 küçük-örneklem (76 satır) gürültüsü olup OOF-robust gerçek değer ≈0.789'dur. **Resmi %20-prior F1 = 0.5299** — panel-ler arası en zayıf; anonim-veri tavanında (4 kaldıraç denendi, `reports/pah_analysis.json`).
 
-*MASTER (MCC=0.5732):* En geniş varyant çeşitliliği içermekte; 2.75:1 sınıf dengesizliği Benign sınıfı tanımlamayı zorlaştırarak MCC'yi baskılamaktadır. Çoğu test örneği bu panelde olduğundan genel MCC'yi (0.5863) domine eder.
+*MASTER (General; MCC=0.4951):* En geniş varyant çeşitliliği içermekte; 2.75:1 sınıf dengesizliği Benign sınıfı tanımlamayı zorlaştırarak MCC'yi baskılamaktadır. Çoğu test örneği bu panelde olduğundan genel MCC'yi (0.5112) domine eder. **Resmi %20-prior F1 = 0.6006**.
+
+*Resmi 4-panel skoru:* (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299) / 3 = **0.6202** (CFTR hold-out'ta ölçülemez). Bu, jürinin beklenen skorudur; iç hold-out F1'leri (yukarıda) ayrım gücüdür.
 
 **Tablo 8: Bileşen vs Ensemble — Binary F1 (canonical)**
 
@@ -310,14 +322,14 @@ Tek modellerin genel **group-aware CV F1** sıralaması (`cv_report.json`) ve en
 
 | Model / Birleşim | Genel CV F1 | MASTER | KANSER | PAH | CFTR |
 |:------|:-----------:|:------:|:------:|:---:|:----:|
-| XGBoost (tek) | 0.8865 | — | — | — | — |
-| LightGBM (tek) | 0.8778 | — | — | — | — |
-| VariantGATv2GNN (tek) | 0.7802 | — | — | — | — |
-| VariantDNN (tek) | 0.7288 | — | — | — | — |
+| XGBoost (tek) | 0.8875 | — | — | — | — |
+| LightGBM (tek) | 0.8828 | — | — | — | — |
+| VariantGATv2GNN (tek) | 0.8114 | — | — | — | — |
+| VariantDNN (tek) | 0.7596 | — | — | — | — |
 | **Hibrit Ensemble (OOF-stacking)** | **0.8936** | — | — | — | — |
-| **Hibrit Ensemble (test, panel)** | 0.8969 | **0.8865** | **0.9440** | **0.9077** | **0.9412** |
+| **Hibrit Ensemble (test hold-out, panel F1)** | 0.8367 | **0.8185** | **0.9060** | **0.9120** | **0.7143** |
 
-*Ensemble CV F1 (0.8936) en güçlü tek modeli (XGB 0.8865) geçer; çeşitlilik + OOF-stacking kazancını doğrular. Panel-bazlı tek-model kırılımı `--mode train_panels`/`ablation` ile yeniden üretilebilir; burada savunulabilir canonical değerler (genel CV + ensemble panel F1) raporlanmıştır.*
+*Ensemble CV F1 (0.8936) en güçlü tek modeli (XGB 0.8875) geçer; çeşitlilik + OOF-stacking kazancını doğrular. Alt satırdaki panel F1'leri iç hold-out (θ=0.8415) ayrım gücüdür — jürinin resmi %20-prior skoru için §3.1/Tablo 5'e bakınız. Panel-bazlı tek-model kırılımı `--mode train_panels`/`ablation` ile yeniden üretilebilir; burada savunulabilir canonical değerler (genel CV + ensemble panel F1) raporlanmıştır.*
 
 ### 3.3 Eşik Analizi
 
@@ -325,13 +337,13 @@ Tek modellerin genel **group-aware CV F1** sıralaması (`cv_report.json`) ve en
 
 | Eşik | θ | Kapsam | Recall | MCC | Not |
 |:------|:-:|:-------|:------:|:---:|:----|
-| **Global (CANONICAL / jüri)** | **0.6831** | tüm paneller | 0.8953 | 0.5863 | balanced-OOF F1-optimal; `models/threshold.json` |
-| Opt-in General | 0.4040 | — | — | — | varsayılan KAPALI |
-| Opt-in KANSER | 0.3695 | — | — | — | varsayılan KAPALI |
-| Opt-in PAH | 0.3203 | — | — | — | varsayılan KAPALI |
+| **Global (CANONICAL / jüri)** | **0.8415** | tüm paneller | 0.7644 | 0.5112 | %20-prior F1-optimal (kalibrasyon seti); `models/threshold.json` |
+| Opt-in General | 0.3990 | — | — | — | varsayılan KAPALI |
+| Opt-in Hereditary_Cancer | 0.4532 | — | — | — | varsayılan KAPALI |
+| Opt-in PAH | 0.4434 | — | — | — | varsayılan KAPALI |
 | Opt-in CFTR | 0.1922 | — | — | — | varsayılan KAPALI |
 
-Eşik stratejisi: Şartname §3.2 jüri seti dengeli (50/50) olduğundan, karar eşiği group-aware OOF üzerinde **sınıf-dengeli** resample ile F1-optimal türetilir (**θ=0.6831 global, canonical**). Panel-spesifik eşikler `models/panel_thresholds.json` içinde mevcuttur ancak **opt-in**'dir (`use_panel_thresholds=false` varsayılan) ve jüri kararında kullanılmaz — test setinde global eşikten daha iyi sonuç vermedikleri için. Global eşikteki panel recall/MCC değerleri Tablo 7'dedir.
+Eşik stratejisi: Karar eşiği, group-aware **held-out calibration set** üzerinde resmi test prior'ına (%20-patojenik) **F1-optimal** olacak biçimde, **HAM (kalibre edilmemiş değil; ham-olasılık girişli) olasılık** üzerinden türetilir (**θ=0.8415 global, canonical**). Türetim ile çıkarım birebir aynı dağılım ve aynı olasılık uzayında yapıldığından **derivation == inference** garantisi sağlanır (üreten: `src/cli/modes/train.py`, `threshold_source=calibration_set`). Eşiği %74-pozitif/50-50 dağılımda türetmek %20-prior'lı resmi sette F1 kaybettirir. Panel-spesifik eşikler `models/panel_thresholds.json` içinde mevcuttur ancak **opt-in**'dir (`use_panel_thresholds=false` varsayılan) ve jüri kararında kullanılmaz — test setinde global eşikten daha iyi sonuç vermedikleri için (`reports/competition_jury_f1.json`: per-panel-threshold skoru 0.5445 < global 0.6202). Global eşikteki panel recall/MCC değerleri Tablo 7'dedir.
 
 **Şekil 7:** Eşik Analizi — *reports/figures/pdr/14_threshold_analysis.png*
 
@@ -341,7 +353,7 @@ Eşik stratejisi: Şartname §3.2 jüri seti dengeli (50/50) olduğundan, karar 
 
 | Konfigürasyon | ΔF1 | Kaynak / Gözlem |
 |:-------------|:---:|:----------------|
-| **Tam Ensemble** | — | Test F1=0.8969, CV F1=0.8936 (tüm bileşenler aktif) |
+| **Tam Ensemble** | — | Test F1=0.8367 (iç hold-out), CV F1=0.8936 (tüm bileşenler aktif) |
 | GNN kaldırıldı | −2.2 pp | `ensemble_weight_justification.json` — çeşitlilik kaybı |
 | DNN (DANN) kaldırıldı | −0.7 pp | `ensemble_weight_justification.json` |
 | OOF-stacking → sabit ağırlık | −0.59 pp | `stacking_improvement.json` (nested-CV) |
@@ -358,9 +370,9 @@ Eşik stratejisi: Şartname §3.2 jüri seti dengeli (50/50) olduğundan, karar 
 
 ### 4.1 Ana Bulgular ve Yorum
 
-VARIANT-GNN, dört hastalık panelinde missense varyant patojenite sınıflandırması için geliştirilen hibrit grafik ensemble sistemi olarak TEKNOFEST 2026 şartname birincil metriğinde (Binary F1, §7.3) güçlü ve **sızıntısız** sonuçlar elde etmiştir. Beklenen yarışma skoru (dengeli §3.2 jüri seti) **balanced Binary F1=0.8134±0.0103**; iç ayrım gücü Test F1=0.8969, PR-AUC=0.9114, ROC-AUC=0.8398. Üretim CV F1=0.8936±0.0004 (OOF-stacking) ve 5-seed kararlılığı (0.8738±0.0034) modelin tekrar üretilebilir, tohum-kararlı sonuçlar ürettiğini doğrulamaktadır.
+VARIANT-GNN, dört hastalık panelinde missense varyant patojenite sınıflandırması için geliştirilen hibrit grafik ensemble sistemi olarak TEKNOFEST 2026 şartname birincil metriğinde (Binary F1, §7.3) **sızıntısız** ve dürüst sonuçlar elde etmiştir. Beklenen resmi yarışma skoru, %20-patojenik test prior'ında **4-panel F1 ortalaması = 0.6202** (havuzlanmış tahmin 0.6042±0.0324); iç ayrım gücü Test F1=0.8367, PR-AUC=0.9267, ROC-AUC=0.8538. F1'in patojenik-azınlık test setinde ~0.60 düzeyinde olması metrik tanımının (pos_label=1) doğal sonucudur. Üretim CV F1=0.8936±0.0004 (OOF-stacking) ve 5-seed kararlılığı (0.8738±0.0034) modelin tekrar üretilebilir, tohum-kararlı sonuçlar ürettiğini doğrulamaktadır.
 
-Panel bazlı analiz: KANSER paneli en yüksek MCC (0.7985) ve F1 (0.944) ile en dengeli paneldir; CFTR (n=18 test) tam precision=1.000 elde etmiş ancak küçük-n nedeniyle MCC tanımsızdır. PR-AUC tüm panellerde yüksektir (KANSER 0.9393, CFTR 1.0, MASTER 0.9102, PAH 0.8843); bu, olasılık kalibrasyonunun karar eşiğinden bağımsız güçlü sınıf ayrım kapasitesine işaret eder. Ablasyon analizi en büyük katkıların GNN çeşitliliği (−2.2 pp), önişleme darboğazının kaldırılması (≈+5.3 pp) ve OOF-stacking (+0.59 pp) olduğunu göstermektedir.
+Panel bazlı analiz: KANSER (Hereditary_Cancer) paneli en yüksek MCC (0.7135) ve hold-out F1 (0.9060) ile en dengeli paneldir ve resmi %20-prior F1'inde de (0.7301) en güçlü panellidir; CFTR (n=18 test) tam precision=1.000 elde etmiş ancak küçük-n nedeniyle MCC tanımsız (0) ve recall düşüktür (0.5556). PR-AUC tüm panellerde yüksektir (KANSER 0.9743, CFTR 1.0, MASTER 0.9271, PAH 0.8908); bu, olasılık kalibrasyonunun karar eşiğinden bağımsız güçlü sınıf ayrım kapasitesine işaret eder. Ablasyon analizi en büyük katkıların GNN çeşitliliği (−2.2 pp), önişleme darboğazının kaldırılması (≈+5.3 pp) ve OOF-stacking (+0.59 pp) olduğunu göstermektedir.
 
 ### 4.2 PSR ile Karşılaştırma ve Tutarsızlık Açıklaması
 
@@ -370,10 +382,10 @@ PDR'de elde edilen gerçek yarışma verisi sonuçları PSR'de raporlanan pilot 
 
 | Metrik | PSR Pilot | Gerçek Yarışma (canonical) | Fark | Açıklama |
 |:-------|:---------:|:--------------------------:|:----:|:---------|
-| Binary F1 | 0.945 | 0.8969 | −0.048 | Yarışma verisi gerçek zorluğu + sızıntısız değerlendirme |
-| MCC | 0.892 | 0.5863 | −0.306 | Sınıf dengesizliği (2.75:1) + dürüst group-aware eval |
-| ROC-AUC | 0.976 | 0.8398 | −0.136 | Gerçek varyant heterojenliği |
-| PR-AUC | 0.973 | 0.9114 | −0.062 | Makul kalibrasyon dayanıklılığı |
+| Binary F1 (iç hold-out) | 0.945 | 0.8367 | −0.108 | Yarışma verisi gerçek zorluğu + sızıntısız group-aware değerlendirme |
+| MCC | 0.892 | 0.5112 | −0.381 | Sınıf dengesizliği (2.75:1) + dürüst group-aware eval |
+| ROC-AUC | 0.976 | 0.8538 | −0.122 | Gerçek varyant heterojenliği |
+| PR-AUC | 0.973 | 0.9267 | −0.046 | Makul kalibrasyon dayanıklılığı |
 
 **Fark Nedenleri (üç unsur):**
 
@@ -381,7 +393,7 @@ PDR'de elde edilen gerçek yarışma verisi sonuçları PSR'de raporlanan pilot 
 
 (2) *Sınıf dengesi:* Pilot veride 1:1 oran; yarışma verisinde 2.75:1 (MASTER). Bu dengesizlik MCC'yi F1'den orantısız biçimde etkileyen FP yoğunluğuna yol açmaktadır.
 
-(3) *Özellik uzayı:* Pilot çalışmada bilinen kolon isimleri (CADD, REVEL vb.) kullanılırken yarışma verisinde 343 anonim kolon bulunmaktadır. ColumnAligner bu kısıtlamayı önemli ölçüde hafifletmektedir (feature_coverage=0.0: beklenen davranış, çünkü kolon eşlemesi distribüsyonel imzaya dayanır).
+(3) *Özellik uzayı:* Pilot çalışmada bilinen kolon isimleri (CADD, REVEL vb.) kullanılırken yarışma verisinde 343 anonim kolon bulunmaktadır. ColumnAligner bu kısıtlamayı isim-tabanlı çok aşamalı hizalama (exact → case-insensitive → fuzzy ≥0.85 → positional) ile ele alır. `feature_coverage=0.0`, anonim isimlerin bilinen biyolojik kolon adlarıyla *adlandırma* örtüşmesinin sıfır olduğunu gösteren beklenen bir göstergedir (kolonlar `AL_x/EK_x/CAT_x/AA_x` öneklidir); model tüm 343 özniteliği değer-bazlı kullanmaya devam eder.
 
 **PSR'deki GNN Adı Tutarsızlığı:** PSR'de "VariantSAGEGNN/SAGEConv" olarak adlandırılan bileşen gerçekte GATv2Conv implementasyonudur; bu tutarsızlık PDR §2.2'de düzeltilmiş ve Brody ve ark. [8] atıfı eklenmiştir.
 
@@ -389,33 +401,34 @@ PDR'de elde edilen gerçek yarışma verisi sonuçları PSR'de raporlanan pilot 
 
 **Güçlü Yönler**
 
-- *Sızıntısızlık ve dürüstlük:* Group-aware split + tutarlılık kapısı; beyan edilen 0.8969/0.5863 değerleri §7.5 re-run'da birebir üretilebilir.
-- *Dengeli precision/recall:* θ=0.6831 ile precision=0.8984, recall=0.8953 — FP ve FN dengelenmiştir.
-- *PR-AUC yüksekliği:* PR-AUC=0.9114 (genel), KANSER 0.9393; güçlü olasılık kalibrasyonu.
+- *Sızıntısızlık ve dürüstlük:* Group-aware split + tutarlılık kapısı; θ=0.8415 ile beyan edilen iç hold-out 0.8367/0.5112 değerleri §7.5 re-run'da birebir üretilebilir (kendiyle-tutarlı: 2·0.9241·0.7644/(0.9241+0.7644)=0.8367).
+- *Yüksek precision:* θ=0.8415 ile precision=0.9241, recall=0.7644 — eşik %20-prior'a kalibre edildiğinden FP düşük tutulur (yanlış patojenik alarmı sınırlanır); bedeli recall'ın düşmesidir.
+- *PR-AUC yüksekliği:* PR-AUC=0.9267 (genel), KANSER 0.9743; güçlü olasılık kalibrasyonu (ECE=0.0291).
 - *Tohum kararlılığı:* 5-seed CV F1=0.8738±0.0034; §7.5 jüri tekrar çalıştırma gereksinimi karşılanmaktadır.
-- *Kolon isimsiz çalışma:* ColumnAligner + CategoricalBioFeaturizer §3.2 anonim-kolon kısıtlamasına tam uyum sağlar ve biyolojik sinyali kurtarır.
+- *Kolon isimsiz çalışma:* ColumnAligner (isim-tabanlı hizalama) + CategoricalBioFeaturizer §3.2 anonim-kolon kısıtlamasına tam uyum sağlar ve biyolojik sinyali kurtarır.
 
 **Zayıf Yönler ve Sınırlılıklar**
 
-- *MCC sınırlılığı (MASTER):* MCC=0.5732, sınıf dengesizliğinin (2.75:1) Benign sınıfı tahminini zorlaştırdığını göstermektedir.
-- *Küçük panellerde metrik kararsızlığı:* CFTR test n=18 → MCC/ROC-AUC tanımsız; PAH'ta n_benign=62 → MCC=0.39. Geniş bağımsız kohortta doğrulama gereklidir.
-- *Anonim kolon kısıtlaması:* Özellik-grup eşlemesinin dağılımsal imzaya dayanması kesin biyolojik yorumu kısıtlamaktadır.
+- *MCC sınırlılığı (MASTER/General):* MCC=0.4951, sınıf dengesizliğinin (2.75:1) Benign sınıfı tahminini zorlaştırdığını göstermektedir.
+- *Patojenik-azınlık prior'ında düşük jüri F1:* Resmi %20-prior'da panel F1'leri (General 0.6006, PAH 0.5299) iç hold-out'tan belirgin düşüktür; bu metrik tanımının (pos_label=1, patojenik azınlık) doğal sonucudur, ancak resmi skorun (0.6202) iç ayrım gücünden (0.8367) ayrı raporlanmasını zorunlu kılar.
+- *Küçük panellerde metrik kararsızlığı:* CFTR test n=18 → MCC tanımsız (0), ROC-AUC NaN; PAH'ta n_benign az → hold-out ROC-AUC=0.7016 gürültülü (OOF-robust ≈0.789). Geniş bağımsız kohortta doğrulama gereklidir.
+- *Anonim kolon kısıtlaması:* Özellik-grup eşlemesinin önek/ad örüntüsüne dayalı gösterge (heuristik) niteliğinde olması kesin biyolojik yorumu kısıtlamaktadır.
 
 ### 4.4 Hata Analizi
 
 **Yanlış Negatif (FN) Profili — Kaçırılan Patojenik Varyantlar**
 
-Recall=0.8953, test patojenik varyantlarının ~%10.5'inin kaçırıldığını göstermektedir. Hata örüntüsü: (i) Çelişkili in-silico skor profilleri (yüksek CADD + düşük REVEL veya tersi): ~%60; (ii) Popülasyon frekansı sınırında (AF: 0.0008–0.002) varyantlar: ~%25; (iii) Bu FN örneklerde ortalama MC Dropout σ=0.38 > 0.30 → klinik arayüzde otomatik "Uzman Değerlendirmesi Gerekli" bayrağı oluşmaktadır.
+Recall=0.7644, iç hold-out patojenik varyantlarının ~%23.6'sının kaçırıldığını göstermektedir. Bu yüksek FN oranı, eşiğin (θ=0.8415) %20-prior'a kalibre edilip yüksek-precision lehine ayarlanmasının bilinçli bir sonucudur. Hata örüntüsü: (i) Çelişkili in-silico skor profilleri (yüksek CADD + düşük REVEL veya tersi): ~%60; (ii) Popülasyon frekansı sınırında (AF: 0.0008–0.002) varyantlar: ~%25; (iii) Bu FN örneklerde ortalama MC Dropout σ=0.38 > 0.30 → klinik arayüzde otomatik "Uzman Değerlendirmesi Gerekli" bayrağı oluşmaktadır.
 
 **Şekil 9:** Hata Profil Grafiği — *reports/figures/pdr/15_error_profile.png*
 
 **Yanlış Pozitif (FP) Profili — Hatalı Patojenik Sınıflandırma**
 
-Precision=0.8984, Patojenik tahminlerin ~%10.2'sinin Benign olduğunu göstermektedir. FP profili: (i) Yüksek in-silico risk skoru (>0.6) + gnomAD AF>0.01 kombinasyonu; (ii) Evrimsel açıdan korunmuş bölgede sessiz AA değişimi; (iii) FP örneklerde ortalama σ=0.34.
+Precision=0.9241, Patojenik tahminlerin ~%7.6'sının aslında Benign olduğunu göstermektedir. FP profili: (i) Yüksek in-silico risk skoru (>0.6) + gnomAD AF>0.01 kombinasyonu; (ii) Evrimsel açıdan korunmuş bölgede sessiz AA değişimi; (iii) FP örneklerde ortalama σ=0.34.
 
 **PAH Panel Özel Notu**
 
-PAH'da yalnızca 62 Benign örnek bulunduğundan kalibrasyon ve MCC tahmini istatistiksel olarak sınırlıdır; birkaç FP bile MCC'yi (0.39) sertçe baskılar. Bu küçük-n etkisi olup model başarısızlığı değildir; canonical karar global θ=0.6831 kullanır.
+PAH'da Benign örnek sayısı az olduğundan kalibrasyon ve ROC-AUC tahmini istatistiksel olarak sınırlıdır; hold-out ROC-AUC=0.7016 küçük-örneklem gürültüsüdür (OOF-robust ≈0.789). Bu küçük-n etkisi olup model başarısızlığı değildir; canonical karar global θ=0.8415 kullanır.
 
 ### 4.5 Gelecek Çalışma
 
@@ -429,15 +442,15 @@ PAH'da yalnızca 62 Benign örnek bulunduğundan kalibrasyon ve MCC tahmini ista
 
 *Bu bölüm PDR şablonu §4 zorunlu son maddesi gereği eklenmiştir.*
 
-**Kör Test Verisi ve Dağılım Kayması:** Final aşamasında jüri tarafından sağlanacak kör test verisi eğitim setinden farklı bir varyant profil dağılımı içerebilir. Bu riski azaltmak için adversarial validation (AUC≈0.50) ile eğitim-test dağılım uyumu doğrulanmış; ColumnAligner anonim kolon ortamında dağılımsal imza eşleşmesi ile sağlam hizalama gerçekleştirmektedir.
+**Kör Test Verisi ve Dağılım Kayması:** Final aşamasında jüri tarafından sağlanacak kör test verisi eğitim setinden farklı bir varyant profil dağılımı içerebilir. Bu riski azaltmak için adversarial validation (AUC≈0.50) ile eğitim-test dağılım uyumu doğrulanmış; ColumnAligner anonim kolon ortamında isim-tabanlı çok aşamalı hizalama (exact → case-insensitive → fuzzy difflib ≥0.85 → positional) ile sağlam hizalama gerçekleştirmektedir.
 
-**Eşik Uyarlaması:** Jürinin sunacağı test verisinde sınıf dengesi eğitim setinden farklı olabilir. Model `models/threshold.json` ve `models/panel_thresholds.json` içindeki eşikleri dynamik olarak yüklemektedir; gerekirse kalibrasyon seti üzerinde hızlı yeniden optimizasyon (`src/evaluation/threshold_optimizer.py`) tek komutla çalıştırılabilir.
+**Eşik Uyarlaması:** Jürinin sunacağı test verisinde sınıf dengesi eğitim setinden farklı olabilir. Model `models/threshold.json` ve `models/panel_thresholds.json` içindeki eşikleri dinamik olarak yüklemektedir; eşik türetimi `src/cli/modes/train.py` (threshold_source=calibration_set) içinde, group-aware held-out kalibrasyon seti üzerinde resmi prior'a F1-optimal olacak biçimde yeniden çalıştırılabilir (derivation==inference).
 
 **Tekrar Çalıştırma Güvenilirliği (§7.5):** Jürinin kodu kendi ortamında çalıştırması durumunda Python/kütüphane versiyonu farkları sonuç sapmasına yol açabilir. Bu risk `requirements.txt` sabit versiyonları, `seed=42` deterministik yapılandırması ve `submission/predict.py` tek-giriş-noktası ile minimize edilmiştir; Docker imajı (CPU+GPU) ortam bağımsızlığı sağlar.
 
 **Hesaplama Süresi Kısıtı:** GATv2GNN inference süresi CPU ortamında gecikmeye yol açabilir. `scripts/test_cpu_inference.py` ile CPU benchmark doğrulanmıştır; model ONNX ihracı hazır tutulmaktadır. Jüri laptop ortamında ~500 örnek için beklenen tahmin süresi <90 saniye.
 
-**Kolon Yapısı Farkı:** Final veri setindeki kolon sayısı veya sıralaması eğitimden farklı gelebilir. ColumnAligner bu durumu dağılımsal eşleşme ile otomatik olarak ele alır; `data/contracts/predict_schema.json` sözleşmesi eksik/fazla kolonları tolere etmektedir.
+**Kolon Yapısı Farkı:** Final veri setindeki kolon sayısı veya sıralaması eğitimden farklı gelebilir. ColumnAligner bu durumu isim-tabanlı eşleştirme (exact → case-insensitive → fuzzy ≥0.85 → positional fallback) ile otomatik olarak ele alır; `data/contracts/predict_schema.json` sözleşmesi eksik/fazla kolonları tolere etmektedir.
 
 ---
 

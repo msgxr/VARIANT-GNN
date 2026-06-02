@@ -98,7 +98,7 @@ if page == "🔬 Tahmin":
                 panel_vals = df_input[panel_col].values if panel_col else ["General"] * len(df_input)
                 preds = []
                 for prob, pnl in zip(probas, panel_vals):
-                    t = thresholds.get(pnl, thresholds.get("__global__", 0.241))
+                    t = thresholds.get(pnl, thresholds.get("__global__", 0.8415))
                     preds.append(1 if prob >= t else 0)
 
                 result_df = df_input[["Panel"] if panel_col else []].copy()
@@ -143,14 +143,14 @@ elif page == "📊 Model Performansı":
 
         st.subheader("Genel Test Sonuçları")
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="dengeli jüri ≈ 0.8134 (§3.2)")
+        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="iç hold-out F1=0.8367 @ θ=0.8415")
         m2.metric("MCC", f"{cv['test_mcc']:.4f}")
         m3.metric("PR-AUC", f"{cv['test_pr_auc']:.4f}")
         m4.metric("5-CV F1", f"{cv['mean_cv_binary_f1']:.4f} ±{cv['std_cv_binary_f1']:.4f}")
 
         st.divider()
         st.subheader("Panel Bazlı Sonuçlar")
-        st.caption("Karar eşiği: GLOBAL θ=0.6831 (canonical, balanced-OOF). Panel-spesifik eşikler opt-in (varsayılan kapalı; jüri kullanmaz).")
+        st.caption("Karar eşiği: GLOBAL θ=0.8415 (canonical, §3.2). Test prior: %20-patojenik. Resmi jüri skoru (4-panel %20-F1 ort.): 0.6202. Havuzlanmış: 0.6042±0.0324.")
 
         panel_data = cv.get("panel_metrics", {})
         if panel_data:
@@ -173,13 +173,14 @@ elif page == "📊 Model Performansı":
             panel_df = pd.DataFrame(rows)
             st.dataframe(panel_df.style.highlight_max(subset=["F1", "MCC", "PR-AUC"], color="#bbf7d0"), use_container_width=True)
         else:
+            # Canonical panel results @ θ=0.8415 (RESULTS_CANONICAL.json)
             data = {
                 "Panel": ["MASTER (General)", "KANSER (Hereditary Cancer)", "PAH", "CFTR"],
-                "F1": [0.9116, 0.9556, 0.9929, 0.9677],
-                "MCC": [0.6848, 0.8706, 0.9193, 0.8385],
-                "PR-AUC": [0.9758, 0.9960, 0.9994, 0.9558],
-                "Recall": [0.9011, 0.9773, 1.000, 1.000],
-                "Eşik θ": [0.590, 0.281, 0.138, 0.108],
+                "F1": [0.8185, 0.9060, 0.9120, 0.7143],
+                "MCC": [0.4951, 0.7135, 0.5053, float("nan")],
+                "PR-AUC": [float("nan"), float("nan"), float("nan"), float("nan")],
+                "Recall": [float("nan"), float("nan"), float("nan"), float("nan")],
+                "Eşik θ": [0.8415, 0.8415, 0.8415, 0.8415],
             }
             df = pd.DataFrame(data)
             st.dataframe(df.style.highlight_max(subset=["F1", "MCC", "PR-AUC", "Recall"], color="#bbf7d0"), use_container_width=True)
@@ -404,4 +405,4 @@ elif page == "🕸️ GNN Graf Açıklaması":
 
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.divider()
-st.caption("VARIANT-GNN · Takım XYRA3 · TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması · Yalnızca araştırma ve eğitim amaçlıdır")
+st.caption("VARIANT-GNN · Takım XYRA3 · TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması · Yalnızca araştırma ve eğitim amaçlıdır · Resmi jüri skoru: 0.6202 (%20-patojenik test prior, θ=0.8415)")

@@ -9,9 +9,9 @@ için gereken kesin adımları içerir. Tüm sonuçlar tek bir kaynaktan gelir:
 | Metrik | Değer | Protokol |
 |---|---|---|
 | **CV Binary F1** | **0.8936 ± 0.0004** | StratifiedGroupKFold (Variant_ID), 5 fold |
-| **Test Binary F1** | **0.833** | Group-aware 80/20 hold-out |
-| Test MCC | 0.5863 | precision/recall, binary_f1'i birebir üretir |
-| Panel F1 (test) | General 0.8145 · KANSER 0.906 · PAH 0.878 · CFTR 0.8387 | |
+| **Test Binary F1** | **0.8367** | Group-aware 80/20 hold-out |
+| Test MCC | 0.5112 | precision/recall, binary_f1'i birebir üretir |
+| Panel F1 (test) | General 0.8185 · KANSER 0.9060 · PAH 0.9120 · CFTR 0.7143 | |
 
 > **Sızıntısızlık garantisi:** Eğitim, `Variant_ID`'ye göre **grup-farkında** bölme
 > kullanır; aynı varyant asla hem train hem test'te yer almaz. Eğitim çıktısında
@@ -53,7 +53,7 @@ Group-aware splitting ON: 3802 rows → 3224 unique variants
 CV: StratifiedGroupKFold (group-aware)
 Cross-validation complete: Binary F1 (§7.3) = 0.8936 ± 0.0004
 Leakage guard PASSED: 0 variants straddle train/test
-[TEST] [§7.3 PRIMARY] Binary F1 : 0.833
+[TEST] [§7.3 PRIMARY] Binary F1 : 0.8367
 ```
 `seed=42` deterministiktir; her çalıştırma aynı sonucu verir.
 

@@ -530,6 +530,13 @@ jobs:
           print(f"✅ Competition metric §7.3: binary F1 = {f1:.4f}")
           EOF
 
+      # ── 9. Results consistency gate — tüm beyan edilen metrikler ↔ canonical ──
+      # Hiçbir doküman/rapor RESULTS_CANONICAL.json'dan kaymamalı; geri çekilmiş
+      # sızıntı sayıları jüri-görünür belgelerde yaşamamalı. Non-zero exit → CI fail.
+      - name: Results consistency gate (RESULTS_CANONICAL.json SSOT)
+        run: |
+          python scripts/check_results_consistency.py
+
       # ── Compliance summary ────────────────────────────────────────────
       - name: Write compliance summary
         run: |
@@ -546,6 +553,7 @@ jobs:
           | submission/predict.py | ✅ Importable, offline-ready |
           | configs/pdr.yaml | ✅ All required keys present |
           | Metric §7.3 | ✅ Binary F1 (TP/FP/FN) |
+          | Results consistency | ✅ All declared numbers == RESULTS_CANONICAL.json |
           EOF
 
   # ───────────────────────────────────────────────────────────────────────────

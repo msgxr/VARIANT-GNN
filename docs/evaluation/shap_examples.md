@@ -9,7 +9,7 @@
 ## 1. SHAP Waterfall — Örnek 1: Patojenik Varyant (Yüksek Güven)
 
 **Varyant:** VAR_001847 | Panel: Hereditary_Cancer  
-**Tahmin:** Patojenik | Olasılık: 0.947 | Karar Eşiği: 0.6831 (global, canonical) ✅  
+**Tahmin:** Patojenik | Olasılık: 0.947 | Karar Eşiği: 0.8415 (global, canonical) ✅  
 **Gerçek Etiket:** Patojenik ✅ (Doğru Tahmin)
 
 ```
@@ -37,7 +37,7 @@ E[f(x)] = 0.432  →  f(x) = 0.947
 ## 2. SHAP Waterfall — Örnek 2: Benign Varyant (Yüksek Güven)
 
 **Varyant:** VAR_002341 | Panel: General  
-**Tahmin:** Benign | Olasılık: 0.089 | Karar Eşiği: 0.6831 (global, canonical) ✅  
+**Tahmin:** Benign | Olasılık: 0.089 | Karar Eşiği: 0.8415 (global, canonical) ✅  
 **Gerçek Etiket:** Benign ✅ (Doğru Tahmin)
 
 ```

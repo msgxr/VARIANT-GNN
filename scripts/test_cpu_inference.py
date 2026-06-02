@@ -47,10 +47,11 @@ PANEL_FILES = {
 }
 
 PANEL_THRESHOLDS = {
-    "General": 0.24145728643216083,
-    "Hereditary_Cancer": 0.2808542713567839,
-    "PAH": 0.13804020100502515,
-    "CFTR": 0.10849246231155779,
+    # OPT-IN panel eşikleri (canonical; reports/cv_report.json panel_thresholds). Jüri global θ=0.8415 kullanır.
+    "General": 0.3990,
+    "Hereditary_Cancer": 0.4532,
+    "PAH": 0.4434,
+    "CFTR": 0.1922,
 }
 
 LABEL_MAP = {

@@ -48,7 +48,7 @@ _PDR_FIGURES: List[Dict[str, str]] = [
     {
         "file": "04_confusion_matrix_panel.png",
         "title": "Confusion Matrix (Panel Bazlı)",
-        "desc": "Gerçek yarışma verisi — TP/FP/FN/TN dağılımı. θ=0.241 global eşik.",
+        "desc": "Gerçek yarışma verisi — TP/FP/FN/TN dağılımı. θ=0.8415 global eşik (canonical).",
         "section": "evaluation",
     },
     {

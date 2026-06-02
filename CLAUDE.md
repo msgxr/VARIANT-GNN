@@ -47,7 +47,7 @@ These rules apply in every session without exception:
 
 8. **Reproducibility red line.** Every implementation decision is evaluated against: "Can a jury member reproduce this from scratch?" Seed, environment, single-command execution are non-negotiable.
 
-9. **Scientific integrity over convenience.** Do not soften critical findings. Do not suppress inconvenient results. PSR vs actual result gap (MCC 0.892→0.5863, canonical) must be explained, not hidden.
+9. **Scientific integrity over convenience.** Do not soften critical findings. Do not suppress inconvenient results. PSR vs actual result gap (MCC 0.892→0.5112, canonical) must be explained, not hidden.
 
 10. **Clinical ethics enforced.** Never write or suggest language implying the model makes clinical diagnoses, recommends treatment, or replaces physician judgment.
 
@@ -169,11 +169,11 @@ Claude always operates with this context active:
 
 **Architecture:** XGBoost(30%) + LightGBM(30%) + VariantGATv2GNN/GATv2Conv(25%) + DNN(15%) + Stacking meta-learner (LogReg)  
 **Pipeline:** Medyan Imputation → RobustScaler → (full §3.2 feature set — no aggressive SelectKBest/AE) → SMOTE(train only) → Cosine k-NN graph  
-**Split:** GROUP-AWARE 80/20 hold-out by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-Fold, random_state=42. Leakage guard: 0 variants straddle train/test. Karar eşiği: θ=0.8415 — TAM group-aware OOF'ta (n≈3040) KALİBRE + %20-PATOJENİK (resmi test prior) resample F1-optimal (25x medyan). §3.2 jüri seti %20-PATOJENİK olduğundan eşik o prior'a ayarlanır; %74-poz cal'da türetmek %20-test'te -5pp kaybettirir. A→B çapraz-doğrulandı, overfit yok.  
-**Results (real TEKNOFEST data — %20-patojenik-OOF threshold retrain 2026-06-02, canonical: RESULTS_CANONICAL.json):** ⭐ **YARIŞMA BEKLENTİSİ = competition_jury_f1=0.6042±0.0103** (§3.2 %20 patojenik/%80 benign jüri seti — GERÇEK beklenen skor; eski mis-tuned θ=0.3367 ile 0.7635 olurdu, +5pp kurtarıldı). İç AYRIM gücü (%75-poz hold-out, jüri skoru DEĞİL): Test F1=0.833, MCC=0.5863, precision=0.9254, recall=0.7574, CV F1=0.8936±0.0004. reports/competition_jury_f1.json  
-**Panel results (test hold-out, group-aware @ θ=0.8415):** General F1=0.8145 | KANSER F1=0.906 | PAH F1=0.878 | CFTR F1=0.8387  
+**Split:** GROUP-AWARE 80/20 hold-out by Variant_ID (GroupShuffleSplit) + StratifiedGroupKFold 5-Fold, random_state=42. Leakage guard: 0 variants straddle train/test. Karar eşiği: θ=0.8415 — group-aware HELD-OUT calibration set'te %20-PATOJENİK (resmi test prior — UNVERIFIED, bkz. RESULTS_CANONICAL.provenance_unverified) F1-optimal, HAM olasılıkta (derivation==inference; üreten: src/cli/modes/train.py, threshold_source=calibration_set). %74-poz cal'da türetmek %20-test'te -5pp kaybettirir. A→B çapraz-doğrulandı, overfit yok.  
+**Results (real TEKNOFEST data — %20-patojenik threshold retrain, canonical: RESULTS_CANONICAL.json):** ⭐ **YARIŞMA BEKLENTİSİ = resmi 4-panel %20-F1 ortalaması = 0.6202** (havuzlanmış jüri-F1 tahmini = competition_jury_f1=0.6042±0.0324; §3.2 %20 patojenik/%80 benign — NOT: prior UNVERIFIED). İç AYRIM gücü (%75-poz hold-out, jüri skoru DEĞİL): Test F1=0.8367, MCC=0.5112, precision=0.9241, recall=0.7644, ROC-AUC=0.8538, PR-AUC=0.9267, Brier=0.1115, ECE=0.0291, CV F1=0.8936±0.0004 (OOF-stacking; fold-CV 0.8812±0.0113). reports/competition_jury_f1.json  
+**Panel results (test hold-out, group-aware @ θ=0.8415):** General F1=0.8185 (MCC 0.4951) | KANSER F1=0.906 (0.7135) | PAH F1=0.912 (0.5053) | CFTR F1=0.7143 (MCC tanımsız, n=18)  
 **PSR score:** 93/100. Weak: §4.4 Explainability(3.33/5), §4.5 Tech Evolution(3.33/5), §5.1 Architecture Justification(4/5)  
-**Known risks:** Önceki 0.8980/0.9269 sayıları GERİ ÇEKİLDİ — augmentation near-twin + panel-overlap satır-bazlı split sızıntısıyla şişikti (reports/leakage_quantification.json). Düzeltildi: group-aware split + SelectKBest(35)+AE kaldırıldı (+5.3pp dürüst geri kazanım, reports/preprocessing_diagnostic.json). PSR pilot MCC=0.892 vs gerçek MCC=0.5863 (PDR §4.2). GNN PSR'de "VariantSAGEGNN", kodda GATv2Conv (PDR'de düzeltildi)  
+**Known risks:** Önceki 0.8980/0.9269 sayıları GERİ ÇEKİLDİ — augmentation near-twin + panel-overlap satır-bazlı split sızıntısıyla şişikti (reports/leakage_quantification.json). Düzeltildi: group-aware split + SelectKBest(35)+AE kaldırıldı (+5.3pp dürüst geri kazanım, reports/preprocessing_diagnostic.json). PSR pilot MCC=0.892 vs gerçek MCC=0.5112 (PDR §4.2). GNN PSR'de "VariantSAGEGNN", kodda GATv2Conv (PDR'de düzeltildi)  
 **PDR deadline:** 29.06.2026 | Final: Ağustos–Eylül 2026 @ TEKNOFEST Şanlıurfa  
 **Ethical boundary:** Model is for research/education/competition only — not clinical diagnosis  
 

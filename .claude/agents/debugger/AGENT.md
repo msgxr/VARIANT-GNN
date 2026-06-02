@@ -72,14 +72,12 @@ ensemble_pred = (
 # Check: src/core/ensemble.py for any division operation
 ```
 
-### Pattern 3: AutoEncoder Dimension Errors
+### Pattern 3: Feature Selection / AutoEncoder (DISABLED in production)
 ```python
-# Contract: input=43 features, latent=16
-# If actual feature count != 43 after SelectKBest(k=35), shape mismatch
-
-# Actual flow: raw features → SelectKBest(k=35) → AutoEncoder
-# So AutoEncoder input should be 35, not 43 — check actual input dim
-# Bug: mismatch between documented "43→16" and actual "35→16"
+# configs/pdr.yaml: use_feature_selection=false, use_autoencoder=false
+# Both SelectKBest and AutoEncoder are INACTIVE in the real pipeline.
+# If code conditionally activates them, verify the flags are correctly read.
+# Bug pattern: flag read from wrong config layer, silently activating a disabled component.
 ```
 
 ### Pattern 4: TTA (Test Time Augmentation) Sequence Bugs
@@ -122,8 +120,8 @@ X_train_res, y_train_res = SMOTE().fit_resample(X_train, y_train)
 
 ### Pattern 8: Threshold Application
 ```python
-# threshold = 0.8514 global, canonical (from models/threshold.json)
-# panel-specific OPT-IN: General=0.404, KANSER=0.3695, PAH=0.3203, CFTR=0.1922 (models/panel_thresholds.json; jüri kullanmaz)
+# threshold = 0.8415 global, canonical (from models/threshold.json)
+# panel-specific OPT-IN: General=0.3990, KANSER=0.4532, PAH=0.4434, CFTR=0.1922 (models/panel_thresholds.json; jüri kullanmaz)
 # WRONG: Using 0.5 for binary decision
 # WRONG: Threshold not applied consistently across all 4 panels
 # CORRECT: y_pred = (y_prob >= threshold).astype(int)

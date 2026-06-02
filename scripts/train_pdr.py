@@ -1,3 +1,6 @@
+# LEGACY/AUXILIARY — bu script shipped artefaktları üretmez.
+# Canonical eğitim yolu: src/cli/modes/train.py (threshold_source=calibration_set, θ=0.8415).
+# train_pdr.py tam-veri threshold sweep yapar; karar eşiği için kullanılmaz.
 """
 scripts/train_pdr.py
 TEKNOFEST 2026 PDR aşaması için tam yarışma eğitim betiği.

@@ -37,9 +37,9 @@ Activate when:
 - TEKNOFEST evaluation committee: Will verify specification compliance
 
 **What does the jury care most about?**
-1. Can the code reproduce the declared F1=0.833 (and balanced jüri F1=0.6063)?
+1. Can the code reproduce the declared F1=0.8367 (and balanced jüri F1=0.6042)?
 2. Is the GNN actually contributing or is XGBoost sufficient?
-3. How is the MCC gap (PSR 0.892 → actual 0.5863) explained?
+3. How is the MCC gap (PSR 0.892 → actual 0.5112) explained?
 4. Is data leakage truly prevented?
 5. Are anonymous column groupings scientifically defensible?
 6. Is the methodology reproducible by an independent researcher?
@@ -47,13 +47,13 @@ Activate when:
 ## Attack-and-Defense Matrix
 
 ### Attack Zone 1: Result Credibility
-**Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.5863. Which results should we trust, and why?"
+**Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.5112. Which results should we trust, and why?"
 
 **Required defense:**
-"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants, and our evaluation is now sızıntısız (group-aware by Variant_ID) — the earlier inflated numbers were withdrawn. The MCC of 0.5863 reflects this distributional difference + honest evaluation, not model failure. Our F1=0.833 is consistent with OOF-stacking CV (0.8936±0.0004), confirming stable generalization."
+"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants, and our evaluation is now sızıntısız (group-aware by Variant_ID) — the earlier inflated numbers were withdrawn. The MCC of 0.5112 reflects this distributional difference + honest evaluation, not model failure. Our F1=0.8367 is consistent with OOF-stacking CV (0.8936±0.0004), confirming stable generalization."
 
 **Jury follow-up:** "But why does your F1 stay high while MCC is more moderate?"
-**Defense:** "MCC weighs both classes equally while F1 targets the positive class. Our global threshold θ=0.8514 (balanced-OOF) yields balanced precision (0.9254) and recall (0.7574). MASTER (General) panel has 2.75:1 imbalance — MCC=0.5732 reflects this structural challenge; the balanced KANSER panel reaches MCC=0.7985. Panel thresholds are opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922) — the jury decision uses the single global θ."
+**Defense:** "MCC weighs both classes equally while F1 targets the positive class. Our global threshold θ=0.8415 (balanced-OOF) yields precision=0.9241 and recall=0.7644. MASTER (General) panel has 2.75:1 imbalance — MCC=0.4951 reflects this structural challenge; the balanced KANSER panel reaches MCC=0.7135. Panel thresholds are opt-in (General 0.3990, Hereditary_Cancer 0.4532, PAH 0.4434, CFTR 0.1922) — the jury decision uses the single global θ=0.8415."
 
 ---
 
@@ -61,7 +61,7 @@ Activate when:
 **Jury attack:** "PAH and CFTR MCC values — are they reliable? How do you explain them?"
 
 **Required defense:**
-"PAH MCC=0.39 reflects its tiny benign set (n=62) — a few false positives sharply depress MCC (small-n effect), while F1=0.878 and recall=0.9516 stay strong. CFTR's MCC is undefined (test n=18, degenerate negative class, ROC-AUC=NaN); its meaningful metrics are F1=0.8387 and precision=1.000. The jury decision uses the single global threshold θ=0.8514 (canonical); panel thresholds are opt-in. Known limitations are documented in PDR §4.2."
+"PAH MCC=0.5053 reflects its imbalanced set — a few false positives depress MCC (small-n benign effect), while F1=0.9120 and recall stay strong. CFTR's MCC is undefined (test n=18, degenerate negative class, ROC-AUC=NaN); its meaningful metrics are F1=0.7143 and precision=1.000. The jury decision uses the single global threshold θ=0.8415 (canonical); panel thresholds are opt-in. Known limitations are documented in PDR §4.2."
 
 ---
 
@@ -82,7 +82,7 @@ Activate when:
 ---
 
 ### Attack Zone 5: Reproducibility
-**Jury attack:** "I will clone your repo right now and try to reproduce F1=0.8706. Walk me through the exact steps."
+**Jury attack:** "I will clone your repo right now and try to reproduce F1=0.8367. Walk me through the exact steps."
 
 **Required answer sequence:**
 ```
@@ -91,7 +91,7 @@ Activate when:
 3. Place competition data at data/ (per data/README.md)
 4. python main.py --config configs/final.yaml
 5. Output: predictions.csv + reports/cv_report.json
-6. F1=0.8706 appears in cv_report.json (test set, General panel)
+6. F1=0.8367 appears in cv_report.json (test set, General panel)
 7. Run time: ~XX minutes on CPU / ~YY minutes on GPU
 ```
 **Gap:** If any step fails, it's a competition risk. Verify each step produces expected output.
@@ -135,7 +135,7 @@ For every deliverable, run this attack sequence:
 
 2. METRIC ATTACK  
    - "Show me the F1 calculation code"
-   - "Why global threshold 0.8514 specifically? (balanced-OOF)"
+   - "Why global threshold 0.8415 specifically? (balanced-OOF)"
    - "What's your CFTR F1 confidence interval?"
 
 3. ARCHITECTURE ATTACK

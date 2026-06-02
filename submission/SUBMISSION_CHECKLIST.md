@@ -12,7 +12,7 @@
 |---|---|---|
 | Gerçek yarışma verisi alındı (14 Mayıs 2026) | ✅ Tamamlandı | `data/raw/YARISMA_TRAIN_*.csv` (4 panel) |
 | Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `train_log.txt`, `reports/cv_report.json` |
-| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.833, MCC=0.5863 |
+| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112 |
 | train_log.txt gerçek veri eğitimini gösteriyor | ✅ Tamamlandı | 48 KB log, 5-fold CV + test metrikleri |
 | Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
 
@@ -38,13 +38,13 @@
 
 | Görev | Durum | Kanıt |
 |---|---|---|
-| `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.833 |
+| `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.8367 |
 | `submission/teknofest/artifact_manifest.json` güncel | ✅ Tamamlandı | Gerçek SHA256, 2026-05-21 tarihi |
 | `submission/teknofest/checksums.json` güncel | ✅ Tamamlandı | SHA256 hash'leri doğrulandı |
 | `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED, 7 zorunlu kolon |
 | `data/samples/jury_blind_sample.csv` | ✅ Tamamlandı | Jüri format örneği (5 satır, etiketsiz) |
 | `reports/ablation_report.json` | ✅ Tamamlandı | 8 ablasyon konfigürasyonu, F1 etkileri |
-| `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5863`, `test_pr_auc=0.9114` |
+| `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5112`, `test_pr_auc=0.9267` |
 | `reports/cross_panel_eval.json` | ✅ Tamamlandı | LOPO cross-validation (domain shift kanıtı) |
 | `reports/seed_stability.json` | ✅ Tamamlandı | 5 seed (42/123/456/789/2026), CV F1=0.8738 ± 0.0034 |
 | Model ağırlıkları `models/` altında | ✅ Tamamlandı | xgb, lgbm, gnn, dnn, ensemble, preprocessor |

@@ -16,10 +16,10 @@ def _load_default_threshold() -> float:
         try:
             with open(path) as f:
                 data = json.load(f)
-            return float(data.get("threshold", data.get("classification_threshold", 0.241)))
+            return float(data.get("threshold", data.get("classification_threshold", 0.8415)))
         except Exception:
             pass
-    return 0.241
+    return 0.8415
 
 
 def _model_status_badge() -> None:

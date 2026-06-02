@@ -8,7 +8,7 @@ description: Use when preparing for the TEKNOFEST 2026 final jury defense. Simul
 ## Official Source Boundary
 
 Jüri soruları yalnızca gerçek yarışma verisi sonuçlarına (2026-06-02 sızıntısız retrain, canonical) dayanarak cevaplanır.  
-PSR pilot sonuçları (MCC=0.892) gerçek veri sonucu (MCC=0.5863) gibi savunulmaz. Jüri beklentisi %20 patojenik (resmi) setinde F1=0.6063.  
+PSR pilot sonuçları (MCC=0.892) gerçek veri sonucu (MCC=0.5112) gibi savunulmaz. Jüri beklentisi %20-patojenik (resmi Q&A) (UNVERIFIED) setinde F1=0.6042 (havuzlanmış); RESMİ headline=0.6202.  
 Şartnamenin açıkça belirtmediği jüri kriterleri UNVERIFIED olarak işaretlenir.  
 Kaynak: TEKNOFEST 2026 Şartname + PDR §4.2 (PSR-PDR fark açıklaması).
 
@@ -57,8 +57,8 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 18. LIME and SHAP have "high overlap" — give a numerical value.
 
 ### Group 4: Metrics and Threshold (Questions 19–23)
-19. You use threshold 0.40 instead of 0.50. How did you determine this is optimal?
-20. MCC=0.892 for the General dataset — what does this mean in biological terms?
+19. You use threshold 0.8415 instead of 0.50. How did you determine this is optimal?
+20. PSR reports MCC=0.892 for the General dataset but your PDR shows MCC=0.5112 — how do you explain this discrepancy?
 21. Your PR-AUC for CFTR — can you show this curve right now?
 22. F1 is the competition metric, but you also report Brier Score. Why? What does it add?
 23. CFTR test set is only 30+30. One misclassification = ~3.3% F1 change. How do you account for this instability?
@@ -79,7 +79,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 1. **Q24 (Run command)** — If reproducibility isn't ready, competition credibility collapses
 2. **Q14 (SHAP + GNN)** — If you can't explain this technically, explainability section is invalid
 3. **Q7 (Why VariantGATv2GNN)** — No ablation = no defense
-4. **Q19 (0.40 threshold)** — Must be justified with PR curve data
+4. **Q19 (0.8415 threshold)** — Must be justified with PR curve + OOF calibration data
 5. **Q28 (Clinical Rapor)** — Any clinical claim = ethics violation
 
 ## Answer Evaluation Framework

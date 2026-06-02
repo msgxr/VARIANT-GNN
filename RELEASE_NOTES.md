@@ -6,8 +6,8 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 
 - **Sızıntı giderildi (KRİTİK):** Eğitim artık `Variant_ID`'ye göre **group-aware** bölme kullanır (GroupShuffleSplit + StratifiedGroupKFold). Önceki satır-bazlı split, augmentation near-twin (369) + panel-overlap (578) yoluyla aynı varyantı train+test'e düşürerek **+3.71 pp** şişme yaratıyordu (`reports/leakage_quantification.json`).
 - **Geri çekilen sayılar:** Eski **0.8980 / 0.9269** (Test/ensemble F1), **0.5356** (MCC), **θ=0.241** ve panel eşikleri (0.281/0.138/0.108) **GEÇERSİZ** — leakage-şişik. Bu satırların hepsi supersede edilmiştir.
-- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.833**, MCC = **0.5863**, PR-AUC = 0.9114, ROC-AUC = 0.8398, Brier = 0.1197, ECE = 0.0755. **Jüri beklentisi (%20 patojenik (resmi)) = 0.6042 ± 0.0103**.
-- **Panel F1 (test, θ=0.8415):** General 0.8145 · KANSER 0.906 · PAH 0.878 · CFTR 0.8387.
+- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291. **Resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
+- **Panel F1 (test, θ=0.8415):** General 0.8185/MCC0.4951 · KANSER 0.9060/MCC0.7135 · PAH 0.9120/MCC0.5053 · CFTR 0.7143/MCC-tanımsız.
 - **Karar eşiği:** GLOBAL **θ = 0.8415** (%20-patojenik-OOF, canonical); panel eşikleri opt-in, jüri global θ kullanır.
 - **Pipeline:** SelectKBest(35)+AutoEncoder darboğazı kaldırıldı (≈+5.3 pp dürüst geri kazanım); CategoricalBioFeaturizer (ACMG-hizalı, +0.38pp) ve Domain-Adversarial DNN (LOPO +2.17pp) eklendi.
 - **Tutarlılık kapısı:** `scripts/check_results_consistency.py` tüm jüri belgelerini canonical'a karşı doğrular (Windows encoding düzeltmesi dahil, 5/5 PASS).
@@ -22,7 +22,7 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 ## 2026-05 (Gerçek veri eğitimi)
 
 - **Gerçek veri alındı:** 14 Mayıs 2026 — 3802 örnek, 343 anonim kolon, 4 panel
-- **Model eğitildi:** 20 Mayıs 2026 — CV F1=0.8779±0.0062 (fold-CV bileşeni), Test F1=0.833, MCC=0.5863
+- **Model eğitildi:** 20 Mayıs 2026 — CV F1=0.8779±0.0062 (fold-CV bileşeni), Test F1=0.8367, MCC=0.5112
 - ⚠️ **SUPERSEDED (→ v4.0.0):** Bu aşamadaki Gaussian augmentation (3802→7604) ve panel sonuçları/eşikleri (MASTER=0.8872 · KANSER=0.8960 · PAH=0.9556 · CFTR=0.9524; θ=0.108/0.281/0.138) **satır-bazlı split sızıntısıyla** üretilmişti → 2 Haziran 2026 sızıntısız retrain ile geri çekildi. Güncel değerler için yukarıdaki v4.0.0 girişi ve `RESULTS_CANONICAL.json`.
 - **Submission paketi hazırlandı:** artifact_manifest, checksums, SHA256 doğrulandı
 

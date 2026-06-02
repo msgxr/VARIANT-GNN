@@ -4,7 +4,7 @@
 
 ## P0 — PDR Kritik (Mayıs–Haziran 2026)
 
-- [x] Gerçek yarışma verisiyle tam eğitim pipeline çalıştır (20 Mayıs 2026 — Test F1=0.833)
+- [x] Gerçek yarışma verisiyle tam eğitim pipeline çalıştır (20 Mayıs 2026 — Test F1=0.8367)
 - [x] Panel bazlı metrik raporlarını gerçek veriyle üret (`reports/cv_report.json`)
 - [x] External validation raporunu güçlendir (`reports/external_validation_report.json`)
 - [x] Adversarial validation raporunu belgele (AUC≈0.50, tüm paneller)

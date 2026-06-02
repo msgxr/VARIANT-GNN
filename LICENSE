@@ -187,7 +187,7 @@ Bu gerekliliği karşılamak için bu proje şu garantileri sunar:
   ✅  Sabit seed (random_state=42) — tüm RNG kaynaklarında
   ✅  Tek komutla çalıştırma: python main.py --mode train
   ✅  Sabit versiyonlu requirements.txt
-  ✅  CV F1 = 0.8347 ± 0.0114  |  Test F1 = 0.8706  |  θ = 0.4357
+  ✅  CV F1 = 0.8936 ± 0.0004 (OOF-stacking)  |  Test F1 = 0.8367  |  θ = 0.8415
 
 Şartname §4: "Kodların çalışabilir, yeniden üretilebilir ve açık bir
 şekilde dokümante edilmiş olması beklenmektedir."

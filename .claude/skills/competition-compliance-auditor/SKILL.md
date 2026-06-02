@@ -36,13 +36,13 @@ Unverifiable items: mark UNVERIFIED, never assume
 - [ ] F1 = TP / (TP + 0.5×FP + 0.5×FN) — formula correct
 - [ ] Accuracy NOT presented as the main success metric
 - [ ] Each panel has its own F1 score
-- [ ] Global decision threshold θ=0.8514 (canonical); panel thresholds opt-in (General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922 — jüri kullanmaz)
+- [ ] Global decision threshold θ=0.8415 (canonical); panel thresholds opt-in (General 0.3990, KANSER 0.4532, PAH 0.4434, CFTR 0.1922 — jüri kullanmaz)
 
 **Current verified values (CANONICAL: RESULTS_CANONICAL.json):**
 ```
-Jüri beklentisi (%20 patojenik (resmi)): balanced F1=0.6063±0.0103
-İç hold-out: Test F1=0.833 | CV F1=0.8936±0.0004 | MCC=0.5863 | PR-AUC=0.9114 | θ=0.8514
-Panel F1: MASTER 0.8145 | KANSER 0.906 | PAH 0.878 | CFTR 0.8387
+Jüri beklentisi (%20 patojenik (resmi Q&A) (UNVERIFIED)): balanced F1=0.6042±0.0324 (havuzlanmış); RESMİ headline=0.6202
+İç hold-out: Test F1=0.8367 | CV F1=0.8936±0.0004 | MCC=0.5112 | PR-AUC=0.9267 | θ=0.8415
+Panel F1 @ θ=0.8415: MASTER 0.8185 | KANSER 0.9060 | PAH 0.9120 | CFTR 0.7143
 WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 ```
 
@@ -89,16 +89,16 @@ WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 - [ ] PDR uses official 2026 Üniversite template
 - [ ] All 5 sections present: Giriş(10) / Yöntem(25) / Bulgular(30) / Sonuç(25) / Kaynakça(10)
 - [ ] Ethics declaration present
-- [ ] PSR→PDR discrepancy explained (§4.2 — MCC 0.892→0.5863)
+- [ ] PSR→PDR discrepancy explained (§4.2 — MCC 0.892→0.5112)
 - [ ] GATv2Conv vs SAGEConv correction documented
 - [ ] PDR numbers match RESULTS_CANONICAL.json (no withdrawn 0.8980/θ=0.241)
 
 **Known PDR Issues — STATUS (2026-06-02):**
 ```
 ✅ §1.2 references fixed: REVEL[2], EVE[9], GATv2[8]
-✅ §3.2 threshold: θ=0.8514 (canonical; 0.241 superseded)
+✅ §3.2 threshold: θ=0.8415 (canonical; 0.241 superseded)
 ✅ §3.1 figure paths: reports/figures/pdr/*
-✅ All §3 tables aligned to canonical; balanced jüri F1=0.6063 framing added
+✅ All §3 tables aligned to canonical; jüri F1=0.6042 (%20-patojenik) framing added
 ```
 
 **FAIL if:** Any withdrawn number (0.8980/0.9269/0.5356/θ=0.241) reappears as current claim → run scripts/check_results_consistency.py.

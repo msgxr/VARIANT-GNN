@@ -5,10 +5,10 @@
         app api docker-build docker-run docker-up help
 
 # Jüri için parametreler (override edebilirsin)
-TEST_FILE  ?= data/samples/sample_predict.csv
-TRAIN_FILE ?= data/samples/sample_train.csv
+TEST_FILE  ?= data/samples/jury_blind_sample.csv
+TRAIN_FILE ?= data/samples/jury_blind_sample.csv
 OUTPUT     ?= submission/predictions.csv
-CONFIG     ?= configs/final.yaml
+CONFIG     ?= configs/pdr.yaml
 
 PYTHON := python
 PYTEST := pytest
@@ -17,9 +17,9 @@ VENV := venv
 # ─── Kurulum ────────────────────────────────────────────────────────────────
 
 install:
-	$(PYTHON) -m pip install torch==2.8.0+cpu --index-url https://download.pytorch.org/whl/cpu
-	$(PYTHON) -m pip install torch-scatter torch-sparse torch-geometric \
-		-f https://data.pyg.org/whl/torch-2.8.0+cpu.html
+	$(PYTHON) -m pip install torch==2.2.1+cpu --index-url https://download.pytorch.org/whl/cpu
+	$(PYTHON) -m pip install torch-scatter==2.1.2 torch-sparse==0.6.18 torch-geometric==2.5.3 \
+		-f https://data.pyg.org/whl/torch-2.2.1+cpu.html
 	$(PYTHON) -m pip install -r requirements.txt
 
 install-dev: install
@@ -75,10 +75,10 @@ train-cftr:
 	$(PYTHON) main.py --mode train --panel cftr --data_file data/train_cftr.csv
 
 crossval:
-	$(PYTHON) main.py --mode crossval --data_file data/samples/sample_train.csv
+	$(PYTHON) main.py --mode crossval --data_file data/samples/jury_blind_sample.csv
 
 predict:
-	$(PYTHON) main.py --mode predict --test_file data/samples/sample_predict.csv
+	$(PYTHON) main.py --mode predict --test_file data/samples/jury_blind_sample.csv
 
 # ─── JÜRİ MODU (tek komutla çalışır) ────────────────────────────────────────
 predict-jury:
@@ -95,7 +95,7 @@ predict-jury:
 
 # ─── EXTERNAL VALIDATION (tam metrik paketi) ──────────────────────────────────
 external-val:
-	$(PYTHON) main.py --mode external_val --test_file data/samples/sample_train.csv
+	$(PYTHON) main.py --mode external_val --test_file data/samples/jury_blind_sample.csv
 
 external-val-full:
 	@echo "═══════════════════════════════════════════"
@@ -108,7 +108,7 @@ external-val-full:
 	@echo "✅ Rapor → reports/external_validation_report.json"
 
 eval:
-	$(PYTHON) main.py --mode eval --data_file data/samples/sample_train.csv
+	$(PYTHON) main.py --mode eval --data_file data/samples/jury_blind_sample.csv
 
 # ─── ABLATION STUDY ──────────────────────────────────────────────────────────
 ablation:
@@ -131,11 +131,11 @@ pdr-report: pdr-evidence ablation
 
 adversarial-val:
 	$(PYTHON) main.py --mode adversarial_val \
-		--data_file data/samples/sample_train.csv \
-		--test_file data/samples/sample_predict.csv
+		--data_file data/samples/jury_blind_sample.csv \
+		--test_file data/samples/jury_blind_sample.csv
 
 explain:
-	$(PYTHON) main.py --mode explain --data_file data/samples/sample_train.csv
+	$(PYTHON) main.py --mode explain --data_file data/samples/jury_blind_sample.csv
 
 # ─── Web Arayüzü ─────────────────────────────────────────────────────────────
 

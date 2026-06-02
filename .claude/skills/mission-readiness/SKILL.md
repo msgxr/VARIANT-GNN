@@ -20,7 +20,7 @@ First determine current competition phase:
 #### Dimension 1: Technical Readiness
 ```
 [ ] Pipeline runs end-to-end without errors
-[ ] Training produces F1 ≈ 0.8706 with seed=42
+[ ] Training produces F1 ≈ 0.8367 with seed=42
 [ ] Inference produces submission.csv in correct format
 [ ] CPU-only execution works (< threshold time)
 [ ] All 4 panels produce results
@@ -47,11 +47,11 @@ First determine current competition phase:
 
 #### Dimension 3: Scientific Defensibility
 ```
-[ ] F1=0.833 can be verified in code output (reports/cv_report.json → RESULTS_CANONICAL.json)
-[ ] MCC gap (PSR 0.892 → actual 0.5863) has documented explanation (PDR §4.2)
-[ ] MASTER (General) MCC=0.5732 explained as class imbalance 2.75:1 (PDR §4.2)
+[ ] F1=0.8367 can be verified in code output (reports/cv_report.json → RESULTS_CANONICAL.json)
+[ ] MCC gap (PSR 0.892 → actual 0.5112) has documented explanation (PDR §4.2)
+[ ] MASTER (General) MCC=0.4951 explained as class imbalance 2.75:1 (PDR §4.2)
 [ ] GNN architecture name inconsistency resolved in PDR (VariantGATv2GNN confirmed)
-[ ] All metrics computed correctly (binary F1, GLOBAL threshold θ=0.8514 canonical; panel opt-in)
+[ ] All metrics computed correctly (binary F1, GLOBAL threshold θ=0.8415 canonical; panel opt-in)
 [ ] No data leakage in preprocessing pipeline
 [ ] SMOTE applied only to train split
 [ ] Ablation study showing GNN contribution

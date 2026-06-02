@@ -50,11 +50,11 @@ configs/
   pdr.yaml        ← PDR-specific config
   final.yaml      ← competition final config
   panels.yaml     ← panel-specific settings
-  thresholds.yaml ← decision thresholds (CANONICAL global θ=0.8514; panel opt-in: General 0.404, KANSER 0.3695, PAH 0.3203, CFTR 0.1922)
+  thresholds.yaml ← decision thresholds (CANONICAL global θ=0.8415; panel opt-in: General 0.3990, KANSER 0.4532, PAH 0.4434, CFTR 0.1922)
   inference.yaml  ← inference config
   evaluation.yaml ← eval config
 ```
-**Rule:** Karar eşiğinin tek doğruluk kaynağı `models/threshold.json` (canonical θ=0.8514). `configs/pdr.yaml`'nin yarışma senaryosunda çalıştığını ve `optimize_metric: binary_f1` olduğunu doğrula.
+**Rule:** Karar eşiğinin tek doğruluk kaynağı `models/threshold.json` (canonical θ=0.8415). `configs/pdr.yaml`'nin yarışma senaryosunda çalıştığını ve `optimize_metric: binary_f1` olduğunu doğrula.
 
 ### Entry Points
 ```
@@ -69,8 +69,9 @@ src/data/loader.py
   → src/data/column_aligner.py (anonymous column handling)
   → src/data/leakage_firewall.py
   → src/features/preprocessing.py
-    → Imputation → RobustScaler → SelectKBest(k=35)
-    → src/features/autoencoder.py (43→16)
+    → Imputation → RobustScaler
+    → [SelectKBest DISABLED: use_feature_selection=false in configs/pdr.yaml]
+    → [AutoEncoder DISABLED: use_autoencoder=false in configs/pdr.yaml]
   → SMOTE (train only)
   → src/core/graph/builder.py (cosine k-NN, k=10, threshold=0.3)
   → src/core/gnn.py (VariantGATv2GNN, GATv2Conv, 4 heads, hidden=128)

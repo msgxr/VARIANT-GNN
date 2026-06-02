@@ -74,8 +74,8 @@ for t in thresholds:
 f1s  = np.array(f1s)
 mccs = np.array(mccs)
 
-# Mevcut F1 baseline (θ=0.6831, canonical karar eşiği)
-baseline_idx = np.argmin(np.abs(thresholds - 0.6831))
+# Mevcut F1 baseline (θ=0.8415, canonical karar eşiği — RESULTS_CANONICAL.json)
+baseline_idx = np.argmin(np.abs(thresholds - 0.8415))
 baseline_f1  = float(f1s[baseline_idx])
 baseline_mcc = float(mccs[baseline_idx])
 
@@ -90,7 +90,7 @@ best_f1      = float(f1s[best_mcc_idx])
 print(f"\n{'='*55}")
 print(f"SONUÇ — MASTER Panel Eşik Optimizasyonu")
 print(f"{'='*55}")
-print(f"  Mevcut  θ=0.6831 → F1={baseline_f1:.4f}, MCC={baseline_mcc:.4f}")
+print(f"  Mevcut  θ=0.8415 (canonical) → F1={baseline_f1:.4f}, MCC={baseline_mcc:.4f}")
 print(f"  Optimal θ={best_t:.3f} → F1={best_f1:.4f}, MCC={best_mcc:.4f}")
 print(f"  ΔMCC = +{best_mcc - baseline_mcc:.4f}")
 print(f"  ΔF1  =  {best_f1 - baseline_f1:+.4f}")
@@ -98,7 +98,7 @@ print(f"  ΔF1  =  {best_f1 - baseline_f1:+.4f}")
 # ── panel_thresholds.json güncelle ─────────────────────────────────────────
 thresh_path = REPO / "models" / "panel_thresholds.json"
 thresholds_dict = json.loads(thresh_path.read_text())
-old_general = thresholds_dict.get("General", thresholds_dict.get("__global__", 0.241))
+old_general = thresholds_dict.get("General", thresholds_dict.get("__global__", 0.8415))
 
 thresholds_dict["General"] = round(best_t, 6)
 # __global__ da güncelle (tahmin pipeline'ı bu değeri kullanıyor)

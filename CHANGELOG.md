@@ -15,8 +15,8 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 - Test/ensemble F1 **0.8980 / 0.9269**, MCC **0.5356**, global eşik **θ=0.241** ve panel eşikleri **0.281/0.138/0.108**. Bu sayılar hiçbir güncel belgede iddia edilemez (CI kapısı zorlar).
 
 ### Eklendi / Değişti (CANONICAL — `RESULTS_CANONICAL.json`)
-- **CV F1 = 0.8936 ± 0.0004** (OOF-stacking, Wolpert), Test F1 = **0.833**, MCC = **0.5863**, PR-AUC = 0.9114, ROC-AUC = 0.8398, Brier = 0.1197, ECE = 0.0755; **jüri beklentisi (%20 patojenik (resmi)) = 0.6063 ± 0.0103**.
-- Global karar eşiği **θ = 0.8514** (%20-patojenik-OOF); panel eşikleri opt-in.
+- **CV F1 = 0.8936 ± 0.0004** (OOF-stacking, Wolpert), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291; **resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
+- Global karar eşiği **θ = 0.8415** (%20-patojenik-OOF); panel eşikleri opt-in.
 - `CategoricalBioFeaturizer` (ACMG-hizalı bio sinyal kurtarma, +0.38pp) ve **Domain-Adversarial DNN** (LOPO +2.17pp) eklendi.
 - Eğitilmiş model artefaktları (<7MB) jüri tekrar-üretimi için repoya dahil edildi; `REPRODUCE.md` + `RESULTS_CANONICAL.json` eklendi.
 - README baştan yazıldı (canonical hizalama + 16 figür + yeni bölümler).

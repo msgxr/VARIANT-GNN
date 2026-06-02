@@ -34,15 +34,15 @@ Activate when:
 
 ### Issue 1: PSR vs Competition Data Discrepancy
 PSR pilot: MCC=0.892, F1=0.945 (ClinVar Expert Panel — clean, curated)  
-Competition actual (canonical): MCC=0.5863, F1=0.833 (broader variants + sızıntısız group-aware eval)  
+Competition actual (canonical): MCC=0.5112, F1=0.8367 (broader variants + sızıntısız group-aware eval)  
 **This gap MUST be explained scientifically in PDR. It is not a failure — it reflects data difficulty.**  
 Acceptable explanation: "Pilot data consisted exclusively of high-confidence ClinVar Expert Panel variants (3-4★), while competition data includes harder boundary-region variants with greater ambiguity."
 
 ### Issue 2: PAH and CFTR MCC (küçük-n)
-PAH MCC=0.39 (n_benign=62), CFTR MCC tanımsız (test n=18, dejenere) — küçük-n etkisi, model başarısızlığı değil  
-Binary F1: PAH=0.878, CFTR=0.8387 — yüksek  
-Karar: GLOBAL θ=0.8514 (canonical); panel eşikleri opt-in  
-**MASTER (General) MCC=0.5732: 2.75:1 imbalance — documented in PDR §4.2**
+PAH MCC=0.5053 (panel eşiğinde), CFTR MCC tanımsız (test n=18, dejenere) — küçük-n etkisi, model başarısızlığı değil  
+Binary F1: PAH=0.9120, CFTR=0.7143 — panel @ θ=0.8415  
+Karar: GLOBAL θ=0.8415 (canonical); panel eşikleri opt-in  
+**MASTER (General) MCC=0.4951: 2.75:1 imbalance — documented in PDR §4.2**
 
 ### Issue 3: GNN Architecture Name Inconsistency
 PSR: "VariantSAGEGNN / GraphSAGE"  
@@ -102,7 +102,7 @@ Every claim must pass: **"Would an NeurIPS/ICLR reviewer accept this statement?"
 
 ### Acceptable Statements (with evidence)
 - "VariantGATv2GNN achieves F1=0.8449 on fold 1 vs XGBoost F1=0.8373 — a 0.9% improvement (see Table X)"
-- "Ensemble F1=0.8706 vs best individual model (GNN, F1=0.8464 avg) — 2.4% uplift attributable to diversity"
+- "Ensemble F1=0.8367 vs best individual model (GNN, F1=0.8464 avg) — uplift attributable to diversity"
 - "PAH panel MCC=0.1466 reflects threshold calibration prioritizing sensitivity — see clinical justification §4.4"
 
 ## Experiment Review Protocol
@@ -113,7 +113,7 @@ When reviewing experimental results:
 - Is F1 computed with `average='binary'`?
 - Are precision and recall both reported?
 - Is confusion matrix present?
-- Is threshold selection justified (GLOBAL θ=0.8514 balanced-OOF, canonical; panel thresholds opt-in)?
+- Is threshold selection justified (GLOBAL θ=0.8415 balanced-OOF, canonical; panel thresholds opt-in)?
 
 ### Step 2: Panel Analysis
 - Are all 4 panels analyzed separately?
@@ -121,7 +121,7 @@ When reviewing experimental results:
 - Is PAH's MCC weakness explained?
 
 ### Step 3: Overfitting Signals
-- Is CV F1 (0.8347) much lower than test F1 (0.8706)?
+- Is CV F1 (0.8812±0.0113) much lower than test F1 (0.8367)?
 - Actually inverse here — test > CV slightly, check if test was properly held out
 - Is there train/val performance gap?
 

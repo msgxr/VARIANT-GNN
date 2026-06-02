@@ -4,7 +4,7 @@
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;JURI+F1+(resmi+test)+%3D+0.6042+%7C+ic+hold-out+0.833;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DANN-DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=24&duration=2500&pause=800&color=22D3EE&center=true&vCenter=true&width=1200&lines=PSR+ASAMASI+%E2%86%92+93.00+%2F+100+PUAN+%E2%9C%85;JURI+F1+(resmi+4-panel)+%3D+0.6202+%7C+ic+hold-out+0.8367;Missense+Varyant+Patojenitesi+Tahmini;GATv2Conv+%2B+XGBoost+%2B+LightGBM+%2B+DANN-DNN+Ensemble;PDR+Teslimi+%E2%86%92+29+Haziran+2026" alt="Typing SVG"/>
 
 <br/><br/>
 
@@ -49,14 +49,14 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                   ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri              ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                             ║
-║  F1 §7.3 (juri)  ║  0.6042 %20-patojenik · 0.833 ic hold-out · θ=0.8415          ║
+║  F1 §7.3 (juri)  ║  0.6202 4-panel ort. (resmi) · 0.8367 ic hold-out · θ=0.8415   ║
 ║  Veri            ║  3802 satir · 3224 tekil varyant · 4 panel (NDA)               ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00               ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi             ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
 ```
 
-> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A** (2026-06-02): jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; 50/50 dengeli ESKİ şartnameydi, geçersiz). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **Binary F1 = 0.6042 ± 0.034** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.833** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
+> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A** (2026-06-02) *(artefakt eklenecek — UNVERIFIED)*: jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; %20-patojenik resmi prior). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **RESMİ 4-panel %20-F1 ortalaması = 0.6202** (HEADLINE); havuzlanmış = **0.6042 ± 0.0324** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.8367** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
 >
 > **⚠️ KLİNİK UYARI:** Model çıktıları **yalnızca araştırma, eğitim ve yarışma değerlendirmesi** amaçlıdır. Klinik tanı, tedavi veya tıbbi karar desteği için **kullanılamaz**.
 
@@ -117,13 +117,14 @@
 
 | Metrik | Değer | Protokol | Kaynak |
 |:---|:---:|:---|:---:|
-| 🎯 **Jüri F1 (beklenen)** | **0.6042 ± 0.0103** | Dengeli %20/%80 jüri prior'ı, θ=0.8415, 300× resample | `reports/competition_jury_f1.json` |
+| 🎯 **Jüri F1 — RESMİ (4-panel ort.)** | **0.6202** | %20-patojenik resmi prior, 4-panel %20-F1 ortalaması — HEADLINE | `reports/competition_jury_f1.json` |
+| 🎯 **Jüri F1 — havuzlanmış** | **0.6042 ± 0.0324** | %20-patojenik resmi prior, θ=0.8415, 300× resample | `reports/competition_jury_f1.json` |
 | **CV Binary F1** | **0.8936 ± 0.0004** | OOF-stacking, nested StratifiedGroupKFold (5 seed) | `RESULTS_CANONICAL.json` |
-| **Test Binary F1** | **0.833** | Group-aware %20 hold-out (ayrım gücü, %75-poz) | `reports/cv_report.json` |
-| Test MCC | 0.5863 | precision/recall ile birebir tutarlı | `reports/cv_report.json` |
-| Test Precision / Recall | 0.9254 / 0.7574 | | `reports/cv_report.json` |
-| Test PR-AUC / ROC-AUC | 0.9114 / 0.8398 | | `reports/cv_report.json` |
-| Test Brier / ECE | 0.1197 / 0.0755 | Isotonik kalibrasyon sonrası | `reports/cv_report.json` |
+| **Test Binary F1** | **0.8367** | Group-aware %75-poz iç hold-out (ayrım gücü, JÜRİ SKORU DEĞİL) | `reports/cv_report.json` |
+| Test MCC | 0.5112 | precision/recall ile birebir tutarlı | `reports/cv_report.json` |
+| Test Precision / Recall | 0.9241 / 0.7644 | | `reports/cv_report.json` |
+| Test PR-AUC / ROC-AUC | 0.9267 / 0.8538 | | `reports/cv_report.json` |
+| Test Brier / ECE | 0.1115 / 0.0291 | Isotonik kalibrasyon sonrası | `reports/cv_report.json` |
 | **Karar Eşiği (θ)** | **0.8415** | Global, %20-patojenik-OOF F1-optimal (canonical/jüri) | `models/threshold.json` |
 
 </div>
@@ -198,7 +199,7 @@ flowchart TD
     M3 --> ST
     M4 --> ST
 
-    ST --> ISO["🔬 İsotonik Kalibrasyon\nBrier=0.1197  ECE=0.0755"]
+    ST --> ISO["🔬 İsotonik Kalibrasyon\nBrier=0.1115  ECE=0.0291"]
     ISO --> MCD["🎲 MC Dropout\n10 Forward Pass\nBelirsizlik ölçümü"]
     MCD --> OOD["👁️ OOD Dedektörü\nEğitim ref. — sadece detect()"]
     OOD --> CNF["📐 Conformal LAC\nMondrian per-panel\nKapsama garantisi"]
@@ -789,11 +790,12 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🎯 JÜRİ BEKLENTİSİ  =  competition_jury_f1 = 0.6042 ± 0.0103                │
-│     §3.2 %20-patojenik jüri seti · θ=0.8415 %20-patojenik-OOF · 300× resample │
+│  🎯 JÜRİ BEKLENTİSİ  =  4-panel %20-F1 ortalaması = 0.6202  (HEADLINE)        │
+│     havuzlanmış = 0.6042 ± 0.0324 · §3.2 %20-patojenik resmi prior           │
+│     θ=0.8415 %20-patojenik-OOF · 300× resample                             │
 │     → GERÇEK beklenen yarışma skorumuz                                     │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  📏 İÇ AYRIM GÜCÜ    =  test_binary_f1 = 0.833                            │
+│  📏 İÇ AYRIM GÜCÜ    =  test_binary_f1 = 0.8367                           │
 │     %75-pozitif iç hold-out · jüri skoru DEĞİL                            │
 │     → modelin ham ayırt etme kapasitesi                                   │
 ├──────────────────────────────────────────────────────────────────────────┤
@@ -812,7 +814,7 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
   ─────────────────────────────────────────────────────────────────
   Ensemble (fixed-weight CV) ██████████████████████████████████████░  0.8877
   Ensemble (OOF-stacking CV) ████████████████████████████████████████  0.8936  ← üretim
-  Ensemble (Test hold-out)   ████████████████████████████████████████  0.833  ← ayrım gücü
+  Ensemble (Test hold-out)   ████████████████████████████████████████  0.8367 ← ayrım gücü
 ```
 
 ### Genel Test Metrikleri (hold-out, θ=0.8415)
@@ -821,10 +823,10 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 
 | Metrik | Değer | Metrik | Değer |
 |:---|:---:|:---|:---:|
-| **Binary F1 (§7.3)** | **0.833** | MCC | 0.5863 |
-| Precision | 0.9254 | Recall | 0.7574 |
-| PR-AUC | 0.9114 | ROC-AUC | 0.8398 |
-| Brier | 0.1197 | ECE | 0.0755 |
+| **Binary F1 (§7.3)** | **0.8367** | MCC | 0.5112 |
+| Precision | 0.9241 | Recall | 0.7644 |
+| PR-AUC | 0.9267 | ROC-AUC | 0.8538 |
+| Brier | 0.1115 | ECE | 0.0291 |
 | Macro F1 | 0.7932 | Eşik (θ) | 0.8415 |
 
 </div>
@@ -835,15 +837,15 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 
 | Panel | F1_Pat | Recall_P | Prec_P | MCC | PR-AUC | ROC-AUC | Brier |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **MASTER** (General) | 0.8145 | 0.8773 | 0.8960 | 0.5732 | 0.9102 | 0.8416 | 0.1242 |
-| **KANSER** (Hered.) | **0.9060** | 0.9672 | 0.9219 | **0.7985** | **0.9393** | **0.9161** | 0.0802 |
-| **PAH** | 0.878 | 0.9516 | 0.8676 | 0.3900 | 0.8843 | 0.7051 | 0.1414 |
-| **CFTR** | 0.8387 | 0.8889 | **1.0000** | 0.0 ⚠️ | 1.0000 | — | 0.0698 |
-| **TOPLAM** | **0.833** | 0.7574 | 0.9254 | 0.5863 | 0.9114 | 0.8398 | 0.1197 |
+| **MASTER** (General) | 0.8185 | 0.8773 | 0.8960 | 0.4951 | 0.9102 | 0.8416 | 0.1242 |
+| **KANSER** (Hered.) | **0.9060** | 0.9672 | 0.9219 | **0.7135** | **0.9393** | **0.9161** | 0.0802 |
+| **PAH** | 0.912 | 0.9516 | 0.8676 | 0.5053 | 0.8843 | 0.7051 | 0.1414 |
+| **CFTR** | 0.7143 | 0.8889 | **1.0000** | tanımsız(0) ⚠️ | 1.0000 | — | 0.0698 |
+| **TOPLAM** | **0.8367** | 0.7644 | 0.9241 | 0.5112 | 0.9267 | 0.8538 | 0.1115 |
 
 </div>
 
-> **CFTR MCC = 0.0 / ROC-AUC = — dürüst açıklaması:** CFTR test hold-out'u çok küçüktür (n=18) ve bu fold'da MCC ile ROC-AUC **tanımsız/dejenere** olur (ROC-AUC = NaN). Bu, "sıfır korelasyon" değil, küçük-n dejenerasyonudur. CFTR için anlamlı metrikler **F1=0.8387, Precision=1.0, Recall=0.8889**'dur. Bu nedenle panel-spesifik eşikler yalnızca **opt-in**'dir; canonical jüri kararı global θ=0.8415'i kullanır.
+> **CFTR MCC = tanımsız(0) / ROC-AUC = — dürüst açıklaması:** CFTR test hold-out'u çok küçüktür (n=18) ve bu fold'da MCC ile ROC-AUC **tanımsız/dejenere** olur (ROC-AUC = NaN). Bu, "sıfır korelasyon" değil, küçük-n dejenerasyonudur. CFTR için anlamlı metrikler **F1=0.7143, Precision=1.0, Recall=0.8889**'dur. Bu nedenle panel-spesifik eşikler yalnızca **opt-in**'dir; canonical jüri kararı global θ=0.8415'i kullanır.
 
 > **Panel F1 figürü:** ![Panel F1](reports/figures/pdr/02_panel_f1_bar.png)
 >
@@ -862,9 +864,9 @@ CANONICAL / JÜRİ KARARI:  Global θ = 0.8415   (models/threshold.json)
                           → her satıra uygulanır, jüri bunu kullanır
 
 OPT-IN (varsayılan KAPALI — use_panel_thresholds=false):
-  General            θ = 0.4040
-  Hereditary_Cancer  θ = 0.3695
-  PAH                θ = 0.3203
+  General            θ = 0.3990
+  Hereditary_Cancer  θ = 0.4532
+  PAH                θ = 0.4434
   CFTR               θ = 0.1922
   → shipped models/panel_thresholds.json ile birebir; jüri kullanmaz
 ```
@@ -977,7 +979,7 @@ Model çıktısı dört bağımsız güvenilirlik mekanizmasıyla zenginleştiri
 ```mermaid
 flowchart TD
     R["Ham Ensemble P_Patojenik"]
-    ISO["İsotonik Regresyon\nBrier=0.1197  ECE=0.0755\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
+    ISO["İsotonik Regresyon\nBrier=0.1115  ECE=0.0291\nFit: Kalibrasyon seti\nTest DAHIL DEĞİL"]
     TH["Threshold Optimizasyon\n%20-patojenik-OOF F1 maximize\nθ=0.8415 (global, canonical)"]
     PAT["Patojenik\nP >= θ\nHigh_Risk = True"]
     BEN["Benign\nP < θ\nHigh_Risk = False"]
@@ -1346,13 +1348,14 @@ flowchart LR
 ### PDR Metrik Kontrol Listesi (canonical)
 
 ```
-✅  Jüri F1 (beklenen, §7.3)      =  0.6042 ± 0.0103   (%20 patojenik/%80 benign)
-✅  Test Binary F1 (ayrım gücü)   =  0.833
+✅  Jüri F1 — RESMİ headline       =  0.6202   (4-panel %20-F1 ortalaması)
+✅  Jüri F1 — havuzlanmış         =  0.6042 ± 0.0324   (%20-patojenik resmi prior)
+✅  Test Binary F1 (ayrım gücü)   =  0.8367
 ✅  CV F1 (OOF-stacking)          =  0.8936 ± 0.0004
-✅  MCC                           =  0.5863
-✅  PR-AUC / ROC-AUC              =  0.9114 / 0.8398
-✅  Precision / Recall            =  0.9254 / 0.7574
-✅  Brier / ECE                   =  0.1197 / 0.0755
+✅  MCC                           =  0.5112
+✅  PR-AUC / ROC-AUC              =  0.9267 / 0.8538
+✅  Precision / Recall            =  0.9241 / 0.7644
+✅  Brier / ECE                   =  0.1115 / 0.0291
 ✅  Panel kırılımı (4 panel)      =  General · KANSER · PAH · CFTR
 ✅  Seed kararlılığı (5 tohum)    =  0.8738 ± 0.0034
 ✅  Sızıntı kuantifikasyonu       =  +3.71 pp şişme kaldırıldı (§14)
@@ -1423,7 +1426,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 + DANN Ensemble Sistemi
 
 ```
-Jüri F1 (dengeli): 0.6042 ± 0.0103  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.833  ·  MCC: 0.5863  ·  θ: 0.8415
+Jüri F1 (%20-patojenik) headline: 0.6202  ·  havuzlanmış: 0.6042 ± 0.0324  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.8367  ·  MCC: 0.5112  ·  θ: 0.8415
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DANN-DNN  ·  OOF-Stacking  ·  İsotonik Kalibrasyon  ·  Conformal  ·  SWA
 Tüm sayılar RESULTS_CANONICAL.json ile tutarlı · scripts/check_results_consistency.py ile zorlanır
 ```

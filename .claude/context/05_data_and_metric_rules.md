@@ -15,7 +15,7 @@ pos_label = 1 = Patojenik
 ```
 
 - Yanlış Negatif (FN) klinik açıdan yanlış Pozitiften (FP) daha ağırdır
-- Karar eşiği, jüri §3.2 setinin %20-patojenik (%20/%80) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8514**); precision (0.9254) ve recall (0.7574) dengelidir
+- Karar eşiği, jüri §3.2 setinin %20-patojenik (%20/%80) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8415**); precision (0.9241) ve recall (0.7644) dengelidir
 - Test seti değerlendirmesi jüri tarafından yapılır
 
 ---
@@ -34,31 +34,31 @@ pos_label = 1 = Patojenik
 
 ## Mevcut Model Sonuçları (Gerçek Yarışma Verisi — 2026-06-02, canonical)
 
-⭐ **Jüri beklentisi (%20 patojenik (resmi)):** balanced Binary F1 = **0.6063 ± 0.0103** (θ=0.8514). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
+⭐ **Jüri beklentisi (%20 patojenik (UNVERIFIED — artefakt eklenecek)):** havuzlanmış balanced Binary F1 = **0.6042 ± 0.0324** (θ=0.8415); RESMİ headline = **0.6202** (4-panel %20-F1 ort.). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
 
 | Metrik | Değer |
 |---|---|
 | CV F1 (OOF-stacking nested) | 0.8936 ± 0.0004 |
-| CV F1 (fold-CV bileşeni) | 0.8779 ± 0.0062 |
-| Test F1 | 0.833 |
-| MCC | 0.5863 |
-| PR-AUC | 0.9114 |
-| ROC-AUC | 0.8398 |
-| Recall | 0.7574 |
-| Precision | 0.9254 |
-| Brier / ECE | 0.1197 / 0.0755 |
-| Global eşik θ | 0.8514 |
+| CV F1 (fold-CV bileşeni) | 0.8812 ± 0.0113 |
+| Test F1 | 0.8367 |
+| MCC | 0.5112 |
+| PR-AUC | 0.9267 |
+| ROC-AUC | 0.8538 |
+| Recall | 0.7644 |
+| Precision | 0.9241 |
+| Brier / ECE | 0.1115 / 0.0291 |
+| Global eşik θ | 0.8415 |
 
 > ⚠️ Önceki 0.8980/0.9269, MCC 0.5356, θ=0.241 leakage-şişikti — geri çekildi (reports/leakage_quantification.json).
 
-### Panel Sonuçları (test, global θ=0.8514)
+### Panel Sonuçları (test, global θ=0.8415)
 
 | Panel | F1 | MCC | Opt-in eşik (jüri kullanmaz) |
 |---|---|---|---|
-| MASTER (General) | 0.8145 | 0.5732 | 0.404 |
-| KANSER (Hereditary_Cancer) | 0.906 | 0.7985 | 0.3695 |
-| PAH | 0.878 | 0.39 | 0.3203 |
-| CFTR | 0.8387 | — (n=18, tanımsız) | 0.1922 |
+| MASTER (General) | 0.8185 | 0.4951 | 0.3990 |
+| KANSER (Hereditary_Cancer) | 0.9060 | 0.7135 | 0.4532 |
+| PAH | 0.9120 | 0.5053 | 0.4434 |
+| CFTR | 0.7143 | — (n=18, tanımsız) | 0.1922 |
 
 ---
 
@@ -93,6 +93,6 @@ Gerçek yarışma verisi farklı → PDR §4.2'de açıklandı.
 
 | Metrik | PSR Pilot | Gerçek Veri (canonical) | Fark |
 |---|---|---|---|
-| F1 | 0.945 | 0.833 | -0.048 |
-| MCC | 0.892 | 0.5863 | -0.306 |
-| ROC-AUC | 0.976 | 0.8398 | -0.136 |
+| F1 | 0.945 | 0.8367 | -0.108 |
+| MCC | 0.892 | 0.5112 | -0.381 |
+| ROC-AUC | 0.976 | 0.8538 | -0.122 |

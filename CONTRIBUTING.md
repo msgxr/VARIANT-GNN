@@ -78,7 +78,7 @@ Her katkı bu garantiyi korumalıdır:
 ✅  random_state=42 — tüm stokastik işlemlerde sabit seed
 ✅  python main.py --mode train — tek komutla çalıştırılabilir
 ✅  requirements.txt — sabit versiyonlarla kilitli
-✅  CV F1 = 0.8347 ± 0.0114  |  Test F1 = 0.8706
+✅  CV F1 = 0.8936 ± 0.0004 (OOF-stacking)  |  Test F1 = 0.8367 @ θ=0.8415
 ```
 
 ---
