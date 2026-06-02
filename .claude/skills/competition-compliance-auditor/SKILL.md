@@ -40,7 +40,7 @@ Unverifiable items: mark UNVERIFIED, never assume
 
 **Current verified values:**
 ```
-Test F1=0.8980 | CV F1=0.8668±0.0081 | MCC=0.5356 | PR-AUC=0.9294
+Test F1=0.8969 | CV F1=0.8779±0.0062 | MCC=0.5863 | PR-AUC=0.9294
 MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
 ```
 
@@ -93,7 +93,7 @@ MASTER 0.8872 | KANSER 0.8960 | PAH 0.9556 | CFTR 0.9524
 **Known PDR Issues (fix before submission):**
 ```
 §1.2 references wrong: REVEL[3]→[2], EVE[5]→[9], GATv2[7]→[8]
-§3.2 threshold wrong: θ=0.01 → θ=0.241
+§3.2 threshold wrong: θ=0.01 → θ=0.6831
 §3.1 figure paths dead: reports/roc_curves.png → reports/figures/pdr/05_roc_curves.png
 Header date inconsistent: 15 Mayıs vs 20 Mayıs training date
 ```

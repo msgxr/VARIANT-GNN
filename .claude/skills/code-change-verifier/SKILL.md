@@ -106,7 +106,7 @@ MUST VERIFY:
 ```
 MUST VERIFY:
 - f1_score called with average='binary'
-- threshold 0.241 (global) still applied; panel thresholds from panel_thresholds.json
+- threshold 0.6831 (global) still applied; panel thresholds from panel_thresholds.json
 - confusion_matrix still computed
 - Panel-level metrics computed separately
 ```

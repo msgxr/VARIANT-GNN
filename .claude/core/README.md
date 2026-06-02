@@ -104,6 +104,6 @@ Doğrulanamayan yarışma bilgisi → **UNVERIFIED** işareti. Hiçbir zaman kes
 | Görev | Durum |
 |---|---|
 | PSR Teslimi | ✅ 25 Mart 2026 — 93/100 |
-| Model Eğitimi | ✅ Test F1=0.8980, CV F1=0.8668±0.0081 |
+| Model Eğitimi | ✅ Test F1=0.8969, CV F1=0.8779±0.0062 |
 | PDR Hazırlığı | 🔧 9 açık bug var (bkz. MASTER_PLAYBOOK.md §6) |
 | PDR Deadline | ⏰ 29 Haziran 2026, 17:00 |

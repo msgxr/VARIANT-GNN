@@ -36,9 +36,9 @@ pos_label = 1 = Patojenik
 
 | Metrik | Değer |
 |---|---|
-| CV F1 (5-fold) | 0.8668 ± 0.0081 |
-| Test F1 | 0.8980 |
-| MCC | 0.5356 |
+| CV F1 (5-fold) | 0.8779 ± 0.0062 |
+| Test F1 | 0.8969 |
+| MCC | 0.5863 |
 | PR-AUC | 0.9294 |
 | ROC-AUC | 0.8673 |
 | Recall | 0.9725 |
@@ -85,6 +85,6 @@ Gerçek yarışma verisi farklı → PDR §4.2'de açıklandı.
 
 | Metrik | PSR Pilot | Gerçek Veri | Fark |
 |---|---|---|---|
-| F1 | 0.945 | 0.8980 | -0.047 |
-| MCC | 0.892 | 0.5356 | -0.356 |
+| F1 | 0.945 | 0.8969 | -0.047 |
+| MCC | 0.892 | 0.5863 | -0.356 |
 | ROC-AUC | 0.976 | 0.8673 | -0.109 |

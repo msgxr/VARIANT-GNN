@@ -56,10 +56,10 @@ Monitor official announcements for any metric change before PDR submission.
 
 | Metric | Value | Status |
 |---|---|---|
-| CV F1 (5-fold mean) | **0.8668 ± 0.0081** | Primary declared metric |
+| CV F1 (5-fold mean) | **0.8779 ± 0.0062** | Primary declared metric |
 | CV std (5 seeds) | ±0.0013 | Stability confirmed |
-| Test F1 (hold-out) | **0.8980** | Final evaluation |
-| MCC | **0.5356** | Overall |
+| Test F1 (hold-out) | **0.8969** | Final evaluation |
+| MCC | **0.5863** | Overall |
 | PR-AUC | **0.9294** | |
 | ROC-AUC | **0.8673** | |
 | Recall | **0.9725** | High sensitivity (Patojenik-first) |

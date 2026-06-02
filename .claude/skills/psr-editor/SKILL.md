@@ -122,7 +122,7 @@ Note: PSR is CLOSED (submitted 25 March 2026). This skill only analyzes gaps and
 | Metric | PSR Pilot (ClinVar EP) | Real Competition (2026-05-20) |
 |---|---|---|
 | MCC (General) | 0.892 | **0.536** |
-| Binary F1 (General) | ~0.945 | **0.8980** |
+| Binary F1 (General) | ~0.945 | **0.8969** |
 | Threshold | ~0.50 (default) | **0.241** (calibration-optimized) |
 
 **Root cause:** Pilot data = ClinVar Expert Panel (3-4 yıldız, extremely clean labels). Competition data = broader, more complex variant distribution including borderline pathogenic variants.

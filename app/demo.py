@@ -37,7 +37,7 @@ def load_pipeline():
 @st.cache_data(show_spinner=False)
 def load_metrics():
     cv = json.loads((REPO / "reports" / "cv_report.json").read_text())
-    conf = json.loads((REPO / "reports" / "conformal_results.json").read_text())
+    conf = json.loads((REPO / "reports" / "conformal_coverage_report.json").read_text())
     bench = json.loads((REPO / "reports" / "benchmark_comparison.json").read_text())
     return cv, conf, bench
 

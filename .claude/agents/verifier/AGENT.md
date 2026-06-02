@@ -65,7 +65,7 @@ def test_f1_binary_average():
     """f1_score called with average='binary'"""
 
 def test_threshold_applied():
-    """Predictions use threshold=0.241 (global), not 0.5"""
+    """Predictions use threshold=0.6831 (global), not 0.5"""
 
 def test_panel_f1_computed_separately():
     """Each panel's F1 computed independently"""

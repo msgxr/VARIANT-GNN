@@ -47,7 +47,7 @@ First determine current competition phase:
 
 #### Dimension 3: Scientific Defensibility
 ```
-[ ] F1=0.8980 can be verified in code output (reports/cv_report.json)
+[ ] F1=0.8969 can be verified in code output (reports/cv_report.json)
 [ ] MCC gap (PSR 0.892 → actual 0.536) has documented explanation (PDR §4.2)
 [ ] MASTER MCC=0.507 explained as class imbalance 2.75:1 (PDR §4.2)
 [ ] GNN architecture name inconsistency resolved in PDR (VariantGATv2GNN confirmed)

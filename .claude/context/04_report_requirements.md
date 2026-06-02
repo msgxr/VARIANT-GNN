@@ -53,7 +53,7 @@
 |---|---|
 | Dosya | reports/PDR_VARIANT_GNN_2026.md |
 | Kaynakça numaraları | YANLIŞ — §1.2 atıfları kaynakçayla uyuşmuyor |
-| §3.2 eşik değeri | YANLIŞ — θ=0.01 yazıyor, olması gereken θ=0.241 |
+| §3.2 eşik değeri | YANLIŞ — θ=0.01 yazıyor, olması gereken θ=0.6831 |
 | Figür yolları | YANLIŞ — reports/roc_curves.png yok, reports/figures/pdr/05_roc_curves.png |
 | Rapor tarihi | TUTARSIZ — 15 Mayıs yazıyor, model 20 Mayıs eğitildi |
 

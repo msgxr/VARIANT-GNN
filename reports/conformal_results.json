@@ -1,4 +1,5 @@
 {
+  "_SUPERSEDED": "Row-wise split + uncalibrated + XGB-only. Geçerli rapor: conformal_coverage_report.json (group-aware, kalibre). Jüri paketinde KULLANILMAZ.",
   "90%": {
     "alpha": 0.1,
     "target_coverage": 0.9,

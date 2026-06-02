@@ -50,7 +50,7 @@ Activate when:
 **Jury attack:** "Your PSR showed MCC=0.892 but actual competition data gives MCC=0.406. Which results should we trust, and why?"
 
 **Required defense:**
-"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), which represent the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants. The MCC drop from 0.892 to 0.536 reflects this distributional difference, not model failure. Our F1=0.8980 is consistent across 5-fold CV (0.8668±0.0081), confirming stable generalization."
+"PSR pilot data consisted exclusively of ClinVar Expert Panel variants (3-4★ reliability), which represent the most unambiguous pathogenic/benign boundary. Competition data includes a broader spectrum of clinically ambiguous variants. The MCC drop from 0.892 to 0.536 reflects this distributional difference, not model failure. Our F1=0.8969 is consistent across 5-fold CV (0.8779±0.0062), confirming stable generalization."
 
 **Jury follow-up:** "But why does your F1 stay high while MCC drops so dramatically?"
 **Defense:** "MCC is sensitive to class imbalance across both classes simultaneously. Our threshold (0.241 global) is optimized for binary F1, balancing recall and precision. MASTER panel has 2.75:1 class imbalance — MCC=0.507 reflects this structural challenge, not model failure. All panel-specific thresholds are further optimized: KANSER=0.281, PAH=0.138, CFTR=0.108."

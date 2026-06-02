@@ -56,7 +56,7 @@ mkdir -p "${PKG_DIR}/data/samples"
 echo "[4/5] Rapor figürleri kopyalanıyor..."
 mkdir -p "${PKG_DIR}/reports/figures/pdr"
 cp -r "${REPO}/reports/figures/pdr/"* "${PKG_DIR}/reports/figures/pdr/" 2>/dev/null || true
-for f in cv_report.json conformal_results.json threshold_analysis.json \
+for f in cv_report.json conformal_coverage_report.json threshold_analysis.json \
           ablation_report.json benchmark_comparison.json cross_panel_eval.json \
           seed_stability.json; do
     [ -f "${REPO}/reports/${f}" ] && cp "${REPO}/reports/${f}" "${PKG_DIR}/reports/"
