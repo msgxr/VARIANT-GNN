@@ -177,9 +177,9 @@ cv["panel_mcc"] = {k: round(v["mcc"], 4) for k, v in updated_panel_metrics.items
 cv["panel_f1"]  = {k: round(v["binary_f1"], 4) for k, v in updated_panel_metrics.items()}
 
 cv["threshold_note"] = (
-    "Üretim threshold'ları: General=0.590 (MCC-optimal, §3.2), "
-    "Hereditary_Cancer=0.281, PAH=0.138, CFTR=0.108. "
-    "Panel-aware eşik stratejisi — her panel için F1 ve MCC birlikte optimize edildi."
+    "Karar eşiği: GLOBAL θ=0.6831 (canonical, balanced-OOF, §3.2). "
+    "Panel-spesifik eşikler OPT-IN (varsayılan kapalı, jüri kullanmaz): "
+    "General=0.404, Hereditary_Cancer=0.3695, PAH=0.3203, CFTR=0.1922."
 )
 
 cv_path.write_text(json.dumps(cv, indent=2, ensure_ascii=False))
@@ -207,16 +207,16 @@ fig.patch.set_facecolor("#0f1117"); ax.set_facecolor("#0f1117")
 ax.plot(thrs, mccs_g, color="#a78bfa", linewidth=2.5, label="MCC",      marker="o", markersize=3)
 ax.plot(thrs, f1s_g,  color="#22c55e", linewidth=2,   label="Binary F1", linestyle="--")
 ax.axvline(best_t_mcc, color="#a78bfa", linestyle=":", linewidth=1.8, alpha=0.9)
-ax.axvline(0.241, color="#6b7280", linestyle=":", linewidth=1.2, alpha=0.7)
+ax.axvline(0.6831, color="#6b7280", linestyle=":", linewidth=1.2, alpha=0.7)
 
 ax.annotate(f"θ*={best_t_mcc:.2f} (MCC={best_mcc_val:.3f})",
             xy=(best_t_mcc, best_mcc_val),
             xytext=(best_t_mcc + 0.06, best_mcc_val - 0.06),
             color="white", fontsize=9,
             arrowprops=dict(arrowstyle="->", color="white", lw=1))
-ax.annotate("θ=0.241 (eski)",
-            xy=(0.241, float(mccs_g[np.argmin(np.abs(thrs - 0.241))])),
-            xytext=(0.241 + 0.04, float(mccs_g[np.argmin(np.abs(thrs - 0.241))]) - 0.08),
+ax.annotate("θ=0.6831 (karar eşiği)",
+            xy=(0.6831, float(mccs_g[np.argmin(np.abs(thrs - 0.6831))])),
+            xytext=(0.6831 - 0.30, float(mccs_g[np.argmin(np.abs(thrs - 0.6831))]) - 0.10),
             color="#9ca3af", fontsize=8,
             arrowprops=dict(arrowstyle="->", color="#9ca3af", lw=0.8))
 
@@ -224,7 +224,7 @@ ax.set_xlabel("Karar Eşiği (θ)", color="white", fontsize=11)
 ax.set_ylabel("Metrik Değeri", color="white", fontsize=11)
 ax.set_title(
     "MASTER/General Panel: MCC Optimizasyonu\n"
-    f"θ={best_t_mcc:.2f} → MCC={best_mcc_val:.4f}  (θ=0.241 ile karşılaştırma, §3.2)",
+    f"θ={best_t_mcc:.2f} → MCC={best_mcc_val:.4f}  (θ=0.6831 karar eşiği ile karşılaştırma, §3.2)",
     color="white", fontsize=11, pad=10
 )
 ax.tick_params(colors="white"); ax.set_xlim(0, 1); ax.set_ylim(0, 1.05)

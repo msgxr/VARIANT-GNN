@@ -143,14 +143,14 @@ elif page == "📊 Model Performansı":
 
         st.subheader("Genel Test Sonuçları")
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="→ 0.9269 panel-aware")
+        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="dengeli jüri ≈ 0.8134 (§3.2)")
         m2.metric("MCC", f"{cv['test_mcc']:.4f}")
         m3.metric("PR-AUC", f"{cv['test_pr_auc']:.4f}")
         m4.metric("5-CV F1", f"{cv['mean_cv_binary_f1']:.4f} ±{cv['std_cv_binary_f1']:.4f}")
 
         st.divider()
         st.subheader("Panel Bazlı Sonuçlar")
-        st.caption("Panel-spesifik threshold kullanıldı: General=0.590, KANSER=0.281, PAH=0.138, CFTR=0.108")
+        st.caption("Karar eşiği: GLOBAL θ=0.6831 (canonical, balanced-OOF). Panel-spesifik eşikler opt-in (varsayılan kapalı; jüri kullanmaz).")
 
         panel_data = cv.get("panel_metrics", {})
         if panel_data:

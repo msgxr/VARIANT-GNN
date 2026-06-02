@@ -407,38 +407,33 @@ def fig_09():
 
 # ── 10. Augmentation ──────────────────────────────────────────────────────────
 def fig_10():
-    metrics = ["Binary F1", "Recall", "ROC-AUC", "PR-AUC", "MCC"]
-    before  = [0.8706, 0.9309, 0.7797, 0.8843, 0.4063]
-    after   = [0.8984, 0.9725, 0.8671, 0.9292, 0.5378]
-    deltas  = [a - b for a, b in zip(after, before)]
+    # Sizinti kuantifikasyonu: augmentation + satir-bazli split KALDIRILDI (group-aware'e gecildi).
+    # Kaynak: reports/leakage_quantification.json (HistGradientBoosting proxy, model-agnostik).
+    labels = ["Augmentation+\nStratKFold\n(LEAKY)", "Orijinal+\nStratKFold", "Group-aware\nKFold\n(DURUST)"]
+    vals   = [0.9268, 0.8915, 0.8897]
+    colors = ["#DC2626", "#F59E0B", C["ensemble"]]
 
-    x     = np.arange(len(metrics))
-    width = 0.33
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    b1 = ax.bar(x - width/2, before, width, label="Augmentation Oncesi",
-                color="#94A3B8", alpha=0.88, edgecolor="white")
-    b2 = ax.bar(x + width/2, after,  width, label="Augmentation Sonrasi",
-                color=C["ensemble"], alpha=0.88, edgecolor="white")
-
-    for bar, v, d in zip(b2, after, deltas):
-        ax.text(bar.get_x() + bar.get_width()/2, v + 0.005,
-                f"+{d:.3f}", ha="center", va="bottom",
-                fontsize=8.5, color="#15803D", fontweight="bold")
-    for bar, v in zip(b1, before):
-        ax.text(bar.get_x() + bar.get_width()/2, v + 0.005,
-                f"{v:.3f}", ha="center", va="bottom", fontsize=8.5, color="#475569")
+    x = np.arange(len(labels))
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    bars = ax.bar(x, vals, 0.55, color=colors, alpha=0.9, edgecolor="white")
+    for bar, v in zip(bars, vals):
+        ax.text(bar.get_x() + bar.get_width()/2, v + 0.003,
+                f"{v:.4f}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+    ax.annotate("+3.71 pp yapay sisme\n(geri cekildi)", xy=(0, 0.9268), xytext=(1.0, 0.935),
+                fontsize=9.5, color="#DC2626", ha="center", fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color="#DC2626", lw=1.5))
 
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics, fontsize=11)
-    ax.set_ylabel("Deger")
-    ax.set_title("Gaussian Feature Augmentation Etkisi (Test Seti)\nYesil: iyilesme miktari")
-    ax.set_ylim(0.35, 1.04)
-    ax.legend(fontsize=10)
+    ax.set_xticklabels(labels, fontsize=9.5)
+    ax.set_ylabel("CV Binary F1 (HistGB proxy)")
+    ax.set_title("Sizinti Kuantifikasyonu — Augmentation + satir-bazli split KALDIRILDI\n"
+                 "Group-aware (Variant_ID) durust deger: 0.890")
+    ax.set_ylim(0.85, 0.95)
     ax.yaxis.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(OUT_DIR / "10_augmentation_comparison.png")
+    fig.savefig(OUT_DIR / "10_leakage_quantification.png")
     plt.close(fig)
-    print("10 OK")
+    print("10 OK (leakage_quantification)")
 
 
 # ── 11. Mimari Sema ───────────────────────────────────────────────────────────
