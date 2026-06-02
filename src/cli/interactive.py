@@ -85,7 +85,9 @@ def run_interactive() -> int:
         print("-" * 60)
         print(MENU)
         try:
-            sec = input("\n  Seciminiz [1]: ").strip() or "1"
+            # lstrip("﻿"): bazi kabuklar (PowerShell pipe) stdin basina BOM ekler;
+            # strip() bunu kaldirmaz, bu yuzden once BOM'u soyup sonra bosluklari kirp.
+            sec = input("\n  Seciminiz [1]: ").lstrip("﻿").strip() or "1"
         except (EOFError, KeyboardInterrupt):
             print("\n  Cikiliyor.")
             return 0
