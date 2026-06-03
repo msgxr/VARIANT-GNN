@@ -33,9 +33,18 @@ JURY_COLUMNS = [
     "expert_review_flag",
 ]
 
+# Minimal jüri modu (opt-in): tek doğruluk kaynağı submission_validator.
+# Resmi format UNVERIFIED — yalnız Q&A teyitli ikili çekirdek yazılır.
+from src.scientific.submission_validator import JURY_MINIMAL_COLUMNS  # noqa: E402
 
-def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Pipeline çıktısından garanti edilen 7 kolonu oluşturur."""
+
+def _ensure_jury_columns(df: pd.DataFrame, minimal: bool = False) -> pd.DataFrame:
+    """Pipeline çıktısından garanti edilen kolonları oluşturur.
+
+    minimal=False (varsayılan): 7 garantili JURY_COLUMNS — mevcut davranış.
+    minimal=True : yalnız JURY_MINIMAL_COLUMNS = [Variant_ID, prediction_label]
+                   (klinik-çağrışımlı kolon İÇERMEZ — §10 etik, opt-in).
+    """
     out = pd.DataFrame()
 
     # 1. Variant_ID
@@ -89,6 +98,8 @@ def _ensure_jury_columns(df: pd.DataFrame) -> pd.DataFrame:
         risk = out["calibrated_risk"].values
         out["expert_review_flag"] = (unc > 0.30) | ((risk > 30) & (risk < 70))
 
+    if minimal:
+        return out[JURY_MINIMAL_COLUMNS]
     return out[JURY_COLUMNS]
 
 
@@ -97,6 +108,7 @@ def export_predictions(
     output_dir: str | Path,
     prefix: str = "predictions",
     submission_path: str | Path | None = None,
+    minimal: bool = False,
 ) -> dict[str, Path | None]:
     """
     TEKNOFEST 2026 jüri uyumlu tahmin exportu.
@@ -106,12 +118,16 @@ def export_predictions(
       2. ``{prefix}_full.csv``  — tüm pipeline çıktısı
       3. submission/predictions.csv — ``--output`` ile belirtilen path (opsiyonel)
 
+    minimal=True (opt-in, §10 etik): jüriye giden çıktılar (jury.csv + submission)
+    yalnız [Variant_ID, prediction_label] içerir — klinik-çağrışımlı kolon yok.
+    full.csv YEREL tanı dosyasıdır (jüriye gitmez), ham tanı kolonlarını korur.
+
     Returns dict: {'jury', 'full', 'submission'} → Path.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    jury_df = _ensure_jury_columns(df_result)
+    jury_df = _ensure_jury_columns(df_result, minimal=minimal)
 
     # ── 1. Jury CSV (7 garantili kolon) ──────────────────────────────
     jury_path = output_dir / f"{prefix}_jury.csv"
@@ -140,12 +156,15 @@ def export_predictions(
     # ── Özet istatistikler ────────────────────────────────────────────
     n_path = int((jury_df["prediction_label"] == 1).sum())
     n_ben = int((jury_df["prediction_label"] == 0).sum())
-    n_exp = int(jury_df["expert_review_flag"].sum())
-    logger.info(
-        "Özet: %d Patojenik | %d Benign | %d Uzman Değerlendirmesi",
-        n_path,
-        n_ben,
-        n_exp,
-    )
+    if "expert_review_flag" in jury_df.columns:
+        n_exp = int(jury_df["expert_review_flag"].sum())
+        logger.info(
+            "Özet: %d Patojenik | %d Benign | %d Uzman Değerlendirmesi",
+            n_path,
+            n_ben,
+            n_exp,
+        )
+    else:
+        logger.info("Özet (minimal): %d Patojenik | %d Benign", n_path, n_ben)
 
     return {"jury": jury_path, "full": full_path, "submission": sub_path}

@@ -448,6 +448,7 @@ def predict_anonymous_csv(
     csv_path: str | Path,
     pipeline: Any,  # InferencePipeline (loaded)
     output_csv: Optional[str | Path] = None,
+    jury_minimal: bool = False,
 ) -> pd.DataFrame:
     """
     End-to-end anonymous-CSV → submission predictions.
@@ -463,7 +464,11 @@ def predict_anonymous_csv(
     ----------
     csv_path   : Path to the anonymous test CSV.
     pipeline   : Loaded ``InferencePipeline`` instance.
-    output_csv : If provided, write jury-format submission here.
+    output_csv   : If provided, write jury-format submission here.
+    jury_minimal : If True, write ONLY [Variant_ID, prediction_label] (binary 0/1),
+                   omitting clinical-flavored columns (§10 ethics). Opt-in; default
+                   False keeps the current 7-column rich output. Official submission
+                   format is UNVERIFIED — minimal mode is intentionally not default.
 
     Returns
     -------
@@ -511,6 +516,7 @@ def predict_anonymous_csv(
             output_dir=Path(output_csv).parent,
             prefix=Path(output_csv).stem,
             submission_path=output_csv,
+            minimal=jury_minimal,
         )
 
     return df_result
