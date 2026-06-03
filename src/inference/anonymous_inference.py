@@ -410,16 +410,23 @@ class AnonymousDataAdapter:
             )
             return feat_df.iloc[:, : self.expected_n_features]
         else:
-            # Pad with zero columns
+            # Pad with NaN columns — eksik kolon = EKSİK (0 DEĞİL). Literal 0.0
+            # ekleyince Preprocessor'ın eksiklik-göstergesi bu kolonu 'mevcut'
+            # sayar (np.isnan(0.0)=False) ve §3.2 'missing≠0' sinyali bozulur;
+            # ayrıca RobustScaler/medyan-imputer 0'ı geçerli ölçüm gibi işler.
+            # NaN bırakılırsa iç imputer eğitim medyanıyla doldurur (eğitimle
+            # simetri). NOT: bu yalnız eksik-kolon (pad) sinyalini düzeltir;
+            # _miss_cols sabit tamsayı indeksli olduğundan kolon-SIRASI uyumu
+            # ayrı bir konudur (bkz. follow-up: aligner'ı isim/imza-anahtarlı yap).
             n_pad = self.expected_n_features - n_cols
             logger.warning(
-                "AnonymousDataAdapter: %d → %d columns (zero-padded by %d).",
+                "AnonymousDataAdapter: %d → %d columns (NaN-padded by %d).",
                 n_cols,
                 self.expected_n_features,
                 n_pad,
             )
             for i in range(n_pad):
-                feat_df[f"__pad_{i}"] = 0.0
+                feat_df[f"__pad_{i}"] = np.nan
             return feat_df
 
 

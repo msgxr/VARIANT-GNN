@@ -112,8 +112,15 @@ class ExternalValidationRunner:
         for msg in report.warnings():
             logger.warning(msg)
 
-        # Fill missing with 0 (safe default; imputer handles downstream)
-        aligned_df = aligned_df.fillna(0.0)
+        # NaN'i KORU — eğitimle simetri (§3.2 'missing≠0'). Eskiden burada
+        # aligned_df.fillna(0.0) vardı: feature_names.json shipped edildiğinde bu
+        # dal aktifleşir ve VariantPreprocessor.transform'daki eksiklik-göstergesi
+        # bloğunu (np.isnan(_Xraw_t), bkz. features/preprocessing.py:496) TÜMÜYLE
+        # SIFIR yapardı — eğitim ham NaN görürken çıkarım 0.0 görür (asimetri).
+        # LATENT foot-gun: bugün feature_names yok → erken-dönüş dalı (yukarıda)
+        # zaten NaN korur, canonical skor bu siteden etkilenmedi. Hizalanmış
+        # frame'in NaN'leri (gerçek + eksik-kolon) olduğu gibi geçilir; ana
+        # Preprocessor'ın iç imputer'ı eğitim medyanlarıyla doldurur.
         return cast(np.ndarray, aligned_df.values.astype(float))
 
     # ------------------------------------------------------------------
