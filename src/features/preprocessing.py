@@ -487,12 +487,19 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         X_scaled = self._scaler.transform(X_imputed)
 
         # 4b. Eksiklik göstergeleri (fit ile simetrik) — HAM X'ten (NaN'li), aligner-impute öncesi
-        if (
-            getattr(self, "use_missing_indicators", True)
-            and len(getattr(self, "_miss_cols", [])) > 0
-            and _Xraw_t is not None
-            and _Xraw_t.shape[1] > int(self._miss_cols.max())
-        ):
+        if getattr(self, "use_missing_indicators", True) and len(getattr(self, "_miss_cols", [])) > 0:
+            # FAIL-LOUD: eksiklik-göstergesi bloğu ASLA sessizce atlanmamalı.
+            # Eskiden _Xraw_t.shape[1] <= _miss_cols.max() olduğunda blok sessizce
+            # atlanıp çıktı n_output_features'tan dar kalıyor → ensemble uyumsuzluğu.
+            # Eşik = _miss_cols.max()+1 (gerçek sınır); 343-368 genişlikleri OLDUĞU
+            # GİBİ geçer (over-reject yok). §3.2: test = eğitimle aynı sütun/sıra.
+            _need = int(self._miss_cols.max()) + 1
+            if _Xraw_t is None or _Xraw_t.shape[1] < _need:
+                raise ValueError(
+                    f"transform: missing-indicator için en az {_need} sütun gerekli, "
+                    f"girdi {0 if _Xraw_t is None else _Xraw_t.shape[1]}. "
+                    "Eğitimle aynı sütun setini (sıra korunarak) verin."
+                )
             _mi = np.isnan(_Xraw_t[:, self._miss_cols]).astype(float)
             X_scaled = np.hstack([X_scaled, _mi])
 
@@ -510,6 +517,16 @@ class VariantPreprocessor(BaseEstimator, TransformerMixin):
         if self.use_autoencoder and self._autoenc is not None:
             X_scaled = self._autoenc.transform(X_scaled)
 
+        # Çıktı-genişliği invaryantı: eğitimde sabitlenen n_output_features ile
+        # birebir eşleşmeli. Eşleşmezse (örn. eksik gösterge/bio bloğu) ensemble'a
+        # yanlış-genişlik beslemek yerine net hata ver. fit öncesi (0) → no-op.
+        if getattr(self, "n_output_features", 0):
+            if X_scaled.shape[1] != int(self.n_output_features):
+                raise ValueError(
+                    f"transform çıktısı {X_scaled.shape[1]} sütun, "
+                    f"beklenen n_output_features={int(self.n_output_features)}. "
+                    "Girdi sütun seti/sırası eğitimle uyumsuz olabilir."
+                )
         return cast(np.ndarray, X_scaled)
 
     def _fit_feature_selection(self, X: np.ndarray, y: Optional[np.ndarray]) -> np.ndarray:

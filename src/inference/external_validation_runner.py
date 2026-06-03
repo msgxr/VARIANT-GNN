@@ -102,9 +102,24 @@ class ExternalValidationRunner:
     def _align_features(self, feat_df: pd.DataFrame) -> np.ndarray:
         """Align incoming feature columns to training-time feature names."""
         if self._feature_names is None:
-            # Best-effort: use numeric columns only
+            # Best-effort: use numeric columns only. select_dtypes kolon SIRASINI
+            # korur; §3.2/Q&A-II "test = eğitim sırası" varsayımıyla pozisyonel
+            # eşleme doğru kalır.
             numeric_df = feat_df.select_dtypes(include="number")
             logger.warning("No feature_names.json found; using %d numeric columns.", numeric_df.shape[1])
+            # Savunmacı tanı: genişlik eğitimden farklıysa uyar. ASIL koruma
+            # VariantPreprocessor.transform'daki output-width invaryantıdır
+            # (yanlış genişlikte net hata verir), bu yüzden burada fail-loud gerekmez.
+            try:
+                _need = int(self._preprocessor._imputer.n_features_in_)
+                if numeric_df.shape[1] != _need:
+                    logger.warning(
+                        "Numeric sütun genişliği %d != eğitim %d — sütun seti/sırasını kontrol edin.",
+                        numeric_df.shape[1],
+                        _need,
+                    )
+            except (AttributeError, TypeError):
+                pass
             return cast(np.ndarray, numeric_df.values.astype(float))
 
         aligner = ColumnAligner(expected_columns=self._feature_names)

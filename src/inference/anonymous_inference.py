@@ -275,8 +275,17 @@ class AnonymousDataAdapter:
         # Drop fully-non-numeric columns
         feat_df = feat_df_raw.select_dtypes(include=[np.number])
 
-        # 5. Distributional alignment if signatures available
-        if self.feature_signatures and len(self.feature_signatures) > 0:
+        # 5. Distributional alignment if signatures available.
+        # Şartname §3.2 / Q&A-II: test = eğitimle AYNI sütun seti, AYNI SIRA. Girdi
+        # zaten beklenen genişlikteyse dağılımsal yeniden-sıralama YAPMA — aksi halde
+        # 369-genişlikli ama permüte bir frame, sabit tamsayı _miss_cols indekslerini
+        # (preprocessing.py:496) desync edip gösterge/öznitelikleri yanlış sütundan
+        # okutur. Yalnız off-width (anonim/eksik) girdide hizalama denenir.
+        if (
+            self.feature_signatures
+            and len(self.feature_signatures) > 0
+            and feat_df.shape[1] != self.expected_n_features
+        ):
             feat_df = self._distributional_align(feat_df)
 
         # 6. Positional truncation/padding to match expected size

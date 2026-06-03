@@ -83,6 +83,16 @@ def _parse_args() -> argparse.Namespace:
         default=False,
         help="If set and Label column present, compute local metrics (labels NOT fed to model).",
     )
+    parser.add_argument(
+        "--jury_minimal",
+        action="store_true",
+        default=False,
+        help=(
+            "Yalnız Variant_ID + prediction_label (ikili 0/1) yaz — klinik-çağrışımlı "
+            "kolonlar olmadan. NOT: resmi submission dosya formatı henüz açıklanmadı "
+            "(UNVERIFIED); bu mod Q&A-II'de teyit edilen ikili-etiket çekirdeğini varsayar."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -164,11 +174,12 @@ def main() -> None:
     jury = pd.DataFrame()
     jury["Variant_ID"] = predictions["Variant_ID"]
     jury["prediction_label"] = (predictions["Prediction"] == "Pathogenic").astype(int)
-    jury["pathogenic_probability"] = predictions["Pathogenic_Probability"].round(4)
-    jury["calibrated_risk"] = (predictions["Calibrated_Risk"] * 100).round(2)
-    jury["confidence_level"] = ((1.0 - predictions["Uncertainty"]) * 100).round(2)
-    jury["uncertainty_score"] = predictions["Uncertainty"].round(4)
-    jury["expert_review_flag"] = predictions["Uncertainty"] > 0.30
+    if not args.jury_minimal:
+        jury["pathogenic_probability"] = predictions["Pathogenic_Probability"].round(4)
+        jury["calibrated_risk"] = (predictions["Calibrated_Risk"] * 100).round(2)
+        jury["confidence_level"] = ((1.0 - predictions["Uncertainty"]) * 100).round(2)
+        jury["uncertainty_score"] = predictions["Uncertainty"].round(4)
+        jury["expert_review_flag"] = predictions["Uncertainty"] > 0.30
 
     jury.to_csv(args.output, index=False)
     _tmp_path.unlink(missing_ok=True)  # geçici dosyayı temizle
@@ -178,18 +189,24 @@ def main() -> None:
         len(jury),
         args.output,
     )
+    _n_review = int(jury["expert_review_flag"].sum()) if "expert_review_flag" in jury.columns else 0
     logger.info(
         "Prediction distribution: Pathogenic=%d | Benign=%d | ExpertReview=%d",
         int((jury["prediction_label"] == 1).sum()),
         int((jury["prediction_label"] == 0).sum()),
-        int(jury["expert_review_flag"].sum()),
+        _n_review,
     )
 
     # ── Otomatik submission formatı doğrulama ─────────────────────────
     try:
-        from src.scientific.submission_validator import SubmissionValidator
+        from src.scientific.submission_validator import (
+            JURY_MINIMAL_COLUMNS,
+            SubmissionValidator,
+        )
 
-        validator = SubmissionValidator()
+        validator = SubmissionValidator(
+            expected_columns=JURY_MINIMAL_COLUMNS if args.jury_minimal else None
+        )
         report = validator.validate(submission_path=args.output)
         validator.print_report(report, verbose=True)
         if not report.passed:

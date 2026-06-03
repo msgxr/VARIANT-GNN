@@ -58,6 +58,12 @@ JURY_COLUMNS: List[str] = [
     "expert_review_flag",
 ]
 
+# Resmi submission DOSYA FORMATI henüz duyurulmadı (UNVERIFIED — Q&A-II: "son
+# aşamada netleşecek"). --jury_minimal modu yalnız Q&A-II'de teyit edilen ÇEKİRDEĞİ
+# yazar: Variant_ID + ikili 0/1 etiket. Klinik-çağrışımlı kolon İÇERMEZ (§10 etik).
+# Resmi format açıklanınca bu liste güncellenecek.
+JURY_MINIMAL_COLUMNS: List[str] = ["Variant_ID", "prediction_label"]
+
 # Şartname §3.2: Panel boyutları (eğitim ve test)
 PANEL_SPEC: Dict[str, Dict[str, int]] = {
     "General": {"train_p": 1500, "train_b": 1500, "test_p": 1000, "test_b": 1000},
