@@ -65,6 +65,17 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 - **Açıklama:** `requirements.txt` içinde `mlflow` var ama aktif kullanım yoksa gereksiz ağır bağımlılık.
 - **Çözüm:** MLflow kullanımını belgele veya `requirements-dev.txt`'e taşı.
 
+### TD-013: Missing-indicator Pozisyonel Kuplaj — Derin Sağlamlık
+- **Durum:** Açık (HAFİFLETİLDİ ve kabul edildi — deadline öncesi yapısal redesign bilinçli olarak ertelendi)
+- **Açıklama:** `VariantPreprocessor._miss_cols` SABİT TAMSAYI indekstir (`src/features/preprocessing.py:496`). `ExternalValidationRunner._align_features`'in no-feature_names erken-dönüş dalı kolon sırasını KORUR ama yeniden-SIRALAMAZ; jüri CSV'si eğitimden farklı SIRADA gelirse göstergeler yanlış kolondan okunabilir. `anonymous_inference._distributional_align` de permüte edebilir.
+- **Mevcut hafifletme (gerçekçi senaryo için yeterli):**
+  1. Organizatör Q&A-II garantisi: test = eğitimle AYNI sütun seti, AYNI SIRA, aynı (sansürlü) isimler.
+  2. `transform` ÇIKTI-GENİŞLİĞİ İNVARYANTI: yanlış genişlikte sessiz hata yerine `ValueError` (fail-loud) + missing-indicator bloğu artık asla sessizce atlanmaz.
+  3. `_distributional_align` genişlik==beklenen ise atlanır (same-order frame'i bozmaz).
+  4. **Robust yol mevcut:** `feature_names.json` shipped edilirse named-branch kolonları İSİMLE hizalar (sıra-bağımsız) — `tests/integration/test_high_risk_fixes.py::test_runner_named_branch_reorders_by_name` ile kanıtlı.
+- **Risk:** Düşük (garanti + invaryant + isim-bazlı robust yol birlikte).
+- **Tam çözüm (ertelendi — YAPISAL, onay+doğrulama gerektirir):** ya eğitim kolon adlarını sırayla içeren `models/feature_names.json` üret+shipla (named-branch'i aktive eder; uçtan-uca prediction-eşitliği doğrulaması şart), ya da iç aligner'ı isim/imza-anahtarlı yap. Deadline sonrası veya resmi submission formatı duyurusuyla ele alınmalı.
+
 ## Tamamlanan Öğeler
 
 | ID | Açıklama | Çözüm |

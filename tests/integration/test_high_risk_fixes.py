@@ -113,3 +113,37 @@ def test_default_validator_rejects_minimal_schema(tmp_path):
     csv = _write_minimal_csv(tmp_path / "min.csv")
     report = SubmissionValidator().validate(submission_path=csv)  # default = 7-col JURY_COLUMNS
     assert not report.passed, "default 7-col validator must reject a 2-col file"
+
+
+# ── #4 (LOW) — named branch reorders BY NAME → pozisyonel-kuplajın robust yolu ──
+@pytest.mark.skipif(not _HAS_PREPROCESSOR, reason="shipped models/preprocessor.pkl required")
+def test_runner_named_branch_reorders_by_name():
+    """feature_names.json (named branch) varsa kolonlar İSİMLE hizalanır — girdi
+    sırasından bağımsız. Bu, pozisyonel-kuplajın 'robust yol' çözümünü kanıtlar (#4):
+    jüri kolonları farklı sırada gelse bile named-branch eğitim sırasına yeniden dizer,
+    böylece sabit tamsayı _miss_cols doğru kolonu okur. (no-feature_names erken-dönüş
+    dalı sıra-korumalıdır ama yeniden-sıralamaz; bu yüzden named-branch daha sağlam.)
+    """
+    from src.inference.external_validation_runner import ExternalValidationRunner
+
+    pre = _load_preprocessor()
+    n_in = int(pre._imputer.n_features_in_)
+    feature_names = [f"F{i}" for i in range(n_in)]
+    mc = int(np.asarray(pre._miss_cols)[0])  # bir eksiklik-gösterge kolonu
+
+    rng = np.random.default_rng(7)
+    data = {f"F{i}": rng.normal(size=5) for i in range(n_in)}
+    data[f"F{mc}"][2] = np.nan  # eksikliği İSİMLE F{mc}'ye koy
+    # Kolonları TERS sırada ver — named-branch eğitim sırasına dizmeli
+    df_reversed = pd.DataFrame(data)[[f"F{i}" for i in reversed(range(n_in))]]
+    assert list(df_reversed.columns)[0] == f"F{n_in - 1}"  # gerçekten ters
+
+    runner = ExternalValidationRunner.__new__(ExternalValidationRunner)
+    runner._feature_names = feature_names
+
+    X = runner._align_features(df_reversed)
+    # named-branch isimle hizaladıysa NaN, girdi sırasında (son sütun) değil
+    # eğitim sırasındaki mc konumunda olmalı:
+    assert np.isnan(X[:, mc]).any(), "named branch isimle hizalamadı (pozisyonel desync riski)"
+    out = pre.transform(X)
+    assert out.shape[1] == int(pre.n_output_features)
