@@ -15,7 +15,7 @@ pos_label = 1 = Patojenik
 ```
 
 - Yanlış Negatif (FN) klinik açıdan yanlış Pozitiften (FP) daha ağırdır
-- Karar eşiği, jüri §3.2 setinin %20-patojenik (%20/%80) olduğu varsayımıyla balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8415**); precision (0.9241) ve recall (0.7644) dengelidir
+- Karar eşiği, jüri/test setinin %20-patojenik (%20/%80) olduğu **Q&A-II ile doğrulanmış** gerçeği temelinde balanced-OOF üzerinde F1-optimal türetilir (global **θ=0.8415**); precision (0.9241) ve recall (0.7644) dengelidir
 - Test seti değerlendirmesi jüri tarafından yapılır
 
 ---
@@ -34,7 +34,7 @@ pos_label = 1 = Patojenik
 
 ## Mevcut Model Sonuçları (Gerçek Yarışma Verisi — 2026-06-02, canonical)
 
-⭐ **Jüri beklentisi (%20 patojenik (UNVERIFIED — artefakt eklenecek)):** havuzlanmış balanced Binary F1 = **0.6042 ± 0.0324** (θ=0.8415); RESMİ headline = **0.6202** (4-panel %20-F1 ort.). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
+⭐ **Jüri beklentisi (%20 patojenik — ✅ Q&A-II ile DOĞRULANDI 2026-06-03):** havuzlanmış balanced Binary F1 = **0.6042 ± 0.0324** (θ=0.8415); RESMİ headline = **0.6202** (4-panel %20-F1 ort.). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
 
 | Metrik | Değer |
 |---|---|

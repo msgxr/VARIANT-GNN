@@ -100,6 +100,10 @@ reports/*.bak
 # Eğitim logları
 train_log.txt
 
+# Resmi Q&A transkript artefaktları — YEREL doğrulama kanıtı (organizatörün kayıt
+# yeniden-paylaşım çekincesi nedeniyle public repoya PUSH EDİLMEZ; ekip içi referans)
+docs/qa/
+
 # Claude Code — kişisel ayarlar ve geçici klasörler ignore; skills + context repoda
 .claude/settings.local.json
 .claude/settings.json

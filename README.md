@@ -56,7 +56,7 @@
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
 ```
 
-> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A** (2026-06-02) *(artefakt eklenecek — UNVERIFIED)*: jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; %20-patojenik resmi prior). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **RESMİ 4-panel %20-F1 ortalaması = 0.6202** (HEADLINE); havuzlanmış = **0.6042 ± 0.0324** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.8367** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
+> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A-II** (Üniversite, transkript 2026-06-02; ✅ DOĞRULANDI 2026-06-03): jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; %20-patojenik resmi prior). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **RESMİ 4-panel %20-F1 ortalaması = 0.6202** (HEADLINE); havuzlanmış = **0.6042 ± 0.0324** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.8367** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
 >
 > **⚠️ KLİNİK UYARI:** Model çıktıları **yalnızca araştırma, eğitim ve yarışma değerlendirmesi** amaçlıdır. Klinik tanı, tedavi veya tıbbi karar desteği için **kullanılamaz**.
 

@@ -24,6 +24,16 @@ Durum: Birincil — tüm kural kararları bu belgeden alınır.
 
 ---
 
+## Tier-4 — Resmi Duyuru / Q&A (şartnameyi NOKTASAL olarak günceller)
+
+| Belge | Kaynak | Kullanım | Statü |
+|---|---|---|---|
+| **Q&A-II Üniversite transkripti** | Online Soru-Cevap Toplantısı (kayıt `ÜNİVERSİTE VE ÜZERİ.mp4`); takvim 18.05.2026; ekibe 2026-06-02 ulaştı. Yerel artefakt: `docs/qa/2026_QA_Universite_transkript.md` (gitignore — organizatör çekincesi) | Test dağılımı, metrik, çıktı formatı, model sayısı, öznitelik kararları | ✅ **DOĞRULANDI 2026-06-03** |
+
+> ⚠️ ÇELİŞKİ NOTU: Şartname §3.2 test setini 1000/1000 (50/50) yazar; Q&A-II'de organizatör bunun **eski/hatalı** olduğunu, güncel kararın **test ~%20 patojenik / %80 benign** olduğunu açıkça söyledi ve şartnameyi yeniden göndereceğini belirtti (transkript 07:13, 23:37, 26:23). Çelişki Öncelik Sırası gereği **Q&A-II (Tier-4 güncel duyuru) bu noktada şartnameyi geçersiz kılar.** Şartname §7.1/§7.5 komiteye metrik/oran değiştirme hakkını zaten tanır.
+
+---
+
 ## Kullanılmayan / Reddedilen Kaynaklar
 
 - 2024 veya önceki yıl şartnameleri → Geçersiz (2026 kuralları farklı olabilir)
@@ -42,10 +52,10 @@ Durum: Birincil — tüm kural kararları bu belgeden alınır.
 
 ---
 
-## ⚠️ PENDING — EYLEM GEREKLİ (eklenecek resmi kaynak)
+## ✅ ÇÖZÜLDÜ (2026-06-03) — Q&A artefaktı edinildi
 
-**TEKNOFEST resmi Q&A / duyuru (iddia: 2026-06-02 — "gizli test seti %20-patojenik / %80-benign; 50/50 ESKİ/geçersiz").**
+**TEKNOFEST resmi Q&A-II (Üniversite) — "test seti ~%20-patojenik / %80-benign; 50/50 ESKİ/geçersiz".**
 
-- **Durum: UNVERIFIED — artefakt henüz eklenmedi.** Repoda yalnızca bu iddiaya *atıf* var, kaynağın kendisi (ekran görüntüsü / arşiv URL / KYS mesajı) yok.
-- **Bağımlılık:** Bu iddia, `RESULTS_CANONICAL.json` içindeki karar eşiği **θ=0.8415**, havuzlanmış jüri-F1 **0.6042** ve **resmi 4-panel skor 0.6202**'nin tek dayanağıdır. Bkz. `07_uncertainty_log.md` U-008 ve `RESULTS_CANONICAL.provenance_unverified`.
-- **Eylem:** Q&A artefaktını edinip yukarıdaki "İkincil Kaynaklar" tablosuna Tier-4 (KYS/resmi duyuru) olarak ekleyin ve U-008'i "Çözülmüş"e taşıyın. **Edinilemezse:** %20-prior'ı resmi kural değil *modelleme varsayımı* olarak çerçeveleyin (official-source-guardian, CLAUDE.md §III.1).
+- **Durum: DOĞRULANDI.** Toplantı transkripti edinildi ve okundu (yerel artefakt: `docs/qa/2026_QA_Universite_transkript.md`). Hakem ifadesi NET ve TEKRARLI (07:13, 07:48, 08:54, 09:26, 23:37). Şartmanenin 1000/1000'i organizatör tarafından **hata** olarak kabul edildi (26:23).
+- **Sonuç:** `RESULTS_CANONICAL.json` içindeki **θ=0.8415**, jüri-F1 **0.6042** ve **resmi 4-panel skor 0.6202** artık resmi dayanağa sahiptir. U-008 → Çözülmüş. `provenance_unverified` → güncellendi.
+- **Aynı transkriptle ayrıca doğrulandı:** F1 patojenik-odaklı + per-panel + ortalama (34:10); ikili 0/1 çıktı (08:12); 4 ayrı model (31:30); komşu sekans/AA paylaşılmıyor (21:47); missing≠0 (17:25).

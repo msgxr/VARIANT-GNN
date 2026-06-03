@@ -16,8 +16,7 @@
 | U-005 | Mezuniyet tarih kısıtı (üniversite kategori uygunluğu) | 2026-05-24 | Şartname §3 |
 | U-006 | Veri yayın/tez kullanım hakları | 2026-05-24 | Şartname veya gizlilik taahhütü |
 | U-007 | Final değerlendirmesinde sözlü sunum ağırlığı | 2026-05-24 | Şartname §7 |
-| U-008 | Gizli test seti dağılımı — **%20-patojenik AKTİF KULLANIMDA ama UNVERIFIED** | 2026-06-03 | ⚠️ EYLEM GEREKLİ: "resmi Q&A 2026-06-02 (%20-patojenik/%80-benign; 50/50 ESKİ)" iddiasının artefaktını (ekran görüntüsü/arşiv URL/KYS mesajı) edinip `01_official_source_map.md`'ye Tier-4 olarak ekle. Edinilemezse %20-prior'ı MODELLEME VARSAYIMI olarak etiketle. **θ=0.8415 + competition_jury_f1=0.6042 + resmi 4-panel skor 0.6202 tamamen buna bağlı** (RESULTS_CANONICAL.provenance_unverified). |
-| U-009 | Submission çıktı kolon formatı (10 vs 12, OOD dahil) | 2026-06-03 | ⚠️ Şartname SESSİZ (Tier-1 PDF görüntü-tabanlı okunamadı; Tier-3 sayfa "belirtilmemiş"; WebSearch'te format yok). §7.3 yalnızca F1 metriği tanımlar. KARAR: kod=12 kolon (OOD_Score/OOD_Flag kasıtlı; ood_detector.pkl var), CI guard 12'ye hizalandı. Jüri'nin GERÇEK submission formatı sistem duyurulunca Google Groups'tan teyit edilmeli; katı 10-kolon istenirse OOD'u yalnız submission writer'dan çıkar. |
+| U-009 | Submission çıktı dosya formatı (sütun düzeni) | 2026-06-03 | 🟡 KISMEN: Q&A-II **çıktının ikili 0/1 etiket olduğunu** teyit etti (transkript 08:12, 20:44) — olasılık DEĞİL. Ancak tam dosya formatı (kolon düzeni) organizatör tarafından "son aşamada netleşecek, ayrı şartname paylaşılacak" denildi (20:35). Kod=12 kolon (OOD_Score/OOD_Flag kasıtlı; ood_detector.pkl var), CI guard 12'ye hizalı. GERÇEK format sistem duyurusu/Google Groups'tan teyit edilecek; ikili etiket çekirdeği kesin. |
 
 ---
 
@@ -30,6 +29,9 @@
 | C-003 | PDR teslim tarihi | 29 Haziran 2026, 17:00 | Şartname / Takvim |
 | C-004 | Veri dağıtım tarihi | 5 Mayıs 2026 | Takvim |
 | C-005 | Pilot MCC vs gerçek MCC farkı | Açıklandı — veri kalitesi ve denge farkı | PDR §4.2 |
+| C-006 | Gizli test seti dağılımı (50/50 mı, %20-patojenik mi?) | **Test ~%20 patojenik / %80 benign** (eğitim ~%80/%20'nin tersi). Şartnamedeki 50/50 organizatör tarafından eski/hatalı kabul edildi. θ=0.8415 + 0.6202 dayanağı RESMİ. | Q&A-II transkripti (`docs/qa/2026_QA_Universite_transkript.md`, 07:13/23:37/26:23); `01_official_source_map.md` Tier-4 |
+| C-007 | Skorlama: per-panel F1 + ortalama; çıktı 0/1; 4 ayrı model | Hepsi doğrulandı (per-panel F1→ortalama 34:10; ikili 0/1 08:12; 4 model 31:30) | Q&A-II transkripti |
+| C-008 | Komşu nükleotit/aminoasit (yerel sekans bağlamı) verilecek mi? | **Verilmiyor** — şartname §3.2'deki ±5 nt/±5 aa bilim kurulu kararıyla kaldırıldı | Q&A-II transkripti (21:47, 23:57) |
 
 ---
 
