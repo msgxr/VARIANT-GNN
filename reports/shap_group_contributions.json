@@ -1,34 +1,48 @@
 {
-  "_README": "DÜRÜST group-SHAP — 1 Haziran 2026 sızıntısız model (369 öznitelik, SelectKBest/AutoEncoder YOK). Eski 51-feature (k=35+AE16) leaky SHAP GERİ ÇEKİLDİ; reports/acmg_alignment.json ile tutarlı.",
-  "method": "XGBoost TreeExplainer mean|SHAP| — group-aware hold-out test (n=762), tam 369-öznitelik uzayı",
-  "n_features_total": 369,
   "group_contributions_pct": {
-    "Korunmuşluk/sekans imzası (anonim AL_*)": 64.19999694824219,
-    "PP3/PS3 — in-silico + korunmuşluk skorları": 18.59000015258789,
-    "PM4/PP2 — biyokimyasal AA değişimi": 10.5,
-    "BA1/BS1 — popülasyon frekansı/genişliği": 2.880000114440918,
-    "PP3/BP4 — in-silico uzlaşı": 2.7300000190734863,
-    "Panel bağlamı": 0.8199999928474426,
-    "Yerel sekans bağlamı (nükleotid/genotip)": 0.2800000011920929,
-    "Mappability/bölge (LCR/segdup)": 0.0,
-    "PVS1-proxy — stop-gain": 0.0
+    "in_silico_risk": 58.33,
+    "evolutionary_conservation": 10.94,
+    "population_data": 4.78,
+    "biochemical_structural": 18.21,
+    "sequence_context": 7.74,
+    "local_sequence": 0.0
   },
-  "top_features": {
-    "EK_7": 0.51202,
-    "EK_9": 0.22913,
-    "AL_327": 0.19363,
-    "bio_blosum62": 0.16501,
-    "pop_breadth_CAT_1": 0.1627,
-    "bio_d_volume": 0.15717,
-    "insilico_consensus": 0.12753,
-    "AL_40": 0.12172,
-    "AL_311": 0.09408,
-    "AL_287": 0.08974,
-    "AL_73": 0.08618,
-    "AL_298": 0.08101,
-    "AL_318": 0.08003,
-    "AL_17": 0.07311,
-    "EK_2": 0.07297
-  },
-  "acmg_concordance_note": "En yüksek katkılı gruplar (korunmuşluk/in-silico + AA biyokimyası) ACMG PP3/PS3/PM4 kriterleriyle örtüşür — kararlar etiketleri üreten çerçeveyle hizalı. Detaylı kriter eşlemesi: reports/acmg_alignment.json"
+  "ranked": [
+    {
+      "group_key": "in_silico_risk",
+      "label_tr": "In Silico Risk Skorları",
+      "contribution_pct": 58.33,
+      "expected_pct": 38.0
+    },
+    {
+      "group_key": "biochemical_structural",
+      "label_tr": "Biyokimyasal/Yapısal",
+      "contribution_pct": 18.21,
+      "expected_pct": 10.0
+    },
+    {
+      "group_key": "evolutionary_conservation",
+      "label_tr": "Evrimsel Korunmuşluk",
+      "contribution_pct": 10.94,
+      "expected_pct": 27.0
+    },
+    {
+      "group_key": "sequence_context",
+      "label_tr": "Sekans Bağlamı",
+      "contribution_pct": 7.74,
+      "expected_pct": 5.0
+    },
+    {
+      "group_key": "population_data",
+      "label_tr": "Popülasyon Verileri",
+      "contribution_pct": 4.78,
+      "expected_pct": 18.0
+    },
+    {
+      "group_key": "local_sequence",
+      "label_tr": "Yerel Sekans Özellikleri",
+      "contribution_pct": 0.0,
+      "expected_pct": 2.0
+    }
+  ]
 }

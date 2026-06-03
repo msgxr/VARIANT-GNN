@@ -117,6 +117,7 @@ class VariantGATv2GNN(nn.Module):
         nuc_ids: torch.Tensor | None = None,
         aa_ids: torch.Tensor | None = None,
         mc_dropout: bool = False,
+        **kwargs: object,  # torch_geometric Explainer 'batch' vb. geçebilir — sessizce yut
     ) -> torch.Tensor:
         """
         Forward pass with optional MC-Dropout (force dropout at inference).

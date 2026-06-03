@@ -515,6 +515,16 @@ def instance_explanation_tr(
          Model güveni: Yüksek (olasılık: 0.94, belirsizlik σ: 0.08).
          Uzman onayı önerilir."
     """
+    # Savunmacı tip dönüşümü — çağıran DataFrame'den str/np tipinde geçebilir.
+    try:
+        probability = float(probability)
+    except (TypeError, ValueError):
+        probability = 0.0
+    try:
+        uncertainty = float(uncertainty)
+    except (TypeError, ValueError):
+        uncertainty = 0.0
+
     rows = instance_shap_table(shap_values_instance.flatten(), feature_names)
     top_rows = [r for r in rows if r["direction"] != "Nötr"][:top_n]
     if not top_rows:

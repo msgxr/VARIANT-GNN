@@ -111,37 +111,42 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):  # type: ignore[misc
     TEXT_COL = (30, 30, 30)
     HEADER_BG = (30, 58, 138)
 
-    # DejaVu font yüklenip yüklenmediği (ilk add_page'de kontrol edilir)
-    _DEJAVU_LOADED: bool = False
-    _USE_DEJAVU: bool = False
+    # Path keşfi class-level cache'lenir (pahalı, süreçte bir kez); ANCAK fpdf2'de
+    # add_font ÖRNEK-bazlıdır — her VariantReportPDF örneği fontu KENDİNE kaydetmeli.
+    # None=keşfedilmedi, False=DejaVu yok, (regular, bold)=bulunan yollar.
+    _DEJAVU_PATHS = None  # type: Optional[object]
 
     def _init_fonts(self) -> None:
-        """DejaVuSans fontunu fpdf2'ye kaydet (bir kez)."""
-        if VariantReportPDF._DEJAVU_LOADED:
+        """DejaVuSans fontunu BU fpdf2 örneğine kaydet (örnek başına bir kez)."""
+        if getattr(self, "_fonts_ready", False):
             return
-        VariantReportPDF._DEJAVU_LOADED = True
-        font_path = _find_dejavu_font("")
-        font_bold = _find_dejavu_font("B")
-        if font_path and font_bold:
-            try:
-                self.add_font("DejaVu", style="", fname=font_path)
-                self.add_font("DejaVu", style="B", fname=font_bold)
-                VariantReportPDF._USE_DEJAVU = True
-            except Exception:
-                VariantReportPDF._USE_DEJAVU = False
-        else:
-            VariantReportPDF._USE_DEJAVU = False
+        self._fonts_ready = True
+        self._use_dejavu = False
+        cls = VariantReportPDF
+        if cls._DEJAVU_PATHS is None:  # path keşfi — süreçte bir kez
+            fp = _find_dejavu_font("")
+            fb = _find_dejavu_font("B")
+            cls._DEJAVU_PATHS = (fp, fb) if (fp and fb) else False
+        if not cls._DEJAVU_PATHS:
+            return
+        fp, fb = cls._DEJAVU_PATHS  # type: ignore[misc]
+        try:  # add_font örnek-bazlı: HER örnekte tekrar kaydedilir
+            self.add_font("DejaVu", style="", fname=fp)
+            self.add_font("DejaVu", style="B", fname=fb)
+            self._use_dejavu = True
+        except Exception:
+            self._use_dejavu = False
 
     def _set_font(self, style: str = "", size: int = 10) -> None:
         """DejaVu varsa kullan, yoksa Helvetica fallback."""
-        if VariantReportPDF._USE_DEJAVU:
+        if getattr(self, "_use_dejavu", False):
             self.set_font("DejaVu", style=style if style in ("", "B") else "", size=size)
         else:
             self.set_font("Helvetica", style=style, size=size)
 
     def _txt(self, text: str) -> str:
         """Font'a göre uygun metin temizliği uygular."""
-        if VariantReportPDF._USE_DEJAVU:
+        if getattr(self, "_use_dejavu", False):
             return _safe_text(text)  # Türkçe karakterleri koru
         return _safe_text_latin1(text)  # Türkçe → ASCII fallback
 

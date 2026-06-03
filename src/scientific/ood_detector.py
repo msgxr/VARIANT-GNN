@@ -147,8 +147,11 @@ class OODDetector:
         ood_frac = ood_feat_mask.mean(axis=1)  # [N] 0-1
         ood_flags = ood_frac >= self.ood_frac_thresh  # [N] bool
 
-        # Hangi özellikler OOD?
-        feat_names = (feature_names or [f"feat_{i}" for i in range(F)])[:F]
+        # Hangi özellikler OOD? feature_names F'den kısa olabilir (ör. missing-indicator
+        # kolonları eklenince): eksik isimleri feat_i ile doldurup TAM F uzunluğa getir,
+        # aksi halde feat_names[j] (j>=len) IndexError verir.
+        _given = list(feature_names) if feature_names else []
+        feat_names = (_given + [f"feat_{i}" for i in range(len(_given), F)])[:F]
         ood_features = [[feat_names[j] for j in range(F) if ood_feat_mask[i, j]] for i in range(N)]
 
         # Mahalanobis
