@@ -61,7 +61,7 @@ WITHDRAWN = [
 # ('stale', 'iddia edilemez', and the '→' / '->' change-from arrow that records history).
 # A genuine *live* claim ("Test F1 = 0.8969") carries none of these and is still caught.
 WITHDRAW_MARKERS = (
-    r"geri çek|withdraw|supersed|şişik|leaky|leakage|ÖNCE|previous|GERİ ÇEK|"
+    r"geri çek|geri-çek|withdraw|supersed|şişik|leaky|leakage|ÖNCE|previous|GERİ ÇEK|"
     r"eski|önceki|geçersiz|stale|iddia edilemez|artık|→|->"
 )
 # Every jury/governance-facing doc — drift here is the exact failure mode that
@@ -82,6 +82,11 @@ JURY_DOCS = [
     "reports/PDR_VARIANT_GNN_2026.md",
     "reports/mcc_analysis.md",
     "CHANGELOG.md",
+    # Canlı demo UI — .py dosyaları ama jüri görür; geri-çekilmiş leakage-şişik
+    # sayılar (0.8980/0.5356) buraya da sızmamalı. about.py kör-noktası (firewall
+    # eskiden yalnız .md tarardı) 2026-06-05'te bu iki satırla kapatıldı.
+    "src/ui/about.py",
+    "src/ui/performance.py",
 ]
 
 

@@ -1,41 +1,62 @@
-"""src/ui/about.py — About / Project Info tab for VARIANT-GNN Streamlit app."""
+"""src/ui/about.py — About / Project Info tab for VARIANT-GNN Streamlit app.
+
+Tüm performans sayıları RESULTS_CANONICAL.json'dan (tek doğruluk kaynağı) DİNAMİK
+okunur — hardcode YOK. Bu, About sekmesinin Performance sekmesiyle çelişmesini ve
+geri çekilmiş leakage-şişik sayıların demoda yeniden belirmesini önler
+(§7.5 repro + §III-9 bütünlük).
+"""
 
 from __future__ import annotations
+
+import json
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 REPO_URL = "https://github.com/msgxr/VARIANT-GNN"
+_CANON_PATH = Path(__file__).resolve().parents[2] / "RESULTS_CANONICAL.json"
 
-_PERF_DATA = {
-    "Model": [
-        "VARIANT-GNN (Hibrit)",
-        "GATv2GNN (solo)",
-        "LightGBM (solo)",
-        "XGBoost (solo)",
-        "DNN (solo)",
-        "Baseline (LogReg)",
-    ],
-    "CV F1": ["0.8668", "0.8472", "0.8764", "0.8382", "0.8208", "~0.74"],
-    "Test F1": ["0.8980 ✅", "—", "—", "—", "—", "—"],
-    "MCC": ["0.5356", "—", "—", "—", "—", "—"],
-    "PR-AUC": ["0.9294", "—", "—", "—", "—", "—"],
+# Yedek değerler (canonical okunamazsa) — DÜRÜST sayılar (geri-çekilmiş şişik değerler DEĞİL).
+_FALLBACK = {
+    "test_binary_f1": 0.8367,
+    "test_mcc": 0.5112,
+    "test_pr_auc": 0.9267,
+    "test_roc_auc": 0.8538,
+    "cv_binary_f1_production_oof_stacking": 0.8936,
+    "official_competition_score_4panel_avg": 0.6202,
+}
+_PANEL_FALLBACK = {
+    "General": {"binary_f1": 0.8185, "mcc": 0.4951, "precision": 0.9217, "recall": 0.7361},
+    "Hereditary_Cancer": {"binary_f1": 0.906, "mcc": 0.7135, "precision": 0.9464, "recall": 0.8689},
+    "PAH": {"binary_f1": 0.912, "mcc": 0.5053, "precision": 0.9048, "recall": 0.9194},
+    "CFTR": {"binary_f1": 0.7143, "mcc": 0.0, "precision": 1.0, "recall": 0.5556},
 }
 
-_PANEL_DATA = {
-    "Panel": ["MASTER (General)", "KANSER (Hereditary_Cancer)", "PAH", "CFTR"],
-    "F1": ["0.8872", "0.8960", "0.9556", "0.9524"],
-    "MCC": ["0.5070", "0.6491", "0.5562", "0.6742"],
-    "PR-AUC": ["0.9183", "0.9524", "0.9760", "0.9223"],
-    "Recall": ["0.9679", "0.9912", "0.9790", "1.0000"],
-}
+
+def _load_canonical() -> tuple[dict, dict]:
+    """RESULTS_CANONICAL.json'dan headline + panel metriklerini oku (fallback güvenli)."""
+    try:
+        canon = json.loads(_CANON_PATH.read_text(encoding="utf-8"))
+        return canon.get("headline", {}), canon.get("panel_test_metrics", {})
+    except Exception:
+        return {}, {}
+
+
+def _fmt(val: object, nd: int = 4) -> str:
+    return f"{float(val):.{nd}f}" if isinstance(val, (int, float)) else "—"
 
 
 def render_about_tab() -> None:
     """Render the About / Project Info tab."""
+    h, panels = _load_canonical()
+    g = lambda k: h.get(k, _FALLBACK.get(k))  # noqa: E731
+    test_f1 = _fmt(g("test_binary_f1"))
+    jury_f1 = _fmt(g("official_competition_score_4panel_avg"))
+
     # ── Hero ────────────────────────────────────────────────────────────────
     st.markdown(
-        """
+        f"""
     <div style="background:linear-gradient(135deg,#0f2044 0%,#1a3a6e 40%,#0d2855 100%);
                 border:1px solid rgba(99,179,237,0.3); border-radius:16px;
                 padding:36px 40px; margin-bottom:28px;">
@@ -55,14 +76,18 @@ def render_about_tab() -> None:
                   border-radius:20px; margin-right:8px;">🔬 PSR: 93/100</span>
             <span style="background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
                   color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px;
-                  border-radius:20px;">⚡ Test F1 = 0.8980</span>
+                  border-radius:20px;">⚡ Jüri beklentisi (4-panel %20-F1) = {jury_f1}</span>
         </div>
+        <p style="font-size:0.78rem; color:#64748b; margin:12px 0 0 0;">
+            İç hold-out ayrım gücü Test F1 = {test_f1} (jüri skoru DEĞİL; resmi metrik %20-patojenik
+            test'te 4-panel F1 ortalamasıdır → {jury_f1}).
+        </p>
     </div>
     """,
         unsafe_allow_html=True,
     )
 
-    # ── Architecture diagram ─────────────────────────────────────────────────
+    # ── Architecture diagram (canonical pipeline — SelectKBest/AE KALDIRILDI) ──
     st.markdown(
         """
     <div class="section-header">
@@ -80,20 +105,20 @@ def render_about_tab() -> None:
        ▼
   LeakageFirewall (§3.2 — koordinat + etiket bloklama)
        │
-  ColumnAligner → ACMGProxyFeatures → Median Imputer
-       → RobustScaler → VarianceThreshold + SelectKBest(k=35)
-       → AutoEncoder(dim→16) → Cosine k-NN Graf(k=10)
+  ColumnAligner → CategoricalBioFeatures(AA/CAT/EK) → Median Imputer
+       → RobustScaler → Missing-Indicator(+343, 'missing≠0') → SMOTE(yalnız train)
+       → Cosine k-NN Graf(k=10)
        │
-       ├─ XGBoost       (w=0.30)
-       ├─ LightGBM      (w=0.30)
-       ├─ VariantGATv2GNN (w=0.25)
-       └─ DNN           (w=0.15)
+       ├─ XGBoost          (w=0.30)
+       ├─ LightGBM         (w=0.30)
+       ├─ VariantGATv2GNN  (w=0.25)
+       └─ DNN (Domain-Adversarial) (w=0.15)
                 │
-       Logistic Regression Stacking Meta-Learner
+       OOF-Stacking Logistic Regression Meta-Learner (Wolpert)
                 │
        Isotonic Calibration  ·  MC Dropout (10 pass)
                 │
-       Panel-Specific Threshold  ·  OOD Detector
+       Global θ=0.8415 (%20-prior F1-optimal)  ·  OOD Detector
                 │
        prediction_label  ·  calibrated_risk  ·  uncertainty
     """,
@@ -110,7 +135,7 @@ def render_about_tab() -> None:
         ),
         ("🌲 XGBoost", "Gradient boosting, max_depth=6, 200 ağaç, L1+L2 reg, early stopping.", "0.30"),
         ("💡 LightGBM", "Leaf-wise büyüme, 63 yaprak, fast inference, tabular uzmanı.", "0.30"),
-        ("🤖 DNN", "3-katman MLP [input→128→64→2], BatchNorm + Dropout(0.4), SWA.", "0.15"),
+        ("🤖 DNN", "3-katman MLP [input→128→64→2], BatchNorm + Dropout(0.4), SWA + DANN.", "0.15"),
     ]
     for col, (title, desc, w) in zip([c1, c2, c3, c4], models):
         with col:
@@ -125,29 +150,69 @@ def render_about_tab() -> None:
                 unsafe_allow_html=True,
             )
 
-    # ── Performance table ────────────────────────────────────────────────────
+    # ── Headline metrics (canonical — dinamik) ───────────────────────────────
     st.markdown(
         """
     <div class="section-header">
         <div class="section-icon">📈</div>
-        <h3>Ablasyon — Model Karşılaştırması (CV F1)</h3>
+        <h3>Shipped Model — Başlıca Metrikler (RESULTS_CANONICAL.json)</h3>
     </div>
     """,
         unsafe_allow_html=True,
     )
-    st.dataframe(pd.DataFrame(_PERF_DATA), width="stretch", hide_index=True)
+    perf_df = pd.DataFrame(
+        {
+            "Metrik": [
+                "⭐ Jüri beklentisi: 4-panel %20-F1 ortalaması",
+                "İç hold-out Test F1 (ayrım gücü, jüri skoru değil)",
+                "CV F1 (OOF-stacking, nested group-aware)",
+                "MCC (iç hold-out)",
+                "PR-AUC",
+                "ROC-AUC",
+            ],
+            "Değer": [
+                jury_f1,
+                test_f1,
+                _fmt(g("cv_binary_f1_production_oof_stacking")),
+                _fmt(g("test_mcc")),
+                _fmt(g("test_pr_auc")),
+                _fmt(g("test_roc_auc")),
+            ],
+        }
+    )
+    st.dataframe(perf_df, width="stretch", hide_index=True)
 
-    # ── Panel performance ────────────────────────────────────────────────────
+    # ── Panel performance (canonical — dinamik) ──────────────────────────────
     st.markdown(
         """
     <div class="section-header">
         <div class="section-icon">🧬</div>
-        <h3>Panel Bazlı Performans (Test Seti)</h3>
+        <h3>Panel Bazlı Performans (Test Seti, global θ=0.8415)</h3>
     </div>
     """,
         unsafe_allow_html=True,
     )
-    st.dataframe(pd.DataFrame(_PANEL_DATA), width="stretch", hide_index=True)
+    panel_order = [
+        ("MASTER (General)", "General"),
+        ("KANSER (Hereditary_Cancer)", "Hereditary_Cancer"),
+        ("PAH", "PAH"),
+        ("CFTR", "CFTR"),
+    ]
+    pget = lambda key, m: (panels.get(key) or _PANEL_FALLBACK.get(key, {})).get(m)  # noqa: E731
+    panel_df = pd.DataFrame(
+        {
+            "Panel": [disp for disp, _ in panel_order],
+            "F1": [_fmt(pget(k, "binary_f1")) for _, k in panel_order],
+            "MCC": [_fmt(pget(k, "mcc")) for _, k in panel_order],
+            "Precision": [_fmt(pget(k, "precision")) for _, k in panel_order],
+            "Recall": [_fmt(pget(k, "recall")) for _, k in panel_order],
+        }
+    )
+    st.dataframe(panel_df, width="stretch", hide_index=True)
+    st.caption(
+        "Not: CFTR iç hold-out'ta küçük örneklemli (n≈18) → MCC tanımsız/gürültülü; "
+        "gerçek yarışmada kendi test seti olacaktır. Sayılar RESULTS_CANONICAL.json'dan dinamik okunur."
+    )
 
     # ── Tech stack + References ──────────────────────────────────────────────
     col_t1, col_t2 = st.columns(2)

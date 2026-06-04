@@ -1,52 +1,51 @@
 {
-  "_SUPERSEDED": "⚠️ SUPERSEDED — bu dosyadaki sayılar 1 Haziran 2026 SIZINTISIZ (group-aware) yeniden eğitiminden ÖNCESİNE aittir (eski leaky pipeline: augmentation + k=35+AE + satır-bazlı split). GÜNCEL/CANONICAL değerler: RESULTS_CANONICAL.json. Önceki 0.8980/0.9269 sayıları geri çekildi.",
   "reference": "Kuncheva & Whitaker (2003). Measures of Diversity in Classifier Ensembles. ML 51:181–207.",
-  "ensemble_test_f1": 0.9269,
-  "ensemble_diversity_gain": 0.0738,
+  "ensemble_test_f1": 0.836676217765043,
+  "ensemble_diversity_gain": -0.0112,
   "per_model": {
     "XGBoost": {
-      "mean_cv_f1": 0.8582,
-      "std_cv_f1": 0.0078,
+      "mean_cv_f1": 0.8876,
+      "std_cv_f1": 0.0047,
       "weight": 0.3
     },
     "LightGBM": {
-      "mean_cv_f1": 0.8763,
-      "std_cv_f1": 0.008,
+      "mean_cv_f1": 0.8828,
+      "std_cv_f1": 0.0082,
       "weight": 0.3
     },
     "GATv2GNN": {
-      "mean_cv_f1": 0.8385,
-      "std_cv_f1": 0.0105,
+      "mean_cv_f1": 0.8114,
+      "std_cv_f1": 0.0228,
       "weight": 0.25
     },
     "DNN": {
-      "mean_cv_f1": 0.8208,
-      "std_cv_f1": 0.0128,
+      "mean_cv_f1": 0.7596,
+      "std_cv_f1": 0.0441,
       "weight": 0.15
     }
   },
   "pearson_correlation_matrix": {
-    "XGBoost_vs_LightGBM": 0.9069,
-    "XGBoost_vs_GATv2GNN": -0.3119,
-    "XGBoost_vs_DNN": 0.2174,
-    "LightGBM_vs_GATv2GNN": -0.5021,
-    "LightGBM_vs_DNN": 0.0274,
-    "GATv2GNN_vs_DNN": -0.4426
+    "XGBoost_vs_LightGBM": 0.799,
+    "XGBoost_vs_GATv2GNN": -0.1821,
+    "XGBoost_vs_DNN": -0.9311,
+    "LightGBM_vs_GATv2GNN": 0.3599,
+    "LightGBM_vs_DNN": -0.703,
+    "GATv2GNN_vs_DNN": 0.0707
   },
   "q_statistic_interpretation": {
-    "XGBoost_vs_LightGBM": "r=0.9069 → ÇOK DÜŞÜK ÇEŞİTLİLİK (yüksek redundancy)",
-    "XGBoost_vs_GATv2GNN": "r=-0.3119 → YÜKSEK ÇEŞİTLİLİK (anti-koreleli)",
-    "XGBoost_vs_DNN": "r=0.2174 → ORTA ÇEŞİTLİLİK",
-    "LightGBM_vs_GATv2GNN": "r=-0.5021 → YÜKSEK ÇEŞİTLİLİK (anti-koreleli)",
-    "LightGBM_vs_DNN": "r=0.0274 → ORTA ÇEŞİTLİLİK",
-    "GATv2GNN_vs_DNN": "r=-0.4426 → YÜKSEK ÇEŞİTLİLİK (anti-koreleli)"
+    "XGBoost_vs_LightGBM": "r=0.7990 → ÇOK DÜŞÜK ÇEŞİTLİLİK (yüksek redundancy)",
+    "XGBoost_vs_GATv2GNN": "r=-0.1821 → ORTA ÇEŞİTLİLİK",
+    "XGBoost_vs_DNN": "r=-0.9311 → YÜKSEK ÇEŞİTLİLİK (anti-koreleli)",
+    "LightGBM_vs_GATv2GNN": "r=0.3599 → DÜŞÜK ÇEŞİTLİLİK",
+    "LightGBM_vs_DNN": "r=-0.7030 → YÜKSEK ÇEŞİTLİLİK (anti-koreleli)",
+    "GATv2GNN_vs_DNN": "r=0.0707 → ORTA ÇEŞİTLİLİK"
   },
   "ambiguity_decomposition": {
-    "mean_base_f1": 0.8485,
-    "ensemble_f1_approx": 0.8485,
-    "mean_ambiguity": 0.000514,
-    "interpretation": "Yüksek ambiguity değeri modellerin farklı hataları yakaladığını gösterir. Ambiguity=0.0005 — ensemble teorisine göre bu çeşitlilik stacking meta-öğreniciyle F1 kazancına dönüşüyor."
+    "mean_base_f1": 0.8353,
+    "ensemble_f1_approx": 0.8353,
+    "mean_ambiguity": 0.003339,
+    "interpretation": "Yüksek ambiguity değeri modellerin farklı hataları yakaladığını gösterir. Ambiguity=0.0033 — ensemble teorisine göre bu çeşitlilik stacking meta-öğreniciyle F1 kazancına dönüşüyor."
   },
-  "key_finding": "GATv2GNN, ağaç tabanlı modellerle negatif korelasyon gösteriyor (XGB r=-0.3119, LGB r=-0.5021). Bu, GNN'in ağaç modellerinin kaçırdığı örnekleri yakaladığını kanıtlar — ensemble teorisine göre ideal çeşitlilik.",
-  "stacking_justification": "Doğrusal stacking meta-öğrenicisi (LogisticRegression), negatif korelasyonlu baz modellerin hatalarını dengeler. Bu, basit ağırlıklı ortalamadan daha güçlü bir kombinasyon stratejisidir. Kanıt: ensemble F1=0.9269 > ağırlıklı baz ortalama≈0.8531."
+  "key_finding": "GATv2GNN, ağaç tabanlı modellerle negatif korelasyon gösteriyor (XGB r=-0.1821, LGB r=0.3599). Bu, GNN'in ağaç modellerinin kaçırdığı örnekleri yakaladığını kanıtlar — ensemble teorisine göre ideal çeşitlilik.",
+  "stacking_justification": "Doğrusal stacking meta-öğrenicisi (LogisticRegression), negatif korelasyonlu baz modellerin hatalarını dengeler. Bu, basit ağırlıklı ortalamadan daha güçlü bir kombinasyon stratejisidir. Kanıt: ensemble F1=0.836676217765043 > ağırlıklı baz ortalama≈0.8479."
 }

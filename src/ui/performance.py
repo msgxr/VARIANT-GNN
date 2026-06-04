@@ -80,8 +80,10 @@ _PDR_FIGURES: List[Dict[str, str]] = [
     },
     {
         "file": "10_augmentation_comparison.png",
-        "title": "Gaussian Augmentation Etkisi",
-        "desc": "3802 → 7604 örnek: F1 +2.7%. Sadece eğitim verisine uygulandı.",
+        "title": "Gaussian Augmentation — GERİ ÇEKİLDİ (leakage kaynağı)",
+        "desc": "3802→7604 'çoğaltma' near-twin sızıntısı yarattı (aynı Variant_ID "
+        "train/test'i straddle etti, +3.53pp şişme). DEVRE DIŞI bırakıldı; dürüst "
+        "group-aware skor (reports/leakage_quantification.json).",
         "section": "ablation",
     },
     {

@@ -111,11 +111,16 @@ def q_statistic_from_correlations(corr_dict: Dict[str, float]) -> Dict[str, str]
 def generate_diversity_report(
     cv_report_path: Path = Path("reports/cv_report.json"),
     output_path: Path = Path("reports/ensemble_diversity.json"),
-    ensemble_test_f1: float = 0.9269,
+    ensemble_test_f1: float | None = None,
 ) -> dict:
     """cv_report.json'daki fold verilerinden ensemble çeşitlilik raporu üretir."""
     with open(cv_report_path, encoding="utf-8") as fh:
         cv = json.load(fh)
+
+    # Default = shipped canonical test F1 (cv_report'tan dinamik) — ASLA geri-çekilmiş
+    # leaky 0.9269 değil. Hardcode kaldırıldı (2026-06-05, anti-drift).
+    if ensemble_test_f1 is None:
+        ensemble_test_f1 = cv.get("test_binary_f1") or cv.get("test_metrics", {}).get("binary_f1", 0.8367)
 
     fold_f1s: Dict[str, List[float]] = {
         "XGBoost": [f["xgb_f1"] for f in cv["folds"]],
