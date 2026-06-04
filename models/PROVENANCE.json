@@ -4,6 +4,7 @@
   "real_data_received": true,
   "real_data_received_date": "2026-05-14",
   "generated_at": "2026-05-20T21:15:04",
+  "reconciled_to_canonical": "2026-06-05 — tüm metrikler RESULTS_CANONICAL.json (tek doğruluk kaynağı) ile birebir hizalandı; eski MCC-θ=0.59 / 0.9069 değerleri geri çekildi.",
   "train_config": "configs/pdr.yaml",
   "train_data_file": "data/train_variants.csv",
   "train_samples": 3802,
@@ -13,15 +14,20 @@
   "seed": 42,
   "cv_f1_mean": 0.8936,
   "cv_f1_std": 0.0004,
-  "test_f1": 0.9069,
-  "test_recall": 0.9686,
-  "test_roc_auc": 0.8398,
-  "test_brier": 0.1197,
+  "_test_metrics_note": "Shipped karar eşiği θ=0.8415 (%20-patojenik test prior'a F1-optimal). Aşağıdaki test metrikleri %75-poz iç hold-out AYRIM gücüdür — jüri skoru DEĞİL. Resmi beklenen yarışma skoru = 4-panel %20-F1 ortalaması = 0.6202 (RESULTS_CANONICAL.json).",
+  "test_f1": 0.8367,
+  "test_precision": 0.9241,
+  "test_recall": 0.7644,
+  "test_roc_auc": 0.8538,
+  "test_pr_auc": 0.9267,
+  "test_mcc": 0.5112,
+  "test_brier": 0.1115,
+  "test_ece": 0.0291,
   "panel_f1": {
-    "CFTR": 0.9714,
-    "General": 0.8985,
-    "Hereditary_Cancer": 0.9385,
-    "PAH": 0.9173
+    "CFTR": 0.7143,
+    "General": 0.8185,
+    "Hereditary_Cancer": 0.906,
+    "PAH": 0.912
   },
   "seed_stability": {
     "n_seeds": 5,
@@ -32,42 +38,31 @@
       789,
       2026
     ],
-    "inter_seed_mean_f1": 0.8667,
-    "inter_seed_std_f1": 0.0013
+    "inter_seed_mean_f1": 0.8738,
+    "inter_seed_std_f1": 0.00344
   },
-  "retrain_command": "python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants_aug.csv",
+  "retrain_command": "python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv",
   "predict_command": "python main.py --mode predict --test_file data/<jury_test.csv> --config configs/pdr.yaml",
   "validation_command": "python main.py --mode external_val --test_file data/<test_labelled.csv> --config configs/pdr.yaml",
-  "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir) + Gaussian augmentation (7604 satir toplam). NDA kapsamindaki veri lokal makinede kalmistir.",
-  "global_threshold_strategy": "MCC-optimal (F1 >= baseline-0.01 kısıtıyla)",
-  "panel_optimal_threshold_mcc": {
-    "General": 0.59,
-    "Hereditary_Cancer": 0.2808542713567839,
-    "PAH": 0.13804020100502515,
-    "CFTR": 0.10849246231155779
+  "note": "Gercek TEKNOFEST 2026 yarisma verisi (4 panel, 3802 satir). Augmentation DEVRE DISI (near-twin sizinti). NDA kapsamindaki veri lokal makinede kalmistir.",
+  "global_threshold_strategy": "F1-optimal on %20-patojenik test prior (Q&A-II ile dogrulandi); group-aware HELD-OUT calibration set'te HAM olasilikta turetildi (derivation==inference).",
+  "global_threshold": 0.8415,
+  "panel_thresholds_optin": {
+    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Per-panel tuning kucuk panellerde overfit edip DAHA DUSUK skorladi (4-panel 0.5445 < 0.6202).",
+    "General": 0.399,
+    "Hereditary_Cancer": 0.4532,
+    "PAH": 0.4434,
+    "CFTR": 0.1922
   },
-  "master_mcc_optimization": {
-    "method": "5-fold CV threshold sweep on XGBoost (F1 floor = baseline-0.01)",
-    "old_threshold": 0.241,
-    "new_threshold": 0.59,
-    "cv_mcc_before": 0.5452,
-    "cv_mcc_after": 0.6732,
-    "delta_mcc": 0.128,
-    "cv_f1_before": 0.9001,
-    "cv_f1_after": 0.9049,
-    "delta_f1": 0.0048,
-    "note": "No retraining — decision boundary optimization only"
-  },
+  "_superseded_threshold_note": "Eski 'MCC-optimal theta=0.59' ve theta=0.241 stratejileri GERI CEKILDI — guncel ve shipped strateji global theta=0.8415 (yukarida). reports/threshold_consistency.json / RESULTS_CANONICAL.json.",
   "retrain_date": "2026-06-01",
   "unique_variants": 3224,
   "split": "GROUP-AWARE by Variant_ID (GroupShuffleSplit hold-out + StratifiedGroupKFold CV)",
   "leakage_guard": "PASSED — 0 Variant_IDs straddle train/test",
   "preprocessing_change": "SelectKBest(35)+AutoEncoder REMOVED — discarded signal (+5.3pp honest F1; reports/preprocessing_diagnostic.json)",
-  "test_mcc": 0.5639,
-  "test_pr_auc": 0.9114,
   "canonical_results": "RESULTS_CANONICAL.json",
-  "superseded_numbers": "Previous 0.8980/0.9269 withdrawn — leakage-inflated.",
-  "categorical_bio_features": "ENABLED (use_categorical_bio=true) — +0.31pp CV vs no-bio 0.8680",
-  "domain_adversarial_dnn": "ENABLED (use_dann=true) — CV +0.68pp + tighter std; LOPO +2.17pp (reports/dann_lopo_validation.json)",
-  "oof_stacking": "ENABLED — meta-learner genuine OOF üzerinde (Wolpert). Test F1 0.8963→0.9069 (+1.06pp), MCC→0.5639. reports/stacking_improvement.json"
+  "superseded_numbers": "Previous 0.8980/0.9269 (ve eski PROVENANCE 0.9069 argmax-tavani) withdrawn — shipped theta=0.8415 -> test F1=0.8367.",
+  "categorical_bio_features": "ENABLED (use_categorical_bio=true) — pooled +0.38pp tek-model ablasyon (reports/bio_feature_ablation.json)",
+  "domain_adversarial_dnn": "ENABLED (use_dann=true) — panel-invariant DNN (gradient reversal); robustluk tasarim bileseni (DNN agirligi %15).",
+  "oof_stacking": "ENABLED — meta-learner genuine OOF uzerinde (Wolpert), nested-CV +0.59pp (0.8936 vs 0.8877). NOT: reports/stacking_improvement.json icindeki 0.9069 ARGMAX-tavani; shipped theta=0.8415 -> test F1=0.8367."
 }

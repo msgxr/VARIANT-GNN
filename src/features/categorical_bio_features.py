@@ -29,9 +29,11 @@ Türetilen öznitelikler ve ACMG karşılığı:
   insilico_consensus (EK [0,1] skorlarının uzlaşısı)                    → PP3/BP4
   insilico_disagreement                                                → belirsizlik sinyali
 
-Doğrulama: 5-seed × 5-fold ablasyonda tek-model Binary F1 +0.7pp
-(reports/bio_feature_ablation.json). Universal biyokimya olduğu için iç bölmeye
-değil, dağılım-bağımsız sinyale dayanır → harici doğrulamada (final metriği) sağlamdır.
+Doğrulama: 5-seed × 5-fold ablasyonda tek-model (LightGBM) havuzlanmış Binary F1
++0.38pp / +0.023 MCC (reports/bio_feature_ablation.json — ölçülen değer; kazanç
+General panelinde yoğun, küçük panellerde PAH/HC hafif geriler). Universal biyokimya
+olduğu için iç bölmeye değil, dağılım-bağımsız sinyale dayanır → harici doğrulamada
+(final metriği) sağlamdır.
 """
 
 from __future__ import annotations

@@ -7,6 +7,7 @@
   "production_before_test_f1": 0.8963,
   "production_after_test_f1": 0.9069,
   "delta_test_pp": 1.06,
+  "_threshold_note": "Bu test_f1 degerleri (0.8963/0.9069) ARGMAX/varsayilan esikte AYRIM tavanidir — SHIPPED skor DEGIL. Shipped karar esigi theta=0.8415 (%20-prior'a F1-optimal) -> test F1=0.8367 (RESULTS_CANONICAL.json). 0.9069 jurinin gordugu skor degildir. NOT: bu dosya egitimde uretilir; donmus yaris fazinda yeniden uretilmez.",
   "production_before_mcc": 0.5313,
   "production_after_mcc": 0.5639,
   "nested_cv_fixed_weight": 0.8877,
