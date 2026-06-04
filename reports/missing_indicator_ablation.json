@@ -14,5 +14,5 @@
     "official_4panel": 0.6202,
     "pah_f1_20pct": 0.5299
   },
-  "conclusion": "Eksiklik DESENİ patojeniteye katkı sağlıyor (median impute bu sinyali yok ediyordu). +343 özellik → AUC +0.38pp, resmi 4-panel skor +1.5pp, PAH +5.4pp. Hakemin 'missing≠0' uyarısı doğrudan kullanıldı."
+  "conclusion": "Eksiklik DESENİ patojeniteye katkı sağlıyor (median impute bu sinyali yok ediyordu). +343 özellik → AUC +0.34pp (5-SEED DOĞRULU, 5/5 seed iyileşti), resmi 4-panel skor +1.5pp (TEK-KOŞU), PAH +5.4pp (TEK-KOŞU). Hakemin 'missing≠0' uyarısı doğrudan kullanıldı. NOT: Sadece AUC deltası seed-doğrulanmıştır; 4-panel/PAH deltaları tek koşudur ve gürültü payı taşır."
 }

@@ -42,7 +42,7 @@
     "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6202 (CFTR hariç; hold-out'ta n çok küçük, ölçülemedi — gerçek yarışmada kendi seti olacak). Ortalama = (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299) / 3.",
     "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json).",
     "roc_auc": 0.8538,
-    "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812 (fold) / 0.8936 (OOF-stacking), RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp), PAH 0.476→0.530 (+5.4pp). reports/missing_indicator_ablation.json"
+    "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812 (fold) / 0.8936 (OOF-stacking), RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp, TEK-KOŞU), PAH 0.476→0.530 (+5.4pp, TEK-KOŞU). NOT: yalnız AUC +0.34pp 5-seed doğrulandı; 4-panel/PAH deltaları tek-koşudur (gürültü payı var). reports/missing_indicator_ablation.json"
   },
   "panel_test_metrics": {
     "CFTR": {
