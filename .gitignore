@@ -104,6 +104,10 @@ train_log.txt
 # yeniden-paylaşım çekincesi nedeniyle public repoya PUSH EDİLMEZ; ekip içi referans)
 docs/qa/
 
+# İç strateji/rekabet dokümanları (candid zayıflık + "iddia etme" notları içerir —
+# jüriye görünen repoya GİRMEZ; PDR yazımı için ekip içi referans)
+docs/strategy/
+
 # Claude Code — kişisel ayarlar ve geçici klasörler ignore; skills + context repoda
 .claude/settings.local.json
 .claude/settings.json
