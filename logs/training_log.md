@@ -2,7 +2,21 @@
 
 **Proje:** TEKNOFEST 2026 Sağlıkta Yapay Zekâ  
 **Takım:** XYRA3 (#909249)  
-**Bu dosya:** Gerçek yarışma verisi üzerinde yapılan eğitim oturumlarını belgeler.
+**Bu dosya:** Eğitim oturumlarını kronolojik belgeler (tarihsel + canonical).
+
+---
+
+> ## ⚠️ GERİ ÇEKİLDİ — Oturum 1–3 (Mayıs 2026) SIZINTILI / GERÇEK-VERİ-ÖNCESİ protokoldendir
+>
+> Oturum 1–3 sayıları (Test F1≈0.8984, MCC≈0.5378, θ=0.01, panel eşikleri 0.24/0.28/0.14/0.11)
+> **satır-bazlı split + Gaussian augmentation near-twin sızıntısıyla** üretildi ve **GEÇERSİZDİR**
+> (`reports/leakage_quantification.json`). Özellikle **Oturum 3'teki "augmentation +%2.78 iyileştirme"
+> bir SIZINTI ARTEFAKTIDIR** (aynı varyantın jitter'lı kopyaları train+test'e düştü); augmentation
+> kalıcı olarak **devre dışı** bırakıldı.
+>
+> **GEÇERLİ / CANONICAL sonuçlar → Oturum 4 (aşağıda) ve [`../RESULTS_CANONICAL.json`](../RESULTS_CANONICAL.json):**
+> Test F1=**0.8367** @ θ=**0.8415** (group-aware, sızıntısız), CV F1=**0.8936 ± 0.0004** (OOF-stacking),
+> MCC=**0.5112**; jüri 4-panel %20-F1 ort.=**0.6202**.
 
 ---
 
@@ -109,13 +123,49 @@ python main.py --mode train --config configs/psr.yaml --data data/train_variants
 | Baseline (orijinal veri) | 0.8706 | — |
 | Gaussian augmentation (σ=0.02) | **0.8984** | **+0.0278** |
 
-**Sonuç:** Gaussian feature augmentation Test F1'i +%2.78 iyileştirdi.
+**Sonuç (GERİ ÇEKİLDİ):** ⚠️ Bu "+%2.78 iyileştirme" gerçek bir kazanç değil, **sızıntı
+artefaktıdır** — augmentation, aynı varyantın near-twin kopyalarını satır-bazlı split'in iki
+yanına düşürdü (`reports/leakage_quantification.json`). Group-aware (sızıntısız) protokolde
+augmentation NET FAYDA SAĞLAMAZ ve kalıcı olarak devre dışıdır.
+
+---
+
+## Oturum 4 — 2026-06-01 (Sızıntısız Group-Aware Retrain — ⭐ CANONICAL)
+
+**Veri:** `data/train_variants.csv` (gerçek NDA, 3.802 satır / 3.224 tekil varyant, 4 panel)  
+**Config:** `configs/pdr.yaml`  
+**Split:** GROUP-AWARE (Variant_ID) — GroupShuffleSplit %80/20 hold-out + StratifiedGroupKFold 5-fold  
+**Seed:** 42 | **Augmentation:** DEVRE DIŞI | **SelectKBest/AutoEncoder:** KALDIRILDI (+5.3pp dürüst geri kazanım)  
+**Leakage guard:** PASSED — 0 Variant_ID train/test'i çaprazlamıyor
+
+### Sonuçlar (canonical — `RESULTS_CANONICAL.json`)
+
+| Metrik | Değer |
+|:-------|------:|
+| CV Binary F1 (OOF-stacking, nested) | **0.8936 ± 0.0004** |
+| CV Binary F1 (fold-CV bileşen) | 0.8812 ± 0.0113 |
+| Test Binary F1 (§7.3, hold-out @ θ=0.8415) | **0.8367** |
+| MCC | 0.5112 |
+| Precision / Recall | 0.9241 / 0.7644 |
+| ROC-AUC / PR-AUC | 0.8538 / 0.9267 |
+| Brier / ECE | 0.1115 / 0.0291 |
+| **Global karar eşiği θ** | **0.8415** (%20-patojenik prior; Q&A-II ile doğrulandı) |
+| Jüri 4-panel %20-F1 ortalaması | **0.6202** (havuzlanmış 0.6042 ± 0.0324) |
+
+### Panel Bazlı Test Metrikleri (global θ=0.8415)
+
+| Panel | F1 | MCC |
+|:------|---:|----:|
+| General (MASTER) | 0.8185 | 0.4951 |
+| Hereditary_Cancer (KANSER) | 0.9060 | 0.7135 |
+| PAH | 0.9120 | 0.5053 |
+| CFTR | 0.7143 | tanımsız (n=18 degenerate) |
 
 ---
 
 ## Reproducibility Kanıtı
 
-Bu logdaki sonuçları yeniden üretmek için:
+Canonical (Oturum 4) sonuçlarını yeniden üretmek için:
 
 ```bash
 # 1. Ortamı kur
@@ -124,12 +174,17 @@ pip install -r requirements.txt
 # 2. Seed ve deterministik mod
 export PYTHONHASHSEED=42
 
-# 3. Eğit
-python main.py --mode train --config configs/psr.yaml
+# 3. Eğit (canonical config)
+python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv
 
 # Beklenen çıktı:
-# Cross-validation complete: Binary F1 (Pathogenic §7.3) = 0.8661 ± 0.0080
-# Test Binary F1 = 0.8984
+# Cross-validation complete: Binary F1 (§7.3) = 0.8936 ± 0.0004
+# Leakage guard PASSED: 0 variants straddle train/test
+# [TEST] [§7.3 PRIMARY] Binary F1 : 0.8367
+
+# 4. Tutarlılık kapısı
+python scripts/check_results_consistency.py   # ✅ PASS
 ```
 
-**Not:** Sonuçlar ±0.001 toleransla yeniden üretilebilir. CPU/GPU arası küçük farklar kabul edilebilirdir.
+**Not:** Sonuçlar deterministiktir (seed=42); ağaç üyeleri birebir, nöral bileşenler ±küçük
+çalışma-varyansı (bkz. `RESULTS_CANONICAL.json → seed_stability`). CPU/GPU arası küçük farklar kabul edilebilirdir.

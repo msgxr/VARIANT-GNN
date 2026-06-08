@@ -1,7 +1,7 @@
 # 02_competition_summary.md — Yarışma Özeti
 
 **Kaynak:** TEKNOFEST 2026 Şartnamesi (Türkçe v4) + Resmi Ana Sayfa  
-**Versiyon:** 2026-05-24
+**Versiyon:** 2026-06-09
 
 ---
 
@@ -33,7 +33,7 @@
 | **Final** | **Ağustos–Eylül 2026** | — |
 | TEKNOFEST Festivali | 30 Eylül – 4 Ekim 2026 | Şanlıurfa |
 
-**Bugün itibarıyla PDR'ye kalan süre: 36 gün (2026-05-24)**
+**Bugün itibarıyla PDR'ye kalan süre: 20 gün (2026-06-09)**
 
 ---
 

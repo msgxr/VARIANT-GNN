@@ -33,14 +33,16 @@ senaryoları ele alır (§3.2).
                                    ▼
                   ┌────────────────────────────────────┐
                   │ src/features/preprocessing         │
+                  │  • GROUP-AWARE split (Variant_ID)  │
                   │  • ColumnAligner (anonim kolonlar) │
+                  │  • CategoricalBioFeaturizer (ACMG) │
                   │  • Median Imputer                  │
                   │  • RobustScaler                    │
-                  │  • VarianceThreshold + SelectKBest │
-                  │  • AutoEncoder latent (16 dim)     │
+                  │  • SMOTE (yalnız eğitim fold)      │
                   │  • Distributional signatures       │
                   │     (anonim eşleştirme için)       │
-                  │  • Sample k-NN graph builder       │
+                  │  • Cosine k-NN graph (TAM öznitelik)│
+                  │  (SelectKBest/AutoEncoder KALDIRILDI)│
                   └─────────────────┬──────────────────┘
                                     ▼
    ┌──────────────────────────────────────────────────────────────┐
@@ -96,11 +98,15 @@ senaryoları ele alır (§3.2).
 
 ### 3.2 Özellik Mühendisliği (`src/features/`)
 
-- **`preprocessing.py`** — Sklearn-uyumlu pipeline (median impute → RobustScaler →
-  VarianceThreshold → SelectKBest → AutoEncoder latent ekleme + sample
-  k-NN graph). **Tek kuralı:** her transformer YALNIZCA eğitim split'inde fit edilir.
-- **`autoencoder.py`** — 16-boyutlu latent feature öğrenir; deep modellerin
-  performansını artırır.
+- **`preprocessing.py`** — Sklearn-uyumlu pipeline (ColumnAligner → CategoricalBioFeaturizer →
+  median impute → RobustScaler → SMOTE [yalnız eğitim fold] → cosine k-NN graph; **TAM
+  öznitelik seti**). **Tek kuralı:** her transformer YALNIZCA eğitim split'inde fit edilir.
+  > **Not (sızıntısız retrain):** `VarianceThreshold + SelectKBest(35) + AutoEncoder(→16)`
+  > adımları **kaldırıldı** — group-aware CV'de sinyal atıp ≈+5.3pp F1 kaybettiriyorlardı
+  > (`reports/preprocessing_diagnostic.json`).
+- **`autoencoder.py`** — **LEGACY (shipped pipeline'dan kaldırıldı).** 16-boyutlu latent
+  temsili; sızıntısız değerlendirmede net negatif etki yaptığı için devre dışı, yalnız
+  ablasyon/tarihsel referans için tutulur.
 - **`multimodal_encoder.py`** — Nuc_Context (11 nükleotid) ve AA_Context
   (11 amino asit) için CNN tabanlı SequenceEncoder.
 - **`feature_validator.py`** — §3.2 6 özellik kategorisini doğrular ve
@@ -122,8 +128,8 @@ grafiği** üzerinde tam-batch node classification yapar. Genomik adres
 
 ### 3.4 Eğitim (`src/training/`)
 
-- **`trainer.py`** — `VariantTrainer.train()` → 5-fold StratifiedKFold +
-  hold-out test split + final fit + kalibrasyon.
+- **`trainer.py`** — `VariantTrainer.train()` → **group-aware** 5-fold StratifiedGroupKFold
+  (Variant_ID) + group-aware hold-out test split (leakage guard: 0 straddle) + final fit + kalibrasyon.
 - **`focal_loss.py`** — Sınıf dengesizliği için Focal Loss.
 - **`swa.py`** — Stochastic Weight Averaging (Izmailov 2018).
 - **`sam.py`** — Sharpness-Aware Minimization (Foret 2021).

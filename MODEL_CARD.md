@@ -298,9 +298,10 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 |---|---|
 | **Sürüm** | `v1.0.0` |
 | **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
-| **Son güncelleme** | 2 Haziran 2026 — Test F1=0.8367 @ θ=0.8415 (sızıntısız, group-aware) |
+| **Son güncelleme** | 9 Haziran 2026 — Test F1=0.8367 @ θ=0.8415 (sızıntısız, group-aware); %20-patojenik prior Q&A-II ile doğrulandı |
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
-> değişiklikleriyle birlikte güncellenir. Son güncelleme: 2 Haziran 2026
-> (θ=0.8415 canonical retrain; tüm sayılar `RESULTS_CANONICAL.json` ile tutarlı).
+> değişiklikleriyle birlikte güncellenir. Son güncelleme: 9 Haziran 2026
+> (θ=0.8415 canonical retrain; %20-patojenik test prior'ı Q&A-II transkriptiyle
+> doğrulandı; tüm sayılar `RESULTS_CANONICAL.json` ile tutarlı).

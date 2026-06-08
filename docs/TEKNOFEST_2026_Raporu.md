@@ -9,6 +9,28 @@
 
 ---
 
+> ## ⚠️ TARİHSEL ARTEFAKT — SUNULAN PSR (25 Mart 2026, 93/100)
+>
+> Bu belge, ön eleme aşamasında TEKNOFEST'e **sunulmuş** Proje Sunuş Raporu'dur ve
+> **tarihsel kayıt olarak korunur**. İçindeki sayılar **PSR pilot/sentetik geliştirme
+> dönemine** aittir ve gerçek yarışma verisi alındıktan (14 Mayıs 2026) sonra yapılan
+> **sızıntısız group-aware retrain** ile **GERİ ÇEKİLMİŞTİR**:
+>
+> | PSR pilot (bu belge) | Güncel / canonical (geçerli) |
+> |---|---|
+> | Panel F1 ≈ 0.94, MCC ≈ 0.89 | Test F1 = **0.8367**, MCC = **0.5112**; jüri 4-panel %20-F1 ort. = **0.6202** |
+> | Karar eşiği 0.40 | Global **θ = 0.8415** (%20-patojenik prior; Q&A-II ile doğrulandı) |
+> | SelectKBest(35) + AutoEncoder | **Kaldırıldı** (sinyal atıyordu; +5.3pp dürüst geri kazanım) |
+> | Stratified random split (%65/15/20) | **Group-aware** (Variant_ID) 80/20 + StratifiedGroupKFold |
+> | MC Dropout 30 pass | 10 pass |
+>
+> PSR pilot MCC=0.892 → gerçek MCC=0.5112 **farkı gizlenmemiş**, PDR §4.2'de dürüstçe
+> açıklanmıştır. **Güncel ve geçerli sonuçların tek kaynağı:**
+> [`RESULTS_CANONICAL.json`](../RESULTS_CANONICAL.json) ve güncel rapor
+> [`reports/PDR_VARIANT_GNN_2026.md`](../reports/PDR_VARIANT_GNN_2026.md).
+
+---
+
 ## İÇİNDEKİLER
 
 1. TAKIM ŞEMASI
@@ -134,7 +156,9 @@ Veri bölme: %65 eğitim (CV), %15 kalibrasyon (isotonik regresyon), %20 test; s
 ### 4.2 Performans Metrikleri ve Panel Bazlı Raporlama (5 puan)
 **Tablo 3: Panel Bazlı Performans Sonuçları (5-Fold CV)**
 
-> ⚠️ Aşağıdaki değerler gerçek TEKNOFEST verisi alındığında güncellenecektir.
+> ⚠️ **GERİ ÇEKİLDİ (PSR pilot).** Aşağıdaki değerler gerçek veri öncesi pilot/sentetik
+> dönemdendir ve sızıntısız retrain ile geçersiz kılınmıştır. Güncel sonuçlar: Test F1=0.8367,
+> jüri 4-panel %20-F1 ort.=0.6202 → `RESULTS_CANONICAL.json` (bkz. yukarıdaki tarihsel-artefakt notu).
 
 | Panel | **Binary F1 (§7.3)** | Macro F1 | ROC-AUC | MCC | Brier Score |
 | :--- | :---: | :--- | :--- | :--- | :--- |

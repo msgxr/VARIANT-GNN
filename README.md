@@ -1072,9 +1072,12 @@ python scripts/check_results_consistency.py   # ✅ PASS beklenir
 
 1. `RESULTS_CANONICAL.json` başlığı == `reports/cv_report.json` test metrikleri.
 2. İç tutarlılık: test `2·P·R/(P+R)` == test `binary_f1`.
-3. Geri çekilmiş leaky sayılar (0.8980, 0.9269, 0.5356, θ=0.241 …) jüri belgelerinde **güncel iddia olarak görünemez**.
+3. Geri çekilmiş leaky sayılar (0.8980, 0.9269, 0.5356, θ=0.241 …) jüri belgelerinde **güncel iddia olarak görünemez** (jüri-görünür `src/ui/about.py` ve `performance.py` demo UI dahil).
 4. Jüri-görünür raporlarda "sentetik/synthetic proxy" dili yok.
 5. Eşik tek-kaynak: shipped `models/threshold.json` == canonical `global_threshold` (0.8415), rakip θ yok.
+6. Resmi jüri-F1 başlığı (4-panel %20-F1 ort. = 0.6202, havuzlanmış = 0.6042 ± 0.0324) == `reports/competition_jury_f1.json`.
+7. Canonical panel F1'leri == `reports/cv_report.json` `panel_metrics`.
+8. `models/PROVENANCE.json` metrikleri == canonical (jeneratörsüz dosyanın yeniden sürüklenmesine karşı anti-drift pini).
 
 ---
 

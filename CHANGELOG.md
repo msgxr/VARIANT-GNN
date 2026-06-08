@@ -4,6 +4,28 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 
 ---
 
+## [4.1.0] — 5 Haziran 2026 (Q&A-II Doğrulaması + Anti-Drift Sertleştirme + Demo Bütünlüğü)
+
+### Doğrulandı (resmi kaynak)
+- **Test dağılımı:** Test setinin %20-patojenik/%80-benign olduğu, TEKNOFEST resmi **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); belirsizlik U-008 → çözüldü. F1'in panel-bazlı hesaplanıp **4-panel ortalaması** alındığı da teyit edildi. RESMİ headline **0.6202** (4-panel %20-F1 ort.) değişmedi (`RESULTS_CANONICAL.json → provenance_verified`).
+
+### Eklendi
+- **PROVENANCE anti-drift firewall (Check #8):** `scripts/check_results_consistency.py`, jeneratörü olmayan `models/PROVENANCE.json` metriklerini canonical'a pinler — eski sürüklenmiş değerlerin (önceki θ=0.59 / 0.9069) geri dönmesi artık build-failing.
+- **Nested-CV per-panel eşik savunma aracı:** global θ vs per-panel eşik karşılaştırması, dürüst reproduce-guard'lı.
+- **Inference NaN-koruması:** missing-indicator eğitim-çıkarım simetrisi (§3.2 "missing≠0") çıkarım yolunda da korunur.
+- **3 yüksek-riskli jüri-inference koruması:** pozisyonel-kuplaj fail-loud + 342-uçurum + `jury_minimal`; named-branch isim-bazlı reorder testi (TD-013 hafifletmesi).
+- **Anonim jüri writer'ı §10 etik-gating:** klinik-çağrışımlı kolonlar opt-in kaldırılabilir.
+
+### Düzeltildi
+- **Demo bütünlüğü:** geri çekilmiş leakage-şişik sayılar (0.8980/0.9269) Streamlit demo UI'dan ve koddan kaldırıldı; firewall'ın yalnız `.md` tarayan UI kör-noktası kapatıldı (`src/ui/about.py`, `src/ui/performance.py` artık taranır).
+- **Rule-13 hizalama:** repo-içi dayanaksız/eski sayılar canonical'a hizalandı (jüri çelişki riski kapatıldı).
+- **Tek-koşu dürüstlük etiketi:** missing-indicator 4-panel/PAH deltaları "tek-koşu (gürültü payı var)" olarak işaretlendi; yalnız ROC-AUC +0.34pp 5-seed doğrulandı.
+- **Açıklanabilirlik (§4.4):** 4 bug düzeltildi → SHAP/LIME/GNNExplainer/ACMG zinciri uçtan uca çalışır.
+- **PDR baştan revize:** PAH=Fenilketonüri düzeltmesi + dürüst SHAP Tablo 3 + matematiksel kanıtlar + 18 figür; agresif sayfa-kesimi → **10 içerik sayfası** (jüri ≤10, Word COM ile ölçülüp kanıtlandı).
+- **Kalite/CI:** mypy strict 100→0; schema-drift guard 12-kolon (OOD); requirements-ci viz/explainability/tuning deps; opsiyonel-dep yoksa smoke SKIP; CLI menü BOM-strip; `scripts/baslat.bat` V2.0.
+
+---
+
 ## [4.0.0] — 2 Haziran 2026 (Sızıntısız Retrain + CANONICAL Tek Doğruluk Kaynağı)
 
 ### Düzeltildi (KRİTİK)

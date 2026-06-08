@@ -1,6 +1,6 @@
 # Yol Haritası — VARIANT-GNN
 
-**Güncelleme tarihi:** 24 Mayıs 2026
+**Güncelleme tarihi:** 9 Haziran 2026 (PDR teslimine 20 gün)
 
 ## P0 — PDR Kritik (Mayıs–Haziran 2026)
 
@@ -13,10 +13,12 @@
 - [x] JSON veri sözleşmelerini tamamla (`data/contracts/`)
 - [x] Anonim kolon modunu gerçek veriyle test et (feature_coverage=0.0, beklenen)
 - [x] Reproducibility checklist'i tamamla (SHA256, PROVENANCE.json, seed=42)
+- [x] PDR baştan revize: PAH=Fenilketonüri, dürüst SHAP Tablo 3, 18 figür, jüri ≤10 sayfa kesimi (3 Haziran 2026)
 - [ ] PDR raporunu resmi DOCX şablonuna aktar ve teslim et (29 Haziran 2026)
 - [x] SHAP waterfall görseli PDR §2.4'e ekle (§4.4 puanı +1.67) — 24 Mayıs 2026
-- [ ] Deney günlüğü tablosu PDR §4.5'e ekle (§4.5 puanı +1.67)
+- [x] Deney günlüğü + öğrenme eğrisi tablosu PDR §4.5'e ekle (§4.5 puanı +1.67) — 3 Haziran 2026
 - [x] 5×4 model-panel ablasyon tablosu (§5.1 puanı +1.00) — PDR Tablo 8, 24 Mayıs 2026
+- [x] Test %20-patojenik prior'ını resmi Q&A-II transkriptiyle doğrula (U-008 → çözüldü, 3 Haziran 2026)
 
 ## P1 — Jüri Hazırlık (Haziran–Temmuz 2026)
 
@@ -28,7 +30,7 @@ Final aşamasına hazırlık için geliştirmeler:
 - [x] docs/evaluation/evaluation_protocol.md mevcut
 - [x] docs/submission/teknofest_submission.md mevcut
 - [x] LightGBM artifact roundtrip testini ekle (TD-004 — CLOSED)
-- [ ] jury_predictions.csv gerçek kör test verisiyle yeniden üret (`submission/predict.py`)
+- [x] Sentetik `jury_predictions.csv` placeholder'ını kaldır (silindi 2026-06-02); gerçek tahmin jüri kör seti geldiğinde `submission/predict.py` ile üretilir
 - [ ] Streamlit UI klinik uyarı metnini güçlendir
 - [ ] Multimodal sekans inference tutarlılığını test et (TD-006)
 

@@ -2,11 +2,17 @@
 
 ## Veri Durumu
 
-> ⚠️ Bu dizindeki `train_variants.csv` ve `test_variants.csv` dosyaları, gerçek yarışma verisi
-> alınmadan önce geliştirme ve pipeline testi amacıyla kullanılan **gerçekçi sentetik pilot veri**dir.
-> Dosya yapısı ve kolon şeması şartnameyle uyumludur; içerik gerçek ClinVar/gnomAD
-> kayıtlarından türetilmemiştir. Gerçek yarışma verisi CSV dosyalarının aynı isimle
-> bu dizine yerleştirilmesiyle pipeline değişiklik gerektirmeden çalışacaktır.
+> ✅ **GÜNCEL (14 Mayıs 2026'dan itibaren):** Gerçek TEKNOFEST 2026 yarışma verisi alındı.
+> Tüm canonical sonuçların (Test F1=0.8367, CV F1=0.8936±0.0004 — `RESULTS_CANONICAL.json`)
+> eğitildiği **`data/train_variants.csv` artık GERÇEK NDA verisidir** (3.802 satır, 3.224 tekil
+> varyant, 4 panel; §3.2 gereği kolon adları **ANONİMLEŞTİRİLMİŞ** — `AL_*`, `CAT_*`, `EK_*`,
+> `AA_*`). Bu dosya NDA kapsamında **gitignore'dadır** (repoya yüklenmez), lokal makinede tutulur.
+>
+> ⚠️ **Aşağıdaki adlandırılmış kolon şeması (CADD_phred, REVEL_score … bölüm 1-6) tarihsel
+> sentetik/pilot geliştirme verisinin ve §3.2'nin BEKLENEN öznitelik kategorilerinin
+> dokümantasyonudur** — gerçek yarışma kolonları anonimdir ve `ColumnAligner` +
+> `CategoricalBioFeaturizer` ile hizalanır/işlenir. Eski sentetik pilot veri `data/synthetic/`
+> altında arşivlenmiştir.
 
 ## Veri Seti Amacı
 
@@ -16,15 +22,19 @@ tahmin eden bir sınıflandırma modelinin eğitim ve değerlendirmesi için kul
 
 ## Mevcut Dosyalar
 
-| Dosya | Açıklama | Satır Sayısı |
+> **Not:** Canonical eğitim, gerçek NDA `data/train_variants.csv` (3.802 satır, gitignore) üzerinde
+> **group-aware %20 hold-out** ile yapılır; ayrı bir `test_variants.csv` kullanılmaz (yukarıdaki
+> Veri Durumu notuna bakınız). Aşağıdaki tablo tarihsel sentetik/pilot dosyaları ve §3.2 nominal
+> panel bölüştürmesini belgeler.
+
+| Dosya | Açıklama | Satır Sayısı (pilot/nominal) |
 |---|---|---|
-| `train_variants.csv` | Eğitim verisi — tüm paneller (Label dahil) | ≈3940 örnek |
-| `test_variants.csv` | Test verisi — tüm paneller (Label dahil, değerlendirme için) | ≈2460 örnek |
+| `train_variants.csv` (gerçek, NDA) | Eğitim verisi — 4 panel, anonim kolonlar, group-aware split | 3.802 (canonical) |
 | `test_variants_blind.csv` | Kör test — Label yok (yarışma tahmin formatı) | — |
-| `train_general.csv` | Genel panel eğitim verisi | 3000 örnek |
-| `train_hereditary_cancer.csv` | Kalıtsal kanser panel eğitim | 400 örnek |
-| `train_pah.csv` | PAH (Fenilketonüri) panel eğitim | 400 örnek |
-| `train_cftr.csv` | CFTR (Kistik Fibrozis) panel eğitim | 140 örnek |
+| `train_general.csv` | Genel panel — sentetik pilot | 3000 örnek |
+| `train_hereditary_cancer.csv` | Kalıtsal kanser — sentetik pilot | 400 örnek |
+| `train_pah.csv` | PAH (Fenilketonüri) — sentetik pilot | 400 örnek |
+| `train_cftr.csv` | CFTR (Kistik Fibrozis) — sentetik pilot | 140 örnek |
 
 ## Eğitim/Test Panel Sayıları (Şartname §3.2)
 
@@ -160,15 +170,15 @@ karar destek amacıyla kullanılması yasaktır.
 ## Kullanım
 
 ```bash
-# Model eğitimi (psr.yaml konfigürasyonu ile)
-python main.py --mode train --config configs/psr.yaml --data_file data/train_variants.csv
+# Model eğitimi (canonical — pdr.yaml konfigürasyonu ile)
+python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv
 
-# 5-fold çapraz doğrulama
-python main.py --mode crossval --config configs/psr.yaml --data_file data/train_variants.csv
+# 5-fold group-aware çapraz doğrulama
+python main.py --mode crossval --config configs/pdr.yaml --data_file data/train_variants.csv
 
 # Kör tahmin (yarışma submission formatı)
-python main.py --mode predict --test_file data/test_variants_blind.csv
+python submission/predict.py --input data/test_variants_blind.csv --output submission/predictions.csv
 
-# External validation
-python main.py --mode external_val --test_file data/test_variants.csv
+# External validation (etiketli test seti ile)
+python main.py --mode external_val --config configs/pdr.yaml --test_file <test_labelled.csv>
 ```

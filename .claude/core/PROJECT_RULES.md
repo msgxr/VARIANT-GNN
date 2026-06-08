@@ -1,6 +1,6 @@
 # PROJECT_RULES.md — VARIANT-GNN
 
-**Versiyon:** 2026-05-24  
+**Versiyon:** 2026-06-09  
 **Kaynak:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması Şartnamesi (Türkçe v4) + PDR Şablonu  
 **Geçerlilik:** Bu proje süresince değiştirilemez kurallar
 

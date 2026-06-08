@@ -1,7 +1,7 @@
 # 05_data_and_metric_rules.md — Veri ve Metrik Kuralları
 
 **Kaynak:** TEKNOFEST 2026 Şartnamesi (Türkçe v4)  
-**Versiyon:** 2026-06-02 (canonical: RESULTS_CANONICAL.json)
+**Versiyon:** 2026-06-09 (canonical: RESULTS_CANONICAL.json)
 
 ---
 

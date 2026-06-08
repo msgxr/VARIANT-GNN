@@ -20,12 +20,12 @@ Bu PR'ın amacını kısaca açıklayın.
 - [ ] Gerçek yarışma verisi repoya eklenmedi
 - [ ] Model binary dosyaları gitignore kapsamında
 - [ ] Klinik iddialar kapsam içinde (araştırma ve yarışma prototipi)
-- [ ] docs/MODEL_CARD.md güncel (mimari değiştiyse)
+- [ ] MODEL_CARD.md güncel (mimari değiştiyse)
 - [ ] CHANGELOG.md güncellendi
 
 ## Model Değişikliği Varsa
 
-- [ ] Mimari değişikliği `docs/MODEL_CARD.md`'de yansıtıldı
+- [ ] Mimari değişikliği `MODEL_CARD.md`'de yansıtıldı
 - [ ] Eski checkpoint'lerle backward compat korundu
 - [ ] Ablation testi çalıştırıldı
 - [ ] Ensemble ağırlıkları `configs/default.yaml`'da güncellendi

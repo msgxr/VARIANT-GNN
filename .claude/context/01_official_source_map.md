@@ -1,6 +1,6 @@
 # 01_official_source_map.md — Resmi Kaynak Haritası
 
-**Versiyon:** 2026-05-24  
+**Versiyon:** 2026-06-09  
 **İlke:** Bu dosyadaki her bilgi yalnızca aşağıdaki resmi kaynaklardan alınmıştır.
 
 ---

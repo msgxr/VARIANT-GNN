@@ -40,7 +40,7 @@ Unverifiable items: mark UNVERIFIED, never assume
 
 **Current verified values (CANONICAL: RESULTS_CANONICAL.json):**
 ```
-Jüri beklentisi (%20 patojenik (resmi Q&A) (UNVERIFIED)): balanced F1=0.6042±0.0324 (havuzlanmış); RESMİ headline=0.6202
+Jüri beklentisi (%20 patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03): balanced F1=0.6042±0.0324 (havuzlanmış); RESMİ headline=0.6202
 İç hold-out: Test F1=0.8367 | CV F1=0.8936±0.0004 | MCC=0.5112 | PR-AUC=0.9267 | θ=0.8415
 Panel F1 @ θ=0.8415: MASTER 0.8185 | KANSER 0.9060 | PAH 0.9120 | CFTR 0.7143
 WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241

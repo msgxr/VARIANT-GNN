@@ -1,6 +1,6 @@
 # ERRORCHECKLIST.md — VARIANT-GNN
 
-**Versiyon:** 2026-05-24  
+**Versiyon:** 2026-06-09  
 **Kullanım:** error-checker skill ve genel hata denetimi için referans  
 **Kapsam:** Domain A–J — tam proje denetim alanları
 

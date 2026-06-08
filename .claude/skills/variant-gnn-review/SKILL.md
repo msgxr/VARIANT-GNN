@@ -286,7 +286,7 @@ State explicitly if missing.
 Inspect the following components file-by-file:
 
 - GNN
-- VariantSAGEGNN (SAGEConv)
+- VariantGATv2GNN (GATv2Conv; eski alias VariantSAGEGNN — yalnız checkpoint uyumu)
 - XGBoost
 - LightGBM
 - DNN

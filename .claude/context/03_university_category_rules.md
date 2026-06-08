@@ -1,7 +1,7 @@
 # 03_university_category_rules.md — Üniversite Kategorisi Kuralları
 
 **Kaynak:** TEKNOFEST 2026 Şartnamesi (Türkçe v4)  
-**Versiyon:** 2026-05-24
+**Versiyon:** 2026-06-09
 
 ---
 

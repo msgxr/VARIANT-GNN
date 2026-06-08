@@ -1,7 +1,7 @@
 # 06_team_and_process_rules.md — Takım ve İş Süreci
 
 **Kaynak:** TEKNOFEST 2026 Şartnamesi + Proje iç düzeni  
-**Versiyon:** 2026-05-24
+**Versiyon:** 2026-06-09
 
 ---
 

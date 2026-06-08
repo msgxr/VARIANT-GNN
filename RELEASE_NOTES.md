@@ -2,6 +2,16 @@
 
 Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik geçmişi için `CHANGELOG.md` referans alınır.
 
+## 2026-06-05 (v4.1.0 — Q&A-II Doğrulaması + Anti-Drift Sertleştirme) ⭐
+
+- **Resmi doğrulama:** Test seti %20-patojenik/%80-benign dağılımı TEKNOFEST **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); 4-panel-ortalama skorlama kuralı teyit edildi; belirsizlik U-008 çözüldü. RESMİ headline **0.6202** değişmedi (`provenance_verified`).
+- **Anti-drift firewall genişletildi:** `check_results_consistency.py` **Check #8** — `models/PROVENANCE.json` canonical'a pinlendi (jeneratörsüz dosya sürüklenirse build fail). UI kör-noktası kapatıldı: `src/ui/about.py` ve `src/ui/performance.py` da taranır.
+- **Demo bütünlüğü:** geri çekilmiş leakage-şişik sayılar (0.8980/0.9269) Streamlit demosundan ve koddan kaldırıldı.
+- **Dürüstlük etiketi:** tek-koşu missing-indicator 4-panel/PAH deltaları "tek-koşu" olarak işaretlendi; yalnız ROC-AUC +0.34pp 5-seed doğrulandı.
+- **Jüri-inference sağlamlığı:** inference NaN-koruması (missing≠0 simetrisi), 3 yüksek-riskli koruma (pozisyonel-kuplaj fail-loud + 342-uçurum + jury_minimal), anonim writer §10 etik-gating, nested-CV per-panel eşik savunma aracı.
+- **PDR:** baştan revize — PAH=Fenilketonüri, dürüst SHAP Tablo 3, 18 figür, agresif sayfa-kesimi → 10 içerik sayfası (jüri ≤10, Word COM ölçümü). Açıklanabilirlik §4.4 tam çalışır (4 bug).
+- **Kalite:** mypy strict 100→0; schema-drift guard 12-kolon OOD; CI/test sağlamlığı.
+
 ## 2026-06-02 (v4.0.0 — Sızıntısız Retrain + CANONICAL sayılar) ⭐
 
 - **Sızıntı giderildi (KRİTİK):** Eğitim artık `Variant_ID`'ye göre **group-aware** bölme kullanır (GroupShuffleSplit + StratifiedGroupKFold). Önceki satır-bazlı split, augmentation near-twin (369) + panel-overlap (578) yoluyla aynı varyantı train+test'e düşürerek **+3.71 pp** şişme yaratıyordu (`reports/leakage_quantification.json`).

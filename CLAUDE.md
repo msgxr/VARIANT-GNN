@@ -256,5 +256,5 @@ Claude, Bot, AI, Automation commit kimliğinde **kesinlikle görünemez**.
 
 ---
 
-*CAPOS v2.0 — Updated 2026-05-24 | 16 skills, 9 agents, full official-source guardrails*  
+*CAPOS v2.0 — Updated 2026-06-09 | 16 skills, 9 agents, full official-source guardrails*  
 *Next review: after PDR submission (29.06.2026)*

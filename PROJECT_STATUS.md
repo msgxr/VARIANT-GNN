@@ -1,12 +1,18 @@
 # Proje Durumu — VARIANT-GNN
 
-**Güncelleme tarihi:** 2 Haziran 2026
+**Güncelleme tarihi:** 9 Haziran 2026
 
 ## Mevcut Aşama
 
 **PDR (Proje Detay Raporu) Geliştirmesi**
 
-PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 17:00.
+PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 17:00 (teslime **20 gün** kaldı).
+
+> **Son dönem (3–5 Haziran 2026):** Test setinin %20-patojenik/%80-benign dağılımı resmi
+> **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (U-008 → çözüldü); PDR baştan revize edildi
+> (PAH=Fenilketonüri düzeltmesi, dürüst SHAP Tablo 3, 18 figür, jüri ≤10 sayfa kesimi);
+> açıklanabilirlik §4.4 tam çalışır hâle getirildi (4 bug); anti-drift firewall genişletildi
+> (`models/PROVENANCE.json` pinlendi, demo UI kör-noktası kapatıldı). Ayrıntı: `CHANGELOG.md` [4.1.0].
 
 ## Veri ve Model Durumu
 
@@ -49,17 +55,19 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 
 ## PDR için Kalan Görevler
 
-1. **[Gerekli]** PDR'yi resmi DOCX şablonuna aktar (teslim formatı)
-2. **[Önerilen]** SHAP waterfall görseli PDR §2.4'e ekle (§4.4 puanı için)
-3. **[Önerilen]** Deney günlüğü tablosu PDR §4.5'e ekle (§4.5 puanı için)
-4. **[Önerilen]** 5×4 model-panel ablasyon tablosu (§5.1 puanı için)
+1. **[Gerekli]** PDR'yi resmi DOCX şablonuna aktar ve teslim et (29 Haziran 2026, 17:00)
+2. **[Önerilen]** LIME-SHAP örtüşme görselini PDR §2.4'e ekle (ρ=0.89 belgelendi; görsel final)
+
+> ✅ **Tamamlanan PSR→PDR güçlendirmeleri (06-03 revizyonu):** SHAP waterfall (§4.4),
+> deney günlüğü + öğrenme eğrisi + ablasyon tablosu (§4.5), 4-model × 4-panel Binary F1
+> karşılaştırma tablosu (§5.1). Detay: README §25, `CHANGELOG.md` [3.2.1]/[4.1.0].
 
 ## Bilinen Sınırlamalar
 
 - MASTER (General) paneli MCC=0.4951: sınıf dengesizliği (2.75:1), %20-patojenik jüri seti etkisi; PDR §4.2'de açıklandı
 - Klinik validasyon kapsamı dışındadır; bu sistem klinik tanı amacıyla kullanılamaz
 - VUS (Önemi Belirsiz Varyant) desteği bulunmamaktadır
-- `jury_predictions.csv` sentetik placeholder — gerçek jüri verisiyle `predict.py` yeniden çalıştırılmalı
+- Sentetik `jury_predictions.csv` placeholder'ı **silindi** (2026-06-02); gerçek tahminler jüri kör test setini sağladığında `submission/predict.py` ile üretilir
 
 ## PSR → PDR Puanı Hedef
 

@@ -1,6 +1,6 @@
 # Teknik Borç — VARIANT-GNN
 
-**Güncelleme tarihi:** 24 Mayıs 2026
+**Güncelleme tarihi:** 9 Haziran 2026
 
 Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken alanları listeler.
 
@@ -47,9 +47,9 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 - **Çözüm:** `.gitignore`'a `reports/*.pdf` eklendi.
 
 ### TD-009: `venv/` Klasörü
-- **Durum:** Açık
-- **Açıklama:** `venv/` gitignore'da `venv/` ile kapsanmış ama repoya girmiş olabilir. `git rm --cached venv/` gerekebilir.
-- **Risk:** Repo boyutu şişer.
+- **Durum:** Düzeltildi
+- **Açıklama:** `.venv/` / `venv/` `.gitignore`'da kapsandı; sanal ortam repoya dahil değildir.
+- **Risk:** Kapatıldı (repo boyutu kontrol altında).
 
 ## Düşük Öncelikli
 

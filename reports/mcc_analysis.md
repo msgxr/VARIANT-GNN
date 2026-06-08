@@ -1,6 +1,6 @@
 # MCC Analizi — PDR Jüri Hazırlığı (CANONICAL)
 
-**Tarih:** 2026-06-02  
+**Tarih:** 9 Haziran 2026 (test %20-patojenik prior'ı Q&A-II ile doğrulandı)  
 **Hazırlayan:** XYRA3 (#909249)  
 **Kaynak:** `RESULTS_CANONICAL.json`, `reports/cv_report.json`  
 **Eşik:** GLOBAL **θ = 0.8415** (group-aware OOF, canonical). Tüm sayılar bu eşikte hesaplanır.

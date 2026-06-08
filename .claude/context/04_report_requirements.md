@@ -1,7 +1,7 @@
 # 04_report_requirements.md — Rapor Gereksinimleri
 
 **Kaynak:** TEKNOFEST 2026 PDR Şablonu (Üniversite) + PSR Şablonu (Üniversite)  
-**Versiyon:** 2026-05-24
+**Versiyon:** 2026-06-09
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## PDR — Proje Detay Raporu
 
-**Teslim:** 29 Haziran 2026, 17:00 (36 gün kaldı — 2026-05-24 itibarıyla)  
+**Teslim:** 29 Haziran 2026, 17:00 (20 gün kaldı — 2026-06-09 itibarıyla)  
 **Şablon:** 2026_PDR_Şablon_Universite_TR_bCw49.docx
 
 ### Zorunlu Bölümler (Şablondan)
@@ -36,7 +36,7 @@
 | 4 | Sonuç | 25 puan |
 | 5 | Kaynakça | 10 puan |
 
-**Not:** Sayfa limiti ve ağırlıklar şablondan doğrulanmalı — UNVERIFIED (tam değer şablonda)
+**Not:** Sayfa limiti = **≤10 içerik sayfası** (resmi PDR şablonu DOCX'ten doğrulandı; `report-template-checker` SKILL). PDR bu limite kesildi (2026-06-03, Word COM ile ölçüldü). Bölüm ağırlıkları yukarıdaki tabloda.
 
 ### PDR Kalite Gereksinimleri
 

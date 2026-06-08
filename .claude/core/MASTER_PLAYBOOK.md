@@ -4,7 +4,7 @@
 **Project:** VARIANT-GNN | **Team:** XYRA3 | **ID:** 909249  
 **Competition:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
 **PDR Deadline:** 29.06.2026, 17:00 | **Final:** Ağustos–Eylül 2026, Şanlıurfa  
-**Last Updated:** 2026-06-02 (sızıntısız retrain; tüm sayılar RESULTS_CANONICAL.json)
+**Last Updated:** 2026-06-09 (Q&A-II ile %20-patojenik prior doğrulandı; PROVENANCE anti-drift firewall Check #8; demo bütünlüğü; PDR ≤10 sayfa. Tüm sayılar RESULTS_CANONICAL.json)
 
 ---
 
@@ -46,7 +46,7 @@ Prediction: python main.py --mode predict --test_file <file>
 ## 3. VERIFIED PERFORMANCE (Real Competition Data — 2026-06-02, canonical: RESULTS_CANONICAL.json)
 
 ### Overall
-⭐ **Jüri beklentisi (%20 patojenik (resmi Q&A — UNVERIFIED — artefakt eklenecek)) = havuzlanmış Binary F1 = 0.6042 ± 0.0324** (θ=0.8415); **RESMİ headline = 0.6202** (4-panel %20-F1 ort.). İç ayrım gücü aşağıda:
+⭐ **Jüri beklentisi (%20 patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03) = havuzlanmış Binary F1 = 0.6042 ± 0.0324** (θ=0.8415); **RESMİ headline = 0.6202** (4-panel %20-F1 ort.). İç ayrım gücü aşağıda:
 
 | CV F1 (OOF-stacking) | Test F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall | Threshold |
 |---|---|---|---|---|---|---|---|
@@ -193,4 +193,4 @@ PDR format → .claude/skills/report-template-checker/SKILL.md
 
 ---
 
-*CAPOS v2.0 — 16 skills, 9 agents | Updated 2026-05-24*
+*CAPOS v2.0 — 16 skills, 9 agents | Updated 2026-06-09*

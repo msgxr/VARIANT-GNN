@@ -126,4 +126,4 @@ Bir kapı başarısızlığı deadline öncesi düzeltilemiyorsa:
 
 ---
 
-*CAPOS Quality Gates v2.0 — 2026-05-24*
+*CAPOS Quality Gates v2.0 — 2026-06-09*

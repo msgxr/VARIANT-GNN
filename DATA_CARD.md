@@ -9,7 +9,7 @@
 | **Veri türü** | Missense genetik varyant anotasyon profilleri |
 | **Etiket** | Patojenik (1) / Benign (0) |
 | **Mevcut veri durumu** | ✅ Gerçek TEKNOFEST 2026 yarışma verisi (14 Mayıs 2026 alındı) |
-| **Yarışma verisi durumu** | ✅ Model 2 Haziran 2026'da sızıntısız (group-aware) protokolle yeniden eğitildi — CV F1 = 0.8936 ± 0.0004 (production OOF-stacking), Test F1 = 0.8367 @ θ=0.8415; jüri beklentisi (%20-patojenik) = 0.6042±0.0324 |
+| **Yarışma verisi durumu** | ✅ Model 1 Haziran 2026'da sızıntısız (group-aware) protokolle yeniden eğitildi (canonical hizalama 5 Haziran 2026) — CV F1 = 0.8936 ± 0.0004 (production OOF-stacking), Test F1 = 0.8367 @ θ=0.8415; jüri beklentisi (%20-patojenik) = 0.6042±0.0324 |
 | **Gizlilik** | KVKK/GDPR ve TEKNOFEST NDA bağlamında; genomik adres bilgileri gizlenmiş, ham hasta verisi içermez |
 | **Format** | CSV (nümerik özellikler + isteğe bağlı sekans bağlamı) |
 
@@ -45,7 +45,7 @@
 
 ## Veri Durumu
 
-> ✅ **Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alındı.** Model 2 Haziran 2026'da bu veriyle **sızıntısız (group-aware, Variant_ID)** protokolle yeniden eğitildi. Karar eşiği θ=0.8415 (%20-patojenik jüri seti için kalibre); Test F1=0.8367, CV F1=0.8936±0.0004 (production OOF-stacking).
+> ✅ **Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alındı.** Model 1 Haziran 2026'da bu veriyle **sızıntısız (group-aware, Variant_ID)** protokolle yeniden eğitildi (tüm metrikler 5 Haziran 2026'da `RESULTS_CANONICAL.json`'a hizalandı). Karar eşiği θ=0.8415 (%20-patojenik jüri seti için kalibre, Q&A-II ile doğrulandı); Test F1=0.8367, CV F1=0.8936±0.0004 (production OOF-stacking).
 >
 > Eski sentetik geliştirme verisi `data/synthetic/` altında arşivlenmiştir.
 > Gerçek veri `data/raw/` klasöründe TEKNOFEST NDA kapsamında lokal olarak tutulmaktadır (GitHub'a yüklenmez).

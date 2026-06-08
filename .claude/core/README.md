@@ -99,7 +99,7 @@ Doğrulanamayan yarışma bilgisi → **UNVERIFIED** işareti. Hiçbir zaman kes
 
 ---
 
-## Hızlı Durum (2026-05-24)
+## Hızlı Durum (2026-06-09)
 
 | Görev | Durum |
 |---|---|

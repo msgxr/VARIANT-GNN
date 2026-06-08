@@ -1,6 +1,6 @@
 # Açıklanabilirlik Örnekleri — PDR §4.4
 
-**Tarih:** 2026-05-19  
+**Tarih:** 9 Haziran 2026 (canonical θ=0.8415 ile hizalandı)  
 **Hazırlayan:** XYRA3 (#909249)  
 **Kapsam:** SHAP Waterfall Analizi (2 örnek) + GNNExplainer Subgraph Analizi
 

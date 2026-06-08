@@ -1,8 +1,8 @@
 # Teslim Kontrol Listesi — VARIANT-GNN
 
-**PDR Teslim Tarihi:** 29 Haziran 2026  
-**Son Güncelleme:** 2 Haziran 2026  
-**Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle sızıntısız (group-aware) eğitilmiş (2 Haziran 2026)
+**PDR Teslim Tarihi:** 29 Haziran 2026 (teslime 20 gün)  
+**Son Güncelleme:** 9 Haziran 2026  
+**Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle sızıntısız (group-aware) eğitilmiş (1 Haziran 2026; canonical hizalama 5 Haziran 2026)
 
 ---
 
@@ -15,6 +15,7 @@
 | Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112 |
 | train_log.txt gerçek veri eğitimini gösteriyor | ✅ Tamamlandı | 48 KB log, 5-fold CV + test metrikleri |
 | Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
+| Test %20-patojenik prior'ı resmi kaynakla doğrulandı | ✅ Tamamlandı | Q&A-II Üniversite transkripti (2026-06-03); U-008 → çözüldü |
 
 ---
 
@@ -23,6 +24,7 @@
 | Görev | Durum | Kanıt |
 |---|---|---|
 | PDR resmi şablonu kullanıldı | ✅ Tamamlandı | `reports/PDR_VARIANT_GNN_2026.md` |
+| PDR jüri sayfa limiti (≤10 içerik sayfası) | ✅ Tamamlandı | Agresif sayfa-kesimi (2026-06-03); Word COM ile ölçülüp kanıtlandı |
 | Giriş: problem tanımı, ACMG bağlamı, literatür | ✅ Tamamlandı | §1, 4 özgün katkı, 12 IEEE referans |
 | Yöntem: preprocessing, mimari, validation, XAI | ✅ Tamamlandı | §2, GATv2Conv gerekçesi, ablasyon |
 | Bulgular: F1/MCC/PR-AUC, panel bazlı, eşik analizi | ✅ Tamamlandı | §3, Tablo 7-9, gerçek değerler |
