@@ -31,6 +31,7 @@ _miss_cols are fixed integer indices, so a blind CSV whose column ORDER differs
 from training can read indicators from the wrong columns even with NaN
 preserved. That needs a name/signature-keyed aligner (follow-up).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -93,9 +94,7 @@ def test_fillna_zero_destroys_indicator_block():
     out_filled = pre.transform(np.nan_to_num(X, nan=0.0))
 
     assert out_raw[:, n_in:].any(), "raw-NaN path should fire indicators"
-    assert not out_filled[:, n_in:].any(), (
-        "fillna(0.0) path must produce an all-zero block (the bug)"
-    )
+    assert not out_filled[:, n_in:].any(), "fillna(0.0) path must produce an all-zero block (the bug)"
 
 
 def test_runner_align_features_preserves_nan():
@@ -153,6 +152,4 @@ def test_anonymous_pad_uses_nan_not_zero():
     pad_cols = [c for c in padded.columns if str(c).startswith("__pad_")]
     assert pad_cols, "expected padded columns"
     # Post-fix: padded columns must be NaN (missing), not literal 0.0.
-    assert padded[pad_cols].isna().all().all(), (
-        "padded columns must be NaN so the preprocessor treats them as missing"
-    )
+    assert padded[pad_cols].isna().all().all(), "padded columns must be NaN so the preprocessor treats them as missing"

@@ -11,6 +11,7 @@ df_result's raw columns. This test pins the jury-facing outputs only.
 
 Pure unit test: in-memory DataFrame, no model/preprocessor, no skip gate.
 """
+
 import pandas as pd
 import pytest  # noqa: F401  (kept for parametrize-friendliness)
 

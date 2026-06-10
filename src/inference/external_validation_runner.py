@@ -109,9 +109,7 @@ class ExternalValidationRunner:
             # FAIL-LOUD: feature_names.json sözleşmesi YOK. Pozisyonel hizalama
             # sessizce yapılırsa ve sütun sırası eğitimden farklıysa tüm tahminler
             # bozulur. Bu yüzden bağıntıyı yüksek görünürlükle yüzeye çıkar.
-            logger.warning(
-                "=" * 72
-            )
+            logger.warning("=" * 72)
             logger.warning(
                 "FEATURE-NAME CONTRACT MISSING: models/feature_names.json bulunamadı "
                 "— POZİSYONEL hizalama VARSAYILDI. Doğruluk, çıkarım CSV'sinin sütun "
@@ -119,12 +117,8 @@ class ExternalValidationRunner:
                 "Sütun sırası farklıysa tahminler sessizce yanlış olur. Üretim teslimi "
                 "için models/feature_names.json bir sonraki eğitim koşusunda ÜRETİLMELİDİR."
             )
-            logger.warning(
-                "Pozisyonel mod: %d numeric sütun kullanılıyor.", numeric_df.shape[1]
-            )
-            logger.warning(
-                "=" * 72
-            )
+            logger.warning("Pozisyonel mod: %d numeric sütun kullanılıyor.", numeric_df.shape[1])
+            logger.warning("=" * 72)
             # Savunmacı tanı: genişlik eğitimden farklıysa uyar. ASIL koruma
             # VariantPreprocessor.transform'daki output-width invaryantıdır
             # (yanlış genişlikte net hata verir), bu yüzden burada fail-loud gerekmez.

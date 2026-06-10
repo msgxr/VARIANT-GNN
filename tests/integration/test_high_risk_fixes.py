@@ -15,6 +15,7 @@ Regression guards for the 3 high-risk jury-inference fixes.
 Tests that need the trained preprocessor auto-skip when models/preprocessor.pkl
 is absent (fresh clone before training).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -93,9 +94,7 @@ def test_anonymous_skips_reorder_at_expected_width(monkeypatch):
 
 # ── #3 — submission format: validator accepts minimal, rejects when default ─
 def _write_minimal_csv(path: Path) -> Path:
-    pd.DataFrame(
-        {"Variant_ID": ["V1", "V2", "V3"], "prediction_label": [1, 0, 1]}
-    ).to_csv(path, index=False)
+    pd.DataFrame({"Variant_ID": ["V1", "V2", "V3"], "prediction_label": [1, 0, 1]}).to_csv(path, index=False)
     return path
 
 

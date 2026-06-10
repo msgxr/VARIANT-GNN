@@ -3,6 +3,7 @@ src/ui/protein_viz.py — 3D protein görselleştirme (DEMO İSKELETİ).
 NOT: Bu modül şu an hiçbir UI sekmesine bağlı DEĞİLDİR ve sabit/illüstratif bir
 varyant bölgesi (resi 50-60) gösterir — gerçek per-varyant residue mapping yoktur.
 """
+
 import streamlit as st
 
 try:

@@ -19,6 +19,7 @@ NOT: F1 monoton dönüşüme değişmez; per-panel eşik yalnız küçük panell
 ekler (mevcut free-per-panel zaten 0.5445<<0.6202 — competition_jury_f1.json).
 Çıktı: reports/nested_cv_threshold_defense.json (yalnız metrik; NDA veri sızmaz).
 """
+
 from __future__ import annotations
 
 import json
@@ -112,7 +113,7 @@ def main() -> int:
         thr = {p: (1 - lam) * THETA_GLOBAL + lam * theta_oof[p] for p in panels}
         sc, _ = panel_avg(oof_p, oof_y, oof_pan, thr)
         oof_lam[str(lam)] = sc
-    lam_selected = float(max(oof_lam, key=lambda k: (oof_lam[k] if oof_lam[k] == oof_lam[k] else -1)))
+    lam_selected = float(max(oof_lam, key=lambda k: oof_lam[k] if oof_lam[k] == oof_lam[k] else -1))
     thr_sel = {p: (1 - lam_selected) * THETA_GLOBAL + lam_selected * theta_oof[p] for p in panels}
     nested_test_score, nested_per = panel_avg(test_p, test_y, test_pan, thr_sel)
 

@@ -30,7 +30,6 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)

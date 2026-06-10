@@ -218,9 +218,7 @@ def main() -> None:
             SubmissionValidator,
         )
 
-        validator = SubmissionValidator(
-            expected_columns=JURY_MINIMAL_COLUMNS if args.jury_minimal else None
-        )
+        validator = SubmissionValidator(expected_columns=JURY_MINIMAL_COLUMNS if args.jury_minimal else None)
         report = validator.validate(submission_path=args.output)
         validator.print_report(report, verbose=True)
         if not report.passed:

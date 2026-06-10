@@ -157,7 +157,13 @@ class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):  # type: ignore[misc
         self.set_text_color(255, 255, 255)
         self._set_font("B", 16)
         self.set_xy(10, 8)
-        self.cell(0, 8, self._txt("VARIANT-GNN | Varyant Açıklanabilirlik Raporu (Araştırma Amaçlı)"), new_x="LMARGIN", new_y="NEXT")
+        self.cell(
+            0,
+            8,
+            self._txt("VARIANT-GNN | Varyant Açıklanabilirlik Raporu (Araştırma Amaçlı)"),
+            new_x="LMARGIN",
+            new_y="NEXT",
+        )
         self._set_font("", 9)
         self.set_xy(10, 18)
         self.cell(
