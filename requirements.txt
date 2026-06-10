@@ -36,7 +36,7 @@ optuna==3.6.1
 pytest==8.2.0
 
 # ── Streamlit UI ──
-streamlit==1.35.0
+streamlit==1.58.0
 
 # ── Validation (Pydantic v2 — config schema, data contracts) ──
 pydantic==2.7.1

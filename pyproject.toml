@@ -28,7 +28,7 @@ dependencies = [
     "networkx==3.3",
     "tqdm==4.66.4",
     "optuna==3.6.1",
-    "streamlit==1.35.0",
+    "streamlit==1.58.0",
     "pydantic==2.7.1",
     "pyyaml==6.0.1",
     "fpdf2==2.7.9",
