@@ -308,7 +308,7 @@ class ExternalValidationRunner:
             key = str(v).strip().lower()
             if key in label_map:
                 return label_map[key]
-            return int(float(v))
+            return int(float(str(v)))
 
         y = np.array([_to_label(v) for v in labels], dtype=int)
 
