@@ -19,8 +19,8 @@ sırayla devre dışı bırakarak validation Binary F1 (Pathogenic, §7.3)
   - GNN    : GATv2 GNN'i ensemble'dan çıkar
   - DNN    : DNN'i ensemble'dan çıkar
   - SMOTE  : SMOTE re-sampling'i kapat
-  - AE     : AutoEncoder latent feature'ı kapat
-  - SelectKBest : ANOVA F-test feature selection'ı kapat
+  (NOT: AE / SelectKBest canonical hatta zaten KAPALI olduğundan ablasyon spec'leri
+   kaldırıldı — delta≈0 yanıltıcı satır üretmesinler diye.)
 
 Her ablation için tam pipeline yeniden eğitilir, Binary F1 hesaplanır,
 JSON raporu üretilir:
@@ -317,8 +317,9 @@ class AblationRunner:
             ("no_gnn", "GATv2 GNN devre dışı", {"drop_models": ["gnn"]}),
             ("no_dnn", "DNN devre dışı", {"drop_models": ["dnn"]}),
             ("no_smote", "SMOTE devre dışı", {"smote_enabled": False}),
-            ("no_autoencoder", "AutoEncoder feature devre dışı", {"use_autoencoder": False}),
-            ("no_feature_selection", "SelectKBest devre dışı", {"use_feature_selection": False}),
+            # NOT: no_autoencoder / no_feature_selection spec'leri KALDIRILDI — AE+SelectKBest
+            # canonical hatta zaten KAPALI (configs/default.yaml), bu yüzden override delta≈0
+            # üretip §4.5 ablasyon tablosunu yanıltırdı.
         ]
 
         results: List[AblationResult] = []

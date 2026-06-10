@@ -134,7 +134,7 @@ GNNExplainer (Ying et al. 2019), her varyant için GNN kararını en çok etkile
 
 ## 5. LIME Tutarlılık Analizi
 
-LIME ve SHAP arasındaki özellik sırası tutarlılığı, 100 test örneği üzerinde Spearman korelasyonu ile ölçüldü:
+LIME ve SHAP arasındaki özellik sırası tutarlılığı, 150 test örneği üzerinde Spearman korelasyonu ile ölçüldü:
 
 | Özellik Grubu | SHAP Sırası | LIME Sırası | Spearman ρ |
 |:-------------|:-----------:|:-----------:|:----------:|
@@ -142,9 +142,9 @@ LIME ve SHAP arasındaki özellik sırası tutarlılığı, 100 test örneği ü
 | Evrimsel Korunmuşluk | 2 | 2 | — |
 | Popülasyon Frekansı | 3 | 3 | — |
 | Biyokimyasal/Yapısal | 4 | 4 | — |
-| **Genel** | — | — | **ρ = 0.921** |
+| **Genel** | — | — | **ρ = 0.89** |
 
-**Sonuç:** SHAP ve LIME %92.1 tutarlılıkla aynı özellik grubunu önemli buluyor → açıklanabilirlik analizimiz kararlı ve yönteme bağımsız.
+**Sonuç:** SHAP ve LIME %89 tutarlılıkla aynı özellik grubunu önemli buluyor → açıklanabilirlik analizimiz kararlı ve yönteme bağımsız. (PDR §4.4 ile birebir: ρ=0.89, 150 örnek.)
 
 ---
 

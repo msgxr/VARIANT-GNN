@@ -250,14 +250,19 @@ def predict_sample():
     Model yüklü olmalıdır.
     """
     t0 = time.perf_counter()
-    rng = np.random.default_rng(42)
-    df_raw = pd.DataFrame(
-        {
-            "Variant_ID": [f"DEMO_{i:03d}" for i in range(5)],
-            "Panel": ["General"] * 5,
-            **{f"feature_{i}": rng.uniform(0, 1, 5).tolist() for i in range(43)},
-        }
-    )
+    # Gerçek §3.2 anonim format örneğinden oku (sahte feature_i kolonları, modelin
+    # AL_*/CAT_* booster özellikleriyle EŞLEŞMEZ → eski demo hep HTTP 422 dönerdi).
+    from pathlib import Path
+
+    sample_path = Path(__file__).resolve().parents[2] / "data" / "samples" / "jury_blind_sample.csv"
+    if not sample_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Örnek veri dosyası bulunamadı (data/samples/jury_blind_sample.csv).",
+        )
+    df_raw = pd.read_csv(sample_path)
+    if "Panel" not in df_raw.columns:
+        df_raw["Panel"] = "General"
     return _run_prediction(df_raw, t0)
 
 

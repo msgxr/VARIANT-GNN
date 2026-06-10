@@ -284,22 +284,27 @@ else:
     sv = explainer.shap_values(X_sub)
     if isinstance(sv, list):
         sv = sv[1] if len(sv) > 1 else sv[0]  # class 1 = Patojenik
-    # sv: (N, 51) — 35 KB feature + 16 AE latent
+    # sv: (N, F) — canonical hat: tüm §3.2 özellik seti korunur (SelectKBest + AE KALDIRILDI)
 
     # ── Özellik isimlerini geri eşle ────────────────────────────────────────
-    n_kb = 35
-    n_ae = X_te_p.shape[1] - n_kb  # genellikle 16
-
-    # SelectKBest'in seçtiği orijinal kolon isimleri
+    n_features = X_te_p.shape[1]
     if hasattr(preproc, "_kb_selector") and preproc._kb_selector is not None:
+        # Legacy yol: SelectKBest aktif → seçilen orijinal kolonlara geri eşle
         mask_kb = preproc._kb_selector.get_support()
-        selected_kb = [feat_cols[i] for i, m in enumerate(mask_kb) if m]
+        all_names = [feat_cols[i] for i, m in enumerate(mask_kb) if m]
+        all_names += [f"ae_latent_{i}" for i in range(n_features - len(all_names))]
+    elif n_features == len(feat_cols):
+        # Canonical yol: SHAP kolonları işlenmiş özelliklerle birebir eşleşir
+        all_names = list(feat_cols)
     else:
-        selected_kb = [f"feature_{i}" for i in range(n_kb)]
+        all_names = [feat_cols[i] if i < len(feat_cols) else f"feature_{i}" for i in range(n_features)]
+    # Güvenlik: isim sayısı özellik sayısıyla birebir olmalı (aksi halde gruplama bozulur)
+    if len(all_names) != n_features:
+        all_names = (all_names + [f"feature_{i}" for i in range(n_features)])[:n_features]
 
-    # AE latent boyutları için isimlendirme
-    ae_names = [f"ae_latent_{i}" for i in range(n_ae)]
-    all_names = selected_kb + ae_names  # 51 özellik
+    n_ae = sum(1 for nm in all_names if nm.startswith("ae_latent_"))
+    n_kb = n_features - n_ae
+    selected_kb = [nm for nm in all_names if not nm.startswith("ae_latent_")]
 
     mean_abs_shap = np.abs(sv).mean(axis=0)  # (51,)
 
@@ -345,8 +350,8 @@ else:
         "group_contributions_pct": group_pct,
         "ranked_groups": ranked,
         "note": (
-            "AL_x kolonları PSR §4.4 pozisyonel dağılımına göre gruplara atandı. "
-            "AE latent boyutlar dominant gruba (in_silico_risk) atandı."
+            "Canonical hat: SelectKBest/AE kaldırıldı; tüm §3.2 özellikleri korunur. "
+            "Anonim kolonlar (AL_*/CAT_*/EK_*/AA_*) assign_feature_group ile gruplara atandı."
         ),
     }
     shap_json_path = REPO / "reports" / "shap_group_contributions.json"

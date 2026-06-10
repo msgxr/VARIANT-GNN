@@ -158,6 +158,8 @@ def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
 
 def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
     try:
+        from src.explainability.clinical_insight import generate_clinical_insight
+        from src.explainability.group_shap import instance_shap_table
         from src.explainability.pdf_report import FPDF_AVAILABLE, generate_pdf_report
 
         if not FPDF_AVAILABLE:
@@ -168,27 +170,17 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
             pred = rec["prediction"]
             prob = float(rec["probability"])
             risk = float(df_pred["Calibrated_Risk"].iloc[i]) if "Calibrated_Risk" in df_pred.columns else prob * 100
-            if risk >= 75:
-                zone = "CRITICAL RISK — Clinical Assessment Required"
-            elif risk >= 50:
-                zone = "HIGH RISK — Expert Review Recommended"
-            elif risk >= 25:
-                zone = "MODERATE RISK — Follow-up Recommended"
-            else:
-                zone = "LOW RISK — Likely Benign"
-
             sv_i = shap_vals[i] if shap_vals.ndim == 2 else shap_vals
             top_feats = sorted(zip(feature_names, sv_i.tolist()), key=lambda x: abs(x[1]), reverse=True)[:10]
-            clinical_insight = {
-                "zone_label": zone,
-                "summary": rec.get("clinical_insight_tr", ""),
-                "key_findings": [],
-                "recommendation": (
-                    "Genetic counselling and additional functional studies recommended."
-                    if pred == "Pathogenic"
-                    else "Routine clinical follow-up may suffice. Clinician assessment essential."
-                ),
-            }
+            # §4.4: gerçek Türkçe açıklanabilirlik yorumu (boş key_findings / İngilizce metin yerine).
+            # generate_clinical_insight key_findings'i doldurur ve Türkçe zone/öneri üretir.
+            clinical_insight = generate_clinical_insight(
+                risk_score=risk,
+                prediction=pred,
+                top_features=top_feats,
+                probability=prob,
+                variant_id=str(vid),
+            )
             waterfall = str(cfg.paths.reports_dir / "shap_waterfall_sample0.png") if i == 0 else None
             pdf_bytes = generate_pdf_report(
                 variant_id=str(vid),
@@ -197,6 +189,7 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
                 probability=prob,
                 clinical_insight=clinical_insight,
                 top_features=top_feats,
+                group_shap_rows=instance_shap_table(sv_i, feature_names),
                 shap_waterfall_path=waterfall,
             )
             safe_vid = str(vid).replace("/", "_").replace(":", "_")[:40]

@@ -1,3 +1,8 @@
+"""
+src/ui/protein_viz.py — 3D protein görselleştirme (DEMO İSKELETİ).
+NOT: Bu modül şu an hiçbir UI sekmesine bağlı DEĞİLDİR ve sabit/illüstratif bir
+varyant bölgesi (resi 50-60) gösterir — gerçek per-varyant residue mapping yoktur.
+"""
 import streamlit as st
 
 try:
@@ -25,8 +30,8 @@ def render_protein_3d(pdb_id: str = "1A2C", height: int = 500, width: int = 800)
     xyzview.setStyle({"cartoon": {"color": "spectrum"}})
     xyzview.addSurface(py3Dmol.VDW, {"opacity": 0.3, "color": "white"})
 
-    # Simülasyon: Varyant Bölgesini İşaretle (Kırmızı)
-    # Gerçek uygulamada varyantın residue numarası buraya gelir
+    # ÖRNEK/PLACEHOLDER: sabit resi 50-60 yalnızca İLLÜSTRATİFTİR — gerçek varyantın
+    # residue numarası DEĞİLDİR. Gerçek per-varyant mapping henüz bağlanmadı.
     xyzview.addStyle({"resi": "50-60"}, {"stick": {"colorscheme": "redCarbon"}})
 
     xyzview.zoomTo()
@@ -36,7 +41,8 @@ def render_protein_3d(pdb_id: str = "1A2C", height: int = 500, width: int = 800)
     showmol(xyzview, height=height, width=width)
 
     st.info(
-        "ℹ️ Yukarıdaki modelde kırmızı ile işaretlenen bölge, varyantın protein ikincil yapısı üzerindeki olası etkisini göstermektedir."
+        "ℹ️ Kırmızı bölge yalnızca İLLÜSTRATİF bir örnektir (sabit resi 50-60); gerçek "
+        "varyant residue konumu DEĞİLDİR. Bu görsel yalnızca demo amaçlıdır."
     )
 
 

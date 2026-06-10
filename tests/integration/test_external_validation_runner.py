@@ -162,6 +162,55 @@ def test_runner_prediction_values_valid(env):
     assert set(result["Prediction"].unique()).issubset({"Pathogenic", "Benign"})
 
 
+def _write_labeled_csv(path: Path, feature_names: list[str], n: int = 20, string_labels: bool = True) -> None:
+    rng = np.random.default_rng(7)
+    data = {"Variant_ID": [f"V{i}" for i in range(n)], "Panel": ["General"] * n}
+    for fn in feature_names:
+        data[fn] = rng.uniform(0, 1, size=n)
+    if string_labels:
+        data["Label"] = ["Pathogenic" if i % 2 else "Benign" for i in range(n)]
+    else:
+        data["Label"] = rng.integers(0, 2, size=n)
+    pd.DataFrame(data).to_csv(path, index=False)
+
+
+def test_runner_local_validation_string_labels(env):
+    """Regression: --local_validation with textual Pathogenic/Benign labels.
+
+    Guards the eager `int(float('Pathogenic'))` crash (dict.get default is
+    evaluated unconditionally) — labels are extracted before sanitization.
+    """
+    from src.inference.external_validation_runner import ExternalValidationRunner
+
+    labeled_csv = env["tmp"] / "labeled_str.csv"
+    _write_labeled_csv(labeled_csv, env["feature_names"], n=20, string_labels=True)
+    out_path = env["tmp"] / "pred_labeled_str.csv"
+    runner = ExternalValidationRunner(
+        model_dir=env["model_dir"],
+        reports_dir=env["tmp"] / "reports",
+    )
+    # Must complete without raising on the textual labels
+    result = runner.run(labeled_csv, out_path, local_validation=True)
+    assert len(result) == 20
+    validate_prediction_frame(result)
+
+
+def test_runner_local_validation_numeric_labels(env):
+    """Parity: numeric 0/1 labels still validate locally."""
+    from src.inference.external_validation_runner import ExternalValidationRunner
+
+    labeled_csv = env["tmp"] / "labeled_num.csv"
+    _write_labeled_csv(labeled_csv, env["feature_names"], n=20, string_labels=False)
+    out_path = env["tmp"] / "pred_labeled_num.csv"
+    runner = ExternalValidationRunner(
+        model_dir=env["model_dir"],
+        reports_dir=env["tmp"] / "reports",
+    )
+    result = runner.run(labeled_csv, out_path, local_validation=True)
+    assert len(result) == 20
+    validate_prediction_frame(result)
+
+
 def test_runner_missing_artifact_raises(tmp_path):
     from src.inference.external_validation_runner import ExternalValidationRunner
 
