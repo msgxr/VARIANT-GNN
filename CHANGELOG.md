@@ -106,7 +106,7 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 - `.github/ISSUE_TEMPLATE/` ve `.github/PULL_REQUEST_TEMPLATE/`
 
 ### Değiştirildi
-- `docs/MODEL_CARD.md` — **KRİTİK:** "VariantSAGEGNN + 3 model (%40/%40/%20)" → "VariantGATv2GNN + 4 model (XGB %35 + LGB %30 + GATv2GNN %25 + DNN %10)" olarak düzeltildi
+- `docs/MODEL_CARD.md` — **KRİTİK:** "VariantSAGEGNN + 3 model (%40/%40/%20)" → "VariantGATv2GNN + 4 model (XGB %30 + LGB %30 + GATv2GNN %25 + DNN %15)" olarak düzeltildi
 - `.gitignore` — `reports/*.pdf`, `reports/*.json`, `train_log.txt`, `submission/` büyük çıktılar eklendi
 
 ### Düzeltildi
@@ -130,7 +130,7 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 ### Değiştirildi
 - Ana GNN mimarisi GraphSAGE → GATv2 olarak güncellendi
 - `VariantSAGEGNN` backward-compatible alias olarak korundu
-- Ensemble ağırlıkları: [0.35, 0.30, 0.25, 0.10] (XGB, LGB, GNN, DNN)
+- Ensemble ağırlıkları: [0.30, 0.30, 0.25, 0.15] (XGB, LGB, GNN, DNN)
 
 ---
 

@@ -17,7 +17,7 @@ senaryoları ele alır (§3.2).
 ```
                     ┌──────────────────────────────────────┐
                     │  CSV (varyant öznitelikleri)         │
-                    │  • Sayısal (43)                      │
+                    │  • 343 anonim kolon (sayısal)        │
                     │  • Sekans bağlam (Nuc_Context, AA_*)│
                     │  • Panel (4 sınıf)                   │
                     └──────────────┬───────────────────────┘
@@ -156,11 +156,11 @@ grafiği** üzerinde tam-batch node classification yapar. Genomik adres
 
 | Modül | İçerik |
 |-------|--------|
-| `metrics.py` | Binary F1 (TEKNOFEST §7.3 birincil), Macro F1, ROC-AUC, Brier, ECE, MCC |
+| `src/scientific/metrics/metrics.py` | Binary F1 (TEKNOFEST §7.3 birincil), Macro F1, ROC-AUC, Brier, ECE, MCC — **canlı CLI bu kopyayı import eder** (`src/cli/modes/train.py`, `evaluate.py`) |
 | `panel_transfer.py` | 4×4 cross-panel generalization matrisi |
 | `ablation.py` | Komponent katkı analizi |
 | `abstention_analysis.py` | Belirsiz tahminlerin kalite analizi |
-| `adversarial_validation.py` | Train/test domain shift testi |
+| `src/scientific/metrics/adversarial_validation.py` | Train/test domain shift testi — **canlı CLI bu kopyayı import eder** (`src/cli/modes/evaluate.py`) |
 | `benchmarks.py` | Latency + memory benchmarks |
 | `plots.py` | Matplotlib görselleştirmeler |
 
@@ -226,7 +226,7 @@ Sistem aşağıdaki garantileri sunar:
 | §3.2 6 öznitelik kategorisi | `src/features/feature_validator.py` |
 | §3.2 anonim kolon adları | `src/inference/anonymous_inference.py` |
 | §3.2 genomik adres gizli | Hiçbir yerde Chr/Pos kullanılmaz; sample k-NN graph |
-| §7.3 F1 = 2TP/(2TP+FP+FN) | `src/evaluation/metrics.py` `binary_f1` |
+| §7.3 F1 = 2TP/(2TP+FP+FN) | `src/scientific/metrics/metrics.py` `binary_f1` (canlı CLI import yolu) |
 | §7.2 external validation | `src/inference/external_validation_runner.py` |
 | §7.5 jüri kod re-run | `src/utils/reproducibility_manifest.py` |
 | §10 etik beyan | `docs/ethical_statement.md` |

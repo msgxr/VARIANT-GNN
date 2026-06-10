@@ -1,3 +1,12 @@
+# ============================================================================
+# ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
+# Bu betik FABRİKE, canonical-DIŞI SENTETİK-DEMO sayılar üretir (Makro F1≈0.9998–1.0,
+# ROC-AUC=1.0, MCC=1.0, Brier≈3e-5, eski eşik 0.0892, eski ağırlık 0.40/0.40/0.20).
+# Gerçek leakage-free sonuçlar çok daha düşüktür: test F1=0.8367, MCC=0.5112
+# (kaynak: RESULTS_CANONICAL.json / reports/cv_report.json). PDR/jüri raporu için
+# KULLANILMAZ — canlı açıklanabilirlik PDF'i src/explainability/pdf_report.py'dir.
+# Tutuldu: silme/yeniden-üretme kullanıcı onayı bekliyor.
+# ============================================================================
 """
 generate_report_pdf.py
 ======================

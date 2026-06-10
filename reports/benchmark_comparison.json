@@ -49,10 +49,10 @@
     },
     {
       "name": "VARIANT-GNN [Bu Çalışma]",
-      "f1": 0.898,
-      "mcc": 0.536,
-      "pr_auc": 0.929,
-      "note": "TEKNOFEST 2026 gerçek veri; CV F1=0.867±0.008",
+      "f1": 0.8367,
+      "mcc": 0.5112,
+      "pr_auc": 0.9267,
+      "note": "TEKNOFEST 2026 gerçek veri; θ=0.8415 hold-out test F1 (RESULTS_CANONICAL.json); CV F1=0.8812±0.0113 (fold) / 0.8936±0.0004 (OOF-stacking). NOT: bu %75-poz iç hold-out ayrım gücü; resmi %20-prior yarışma skoru ayrıdır.",
       "reference": "XYRA3, TEKNOFEST 2026",
       "ours": true
     }

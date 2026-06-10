@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+# ============================================================================
+# ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
+# "Otantik/Gerçek sonuçlar" başlığına RAĞMEN bu betik FABRİKE, canonical-DIŞI
+# sayılar üretir (panel Macro-F1/ROC-AUC/PR-AUC=100.0, MCC=1.0, Brier≈0,
+# per-model F1≈99.8, eski ağırlık 0.4/0.35/0.15/0.1, eski "VariantSAGE" adı).
+# Gerçek leakage-free sonuçlar: test F1=0.8367, MCC=0.5112; paneller
+# General 0.8185 / Hereditary_Cancer 0.906 / PAH 0.912 / CFTR 0.7143
+# (kaynak: RESULTS_CANONICAL.json). KULLANILMAZ — silme onayı bekliyor.
+# ============================================================================
 """
 TEKNOFEST 2026 Rapor İçin Otantik Figür Üretici
 Gerçek sonuçlarla güvenilir görsel analiz

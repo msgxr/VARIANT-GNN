@@ -1,3 +1,8 @@
+# ════════════════════════════════════════════════════════════════════════
+# INFORMATIONAL ONLY — not loaded by the pipeline.
+# Live threshold = models/threshold.json (θ=0.8415).
+# Panel opt-in flag = cfg.inference.use_panel_thresholds (default false).
+# ════════════════════════════════════════════════════════════════════════
 # configs/thresholds.yaml — Karar eşiği ve risk sınıflandırma ayarları
 
 decision_threshold:

@@ -64,7 +64,7 @@
     }
   },
   "panel_uncertainty_estimates": {
-    "note": "Panel bazlı conformal set per-sample verisi mevcut değil; panel F1 ve MCC değerlerinden tahmini belirsizlik oranları çıkarıldı.",
+    "note": "Panel bazlı conformal set per-sample verisi mevcut değil; panel F1 ve MCC değerlerinden tahmini belirsizlik oranları çıkarıldı. ÖNEMLİ: aşağıdaki panel_mcc değerleri OPT-IN PANEL-SPESİFİK eşik MCC'leridir (panel-bazlı θ; jüri kullanmaz), canonical global θ=0.8415 DEĞİL. Canonical global-θ test MCC (RESULTS_CANONICAL.json): General=0.4951, Hereditary_Cancer=0.7135, PAH=0.5053, CFTR=tanımsız (n=18, ROC-AUC NaN). Belirsizlik sıralaması her iki çerçevede de korunur.",
     "General": {
       "panel_mcc": 0.6848,
       "estimated_uncertain_pct": 22.5,
@@ -83,7 +83,7 @@
     "CFTR": {
       "panel_mcc": 0.8385,
       "estimated_uncertain_pct": 16.8,
-      "interpretation": "n=111 küçük panel — istatistiksel belirsizlik biraz yüksek"
+      "interpretation": "n=18 küçük panel — istatistiksel belirsizlik biraz yüksek (CFTR MCC canonical global-θ'da tanımsız)"
     }
   },
   "mathematical_guarantee": {

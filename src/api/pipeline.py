@@ -269,12 +269,12 @@ class InferencePipeline:
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
 
         # ── Karar eşiği: GLOBAL (canonical) ─────────────────────────────────
-        # preds yukarıda zaten global cal-türevli eşikle (threshold) hesaplandı —
-        # RESULTS_CANONICAL.json Test F1=0.8963 BU eşikle üretildi (§7.5 reprodüksiyon).
-        # Panel-spesifik eşikler hold-out test'te DAHA KÖTÜ (0.8950 < 0.8963) ve
-        # cal-set üzerinde aşırı-uyumlu olduğundan VARSAYILAN OLARAK UYGULANMAZ
-        # (kanıt: reports/threshold_consistency.json). İsteğe bağlı olarak
-        # cfg.inference.use_panel_thresholds=true ile açılabilir.
+        # preds yukarıda zaten global θ=0.8415 eşikle (threshold) hesaplandı —
+        # shipped θ=0.8415 ile Test F1=0.8367 üretilir (RESULTS_CANONICAL.json, §7.5
+        # reprodüksiyon). Panel-spesifik eşikler resmi 4-panel %20-F1 ortalamasında
+        # DAHA DÜŞÜK skorlar ve cal-set üzerinde aşırı-uyumlu olduğundan VARSAYILAN
+        # OLARAK UYGULANMAZ (kanıt: reports/threshold_consistency.json). İsteğe bağlı
+        # olarak cfg.inference.use_panel_thresholds=true ile açılabilir.
         use_panel = bool(getattr(getattr(cfg, "inference", None), "use_panel_thresholds", False))
         if use_panel and panel_thresholds and "Panel" in dataset.metadata.columns:
             proba_pathogenic = raw_proba[:, 1]

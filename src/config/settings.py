@@ -6,11 +6,14 @@ exposes a frozen Settings dataclass.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 _BASE_DIR = Path(__file__).resolve().parents[2]
 _DEFAULT_CONFIG = _BASE_DIR / "configs" / "default.yaml"
@@ -271,6 +274,11 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     `ConfigValidationError` fırlatır (TD-011 çözümü).
     """
     path = Path(config_path) if config_path else _DEFAULT_CONFIG
+    logger.info(
+        "Config kaynağı: %s%s",
+        path,
+        "" if config_path else " (varsayılan — --config verilmedi)",
+    )
     raw = _load_yaml(path)
 
     # Fail-fast Pydantic doğrulama (TD-011)
@@ -304,7 +312,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         use_gat=raw_gnn.get("use_gat", True),
         knn_k=raw_gnn.get("knn_k", 10),
         early_stopping_patience=raw_gnn.get("early_stopping_patience", 20),
-        use_multimodal=raw_gnn.get("use_multimodal", True),
+        use_multimodal=raw_gnn.get("use_multimodal", False),
         seq_enc_dim=raw_gnn.get("seq_enc_dim", 32),
         model_type=raw_gnn.get("model_type", "gatv2"),
     )

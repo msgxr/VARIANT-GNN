@@ -193,7 +193,7 @@ Sütun isimleri gizli olduğundan açıklanabilirlik, özellik grupları bazınd
 
 **SHAP Analiz Örneği:** Patojenik tahmin, olasılık: 0.94: In-silico risk skoru grubu (+0.42), popülasyon frekansı grubu (+0.31), evrimsel korunmuşluk grubu (+0.28), hesaplamalı risk grubu (+0.25). Model, in-silico skorların yüksek değerleri, düşük popülasyon frekansı ve evrimsel korunmuşluk kombinasyonuna dayanarak karar vermiştir.
 **GNNExplainer:** Yüksek patojenite skorlu varyantların k-NN grafında benzer risk profiline sahip komşularla güçlü bağlantıları var; benign varyantlar yüksek popülasyon frekansı skorlu komşularla kümeleniyor. **LIME:** SHAP ile %92 tutarlılık.
-**Türkçe Klinik Rapor:** *"Bu varyant, yüksek in-silico risk skorları, düşük popülasyon frekansı ve güçlü evrimsel korunmuşluk nedeniyle patojenik olarak sınıflandırılmıştır. Model güveni: Yüksek (belirsizlik: 0.12)."*
+**Türkçe Açıklanabilirlik Raporu (araştırma amaçlı):** *"Bu varyant, yüksek in-silico risk skorları, düşük popülasyon frekansı ve güçlü evrimsel korunmuşluk nedeniyle patojenik olarak sınıflandırılmıştır. Model güveni: Yüksek (belirsizlik: 0.12)."* (Model çıktısı klinik tanı/karar değildir; yalnızca araştırma/eğitim amaçlıdır — §10.)
 
 ### 4.5 Öğrenme Süreci ve Teknik Evrim (5 puan)
 **Projemiz planlanan temel geliştirme sürecini erken tamamladığı için, kalan zamanı ek doğrulama deneyleri, hata analizi ve model çıktılarının yorumlanmasına ayırdık.** Bu süreçte modelin teknik evrimi şu aşamalardan geçmiştir:
@@ -249,7 +249,7 @@ VARIANT-GNN'in temel özgünlük katkıları somut teknik çözümler üzerinden
 2.  **Hibrit Ensemble:** GNN graf çıktısını, GBDT ve DNN ile stacking meta-öğrenici aracılığıyla tek pipeline'da birleştirir; hibrit stacking özgün katkıdır.
 3.  **MC Dropout Belirsizlik:** 30 forward pass ile epistemik belirsizlik skoru üretilir. "Yüksek güven (<0.15)", "Düşük (>0.30) -> Uzman Değerlendirmesi Gerekli" ayrımı sunar.
 4.  **Adversarial Validation:** Panel bazlı eğitim-test dağılım uyum testi (AUC≈0.50) ile veri sızıntısı riskini şeffaflaştırmaktadır.
-5.  **Türkçe Klinik Rapor:** SHAP değerlerinden 6 biyolojik kategoriye otomatik Türkçe yorum ve PDF çıktısı üretir. ACMG uyumlu Türkçe klinik rapor üretimi özgün katkılar arasındadır.
+5.  **Türkçe Açıklanabilirlik Raporu (araştırma amaçlı):** SHAP değerlerinden 6 biyolojik kategoriye otomatik Türkçe yorum ve PDF çıktısı üretir. ACMG-hizalı Türkçe araştırma/açıklanabilirlik raporu üretimi özgün katkılar arasındadır. *Bu çıktı klinik tanı/karar değildir; yalnızca araştırma ve eğitim amaçlıdır (§10).*
 
 ---
 

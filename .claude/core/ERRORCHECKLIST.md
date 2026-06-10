@@ -118,8 +118,8 @@
 
 - [ ] Panel-bazlı threshold uygulaması doğru (her panel kendi threshold'unu kullanıyor)
 - [ ] GNN grafı cosine k-NN (k=10, eşik=0.3) doğru kurulmuş
-- [ ] AutoEncoder boyutu: 43→16 (doğrula)
-- [ ] SelectKBest k=35 (doğrula)
+- [ ] AutoEncoder DEVRE DIŞI (use_autoencoder=false; doğrula)
+- [ ] SelectKBest DEVRE DIŞI (use_feature_selection=false; tam 343 öznitelik korunuyor; doğrula)
 - [ ] SMOTE yalnızca eğitim içinde (kod okunarak doğrula, varsayım değil)
 - [ ] Stacking meta-learner logistic regression (doğrula)
 

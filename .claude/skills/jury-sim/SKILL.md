@@ -46,7 +46,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 9. Your ensemble weights are XGBoost 0.30 / LightGBM 0.30 / GNN 0.25 / DNN 0.15. Why these exact values? Are they optimal for all four panels?
 10. XGBoost alone gives F1=0.84 for CFTR, ensemble gives 0.92. Is this 8% meaningful statistically?
 11. Stacking meta-learner is logistic regression. Why not a more powerful combiner?
-12. Your AutoEncoder reduces 43→16 features. How do you justify this dimensionality?
+12. Your PSR pipeline had an AutoEncoder + SelectKBest(35), but production removed both and now keeps the full 343-feature set (≈+5.3pp recovered under leakage-free CV). Justify dropping dimensionality reduction.
 13. Transfer learning from General→CFTR — what exactly is transferred?
 
 ### Group 3: Explainability (Questions 14–18) — PSR §4.4 WAS WEAK

@@ -4,30 +4,31 @@
   "per_model": [
     {
       "model": "XGBoost",
-      "cv_f1_mean": 0.8865,
-      "cv_f1_std": 0.0066,
+      "cv_f1_mean": 0.8876,
+      "cv_f1_std": 0.0047,
       "ensemble_weight": 0.3
     },
     {
       "model": "LightGBM",
-      "cv_f1_mean": 0.8778,
-      "cv_f1_std": 0.0077,
+      "cv_f1_mean": 0.8828,
+      "cv_f1_std": 0.0082,
       "ensemble_weight": 0.3
     },
     {
       "model": "VariantGATv2GNN",
-      "cv_f1_mean": 0.7802,
-      "cv_f1_std": 0.0342,
+      "cv_f1_mean": 0.8114,
+      "cv_f1_std": 0.0228,
       "ensemble_weight": 0.25
     },
     {
       "model": "VariantDNN",
-      "cv_f1_mean": 0.7288,
-      "cv_f1_std": 0.0458,
+      "cv_f1_mean": 0.7596,
+      "cv_f1_std": 0.0441,
       "ensemble_weight": 0.15
     }
   ],
-  "justification": "Ağırlık sıralaması (XGB=LGBM 0.30 > GNN 0.25 > DNN 0.15) tam olarak group-aware CV performans sıralamasıyla örtüşür (XGB 0.887 ≈ LGBM 0.878 > GNN 0.780 > DNN 0.729). En güçlü tabular öğreniciler en yüksek ağırlığı, en zayıf DNN en düşük ağırlığı alır. Stacking meta-learner (LogReg) genuine OOF üzerinde ağırlıkları ince-ayarlar.",
+  "_source": "cv_report.json per-model fold means (== reports/ensemble_diversity.json). Tek kaynak; eski 0.8865/0.8778/0.7802/0.7288 değerleri 2026-06-10 düzeltildi.",
+  "justification": "Ağırlık sıralaması (XGB=LGBM 0.30 > GNN 0.25 > DNN 0.15) tam olarak group-aware CV performans sıralamasıyla örtüşür (XGB 0.888 ≈ LGBM 0.883 > GNN 0.811 > DNN 0.760). En güçlü tabular öğreniciler en yüksek ağırlığı, en zayıf DNN en düşük ağırlığı alır. Stacking meta-learner (LogReg) genuine OOF üzerinde ağırlıkları ince-ayarlar.",
   "oof_artifact": "reports/oof_probs.npz (group-aware tree-blend OOF — conformal + ağırlık doğrulaması)",
   "note": "GNN/DNN tek başına zayıf ama ensemble ÇEŞİTLİLİĞİNE katkı sağlar (ablation: GNN -2.2pp, DNN -0.7pp). DANN ile DNN panel-invariant → genelleme."
 }

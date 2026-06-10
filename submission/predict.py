@@ -22,6 +22,20 @@ Notlar:
   - Leakage firewall otomatik devreye girer.
   - Çıktı şeması sabittir (PREDICTION_COLUMNS).
 
+Jüri teslim formatı (ÖNEMLİ — runbook):
+  - Resmi submission DOSYA formatı HENÜZ duyurulmadı (UNVERIFIED).
+  - GÜVENLİ teslim dosyası = `--jury_minimal` → yalnız 2 kolon:
+        Variant_ID, prediction_label  (ikili 0/1)
+    Klinik-çağrışımlı kolon İÇERMEZ (§10 etik). Resmi format açıklanana
+    kadar jüriye sunulacak DOSYA için önerilen mod budur.
+  - `--jury_minimal` OLMADAN: 7-kolonlu zengin format yazılır
+        (JURY_COLUMNS = Variant_ID, prediction_label, pathogenic_probability,
+         calibrated_risk, confidence_level, uncertainty_score, expert_review_flag).
+    Bu zengin format İÇ ANALİZ/doğrulama içindir; resmi format yayımlanınca
+    güncellenecektir. Varsayılan davranış değiştirilmedi (bayrak verilmezse
+    7 kolon yazılır) — sadece güvenli runbook belgelenmiştir.
+  - Canonical kolon listesi tek kaynaktan: src/scientific/submission_validator.py.
+
 Rules:
   - Fully offline — no internet access.
   - No training or fitting on blind data.

@@ -287,7 +287,7 @@ flowchart LR
     NOTE["Graf Özellikleri\n─────────────\nk = 10 komşu\nCosine ≥ 0.30\nGenomik adres YOK\nAyrı train / val graf\nSizinti = 0"]
 ```
 
-GNN, ağaç modellerinin **kaçırdığı** örnekleri yakalar: tek başına CV F1'i en düşük olan üyelerden biri olmasına rağmen (0.7802), ağaç üyeleriyle **negatif/zayıf korelasyon** gösterdiği için ensemble çeşitliliğine net katkı sağlar (§6).
+GNN, ağaç modellerinin **kaçırdığı** örnekleri yakalar: tek başına CV F1'i en düşük olan üyelerden biri olmasına rağmen (0.8114), ağaç üyeleriyle **negatif/zayıf korelasyon** gösterdiği için ensemble çeşitliliğine net katkı sağlar (§6).
 
 ---
 
@@ -309,10 +309,10 @@ Ağırlıklar keyfî değildir; **grup-farkında 5-fold CV per-model Binary F1 s
 
 | Model | CV F1 (group-aware) | Std | Ağırlık | Ablation etkisi (çıkarınca) |
 |:---|:---:|:---:|:---:|:---:|
-| **XGBoost** | **0.8145** | ±0.0066 | 0.30 | en güçlü tabular |
-| **LightGBM** | **0.8778** | ±0.0077 | 0.30 | yaprak-bazlı tabular |
-| VariantGATv2GNN | 0.7802 | ±0.0342 | 0.25 | **−2.2 pp** çeşitlilik kaybı |
-| VariantDNN (DANN) | 0.7288 | ±0.0458 | 0.15 | **−0.7 pp** + panel-invariance |
+| **XGBoost** | **0.8876** | ±0.0047 | 0.30 | en güçlü tabular |
+| **LightGBM** | **0.8828** | ±0.0082 | 0.30 | yaprak-bazlı tabular |
+| VariantGATv2GNN | 0.8114 | ±0.0228 | 0.25 | **−2.2 pp** çeşitlilik kaybı |
+| VariantDNN (DANN) | 0.7596 | ±0.0441 | 0.15 | **−0.7 pp** + panel-invariance |
 
 </div>
 
@@ -373,7 +373,7 @@ Kaynak: [`reports/stacking_improvement.json`](reports/stacking_improvement.json)
 
 > **Overfit güvenliği — 4 teyit:** (1) bağımsız inceleme, (2) nested group-aware CV (std ≈ 0.0004), (3) held-out doğrulama, (4) ilke (OOF out-of-sample). OOF-stacking, in-sample stacking'in aksine kendi eğitim sinyaline uyum sağlamaz.
 
-> **Not — iki CV sayısı:** `RESULTS_CANONICAL.json` başlığındaki **CV F1 = 0.8936 ± 0.0004** üretim OOF-stacking nested-CV değeridir. `reports/cv_report.json` içindeki **mean_cv_binary_f1 = 0.8779 ± 0.0062**, eski sabit-ağırlık fold-CV (argmax) yardımcı/bileşen metriğidir — başlık değildir. İkisi de raporlanır; karıştırılmaz.
+> **Not — iki CV sayısı:** `RESULTS_CANONICAL.json` başlığındaki **CV F1 = 0.8936 ± 0.0004** üretim OOF-stacking nested-CV değeridir. `reports/cv_report.json` içindeki **mean_cv_binary_f1 = 0.8812 ± 0.0113**, sabit-ağırlık fold-CV yardımcı/bileşen metriğidir — başlık değildir. İkisi de raporlanır; karıştırılmaz.
 
 ---
 
@@ -720,16 +720,16 @@ flowchart TD
 
 | Fold | Ensemble F1 | XGB | LightGBM | GNN | DNN |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | 0.8717 | 0.8784 | 0.8706 | 0.7209 | 0.6718 |
-| 2 | 0.8817 | 0.8901 | 0.8790 | 0.8186 | 0.6883 |
-| 3 | 0.8785 | 0.8800 | 0.8778 | 0.8086 | 0.7964 |
-| 4 | 0.8872 | 0.8963 | 0.8915 | 0.7728 | 0.7271 |
-| 5 | 0.8706 | 0.8877 | 0.8702 | 0.7802 | 0.7606 |
-| **Ort.** | **0.8779 ± 0.0062** | **0.8145** | **0.8778** | **0.7802** | **0.7288** |
+| 1 | 0.8673 | 0.8826 | 0.8741 | 0.7959 | 0.8073 |
+| 2 | 0.8852 | 0.8830 | 0.8825 | 0.8401 | 0.8121 |
+| 3 | 0.8783 | 0.8867 | 0.8795 | 0.8252 | 0.7354 |
+| 4 | 0.9007 | 0.8951 | 0.8983 | 0.8202 | 0.6969 |
+| 5 | 0.8744 | 0.8904 | 0.8795 | 0.7757 | 0.7462 |
+| **Ort.** | **0.8812 ± 0.0113** | **0.8876** | **0.8828** | **0.8114** | **0.7596** |
 
 </div>
 
-> Bu tablo **sabit-ağırlık fold-CV** bileşen metriğidir (0.8779). Üretim **OOF-stacking** başlığı 0.8936 ± 0.0004'tür (§7). İkisi farklı yollardır ve canonical'da ayrı ayrı belgelenir.
+> Bu tablo **sabit-ağırlık fold-CV** bileşen metriğidir (0.8812). Üretim **OOF-stacking** başlığı 0.8936 ± 0.0004'tür (§7). İkisi farklı yollardır ve canonical'da ayrı ayrı belgelenir.
 
 > **CV fold karşılaştırma figürü:** ![CV Folds](reports/figures/pdr/01_cv_fold_comparison.png)
 
@@ -807,14 +807,14 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 ### Model Ablation — CV F1 (Tek Model vs Ensemble)
 
 ```
-  XGBoost  (tek)  ████████████████████████████████████████  0.8145  ← en yüksek tek model
-  LightGBM (tek)  ███████████████████████████████████████░  0.8778
-  GATv2GNN (tek)  ███████████████████████████████░░░░░░░░░  0.7802
-  DNN/DANN (tek)  █████████████████████████████░░░░░░░░░░░  0.7288
+  XGBoost  (tek)  ████████████████████████████████████████  0.8876  ← en yüksek tek model
+  LightGBM (tek)  ███████████████████████████████████████░  0.8828
+  GATv2GNN (tek)  ████████████████████████████████████░░░░  0.8114
+  DNN/DANN (tek)  ██████████████████████████████████░░░░░░  0.7596
   ─────────────────────────────────────────────────────────────────
-  Ensemble (fixed-weight CV) ██████████████████████████████████████░  0.8877
-  Ensemble (OOF-stacking CV) ████████████████████████████████████████  0.8936  ← üretim
-  Ensemble (Test hold-out)   ████████████████████████████████████████  0.8367 ← ayrım gücü
+  Ensemble (fixed-weight fold-CV)   ███████████████████████████████████████░  0.8812
+  Ensemble (OOF-stacking nested-CV) ████████████████████████████████████████  0.8936  ← üretim
+  Ensemble (Test hold-out)          ██████████████████████████████████████░  0.8367 ← ayrım gücü
 ```
 
 ### Genel Test Metrikleri (hold-out, θ=0.8415)
@@ -827,7 +827,7 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 | Precision | 0.9241 | Recall | 0.7644 |
 | PR-AUC | 0.9267 | ROC-AUC | 0.8538 |
 | Brier | 0.1115 | ECE | 0.0291 |
-| Macro F1 | 0.7932 | Eşik (θ) | 0.8415 |
+| Macro F1 | 0.7391 | Eşik (θ) | 0.8415 |
 
 </div>
 
@@ -837,15 +837,15 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 
 | Panel | F1_Pat | Recall_P | Prec_P | MCC | PR-AUC | ROC-AUC | Brier |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **MASTER** (General) | 0.8185 | 0.8773 | 0.8960 | 0.4951 | 0.9102 | 0.8416 | 0.1242 |
-| **KANSER** (Hered.) | **0.9060** | 0.9672 | 0.9219 | **0.7135** | **0.9393** | **0.9161** | 0.0802 |
-| **PAH** | 0.912 | 0.9516 | 0.8676 | 0.5053 | 0.8843 | 0.7051 | 0.1414 |
-| **CFTR** | 0.7143 | 0.8889 | **1.0000** | tanımsız(0) ⚠️ | 1.0000 | — | 0.0698 |
+| **MASTER** (General) | 0.8185 | 0.7361 | 0.9217 | 0.4951 | 0.9271 | 0.8546 | 0.1174 |
+| **KANSER** (Hered.) | **0.9060** | 0.8689 | 0.9464 | **0.7135** | **0.9743** | **0.9449** | 0.0747 |
+| **PAH** | 0.912 | 0.9194 | 0.9048 | 0.5053 | 0.8908 | 0.7016 | 0.1205 |
+| **CFTR** | 0.7143 | 0.5556 | **1.0000** | tanımsız(0) ⚠️ | 1.0000 | — | 0.0594 |
 | **TOPLAM** | **0.8367** | 0.7644 | 0.9241 | 0.5112 | 0.9267 | 0.8538 | 0.1115 |
 
 </div>
 
-> **CFTR MCC = tanımsız(0) / ROC-AUC = — dürüst açıklaması:** CFTR test hold-out'u çok küçüktür (n=18) ve bu fold'da MCC ile ROC-AUC **tanımsız/dejenere** olur (ROC-AUC = NaN). Bu, "sıfır korelasyon" değil, küçük-n dejenerasyonudur. CFTR için anlamlı metrikler **F1=0.7143, Precision=1.0, Recall=0.8889**'dur. Bu nedenle panel-spesifik eşikler yalnızca **opt-in**'dir; canonical jüri kararı global θ=0.8415'i kullanır.
+> **CFTR MCC = tanımsız(0) / ROC-AUC = — dürüst açıklaması:** CFTR test hold-out'u çok küçüktür (n=18) ve bu fold'da MCC ile ROC-AUC **tanımsız/dejenere** olur (ROC-AUC = NaN). Bu, "sıfır korelasyon" değil, küçük-n dejenerasyonudur. CFTR için anlamlı metrikler **F1=0.7143, Precision=1.0, Recall=0.5556**'dır. Bu nedenle panel-spesifik eşikler yalnızca **opt-in**'dir; canonical jüri kararı global θ=0.8415'i kullanır.
 
 > **Panel F1 figürü:** ![Panel F1](reports/figures/pdr/02_panel_f1_bar.png)
 >
@@ -900,7 +900,7 @@ Model, 5 farklı tohumda yeniden eğitilerek CV F1 dağılımı ölçülmüştü
 ```
 Seedler   : 42, 123, 456, 789, 2026
 CV F1 Ort. : 0.8738 ± 0.0034   (min 0.8700 · max 0.8802)
-Shipped   : seed 42 → 0.8779
+Shipped   : seed 42 → 0.8812  (cv_report.json fold-CV)
 ```
 
 > Ağaç üyeleri (toplam %60 ağırlık) deterministiktir; yalnızca nöral bileşenler (GNN/DNN/DANN) küçük çalışma-varyansı ekler. Seedler-arası std ≈ 0.0034 → model **tohum-kararlıdır**, sonuç tek bir şanslı tohuma bağlı değildir.
@@ -1126,17 +1126,17 @@ pytest tests/smoke/ -q
 ### Anahtar Bağımlılıklar
 
 ```
-torch==2.8.0              PyTorch  — GNN ve DNN
-torch-geometric==2.6.1    PyG      — GATv2Conv, knn_graph
-xgboost==2.1.4            Gradient boosting
-lightgbm==4.6.0           Gradient boosting (yaprak bazlı)
-scikit-learn==1.6.1       Preprocessing, metrics, conformal yardımcıları
-imbalanced-learn==0.13.0  SMOTE (isteğe bağlı)
-pandas==2.3.3             Veri işleme
-shap==0.49.1              Açıklanabilirlik
-optuna==4.7.0             Hiperparametre optimizasyonu
-streamlit==1.50.0         Araştırma arayüzü
-joblib>=1.3.0             Model serializasyon
+torch==2.2.1              PyTorch  — GNN ve DNN
+torch-geometric==2.5.3    PyG      — GATv2Conv, knn_graph
+xgboost==2.0.3            Gradient boosting
+lightgbm==4.3.0           Gradient boosting (yaprak bazlı)
+scikit-learn==1.4.2       Preprocessing, metrics, conformal yardımcıları
+imbalanced-learn==0.12.3  SMOTE (isteğe bağlı)
+pandas==2.2.2             Veri işleme
+shap==0.45.1              Açıklanabilirlik
+optuna==3.6.1             Hiperparametre optimizasyonu
+streamlit==1.35.0         Araştırma arayüzü
+joblib==1.4.2             Model serializasyon
 ```
 
 ### Docker

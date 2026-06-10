@@ -179,18 +179,34 @@ models/ood_detector.pkl  ← SADECE güvenilir kaynaktan yükleyin
 
 ### 4.2. Güvenlik Tarama Araçları
 
+**Otomatik (CI'da her PR'da fiilen çalışır — `.github/workflows/ci.yml` `security` job):**
+
 ```bash
-# Static güvenlik analizi (Bandit)
-bandit -r src/ main.py app.py -ll
+# Static güvenlik analizi (Bandit) — geniş tarama exit-zero, yeni yarışma
+# modüllerinde (submission/predict.py, leakage_firewall.py, ...) strict
+bandit -r src/ scripts/ submission/ main.py --severity-level medium --confidence-level medium
 
-# Bağımlılık güvenlik taraması
-pip-audit
-
-# Gizli bilgi taraması (commit öncesi)
-git secrets --scan
+# Bağımlılık CVE taraması (Bandit'ten ayrı adım)
+pip-audit --skip-editable
 ```
 
-CI/CD: `.github/workflows/ci.yml` — Bandit her PR'da otomatik çalışır.
+**Pre-commit'te fiilen çalışan kontroller** (`.pre-commit-config.yaml`):
+büyük-dosya engeli (`check-added-large-files`, maxkb=5000), `__pycache__`
+commit engeli, `debug-statements`, black, flake8 ve metrik-tutarlılık geçidi
+(`scripts/check_results_consistency.py`). **Not:** Pre-commit/CI'da otomatik
+bir GİZLİ-BİLGİ (secret) tarayıcısı (örn. `git secrets` / `detect-secrets` /
+`gitleaks`) **şu an kurulu DEĞİLDİR** (planlanmıştır). Gizli bilgi kontrolü
+bugün için aşağıdaki §6.1 manuel/önerilen adımlarla yapılır.
+
+**Önerilen / yerel (otomatik değil — manuel veya opsiyonel kurulum):**
+
+```bash
+# Gizli bilgi taraması — git-secrets kurulu ise (varsayılan değil)
+git secrets --scan   # veya: detect-secrets scan
+```
+
+CI/CD: `.github/workflows/ci.yml` — Bandit ve pip-audit her PR'da otomatik
+çalışır. Gizli-bilgi tarayıcısı henüz boru hattına bağlı değildir (planlı).
 
 ### 4.3. Repoya Eklenmemesi Gerekenler
 
@@ -227,7 +243,13 @@ Bu gereksinim için güvenlik garantileri:
 
 ## 6. Güvenli Geliştirme Kılavuzu
 
-### Commit Öncesi Kontrol Listesi
+> Bu bölümdeki adımlar **manuel/önerilen**dir — geliştiricinin commit öncesi
+> elle çalıştırması içindir. Otomatik olarak boru hattına bağlı kontroller §4.2'de
+> listelenir (Bandit + pip-audit CI'da; pre-commit'te büyük-dosya/black/flake8/
+> metrik-tutarlılık). Gizli-bilgi taraması bugün için yalnızca aşağıdaki manuel
+> adımdır; otomatik tarayıcı henüz kurulu değildir.
+
+### Commit Öncesi Kontrol Listesi (manuel)
 
 ```bash
 # 1. Gizli bilgi taraması
@@ -243,10 +265,11 @@ bandit -r src/ -ll -q
 git diff --cached --name-only | xargs -I{} du -h {} | sort -h
 ```
 
-### Hassas Dosyalar İçin Pre-commit Hook
+### Hassas Dosyalar İçin Pre-commit Hook (opsiyonel — varsayılan kurulu DEĞİL)
 
 ```bash
-# .git/hooks/pre-commit içine ekleyin
+# Opsiyonel ek koruma — .git/hooks/pre-commit içine ELLE ekleyin
+# (repo'nun .pre-commit-config.yaml'ında bu hook standart olarak BULUNMAZ)
 #!/bin/bash
 if git diff --cached --name-only | grep -E "^data/.*\.csv$|\.env$|\.pem$"; then
   echo "HATA: Hassas dosya commit'e eklenmeye çalışılıyor!"

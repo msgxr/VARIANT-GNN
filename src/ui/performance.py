@@ -51,19 +51,19 @@ _PDR_FIGURES: List[Dict[str, str]] = [
     {
         "file": "05_roc_curves.png",
         "title": "ROC Eğrileri — 4 Panel",
-        "desc": "KANSER AUC=0.935 · MASTER AUC=0.854 · PAH AUC=0.884 · CFTR AUC=0.789",
+        "desc": "KANSER AUC=0.945 · MASTER AUC=0.855 · PAH AUC=0.702 · CFTR AUC=N/A (n=18)",
         "section": "evaluation",
     },
     {
         "file": "06_pr_curves.png",
         "title": "Precision-Recall Eğrisi",
-        "desc": "PR-AUC=0.9294 (genel) · PAH=0.976 · KANSER=0.952 — eşiksiz performans.",
+        "desc": "PR-AUC=0.9271 (genel) · KANSER=0.974 · PAH=0.891 — eşiksiz performans.",
         "section": "evaluation",
     },
     {
         "file": "07_calibration_curve.png",
         "title": "Kalibrasyon Eğrisi",
-        "desc": "Isotonic kalibrasyon öncesi/sonrası. ECE=0.0788, Brier=0.1283.",
+        "desc": "Isotonic kalibrasyon öncesi/sonrası. ECE=0.0291, Brier=0.1115.",
         "section": "evaluation",
     },
     {

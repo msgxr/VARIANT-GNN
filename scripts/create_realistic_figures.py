@@ -1,6 +1,14 @@
+# ============================================================================
+# ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
+# Bu betik FABRİKE, canonical-DIŞI sayılar üretir (F1≈0.94, AUC≈0.97) ve
+# Şeyma'nın Mac'inin sabit yoluna (/Users/seymanur/...) yazar — bu PC'de
+# çalışamaz. Gerçek leakage-free sonuçlar çok daha düşüktür: test F1=0.8367;
+# paneller General 0.8185 / KANSER 0.906 / PAH 0.912 / CFTR 0.7143
+# (kaynak: RESULTS_CANONICAL.json). KULLANILMAZ — silme onayı bekliyor.
+# ============================================================================
 """
-Gerçekçi grafikler oluştur - Tablo 3 ile tutarlı
-F1≈0.94, AUC≈0.97 gösteren grafikler
+Gerçekçi grafikler oluştur - Tablo 3 ile tutarlı  [GERİ ÇEKİLDİ — fabrike]
+F1≈0.94, AUC≈0.97 gösteren grafikler  [FABRİKE — canonical test F1=0.8367]
 """
 
 import matplotlib.pyplot as plt

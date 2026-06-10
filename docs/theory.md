@@ -17,7 +17,7 @@ Kritik sağlık kararlarında "bilmiyorum" diyebilmek, tahminde bulunmak kadar �
 
 1. **Inference Fazında Dropout:** Modelin nöronlarının bir kısmı rastgele kapatılarak $T$ sayıda ($T=15$) tahmin üretilir.
 2. **Varyans Hesaplama:** Bu $T$ tahminin standart sapması ($\sigma$), modelin belirsizliğini temsil eder.
-3. **Güven Skoru:** $(1 - \sigma) \times 100$ formülü ile klinisyene sunulur.
+3. **Güven Skoru:** $(1 - \sigma) \times 100$ formülü ile araştırma amaçlı belirsizlik/güven skoru olarak raporlanır (klinik tanı/karar değildir; yalnızca araştırma/eğitim amaçlı — §10).
 
 ## 3. Biyolojik Zenginleştirme (BLOSUM62 & Grantham)
 
@@ -29,4 +29,4 @@ Sadece koordinat veya popülasyon sıklığı değil, amino asit değişiminin *
 
 ## 4. Akış Özeti
 
-Sistem, varyantı önce biyokimyasal olarak zenginleştirir, ardından GATv2 ile etkileşimli özellik grafında analiz eder ve son olarak MC-Dropout ile güvenilir bir "Klinik Karar Skoru" üretir. Bu hibrit yaklaşım, TEKNOFEST 2026 jürisine sunulacak olan **SOTA (State-of-the-Art)** bilimsel temeli oluşturur.
+Sistem, varyantı önce biyokimyasal olarak zenginleştirir, ardından GATv2 ile etkileşimli özellik grafında analiz eder ve son olarak MC-Dropout ile araştırma amaçlı, kalibre edilmiş bir patojenite olasılığı ve belirsizlik skoru üretir (klinik tanı/karar değildir; yalnızca araştırma/eğitim amaçlı — §10). Bu hibrit yaklaşım, TEKNOFEST 2026 jürisine sunulacak olan **SOTA (State-of-the-Art)** bilimsel temeli oluşturur.

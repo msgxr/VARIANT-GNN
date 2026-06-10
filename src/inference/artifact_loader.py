@@ -74,8 +74,10 @@ class ArtifactLoader:
             obj = joblib.load(str(path))
             logger.debug("Loaded artifact (joblib): %s", path)
             return obj
-        except Exception:
-            pass
+        except Exception as exc:
+            # Kontrol akışı korunur (pickle fallback'e devam); ancak joblib hatası
+            # artık sessiz YUTULMAZ — başarısızlık + path loglanır.
+            logger.warning("joblib yükleme başarısız (%s) → pickle fallback denenecek: %s", path, exc)
         # Fallback: standart pickle
         with open(path, "rb") as fh:
             obj = pickle.load(fh)  # noqa: S301 — own artefakt

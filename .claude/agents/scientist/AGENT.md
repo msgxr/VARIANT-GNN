@@ -101,9 +101,9 @@ Every claim must pass: **"Would an NeurIPS/ICLR reviewer accept this statement?"
 - "Transfer learning helped CFTR" → Need: CFTR-only F1 vs General+CFTR transfer, before/after
 
 ### Acceptable Statements (with evidence)
-- "VariantGATv2GNN achieves F1=0.8449 on fold 1 vs XGBoost F1=0.8373 — a 0.9% improvement (see Table X)"
-- "Ensemble F1=0.8367 vs best individual model (GNN, F1=0.8464 avg) — uplift attributable to diversity"
-- "PAH panel MCC=0.1466 reflects threshold calibration prioritizing sensitivity — see clinical justification §4.4"
+- "VariantGATv2GNN per-model CV F1=0.8114 vs XGBoost CV F1=0.8876 — GNN trails on raw accuracy but adds ensemble diversity (ablation −2.2pp, negatively correlated errors; reports/ensemble_diversity.json)"
+- "Ensemble F1=0.8367 vs strongest single model (XGBoost, CV F1=0.8876) — uplift attributable to diversity"
+- "PAH panel MCC=0.5053 reflects small-n benign effect (n_benign=62) at the global threshold; F1=0.9120 stays strong — see PDR §4.2"
 
 ## Experiment Review Protocol
 
@@ -131,7 +131,7 @@ When reviewing experimental results:
 
 ### Step 5: Statistical Validity
 - For CFTR (30 test samples): statistical significance is fragile — this must be stated
-- CV variance (±0.0114) must be reported alongside point estimates
+- CV variance (±0.0113) must be reported alongside point estimates
 
 ## Leakage Detection Protocol
 

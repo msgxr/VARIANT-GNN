@@ -11,9 +11,9 @@
 | Görev | Durum | Kanıt |
 |---|---|---|
 | Gerçek yarışma verisi alındı (14 Mayıs 2026) | ✅ Tamamlandı | `data/raw/YARISMA_TRAIN_*.csv` (4 panel) |
-| Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `train_log.txt`, `reports/cv_report.json` |
-| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112 |
-| train_log.txt gerçek veri eğitimini gösteriyor | ✅ Tamamlandı | 48 KB log, 5-fold CV + test metrikleri |
+| Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `reports/cv_report.json` (canonical) |
+| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112, CV F1=0.8812 ± 0.0113 |
+| cv_report.json canonical sonuçları gösteriyor | ✅ Tamamlandı | 5-fold CV + test metrikleri (`reports/cv_report.json`) |
 | Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
 | Test %20-patojenik prior'ı resmi kaynakla doğrulandı | ✅ Tamamlandı | Q&A-II Üniversite transkripti (2026-06-03); U-008 → çözüldü |
 
@@ -43,7 +43,8 @@
 | `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.8367 |
 | `submission/teknofest/artifact_manifest.json` güncel | ✅ Tamamlandı | Gerçek SHA256, 2026-05-21 tarihi |
 | `submission/teknofest/checksums.json` güncel | ✅ Tamamlandı | SHA256 hash'leri doğrulandı |
-| `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED, 7 zorunlu kolon |
+| `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED; canonical kolon seti = `src/scientific/submission_validator.py` `JURY_COLUMNS` (7 kolon) |
+| Jüri CSV formatı kod ile tek kaynaktan tanımlı | ✅ Tamamlandı | `JURY_COLUMNS` = `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag`. Resmi format HENÜZ duyurulmadı (UNVERIFIED) → güvenli varsayılan `--jury_minimal` (2 kolon: `Variant_ID + prediction_label`). 7-kolon zengin format iç analiz içindir. |
 | `data/samples/jury_blind_sample.csv` | ✅ Tamamlandı | Jüri format örneği (5 satır, etiketsiz) |
 | `reports/ablation_report.json` | ✅ Tamamlandı | 8 ablasyon konfigürasyonu, F1 etkileri |
 | `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5112`, `test_pr_auc=0.9267` |
@@ -108,6 +109,8 @@
 
 ## Teslim Günü İş Listesi
 
-1. Jüri test CSV'sini al → `python submission/predict.py --input YARISMA_TEST.csv`
+1. Jüri test CSV'sini al → güvenli teslim dosyası için: `python submission/predict.py --input YARISMA_TEST.csv --jury_minimal`
+   - `--jury_minimal` yalnız `Variant_ID + prediction_label` (ikili 0/1) yazar — resmi format duyurulana kadar GÜVENLİ varsayılan.
+   - Resmi format açıklanırsa veya zengin çıktı istenirse: `--jury_minimal` olmadan çalıştır → `JURY_COLUMNS` (7 kolon, iç analiz/zengin format).
 2. `submission/predictions.csv`'yi jüriye sun
 3. Gerekirse: `python main.py --mode train ...` ile model yeniden oluştur

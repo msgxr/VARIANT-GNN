@@ -1,3 +1,12 @@
+# ============================================================================
+# ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
+# Bu betik FABRİKE, canonical-DIŞI sayılar üretir (hedef-AUC 0.976/0.971/0.974/
+# 0.962, val_f1≈0.945). Gerçek leakage-free sonuçlar çok daha düşüktür: test
+# F1=0.8367; paneller General 0.8185 / KANSER 0.906 / PAH 0.912 / CFTR 0.7143;
+# ROC-AUC General 0.855 / KANSER 0.945 / PAH 0.702 / CFTR tanımsız (n=18)
+# (kaynak: RESULTS_CANONICAL.json). reports/figures/Sekil_*.png yazar — PDR/jüri
+# figürleri için KULLANILMAZ. Tutuldu: silme onayı bekliyor.
+# ============================================================================
 from pathlib import Path
 
 import matplotlib

@@ -60,6 +60,27 @@ python submission/predict.py \
 
 ### 3.1 Standart Path (Şartname §7.2)
 
+> **Jüri CSV formatı — tek kaynak (canonical):** Teslim edilecek jüri CSV'sinin
+> kolon seti yalnızca koddan tanımlıdır → `src/scientific/submission_validator.py`
+> `JURY_COLUMNS`:
+> `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag` (7 kolon).
+>
+> **Resmi submission dosya formatı HENÜZ duyurulmadı (UNVERIFIED).** Bu nedenle
+> GÜVENLİ varsayılan teslim biçimi `--jury_minimal` modudur: yalnız
+> `Variant_ID + prediction_label` (ikili 0/1). 7-kolonlu zengin format iç
+> analiz/doğrulama içindir; resmi format açıklanınca güncellenecektir.
+
+**Güvenli teslim (önerilen — 2 kolon):**
+```bash
+python submission/predict.py \
+    --input  <BLIND_TEST_CSV> \
+    --model_dir models \
+    --output submission/predictions.csv \
+    --config configs/pdr.yaml \
+    --jury_minimal
+```
+
+**Zengin çıktı (iç analiz — `JURY_COLUMNS`, 7 kolon):**
 ```bash
 python submission/predict.py \
     --input  <BLIND_TEST_CSV> \
@@ -69,24 +90,30 @@ python submission/predict.py \
 ```
 
 **Üretilen çıktı:**
-- `submission/predictions.csv` — 10 kolonlu tahmin CSV'i
+- `submission/predictions.csv` — jüri tahmin CSV'i (`--jury_minimal`: 2 kolon; aksi halde `JURY_COLUMNS` 7 kolon)
 - `submission/reports/leakage_report_inference.json` — sızıntı raporu
 - `submission/reports/inference_summary.json` — özet istatistikler
 
-**Çıktı kolonları:**
+**Jüri CSV kolonları (`JURY_COLUMNS`, canonical — 7 kolon):**
 
 | Kolon | Tip | Açıklama |
 |-------|-----|---------|
 | `Variant_ID` | string | Varyant kimliği |
-| `Panel` | string | General / Hereditary_Cancer / PAH / CFTR |
-| `Prediction` | string | "Pathogenic" veya "Benign" |
-| `Pathogenic_Probability` | float [0,1] | Ham ensemble olasılığı |
-| `Benign_Probability` | float [0,1] | 1 − Pathogenic_Probability |
-| `Calibrated_Risk` | float [0,1] | Isotonic kalibrasyon sonrası risk |
-| `Uncertainty` | float [0,1] | MC-Dropout std (yüksek = belirsiz) |
-| `Clinical_Flag` | string | OK / LOW_CONFIDENCE / EXPERT_REVIEW |
-| `Model_Version` | string | Model sürümü |
-| `Inference_Timestamp` | ISO-8601 | UTC zaman damgası |
+| `prediction_label` | int {0,1} | İkili tahmin (1 = Pathogenic, 0 = Benign) |
+| `pathogenic_probability` | float [0,1] | Ham ensemble olasılığı |
+| `calibrated_risk` | float [0,100] | Isotonic kalibrasyon sonrası risk skoru |
+| `confidence_level` | float [0,100] | Güven seviyesi (1 − belirsizlik) |
+| `uncertainty_score` | float [0,1] | MC-Dropout std (yüksek = belirsiz) |
+| `expert_review_flag` | bool | Yüksek belirsizlik → uzman gözden geçirme önerisi (araştırma amaçlı; klinik karar DEĞİL) |
+
+> **SUPERSEDED:** Önceki 10-kolonlu çıktı şeması
+> (`Panel`, `Prediction`, `Benign_Probability`, eski triyaj-bayrağı,
+> `Model_Version`, `Inference_Timestamp` dahil) artık jüri teslim formatı
+> DEĞİLDİR — kod ile uyumsuzdu. Triyaj bayrağı araştırma-güvenli
+> `expert_review_flag` (uzman gözden geçirme önerisi) olarak yeniden
+> adlandırılmıştır. Canonical jüri CSV'si yukarıdaki `JURY_COLUMNS` listesidir.
+> (`runner` iç çalışma dosyası ek alanlar üretebilir; bunlar jüriye sunulan
+> teslim CSV'sine yazılmaz.)
 
 ### 3.2 Anonim Kolon Senaryosu (§3.2)
 
@@ -204,7 +231,7 @@ UI bileşenleri:
 - Tek/toplu CSV varyant analizi
 - Risk haritası, kalibrasyon eğrisi, model karşılaştırma grafikleri
 - SHAP, LIME, GNNExplainer açıklama panelleri
-- ACMG kriter raporu, klinik PDF rapor üretimi (FPDF2 ile)
+- ACMG kriter raporu, araştırma amaçlı PDF analiz raporu üretimi (FPDF2 ile; klinik tanı/karar DEĞİL)
 
 ---
 

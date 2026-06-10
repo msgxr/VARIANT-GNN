@@ -62,7 +62,7 @@ When this skill is active, review or produce PDR content strictly against the of
   - GNNExplainer subgraph visualization
   - Panel-based feature group contribution table (not just one chart)
   - LIME/SHAP overlap rate (numerical, e.g. top-5 agreement: 80%)
-- [ ] **Decision threshold determination** (PSR §4.4 weak — justify 0.40 threshold)
+- [ ] **Decision threshold determination** (PSR §4.4 weak — justify global θ=0.8415 threshold)
 
 ## Section 3 — Results (30 pts): Checklist
 

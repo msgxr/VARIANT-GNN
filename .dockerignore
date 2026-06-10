@@ -1,2 +1,81 @@
-﻿# Docker build context ignore listesi
-# Doldurulacak
+# Docker build context ignore listesi
+# .gitignore ruhuyla hizalı — build context'i küçük tut, NDA/türev veriyi dışarıda bırak.
+# DİKKAT: Docker runtime'ın ihtiyaç duyduğu hiçbir şey hariç tutulmaz
+# (src/, configs/, models/, requirements*.txt, main.py, app.py build'e GİRER).
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Sanal ortamlar
+.venv/
+venv/
+env/
+ENV/
+.verify_venv/
+
+# Python cache / derleme artefaktları
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+build/
+dist/
+.eggs/
+*.whl
+
+# Lint / test / tip cache
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Testler (image'a girmesi gerekmez; build context dışı)
+tests/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# CI / pre-commit (build için gerekmez)
+.github/
+.pre-commit-config.yaml
+
+# Loglar
+*.log
+logs/
+train_log.txt
+
+# Veri (NDA — gerçek yarışma verisi image'a girmemeli)
+data/*.csv
+data/raw/
+
+# Üretilmiş rapor artefaktları (image'a gerekmez)
+reports/*.pdf
+reports/*.docx
+reports/*.html
+reports/figures/
+reports/locust_results*.csv
+
+# Kök dizindeki görseller
+*.png
+
+# Dokümantasyon görselleri/varlıkları
+docs/assets/
+
+# Ortam değişkenleri / gizli bilgiler
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Word geçici dosyaları
+~$*.docx

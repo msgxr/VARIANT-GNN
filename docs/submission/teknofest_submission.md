@@ -44,19 +44,42 @@ Takım: XYRA3 (#909249) | Başvuru ID: #4865399
 
 ## Jüri Export Formatı
 
-Tahmin çıktısı aşağıdaki formatı izlemelidir:
+> **Tek kaynak (canonical):** Jüri CSV kolon seti yalnızca koddan tanımlanır —
+> `src/scientific/submission_validator.py` → `JURY_COLUMNS`. Aşağıdaki sıra
+> birebir o listedir:
+>
+> `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag`
+>
+> **Resmi submission dosya formatı HENÜZ duyurulmadı (UNVERIFIED).** Bu yüzden
+> GÜVENLİ varsayılan `--jury_minimal` modudur: yalnız `Variant_ID + prediction_label`
+> (ikili 0/1). 7-kolonlu zengin çıktı iç analiz/doğrulama içindir; resmi format
+> açıklanınca kolon seti güncellenecektir.
+
+**Güvenli teslim (2 kolon — varsayılan öneri):**
+```bash
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv --jury_minimal
+```
 
 ```csv
-Variant_ID,Predicted_Label,Predicted_Class,Pathogenic_Probability,Risk_Score
-VAR_001,1,Pathogenic,0.8731,87.31
-VAR_002,0,Benign,0.1245,12.45
+Variant_ID,prediction_label
+VAR_001,1
+VAR_002,0
 ```
 
-Üretmek için:
+**Zengin çıktı (7 kolon — iç analiz; `JURY_COLUMNS`):**
 ```bash
 python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
-# Çıktı: reports/predictions.csv
 ```
+
+```csv
+Variant_ID,prediction_label,pathogenic_probability,calibrated_risk,confidence_level,uncertainty_score,expert_review_flag
+VAR_001,1,0.8731,87.31,92.40,0.0760,False
+VAR_002,0,0.1245,12.45,95.10,0.0490,False
+```
+
+> **SUPERSEDED:** Eski 5-kolonlu örnek
+> (`Variant_ID,Predicted_Label,Predicted_Class,Pathogenic_Probability,Risk_Score`)
+> artık geçersizdir — kod ile uyumsuzdu. Yukarıdaki `JURY_COLUMNS` canonical'dır.
 
 ## Teslim Paketi İçeriği
 

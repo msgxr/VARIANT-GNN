@@ -56,15 +56,20 @@ ensemble:
   optimize_weights: true               # Nelder-Mead ile validation-set optimizasyonu
 
 preprocessing:
+  # CANONICAL pipeline (configs/pdr.yaml ile birebir): AutoEncoder + SelectKBest(35)
+  # group-aware leakage-free CV altında ~5.3pp F1 KAYBETTİRİR (geri çekilen darboğaz).
+  # Tüm §3.2 özellik seti korunur; SMOTE yalnız train'de. Çıplak
+  # `python main.py --mode train` (--config yok) artık canonical sayıları üretir.
   corr_threshold: 0.25
-  use_autoencoder: true
+  use_autoencoder: false
   autoencoder_encoding_dim: 16
   autoencoder_epochs: 10
-  use_feature_selection: true          # Rapor §3.3: VarianceThreshold + SelectKBest (ANOVA)
-  k_best_features: 35                  # Rapor §3.3: k=35
-  smote_enabled: false                 # TEKNOFEST §3.2: veri zaten dengeli (50/50 P/B), SMOTE gereksiz
+  use_feature_selection: false         # canonical: tüm 343 özellik korunur (SelectKBest kaldırıldı)
+  k_best_features: 35
+  smote_enabled: true                  # train-only SMOTE (canonical pdr.yaml)
   use_bio_scoring: false             # §3.2: yarışma kolon adları anonim → Grantham/BLOSUM eşlenemez (sentetik veride opsiyonel)
   use_acmg_proxy: false              # §3.2: yarışma kolon adları anonim → CADD/REVEL/SIFT yakalanamaz, proxy sabit 0 olur
+  use_categorical_bio: true          # canonical pdr.yaml: AA_1→AA_2 Grantham/BLOSUM kurtarma (+0.38pp/+0.023 MCC)
 
 calibration:
   enabled: true

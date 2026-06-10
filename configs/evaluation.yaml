@@ -16,7 +16,9 @@ evaluation:
     - specificity
   report_per_panel: true
   threshold_search: true
-  threshold_search_range: [0.1, 0.5]
+  # Shipped karar eşiği θ=0.8415 models/threshold.json'da yaşar; bu aralık YALNIZCA
+  # teşhis amaçlı tarama içindir (önceki [0.1, 0.5] canonical θ=0.8415'i dışlıyordu).
+  threshold_search_range: [0.05, 0.95]
   threshold_search_steps: 40
 
 calibration_eval:

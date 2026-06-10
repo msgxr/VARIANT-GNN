@@ -1,8 +1,8 @@
 """
-VARIANT-GNN — Türkçe PDF Klinik Rapor Üretici
+VARIANT-GNN — Türkçe PDF Açıklanabilirlik Raporu Üretici (araştırma amaçlı)
 ==============================================
 SHAP, ClinVar ve risk skoru bilgilerini birleştirerek
-doktora sunulmaya hazır PDF rapor üretir.
+araştırma/yarışma amaçlı açıklanabilirlik PDF raporu üretir (klinik tanı/teşhis DEĞİL; TEKNOFEST §10).
 
 Gereksinim: fpdf2  (pip install fpdf2)
 """
@@ -100,7 +100,7 @@ def _safe_text_latin1(text: str) -> str:
 
 
 class VariantReportPDF(FPDF if FPDF_AVAILABLE else object):  # type: ignore[misc]
-    """FPDF2 tabanlı klinik rapor sınıfı.
+    """FPDF2 tabanlı araştırma amaçlı açıklanabilirlik raporu sınıfı.
 
     DejaVuSans TTF mevcut ise Türkçe karakterler tam olarak gösterilir.
     Yoksa _safe_text_latin1() ile ASCII fallback kullanılır.

@@ -1,5 +1,12 @@
+# ============================================================================
+# ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
+# FABRİKE hedef-AUC'ler (0.976/0.971/0.974/0.962) manuel çizilir; canonical
+# ROC-AUC çok farklıdır: General 0.855 / KANSER 0.945 / PAH 0.702 / CFTR
+# tanımsız (n=18) (kaynak: RESULTS_CANONICAL.json). Ayrıca Mac sabit yoluna
+# (/Users/seymanur/...) yazar — bu PC'de çalışamaz. KULLANILMAZ — silme onayı bekliyor.
+# ============================================================================
 """
-Final ROC Eğrileri - Manuel Kontrol ile Hedef AUC'ler
+Final ROC Eğrileri - Manuel Kontrol ile Hedef AUC'ler  [GERİ ÇEKİLDİ — fabrike hedef-AUC]
 """
 
 import matplotlib.pyplot as plt

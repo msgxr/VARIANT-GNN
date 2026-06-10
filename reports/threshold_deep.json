@@ -1,6 +1,9 @@
 {
-  "canonical_thr": 0.4456,
-  "canonical_f1": 0.8963,
+  "_note": "canonical_thr/canonical_f1 = SHIPPED karar eşiği θ=0.8415 → test F1=0.8367 (RESULTS_CANONICAL.json). argmax_thr=0.4456 / argmax_f1=0.8963 yalnız F1-optimal AYRIM TAVANI'dır (jüri skoru DEĞİL, == test_optimal_upper_bound; 0.8963 GERİ ÇEKİLMİŞ test-F1 ailesinde, canonical olarak kullanılamaz).",
+  "canonical_thr": 0.8415,
+  "canonical_f1": 0.8367,
+  "argmax_thr": 0.4456,
+  "argmax_f1": 0.8963,
   "cal_derived_thr_mean": 0.769,
   "cal_derived_thr_std": 0.0556,
   "cal_derived_f1_mean": 0.8928,

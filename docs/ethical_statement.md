@@ -148,7 +148,7 @@ açıdan kabul edilemezdir**. VARIANT-GNN bu nedenle:
 - **GNNExplainer** — Graph-bazlı katkı analizleri
 - **Group SHAP** — §3.2 6 biyolojik kategorinin katkısı
 - **ACMG/AMP 2015 Kriter Haritalama** — Standart genetik raporlama
-- **PDF Klinik Raporu** — Türkçe doktor-anlaşılır açıklama
+- **PDF Açıklanabilirlik Raporu (araştırma amaçlı)** — Türkçe, teknik-anlaşılır açıklama; model çıktısı **klinik tanı/karar değildir**, yalnızca araştırma/eğitim amaçlıdır (§10)
 
 ---
 

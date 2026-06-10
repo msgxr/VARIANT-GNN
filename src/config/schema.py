@@ -70,7 +70,7 @@ class GNNSchema(_SectionBase):
     knn_k: int = Field(10, ge=2, le=200)
     knn_threshold: float = Field(0.30, ge=0, le=1.0)
     early_stopping_patience: int = Field(20, ge=0, le=1_000)
-    use_multimodal: bool = True
+    use_multimodal: bool = False
     seq_enc_dim: int = Field(32, gt=0, le=512)
     model_type: str = "gatv2"
 

@@ -165,6 +165,7 @@ def mode_train(args, cfg):
     # vs θ≈0.84→0.60). Tam group-aware OOF'ta %20-patojenik resample, 25x medyan F1-optimal.
     _TEST_POS = 0.20
     best_thr = None
+    _thr_source = "oof_20pct_resample_median25"  # birincil yol (aşağıdaki try bloğu)
     try:
         _oofz2 = np.load(cfg.paths.reports_dir / "oof_per_model.npz")
         _meta = getattr(ensemble, "meta_learner", None)
@@ -195,6 +196,7 @@ def mode_train(args, cfg):
         logging.warning("%20-patojenik OOF eşik atlandı, cal-set'e düşülüyor: %s", _thr_exc)
     if best_thr is None:
         best_thr, _ = find_best_threshold(y_cal, cal_cal_proba[:, 1], metric="f1")
+        _thr_source = "calibration_set_fallback"
         logging.info("Threshold from calibration set (fallback, n=%d): %.4f", len(y_cal), best_thr)
 
     report = evaluate(y_test, raw_tst_proba, threshold=best_thr)  # inference HAM'da karar verir
@@ -411,7 +413,7 @@ def mode_train(args, cfg):
                 "test_binary_f1": report.binary_f1,
                 "test_macro_f1": report.macro_f1,
                 "best_threshold": best_thr,
-                "threshold_source": "calibration_set",
+                "threshold_source": _thr_source,
                 "feature_coverage": round(fv_report.overall_coverage, 4),
                 "anonymous_columns": fv_report.anonymous_count,
                 "folds": [vars(r) for r in result.fold_results],

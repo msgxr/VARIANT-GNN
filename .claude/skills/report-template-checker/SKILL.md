@@ -60,7 +60,7 @@ Rejection: Lise/EKG templates, 2024 templates, third-party PDR guides, blog summ
 - [ ] Missing value imputation method stated (median imputation)
 - [ ] Outlier management stated (RobustScaler rationale)
 - [ ] External data: disclosed (none used beyond competition data)
-- [ ] Feature engineering: stated (SelectKBest k=35, AutoEncoder 43→16)
+- [ ] Feature engineering: stated (SelectKBest + AutoEncoder REMOVED — full 343-feature set kept; CategoricalBioFeaturizer ACMG bio features)
 - [ ] Algorithms tried and selection rationale (XGB/LGBM/GATv2GNN/DNN)
 - [ ] Hyperparameter search method and search space defined
 - [ ] Cross-validation approach: Stratified 5-Fold, random_state=42

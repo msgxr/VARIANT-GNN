@@ -14,10 +14,10 @@ Kullanım:
     CUDA_VISIBLE_DEVICES="" python scripts/test_cpu_inference.py
 
 Beklenen çıktı:
-    [OK] General       — 586 tahmin, F1=0.887, süre=X.Xs
-    [OK] Hereditary_Cancer — 78 tahmin, F1=0.900, süre=X.Xs
-    [OK] PAH           — 74 tahmin, F1=0.956, süre=X.Xs
-    [OK] CFTR          — 22 tahmin, F1=0.952, süre=X.Xs
+    [OK] General       — 586 tahmin, F1=0.819, süre=X.Xs
+    [OK] Hereditary_Cancer — 78 tahmin, F1=0.906, süre=X.Xs
+    [OK] PAH           — 74 tahmin, F1=0.912, süre=X.Xs
+    [WARN] CFTR        — 22 tahmin, F1=0.714, süre=X.Xs
     === Tüm paneller CPU'da başarıyla çalıştı ===
 """
 

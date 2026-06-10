@@ -45,16 +45,21 @@ yüklenir ve her satıra `Panel`'ine göre uygulanır.
 ## 3. Sıfırdan eğitim (NDA verisine sahip olanlar için)
 
 ```bash
-python main.py --mode train --config configs/pdr.yaml --data data/train_variants.csv
+python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv
 ```
 Beklenen log:
 ```
 Group-aware splitting ON: 3802 rows → 3224 unique variants
 CV: StratifiedGroupKFold (group-aware)
-Cross-validation complete: Binary F1 (§7.3) = 0.8936 ± 0.0004
+CV summary — Binary F1 (§7.3): 0.8812 ± 0.0113
 Leakage guard PASSED: 0 variants straddle train/test
 [TEST] [§7.3 PRIMARY] Binary F1 : 0.8367
 ```
+> **Not:** Konsola yazılan `0.8812 ± 0.0113` değeri **bileşen sabit-ağırlık fold-CV**
+> satırıdır (`src/cli/modes/train.py` → `result.mean_cv_f1`). Canonical headline
+> **0.8936 ± 0.0004** ise post-hoc **OOF-stacking nested-CV** sonucudur
+> (`reports/stacking_improvement.json`) — konsol satırı değildir.
+
 `seed=42` deterministiktir; her çalıştırma aynı sonucu verir.
 
 ## 4. Sonuç tutarlılığı kontrolü (CI gate)

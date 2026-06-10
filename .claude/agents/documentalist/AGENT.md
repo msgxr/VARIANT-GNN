@@ -149,8 +149,8 @@ CONTENT:
 
 ### Required Precision Patterns
 - Metric: always report as "F1=0.8367 (iç hold-out, θ=0.8415); jüri beklentisi dengeli F1=0.6042 (havuzlanmış ±0.0324); RESMİ headline F1=0.6202"
-- Comparison: "Ensemble CV F1=0.8936 vs en güçlü tek model XGBoost CV F1=0.8145"
-- Limitation: "PAH panel MCC=0.39 (n_benign=62 küçük-n); CFTR MCC tanımsız (n=18)"
+- Comparison: "Ensemble CV F1=0.8936 vs en güçlü tek model XGBoost CV F1=0.8876"
+- Limitation: "PAH panel MCC=0.5053 (n_benign=62 küçük-n); CFTR MCC tanımsız (n=18)"
 - Claim: pair every claim with its evidence source
 
 ## Output Format
