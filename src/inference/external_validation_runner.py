@@ -309,7 +309,14 @@ class ExternalValidationRunner:
         prob = preds_df["Pathogenic_Probability"].values
 
         label_map = {"pathogenic": 1, "benign": 0, "1": 1, "0": 0, "1.0": 1, "0.0": 0}
-        y = np.array([label_map.get(str(v).strip().lower(), int(float(v))) for v in labels], dtype=int)
+
+        def _to_label(v: object) -> int:
+            key = str(v).strip().lower()
+            if key in label_map:
+                return label_map[key]
+            return int(float(v))
+
+        y = np.array([_to_label(v) for v in labels], dtype=int)
 
         f1 = f1_score(y, pred_binary, average="binary", pos_label=1, zero_division=0)
         try:

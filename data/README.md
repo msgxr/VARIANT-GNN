@@ -177,7 +177,7 @@ python main.py --mode train --config configs/pdr.yaml --data_file data/train_var
 python main.py --mode crossval --config configs/pdr.yaml --data_file data/train_variants.csv
 
 # Kör tahmin (yarışma submission formatı)
-python submission/predict.py --input data/test_variants_blind.csv --output submission/predictions.csv
+python submission/predict.py --input data/jury_test.csv --output submission/predictions.csv
 
 # External validation (etiketli test seti ile)
 python main.py --mode external_val --config configs/pdr.yaml --test_file <test_labelled.csv>

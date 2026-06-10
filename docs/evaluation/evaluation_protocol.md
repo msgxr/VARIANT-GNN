@@ -16,8 +16,8 @@ F1 = TP / (TP + 0.5·FP + 0.5·FN)
 ```
 
 Bu, Patojenik (positive=1) sınıfı için **Binary F1** skorudur. Sistemde
-`src/evaluation/metrics.py:evaluate()` tarafından `binary_f1` alanı olarak
-hesaplanır ve raporlanır.
+`src/scientific/metrics/metrics.py:evaluate()` tarafından `binary_f1` alanı olarak
+hesaplanır ve raporlanır (canlı CLI bu kopyayı import eder: `src/cli/modes/train.py`, `evaluate.py`).
 
 ## 2. Tamamlayıcı Metrikler
 

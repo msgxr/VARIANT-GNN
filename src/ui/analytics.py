@@ -103,7 +103,11 @@ def render_risk_map(df_result: pd.DataFrame) -> None:
     )
 
     risk_col: str = "Calibrated_Risk" if "Calibrated_Risk" in df_result.columns else "Probability"
-    risks: np.ndarray = df_result[risk_col].values[:200]  # İlk 200 varyant
+    # Calibrated_Risk zaten 0-100 ölçeğinde; Probability ise ham 0-1 olasılık.
+    # Fallback durumunda 0-100 eksenine, renk eşiklerine ve lejant aralıklarına
+    # uyması için ham olasılığı ×100 ölçekle (aksi halde tüm noktalar ≤1'e çöker).
+    _scale: float = 100.0 if risk_col == "Probability" else 1.0
+    risks: np.ndarray = df_result[risk_col].values[:200] * _scale  # İlk 200 varyant
     n: int = len(risks)
 
     fig, ax = plt.subplots(figsize=(11, 3.5))

@@ -179,7 +179,7 @@ class ConfidentLearner:
     ----------
     noise_threshold : float
         Bir örneğin şüpheli sayılması için gereken maksimum etiket kalite
-        skoru (LQS < noise_threshold → şüpheli).  Varsayılan 0.50 makul
+        skoru (LQS < noise_threshold → şüpheli).  Varsayılan 0.45 makul
         bir F1/temizlik dengesi sağlar; daha agresif temizlik için 0.40
         kullanılabilir.
     cv_folds : int

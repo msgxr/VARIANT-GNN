@@ -167,6 +167,12 @@ class InferencePipeline:
 
     def load(self) -> InferencePipeline:
         """Load all model artefacts from disk."""
+        # §3.2 offline firewall: assert the same ClinVar API lock the jury runner
+        # (ExternalValidationRunner.run) enforces, so the REST API / UI entrypoints
+        # — which bypass src/cli/runner.py — never permit an external label fetch.
+        from src.explainability.clinvar_api import set_inference_mode
+
+        set_inference_mode(True)
         self._preprocessor, self._ensemble, self._calibrator = self.store.load_all()  # type: ignore
         self._loaded = True
         logger.info("InferencePipeline loaded from %s", self.store.model_dir)

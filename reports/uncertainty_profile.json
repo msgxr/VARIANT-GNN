@@ -2,7 +2,7 @@
   "title": "Per-Sample Belirsizlik Profili — Conformal Prediction Tabanlı",
   "method": "Adaptive Prediction Sets (APS) — Angelopoulos et al. 2021",
   "reference": "Angelopoulos et al. (2021). Uncertainty Sets for Image Classifiers using Conformal Prediction. ICLR 2021.",
-  "n_test": 761,
+  "n_test": 762,
   "confidence_level_production": "90%",
   "global_breakdown": {
     "90%_confidence": {
@@ -39,28 +39,29 @@
       "valid_marginal": false
     }
   },
-  "clinical_action_tiers": {
+  "_note_scope": "Araştırma/eğitim amaçlı belirsizlik katmanları — klinik karar/aksiyon DEĞİLDİR (§10). n-değerleri global_breakdown 90% (geçerli OOF) ile hizalı: 629 singleton + 133 belirsiz = 762.",
+  "uncertainty_tiers": {
     "TIER_1_HIGH_CONFIDENCE": {
       "definition": "Singleton prediction set — model sadece 1 sınıf içeriyor",
-      "pct_at_90": 81.1,
-      "n_samples": 617,
-      "clinical_implication": "Model yüksek güvenle Pathogenic veya Benign diyor. Araştırmacı bu tahmine güvenebilir.",
-      "action": "Doğrudan kullan"
+      "pct_at_90": 82.5,
+      "n_samples": 629,
+      "research_interpretation": "Model yüksek güvenle Pathogenic veya Benign diyor. Araştırmacı bu tahmine güvenebilir.",
+      "suggested_research_handling": "Doğrudan kullan"
     },
     "TIER_2_UNCERTAIN": {
       "definition": "Her iki sınıf prediction set içinde — model ikisi arasında kararsız",
-      "pct_at_90": 18.9,
-      "n_samples": 144,
-      "clinical_implication": "Bu 144 varyant için model belirsiz. Bunlar öncelikli uzman incelemesi gerektiren vakalar.",
-      "action": "Uzman yorumu gerekli",
+      "pct_at_90": 17.5,
+      "n_samples": 133,
+      "research_interpretation": "Bu 133 varyant için model belirsiz. Araştırma kapsamında öncelikli incelenecek örnekler.",
+      "suggested_research_handling": "İnsan uzman gözden geçirmesi önerilir",
       "note": "Belirsiz varyantlar genellikle VUS sınırında — bu beklenen ve dürüst bir çıktı."
     },
     "TIER_3_ABSTAIN": {
       "definition": "Empty prediction set — çok az görülür, aşırı atipik örnekler",
       "pct_at_90": 0.0,
       "n_samples": 0,
-      "clinical_implication": "Model hiç tahmin yapmıyor. Bu durum bu veri setinde görülmedi.",
-      "action": "N/A"
+      "research_interpretation": "Model hiç tahmin yapmıyor. Bu durum bu veri setinde görülmedi.",
+      "suggested_research_handling": "N/A"
     }
   },
   "panel_uncertainty_estimates": {

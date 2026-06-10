@@ -157,9 +157,9 @@ class PreprocessingSettings:
     use_autoencoder: bool = True
     autoencoder_encoding_dim: int = 16
     autoencoder_epochs: int = 10
-    use_feature_selection: bool = True  # YAML default: VarianceThreshold + SelectKBest
-    k_best_features: int = 35  # YAML default: k=35
-    smote_enabled: bool = False  # YAML default: TEKNOFEST §3.2 dengeli veri
+    use_feature_selection: bool = True  # canonical YAML: false → tüm 343 özellik korunur (SelectKBest kaldırıldı)
+    k_best_features: int = 35  # canonical YAML: 35 (yalnız use_feature_selection=true iken; loader fallback=30)
+    smote_enabled: bool = False  # canonical YAML: true → train-only SMOTE (pdr.yaml ile birebir)
     use_bio_scoring: bool = False  # YAML default: Grantham/BLOSUM zaten girdi özniteliklerinde
     use_acmg_proxy: bool = False  # §3.2: yarışma kolon adları anonim → CADD/REVEL gibi adlar yok
     use_categorical_bio: bool = False  # AA_1→AA_2 + CAT_* sinyalini kurtar (CategoricalBioFeaturizer)

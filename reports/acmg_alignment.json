@@ -47,5 +47,5 @@
     }
   ],
   "interpretation": "Modelin en yüksek ağırlıklı öznitelik grupları (in-silico uzlaşı + korunmuşluk + AA biyokimyası) ACMG patojenite kriterleriyle (PP3/PS3/PM4) doğrudan örtüşür — kararlar klinik altın-standart mantığıyla hizalı. Hiçbir adlandırılmış dış-DB kolonu kullanılmaz (§3.2).",
-  "importance_source": "group-SHAP (XGBoost TreeExplainer, group-aware hold-out) — reports/shap_group_contributions.json"
+  "importance_source": "group-aware OOF XGBoost TreeExplainer mean|SHAP| (sızıntısız 369-öznitelik model, anonim AL_*/EK_*/CAT_* şeması). NOT: reports/shap_group_contributions.json AYRI bir analizdir (adlandırılmış kategori şeması, eski SelectKBest+AE hattı) ve bu dosyanın kaynağı DEĞİLDİR — yüzdeler kasıtlı olarak farklıdır."
 }

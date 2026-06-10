@@ -26,7 +26,8 @@ git clone <repo> && cd VARIANT-GNN
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 # macOS'ta LightGBM için OpenMP gerekiyorsa:
-#   export DYLD_LIBRARY_PATH="$(pwd)/venv/lib/python3.9/site-packages/torch/lib:$DYLD_LIBRARY_PATH"
+#   PYVER=$(python3 -c 'import sys;print(f"python{sys.version_info.major}.{sys.version_info.minor}")')
+#   export DYLD_LIBRARY_PATH="$(pwd)/venv/lib/$PYVER/site-packages/torch/lib:$DYLD_LIBRARY_PATH"
 ```
 
 ## 2. Tahmin (eğitilmiş modellerle — veri gerektirmez)
@@ -36,11 +37,12 @@ Jüri kendi test CSV'si ile tahmin üretebilir:
 
 ```bash
 python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv
-# Çıktı: reports/predictions_full.csv (panel-aware eşik otomatik uygulanır)
+# Çıktı: --output ile verilen yol (varsayılan submission/predictions.csv)
 ```
 
 GLOBAL eşik θ=0.8415 (canonical, models/threshold.json) inference'ta otomatik
-yüklenir ve her satıra `Panel`'ine göre uygulanır.
+yüklenir ve TÜM satırlara Panel'den bağımsız aynı global eşik uygulanır
+(panel-spesifik eşikler OPT-IN'dir, jüri-yolu kullanmaz).
 
 ## 3. Sıfırdan eğitim (NDA verisine sahip olanlar için)
 

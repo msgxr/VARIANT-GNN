@@ -42,7 +42,7 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
                 <code style="color:#93c5fd;">SIFT_score, PolyPhen2_HDIV_score, CADD_phred, REVEL_score,
                 GERP_RS, PhyloP100way_vertebrate, gnomAD_exomes_AF</code> vb.<br>
                 <strong style="color:#e2e8f0;">Örnek dosya:</strong>
-                <code>data/samples/jury_blind_sample.csv</code> (34 özellik, 10 satır)
+                <code>data/samples/jury_blind_sample.csv</code> (351 özellik, 5 satır)
             </div>
         </div>
         """,
@@ -68,7 +68,8 @@ def render_analysis_tab(pipeline: Any, cfg: Any) -> None:
         with st.spinner("XGBoost + LightGBM + GATv2GNN + DNN modelleri calisiyor..."):
             try:
                 # predict_from_csv runs the full preprocessing pipeline
-                # (imputer → scaler → SelectKBest → autoencoder → graph)
+                # (imputer → RobustScaler → missing-indicator → cosine k-NN graph; canonical pipeline,
+                #  SelectKBest/autoencoder removed per §VIII)
                 # predict_from_dataframe expects already-processed features — wrong for raw data
                 import os
                 import tempfile

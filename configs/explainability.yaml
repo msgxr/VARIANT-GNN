@@ -9,6 +9,13 @@ shap:
     - bar
     - waterfall
   group_shap: true
+  # ⚠️ İLLÜSTRATİF / TARİHSEL — Aşağıdaki biological_groups bloğu adlandırılmış
+  # kolon şemasını (CADD_phred, REVEL_score, GERP++_RS …) §3.2'nin BEKLENEN
+  # öznitelik kategorilerinin dokümantasyonu olarak listeler. Gerçek yarışma
+  # verisi ANONİMDİR (343 kolon: AL_*/CAT_*/EK_*/AA_*); bu adlı kolonlar veride
+  # YOKTUR. Çalışma zamanı grup taksonomisi src/explainability/group_shap.py
+  # BIOLOGICAL_GROUPS içinde anonim öneklerle (AL_/CAT_/EK_/AA_/ae_) kodludur;
+  # bu blok runtime'da TÜKETİLMEZ (sadece referans/dokümantasyon amaçlıdır).
   biological_groups:
     sequence_conservation: ["GERP++_RS", "PhyloP", "phastCons", "SiPhy"]
     functional_prediction: ["CADD_phred", "SIFT_score", "PolyPhen2_HDIV_score", "REVEL_score"]

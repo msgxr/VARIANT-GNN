@@ -196,7 +196,7 @@ class DifferentialPrivacy:
     def privacy_report(self) -> dict:
         """
         Gizlilik bütçesi ve parametre raporu döndür.
-        KVKK uyumluluk belgesi olarak kullanılabilir.
+        Bilgilendirme amaçlı gizlilik-parametre raporudur (resmi KVKK/GDPR uyumluluk beyanı DEĞİLDİR).
         """
         level = "bilinmiyor"
         for lbl, eps in sorted(self.PRIVACY_LEVELS.items(), key=lambda t: t[1]):
@@ -213,10 +213,13 @@ class DifferentialPrivacy:
             "n_queries": self._n_queries,
             "cumulative_epsilon": round(self._budget_used, 4),
             "sensitive_features": self.sensitive_features or "tüm özellikler",
-            "compliance": {
-                "KVKK": "Madde 6 — Özel nitelikli KVK korunması",
-                "GDPR": "Madde 89 — İstatistiksel amaçlı güvence",
-                "HIPAA": "45 CFR §164.514 — Safe Harbor anonymization",
+            "compliance_references": {
+                "_disclaimer": (
+                    "Bilgilendirme amaçlı ilgili mevzuat referanslarıdır; "
+                    "resmi uyumluluk beyanı veya denetim belgesi DEĞİLDİR."
+                ),
+                "KVKK": "Madde 6 — Özel nitelikli kişisel verilere ilişkin referans",
+                "GDPR": "Madde 89 — İstatistiksel amaçlı işleme güvenceleri (referans)",
             },
             "recommendation": (
                 f"ε={self.epsilon} ile gizlilik seviyesi: {level}. "

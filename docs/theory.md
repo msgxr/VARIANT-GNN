@@ -15,7 +15,7 @@ GATv2'de $[h_i \parallel h_j]$ işlemi sayesinde, nükleotid dizilimindeki bir v
 
 Kritik sağlık kararlarında "bilmiyorum" diyebilmek, tahminde bulunmak kadar önemlidir. **Monte Carlo Dropout** yöntemi ile modelin "Güven Skoru" hesaplanır:
 
-1. **Inference Fazında Dropout:** Modelin nöronlarının bir kısmı rastgele kapatılarak $T$ sayıda ($T=15$) tahmin üretilir.
+1. **Inference Fazında Dropout:** Modelin nöronlarının bir kısmı rastgele kapatılarak $T$ sayıda ($T=10$) tahmin üretilir.
 2. **Varyans Hesaplama:** Bu $T$ tahminin standart sapması ($\sigma$), modelin belirsizliğini temsil eder.
 3. **Güven Skoru:** $(1 - \sigma) \times 100$ formülü ile araştırma amaçlı belirsizlik/güven skoru olarak raporlanır (klinik tanı/karar değildir; yalnızca araştırma/eğitim amaçlı — §10).
 

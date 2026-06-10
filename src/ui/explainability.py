@@ -111,7 +111,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
         """
     <div class="section-header">
         <div class="section-icon">🏥</div>
-        <h3>Klinik Karar Destek Asistanı (Otomatik Yorum)</h3>
+        <h3>Açıklanabilirlik — Otomatik Yorum (yalnızca araştırma/eğitim amaçlı, klinik karar değildir)</h3>
     </div>
     """,
         unsafe_allow_html=True,

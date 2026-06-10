@@ -15,9 +15,9 @@ env:
   PYTHONDONTWRITEBYTECODE: "1"
   PYTHONUNBUFFERED: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
-  TORCH_VERSION: "2.2.0"
+  TORCH_VERSION: "2.2.1"
   TORCH_INDEX: "https://download.pytorch.org/whl/cpu"
-  PYG_INDEX: "https://data.pyg.org/whl/torch-2.2.0+cpu.html"
+  PYG_INDEX: "https://data.pyg.org/whl/torch-2.2.1+cpu.html"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # JOB DEPENDENCY GRAPH

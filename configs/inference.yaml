@@ -5,7 +5,7 @@ mode: predict
 inference:
   batch_size: 256
   use_uncertainty: true
-  mc_dropout_passes: 30
+  mc_dropout_passes: 10  # canonical: inference call-site'ları n_iter=10 kullanır (jüri yolu: external_validation_runner)
   high_risk_threshold: 0.7
   confidence_thresholds:
     high: 0.85

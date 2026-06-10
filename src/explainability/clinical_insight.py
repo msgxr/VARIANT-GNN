@@ -1,7 +1,7 @@
 """
 src/explainability/clinical_insight.py
-Klinik Karar Destek Asistanı — SHAP değerlerini kullanarak
-varyant bazında otomatik Türkçe klinik yorum üretir.
+Araştırma Amaçlı Açıklanabilirlik Yorumu — SHAP değerlerini kullanarak
+varyant bazında otomatik Türkçe yorum üretir (klinik tanı/karar DEĞİLDİR; §10).
 """
 
 from __future__ import annotations
@@ -167,15 +167,15 @@ def generate_clinical_insight(
     # ── Özet cümle ─────────────────────────────────────────────
     if zone == "critical":
         summary = (
-            f"{vid_text}, **{risk_score:.1f}/100** klinik risk skoru ile "
+            f"{vid_text}, **{risk_score:.1f}/100** model risk skoru ile "
             f"**KRİTİK** patojenite sınıfında değerlendirilmektedir. "
-            f"Yüksek öncelikli klinik doğrulama önerilir."
+            f"Araştırma kapsamında öncelikli incelenmesi önerilir (klinik karar değildir)."
         )
     elif zone == "high":
         summary = (
-            f"{vid_text}, **{risk_score:.1f}/100** klinik risk skoru ile "
+            f"{vid_text}, **{risk_score:.1f}/100** model risk skoru ile "
             f"**YÜKSEK RİSK** grubuna girmektedir. "
-            f"Fonksiyonel doğrulama testleri düşünülmelidir."
+            f"Literatürde fonksiyonel doğrulama çalışmalarıyla birlikte değerlendirilir."
         )
     elif zone == "moderate":
         summary = (
@@ -231,20 +231,20 @@ def generate_clinical_insight(
     # ── Öneri ──────────────────────────────────────────────────
     if zone in ("critical", "high"):
         recommendation = (
-            "⚡ **Klinik Öneri:** Segregasyon analizi ve fonksiyonel biyokimyasal testler ile "
-            "varyantın hastalık oluşturma potansiyeli doğrulanmalıdır. "
-            "Mevcut ACMG/AMP klinik sınıflandırma kriterleri ile değerlendirilmesi önerilir."
+            "📌 **Araştırma Notu (klinik karar değildir, §10):** Bu tür yüksek-skorlu varyantlar "
+            "literatürde segregasyon analizi ve fonksiyonel biyokimyasal çalışmalarla birlikte ele alınır; "
+            "ACMG/AMP kriterleri yalnızca uzman değerlendirmesinde kullanılır."
         )
     elif zone == "moderate":
         recommendation = (
-            "🔬 **Klinik Öneri:** Varyant önemi belirsizdir (VUS – Variant of Uncertain Significance). "
-            "Aile tarihçesi, popülasyon veritabanları (gnomAD) ve fonksiyonel kanıtlarla birlikte "
-            "kapsamlı değerlendirme yapılmalıdır."
+            "📌 **Araştırma Notu (klinik karar değildir, §10):** Varyant önemi belirsizdir "
+            "(VUS – Variant of Uncertain Significance); literatürde aile tarihçesi, popülasyon "
+            "veritabanları (gnomAD) ve fonksiyonel kanıtlarla birlikte değerlendirilir."
         )
     else:
         recommendation = (
-            "✅ **Klinik Öneri:** Varyant büyük olasılıkla benign ya da polimorfik niteliktedir. "
-            "Klinik tablonun açıklanması için ek genomik bölgeler araştırılabilir."
+            "📌 **Araştırma Notu (klinik karar değildir, §10):** Varyant büyük olasılıkla benign "
+            "ya da polimorfik niteliktedir."
         )
 
     return {

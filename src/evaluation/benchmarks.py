@@ -39,7 +39,7 @@ class BenchmarkReporter:
                 "Accuracy": model_metrics.get("Accuracy", 0.0),
                 "F1-Macro": model_metrics.get("F1-Macro", 0.0),
                 "AUC": model_metrics.get("AUC", 0.0),
-                "Tip": "Ömer (Bu Çalışma)",
+                "Tip": "XYRA3 (Bu Çalışma)",
             }
         )
 

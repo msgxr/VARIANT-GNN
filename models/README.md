@@ -12,7 +12,7 @@ bu artefaktlarla tahmin üretebilir. Yalnızca ham NDA verisi (`data/raw/`) giti
 > (3.802 örnek, 3.224 tekil varyant, 343 anonim kolon) kullanılarak **sızıntısız (group-aware,
 > Variant_ID)** protokolle eğitim tamamlanmış; `PROVENANCE.json` metrikleri anti-drift firewall
 > (Check #8) ile `RESULTS_CANONICAL.json`'a pinlenmiştir. **CV Binary F1 = 0.8936 ± 0.0004** (OOF-stacking nested-CV; bileşen
-> fold-CV = 0.8779 ± 0.0062), **Test F1 = 0.8367**, MCC = 0.5112. Tüm sayılar
+> fold-CV = 0.8812 ± 0.0113), **Test F1 = 0.8367**, MCC = 0.5112. Tüm sayılar
 > [`../RESULTS_CANONICAL.json`](../RESULTS_CANONICAL.json) ile tutarlıdır.
 > Model artefaktları Şeyma'nın Mac'inde üretilmiş ve bu dizine taşınmıştır.
 > Tahminler yalnızca yarışma/araştırma amaçlıdır — klinik tanı için kullanılamaz.

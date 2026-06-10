@@ -41,10 +41,10 @@
 | Görev | Durum | Kanıt |
 |---|---|---|
 | `models/PROVENANCE.json` güncel | ✅ Tamamlandı | `"status": "REAL_DATA_TRAINED"`, F1=0.8367 |
-| `submission/teknofest/artifact_manifest.json` güncel | ✅ Tamamlandı | Gerçek SHA256, 2026-05-21 tarihi |
+| `submission/teknofest/artifact_manifest.json` güncel | ✅ Tamamlandı | Gerçek SHA256, 2026-06-02 tarihi (generated_at) |
 | `submission/teknofest/checksums.json` güncel | ✅ Tamamlandı | SHA256 hash'leri doğrulandı |
 | `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED; canonical kolon seti = `src/scientific/submission_validator.py` `JURY_COLUMNS` (7 kolon) |
-| Jüri CSV formatı kod ile tek kaynaktan tanımlı | ✅ Tamamlandı | `JURY_COLUMNS` = `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag`. Resmi format HENÜZ duyurulmadı (UNVERIFIED) → güvenli varsayılan `--jury_minimal` (2 kolon: `Variant_ID + prediction_label`). 7-kolon zengin format iç analiz içindir. |
+| Jüri CSV formatı kod ile tek kaynaktan tanımlı | ✅ Tamamlandı | `JURY_COLUMNS` = `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag`. Resmi format HENÜZ duyurulmadı (UNVERIFIED) → ÖNERİLEN güvenli mod `--jury_minimal` (opt-in flag; 2 kolon: `Variant_ID + prediction_label`). Bayrak verilmezse VARSAYILAN 7-kolon zengin format yazılır (iç analiz içindir). |
 | `data/samples/jury_blind_sample.csv` | ✅ Tamamlandı | Jüri format örneği (5 satır, etiketsiz) |
 | `reports/ablation_report.json` | ✅ Tamamlandı | 8 ablasyon konfigürasyonu, F1 etkileri |
 | `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5112`, `test_pr_auc=0.9267` |
@@ -64,7 +64,7 @@
 | LightGBM feature names warning temizlendi | ✅ Tamamlandı | `_to_lgbm_frame()` helper |
 | DataFrame fragmented warning temizlendi | ✅ Tamamlandı | ColumnAligner tek seferde DataFrame |
 | sklearn deprecation warning suppress | ✅ Tamamlandı | `warnings.filterwarnings()` |
-| tests/unit/ testler mevcut | ✅ Tamamlandı | 444/444 test geçiyor (2 Haziran 2026) |
+| tests/unit/ testler mevcut | ✅ Tamamlandı | 416 test fonksiyonu (statik `def test_` sayımı, 39 dosya; tests/unit/ = 349 / 31 dosya); toplanan item sayısı CI junit artefaktıyla doğrulanır (2 Haziran 2026) |
 | prediction_schema OOD_Score/OOD_Flag | ✅ Tamamlandı | PREDICTION_COLUMNS güncellendi; build_prediction_frame destekliyor |
 | models/threshold.json | ✅ Tamamlandı | θ=0.8415 (global F1-optimal) |
 | models/panel_thresholds.json | ✅ Tamamlandı | 4 panel eşik değerleri |
@@ -89,7 +89,7 @@
 | Görev | Durum | Notlar |
 |---|---|---|
 | `.env` veya gizli credential repoda yok | ✅ Uyumlu | `.gitignore`'da `.env` |
-| Model binary'leri gitignore kapsamında | ✅ Uyumlu | `models/*.pkl`, `models/*.pth`, `models/*.json` |
+| Yedek/arşiv model klasörleri gitignore kapsamında; canonical eğitilmiş ağırlıklar §7.5 için repoda DAHİL | ✅ Uyumlu | `.gitignore`: `models_backup_*/` vb. ignore; `!models/preprocessor.pkl`, `!models/ensemble.pkl`, `!models/gnn_model.pth`, `!models/xgb_model.json` … negation ile commit'li (REPRODUCE.md §2) |
 | NDA kapsamındaki yarışma verisi repoda yok | ✅ Uyumlu | Veri lokal, hiç push edilmedi |
 
 ---

@@ -39,7 +39,7 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Testleri çalıştır (247/247 yeşil olmalı)
+# 4. Testleri çalıştır (416 test fonksiyonu, 39 dosya; toplanan item sayısı CI junit artefaktında)
 pytest tests/ -q
 
 # 5. Eğitim (gerçek yarışma verisi paylaşıldıktan sonra)
@@ -239,7 +239,7 @@ UI bileşenleri:
 
 | Sorun | Çözüm |
 |------|-------|
-| `ModuleNotFoundError: torch_geometric` | `pip install torch-geometric==2.6.1` |
+| `ModuleNotFoundError: torch_geometric` | `pip install torch-geometric==2.5.3` |
 | GPU bulunmadı uyarısı | Sistem otomatik CPU'ya düşer; sorun değil |
 | `Required artifact missing` | Önce `python main.py --mode train` çalıştırın |
 | Test düşüklük | `pytest tests/ -q -v` ile detaylı çıktı alın |

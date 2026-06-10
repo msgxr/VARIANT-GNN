@@ -226,7 +226,7 @@ Sistem aşağıdaki garantileri sunar:
 | §3.2 6 öznitelik kategorisi | `src/features/feature_validator.py` |
 | §3.2 anonim kolon adları | `src/inference/anonymous_inference.py` |
 | §3.2 genomik adres gizli | Hiçbir yerde Chr/Pos kullanılmaz; sample k-NN graph |
-| §7.3 F1 = 2TP/(2TP+FP+FN) | `src/scientific/metrics/metrics.py` `binary_f1` (canlı CLI import yolu) |
+| §7.3 F1 = TP/(TP+0.5·FP+0.5·FN) | `src/scientific/metrics/metrics.py` `binary_f1` (canlı CLI import yolu; 2TP/(2TP+FP+FN) ile özdeş) |
 | §7.2 external validation | `src/inference/external_validation_runner.py` |
 | §7.5 jüri kod re-run | `src/utils/reproducibility_manifest.py` |
 | §10 etik beyan | `docs/ethical_statement.md` |

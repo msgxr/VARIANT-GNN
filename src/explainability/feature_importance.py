@@ -56,7 +56,7 @@ def _gnn_gradient_importance(
     num_classes: int = 2,
 ) -> np.ndarray:
     """
-    Compute gradient-based feature saliency for VariantSAGEGNN.
+    Compute gradient-based feature saliency for VariantGATv2GNN.
 
     For each sample the absolute gradient of the correct-class logit with
     respect to the input features is computed.  The mean across samples gives
@@ -155,11 +155,11 @@ class FeatureImportanceAnalyzer:
         device: Optional[torch.device] = None,
     ) -> None:
         """
-        Compute mean absolute gradient saliency for VariantSAGEGNN.
+        Compute mean absolute gradient saliency for VariantGATv2GNN.
 
         Parameters
         ----------
-        gnn_model : Fitted VariantSAGEGNN model.
+        gnn_model : Fitted VariantGATv2GNN model.
         X         : [N, F] processed feature matrix.
         y         : [N] integer labels.
         knn_k     : k used for cosine kNN graph construction.

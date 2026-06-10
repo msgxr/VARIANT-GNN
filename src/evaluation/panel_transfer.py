@@ -5,7 +5,7 @@ src/evaluation/panel_transfer.py
 
 TEKNOFEST 2026 bağlamı:
   Şartname §3.2 dört bağımsız hastalık paneli tanımlar:
-    General, Hereditary_Cancer (PAH), Fenilketonüri (PAH), Kistik Fibrozis (CFTR)
+    General, Hereditary_Cancer (Kalıtsal Kanser), PAH (Fenilketonüri), Kistik Fibrozis (CFTR)
 
   Jüri external validation'da her paneli bağımsız değerlendirir.  Bir modelin
   *gerçek genelleştirme kapasitesi* şu soruyla ölçülür:

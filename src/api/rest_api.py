@@ -27,7 +27,7 @@ from __future__ import annotations
 import io
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -151,7 +151,7 @@ def health():
     """Sistem sağlık kontrolü — yük dengeleyici ve Kubernetes probe için."""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "variant-gnn-api",
         "version": "2.0.0",
     }
@@ -308,10 +308,10 @@ def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
     n = len(results)
     path_n = sum(1 for r in results if r.Prediction == "Pathogenic")
     expert_n = sum(1 for r in results if "Uzman" in r.Clinical_Flag)
-    hc_n = sum(1 for r in results if "Yüksek" in r.Clinical_Flag)
+    hc_n = sum(1 for r in results if "Yuksek" in r.Clinical_Flag)
 
     return PredictResponse(
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         n_variants=n,
         latency_ms=round(latency_ms, 2),
         results=results,

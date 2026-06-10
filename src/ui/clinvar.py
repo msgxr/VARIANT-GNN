@@ -128,7 +128,7 @@ def render_clinvar_tab() -> None:
             if "df_result" in st.session_state:
                 df_res = st.session_state["df_result"]
                 # Basit bir eşleşme kontrolü (Gene bazında veya Variant ID bazında)
-                model_pred = df_res["Final_Prediction"].iloc[0] if len(df_res) > 0 else "N/A"
+                model_pred = df_res["Prediction"].iloc[0] if len(df_res) > 0 else "N/A"
                 if clin_sig in ["Pathogenic", "Likely pathogenic"] and model_pred == "Pathogenic":
                     alignment_score = "100% (Tam Konsensüs)"
                 elif clin_sig in ["Benign", "Likely benign"] and model_pred == "Benign":

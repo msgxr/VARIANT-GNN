@@ -604,7 +604,7 @@ Veri seti dört bağımsız panelden oluşur. **Toplam 3802 satır / 3224 tekil 
 
 > OOF kalibrasyon havuzu n=3040, hold-out test n=762 (3040 + 762 = 3802). Eğitim dağılımı ~%74 pozitiftir; jüri §3.2 seti ise %20-patojenik (%20/%80) varsayılır — eşik stratejisi bu prior'a göre ayarlanır (§17).
 >
-> **İki panel sayısını ayırmak (çelişki değil):** `configs/pdr.yaml` `panels:` bloğu, şartname §3.2'nin **nominal/beyan edilen** panel tasarımını taşır (General 1500+1500 train / 1000+1000 test … = 5400 referans hücre). Yukarıdaki tablo ise modelin **fiilen eğitildiği** `data/train_variants.csv` dosyasının gerçek bileşimidir (3802 satır / 3224 tekil varyant). Raporlanan **tüm sonuçlar** fiili 3802-satırlık veri üzerinden, group-aware bölme ile üretilmiştir.
+> **İki panel sayısını ayırmak (çelişki değil):** `configs/pdr.yaml` `panels:` bloğu, şartname §3.2'nin **nominal/beyan edilen** panel tasarımını taşır (General 1500+1500 train / 1000+1000 test = 5000; 4-panel nominal toplam = 6400 referans hücre). Yukarıdaki tablo ise modelin **fiilen eğitildiği** `data/train_variants.csv` dosyasının gerçek bileşimidir (3802 satır / 3224 tekil varyant). Raporlanan **tüm sonuçlar** fiili 3802-satırlık veri üzerinden, group-aware bölme ile üretilmiştir.
 
 ### Panel Örnek Dağılımı
 

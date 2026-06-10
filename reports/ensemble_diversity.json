@@ -46,6 +46,6 @@
     "mean_ambiguity": 0.003339,
     "interpretation": "Yüksek ambiguity değeri modellerin farklı hataları yakaladığını gösterir. Ambiguity=0.0033 — ensemble teorisine göre bu çeşitlilik stacking meta-öğreniciyle F1 kazancına dönüşüyor."
   },
-  "key_finding": "GATv2GNN, ağaç tabanlı modellerle negatif korelasyon gösteriyor (XGB r=-0.1821, LGB r=0.3599). Bu, GNN'in ağaç modellerinin kaçırdığı örnekleri yakaladığını kanıtlar — ensemble teorisine göre ideal çeşitlilik.",
-  "stacking_justification": "Doğrusal stacking meta-öğrenicisi (LogisticRegression), negatif korelasyonlu baz modellerin hatalarını dengeler. Bu, basit ağırlıklı ortalamadan daha güçlü bir kombinasyon stratejisidir. Kanıt: ensemble F1=0.836676217765043 > ağırlıklı baz ortalama≈0.8479."
+  "key_finding": "GATv2GNN, XGBoost ile hafif anti-koreleli (r=-0.1821), LightGBM ile yalnızca zayıf pozitif koreleli (r=0.3599); buna karşılık XGB-LGB çifti r=0.799 ile yüksek redundancy gösterir. GNN, ağaç tabanlı çiftin en düşük-redundansiyalı tamamlayıcısıdır ve ağaç modellerinin kaçırdığı örnekleri kısmen yakalayarak ensemble çeşitliliğine katkı sağlar.",
+  "stacking_justification": "Doğrusal stacking meta-öğrenicisi (LogisticRegression), düşük-redundansiyalı baz modellerin hatalarını dengeler. Stacking üstünlüğü EŞİK-TUTARLI nested-CV ile gösterilir: OOF-stacking CV F1=0.8936 vs sabit-ağırlık baz ortalaması=0.8877 (+0.59pp; reports/stacking_improvement.json). Sevkiyat θ=0.8415 muhafazakâr karar eşiğinde test F1=0.8367; bu eşik ham F1'i kalibrasyon/precision lehine takas eder (jüri %20-prior için tasarlandı) ve argmax baz-F1 ile kıyaslanmaz."
 }

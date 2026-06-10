@@ -83,23 +83,28 @@ VAR_002,0,0.1245,12.45,95.10,0.0490,False
 
 ## Teslim Paketi İçeriği
 
+**Şu an repoda mevcut** (`submission/teknofest/`):
 ```
 submission/teknofest/
-├── jury_predictions.csv       # Jüri formatında tahminler
-├── technical_report.pdf       # PDR raporu
-├── model_card.pdf             # Model kartı (PDF)
 ├── artifact_manifest.json     # Artifact listesi ve hash'leri
-├── checksums.json             # Dosya bütünlük doğrulaması
-└── submission_bundle.zip      # Tüm paket (sıkıştırılmış)
+└── checksums.json             # Dosya bütünlük doğrulaması
 ```
 
-Paketi oluşturmak için:
-```bash
-# Manuel
-cp reports/predictions.csv submission/teknofest/jury_predictions.csv
+**Teslim günü üretilir** (jüri kör test seti sağlandığında — şu an repoda yok):
+```
+jury_predictions.csv                  # python submission/predict.py ile üretilir
+VARIANT_GNN_jury_package_<tarih>.zip  # kod + model ağırlıkları + requirements (paket ZIP)
+technical_report.pdf                  # PDR PDF (resmi şablondan dışa aktarılır)
+model_card.pdf                        # docs/MODEL_CARD.md → PDF
+```
 
-# Artifact manifest üretimi
-python scripts/artifacts/create_manifest.py
+Jüri teslim paketini (kod + model ağırlıkları) oluşturmak için:
+```bash
+# Tam jüri paketi ZIP'i (submission/teknofest/VARIANT_GNN_jury_package_<tarih>.zip)
+bash scripts/create_jury_package.sh
+
+# Jüri tahmin CSV'i (jüri kör test seti sağlandıktan sonra)
+python submission/predict.py --input <jury_test.csv> --output submission/predictions.csv --jury_minimal
 ```
 
 ## Reproducibility

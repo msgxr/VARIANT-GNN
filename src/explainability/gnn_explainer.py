@@ -48,7 +48,7 @@ class GNNExplainerWrapper:
                     model_config=dict(
                         mode="multiclass_classification",
                         task_level="graph",
-                        return_type="log_probs",
+                        return_type="raw",
                     ),
                 )
                 logger.info("GNNExplainer initialised.")

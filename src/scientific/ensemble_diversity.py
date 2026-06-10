@@ -152,17 +152,20 @@ def generate_diversity_report(
         "q_statistic_interpretation": q_interp,
         "ambiguity_decomposition": amb,
         "key_finding": (
-            "GATv2GNN, ağaç tabanlı modellerle negatif korelasyon gösteriyor "
-            f"(XGB r={corr.get('XGBoost_vs_GATv2GNN', 'N/A')}, "
-            f"LGB r={corr.get('LightGBM_vs_GATv2GNN', 'N/A')}). "
-            "Bu, GNN'in ağaç modellerinin kaçırdığı örnekleri yakaladığını kanıtlar — "
-            "ensemble teorisine göre ideal çeşitlilik."
+            "GATv2GNN, XGBoost ile hafif anti-koreleli "
+            f"(r={corr.get('XGBoost_vs_GATv2GNN', 'N/A')}), LightGBM ile yalnızca zayıf pozitif "
+            f"koreleli (r={corr.get('LightGBM_vs_GATv2GNN', 'N/A')}); buna karşılık XGB-LGB çifti "
+            f"r={corr.get('XGBoost_vs_LightGBM', 'N/A')} ile yüksek redundancy gösterir. "
+            "GNN, ağaç tabanlı çiftin en düşük-redundansiyalı tamamlayıcısıdır ve ağaç modellerinin "
+            "kaçırdığı örnekleri kısmen yakalayarak ensemble çeşitliliğine katkı sağlar."
         ),
         "stacking_justification": (
-            "Doğrusal stacking meta-öğrenicisi (LogisticRegression), negatif korelasyonlu "
-            "baz modellerin hatalarını dengeler. Bu, basit ağırlıklı ortalamadan daha "
-            f"güçlü bir kombinasyon stratejisidir. Kanıt: ensemble F1={ensemble_test_f1} > "
-            f"ağırlıklı baz ortalama≈{round(ensemble_test_f1 - gain, 4)}."
+            "Doğrusal stacking meta-öğrenicisi (LogisticRegression), düşük-redundansiyalı "
+            "baz modellerin hatalarını dengeler. Stacking üstünlüğü EŞİK-TUTARLI nested-CV ile "
+            "gösterilir: OOF-stacking CV F1=0.8936 vs sabit-ağırlık baz ortalaması=0.8877 "
+            "(+0.59pp; reports/stacking_improvement.json). Sevkiyat θ=0.8415 muhafazakâr karar "
+            f"eşiğinde test F1={ensemble_test_f1}; bu eşik ham F1'i kalibrasyon/precision lehine "
+            "takas eder (jüri %20-prior için tasarlandı) ve argmax baz-F1 ile kıyaslanmaz."
         ),
     }
 
