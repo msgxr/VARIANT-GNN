@@ -111,7 +111,7 @@ pytest tests/smoke/ -q
 
 ### PyTorch Versiyonu
 
-Bu proje `torch==2.8.0` ve `torch-geometric==2.6.1` kullanır.
+Bu proje `torch==2.2.1` ve `torch-geometric==2.5.3` kullanır.
 `requirements.txt` sabit versiyonlar içerir — değiştirme.
 
 ---
@@ -199,7 +199,7 @@ def train_fold(X, y, fold):
 - Ruff ile uyumlu Python
 - `from __future__ import annotations` her dosyada
 - Docstring yalnızca WHY (neden) için — WHAT iyi isimler anlatır
-- Sihirli sabit yok: `threshold = 0.4357` değil, `cfg.thresholds.classification`
+- Sihirli sabit yok: `threshold = 0.8415` değil, `cfg.thresholds.decision_threshold`
 
 ### 6.2. Veri Sızıntısı Önleme (Kritik)
 

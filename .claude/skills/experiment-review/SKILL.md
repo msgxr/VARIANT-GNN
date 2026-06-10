@@ -41,7 +41,7 @@ When results are shared, analyze in this order:
 - [ ] MCC present? (PDR mandatory)
 - [ ] PR-AUC present? (PDR mandatory — must be computed)
 - [ ] Confusion Matrix available?
-- [ ] Threshold: 0.40 confirmed? Optimal verification done?
+- [ ] Threshold: global θ=0.8415 confirmed (canonical)? Optimal verification done? (panel opt-in thresholds: General 0.3990 | Hereditary_Cancer 0.4532 | PAH 0.4434 | CFTR 0.1922)
 
 ### Step 2: Panel-by-Panel Assessment
 
@@ -52,10 +52,11 @@ For each panel, report:
 - Brier Score (< 0.05 = well-calibrated, > 0.10 = calibration problem)
 
 ### Step 3: CFTR Small-Data Risk
-CFTR: 70+70 training, 30+30 test.
-- F1 std dev: ±0.012 (PSR). Acceptable (< ±0.02).
-- Each test error = ~3.3% F1 change.
-- Flag if: std dev > ±0.02 OR F1 < 0.90 OR MCC < 0.80
+CFTR (actual competition data): 111 total (90 Pat / 21 Ben); test hold-out n=18.
+- Test n=18 → MCC/ROC-AUC undefined (degenerate); F1/precision/recall meaningful only.
+- Canonical CFTR test F1=0.7143 @ θ=0.8415. One misclassification = large F1 swing.
+- (PSR pilot reference was nominal 70+70 train / 30+30 test, F1 std ±0.012 — NOT competition data.)
+- Flag if: a single-error swing inverts the panel verdict, or MCC is reported despite n=18 degeneracy.
 
 ### Step 4: Overfitting Check
 Compare training F1 vs. validation F1.
@@ -64,42 +65,44 @@ Compare training F1 vs. validation F1.
 - PSR evidence: eğitim F1≈0.98 → doğrulama F1≈0.78 (before Dropout correction)
 
 ### Step 5: Ablation Analysis
-If ablation data available:
-| Model | MASTER F1 | KANSER F1 | PAH F1 | CFTR F1 |
-|---|---|---|---|---|
-| XGBoost only | ? | ? | ? | 0.84 (PSR) |
-| LightGBM only | ? | ? | ? | ? |
-| VariantGATv2GNN only | ? | ? | ? | ? |
-| DNN only | ? | ? | ? | ? |
-| Full Ensemble | 0.945 | 0.938 | 0.941 | 0.925 (PSR) |
+Canonical per-model fold-CV Binary F1 (overall, competition data):
+| Model | CV F1 ± std |
+|---|---|
+| XGBoost | 0.8876 ± 0.0047 |
+| LightGBM | 0.8828 ± 0.0082 |
+| VariantGATv2GNN | 0.8114 ± 0.0228 |
+| VariantDNN | 0.7596 ± 0.0441 |
+| Full Ensemble (OOF-stacking) | 0.8936 ± 0.0004 |
 
-Missing ablation data = flag as jury risk (§5.1 was already 4/5 in PSR).
+> The 0.945/0.938/0.941/0.925 panel figures are PSR PILOT values (NOT competition data) — do not present as current ensemble F1. Per-panel competition F1 @ θ=0.8415: MASTER 0.8185 | KANSER 0.9060 | PAH 0.9120 | CFTR 0.7143.
+
+Missing panel-level ablation = flag as jury risk (§5.1 was already 4/5 in PSR).
 
 ### Step 6: Threshold Analysis
-For threshold 0.40:
+For the global decision threshold θ=0.8415 (canonical; derived F1-optimal on the %20-patojenik held-out calibration set, raw probability):
 - PR curve must show this is near the F1-optimal point
-- Compare: F1@0.40 vs F1@0.50 — is 0.40 actually better?
-- CFTR-specific threshold: same or different from global?
+- Compare: F1@0.8415 vs F1@0.50 — is 0.8415 actually better on the calibration prior?
+- Panel opt-in thresholds (General 0.3990 | Hereditary_Cancer 0.4532 | PAH 0.4434 | CFTR 0.1922) are opt-in only — jury uses global θ=0.8415
 
 ### Step 7: PDR-Ready Output
 Produce a table directly usable in PDR §3 (Results):
 
 ```
-Table X: Panel-Based Performance (Competition Data, 5-Fold CV)
+Table X: Panel-Based Performance (Competition Data, group-aware test hold-out @ global θ=0.8415)
 
 Panel    | F1 ± std   | MCC   | PR-AUC | ROC-AUC | Brier | Threshold
 ---------|------------|-------|--------|---------|-------|----------
-MASTER   |            |       |        |         |       | 0.40
-KANSER   |            |       |        |         |       | 0.40
-PAH      |            |       |        |         |       | 0.40
-CFTR     |            |       |        |         |       | 0.40
+MASTER   | 0.8185     | 0.4951|        |         |       | 0.8415
+KANSER   | 0.9060     | 0.7135|        |         |       | 0.8415
+PAH      | 0.9120     | 0.5053|        |         |       | 0.8415
+CFTR     | 0.7143     | n/a   |        |         |       | 0.8415
 ```
 
 ## Interpretation Rules
 
-Do NOT say "the model performs well." Say:
-- "CFTR F1=0.925±0.012 indicates acceptable performance given 70 training samples, but the variance implies instability that must be monitored."
-- "MCC=0.852 for CFTR suggests balanced performance across both classes, better than F1 alone for small imbalanced sets."
+Do NOT say "the model performs well." Say (using canonical competition values):
+- "CFTR F1=0.7143 @ θ=0.8415 on a test hold-out of only n=18 means a single misclassification produces a large F1 swing; MCC/ROC-AUC are undefined (degenerate), so only F1/precision/recall are interpretable."
+- "KANSER MCC=0.7135 (F1=0.9060) is the most balanced panel; its higher MCC reflects the least class imbalance, better than F1 alone for small imbalanced sets."
 
 ## Output Format
 

@@ -12,7 +12,7 @@ Her git push öncesinde commit kimliğinin doğru takım üyesine ait olduğunu 
 ## Official Source Boundary
 
 Bu skill yarışma şartnamesiyle değil, proje iç kimlik protokolüyle çalışır.  
-Referans: .claude/PROJECT_RULES.md §7 ve .claude/context/06_team_and_process_rules.md
+Referans: .claude/core/PROJECT_RULES.md §7 ve .claude/context/06_team_and_process_rules.md
 
 ## Inputs
 

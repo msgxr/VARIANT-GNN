@@ -32,8 +32,8 @@ Hata çıktısını buraya yapıştırın
 ## Ortam
 
 - OS: [örn. Ubuntu 22.04 / Windows 11]
-- Python sürümü: [örn. 3.10.12]
-- PyTorch sürümü: [örn. 2.2.0]
+- Python sürümü: [örn. 3.10.12 — desteklenen: >=3.10,<3.13]
+- PyTorch sürümü: [örn. 2.2.1 — pinned: torch==2.2.1, torch-geometric==2.5.3]
 - GPU: [CPU / GPU model]
 
 ## Ek Bağlam

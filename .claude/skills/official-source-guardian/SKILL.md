@@ -83,6 +83,6 @@ NOTE: [if any caveat]
 
 ## Cross-References
 
-- Verified facts → `.claude/OFFICIAL_REFERENCES.md`
+- Verified facts → `.claude/core/OFFICIAL_REFERENCES.md`
 - Uncertainty log → `.claude/context/07_uncertainty_log.md`
 - Application to audit → `competition-compliance-auditor`

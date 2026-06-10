@@ -136,8 +136,8 @@ WRONG (any of these = leakage):
 
 ```
 Calibration set = held-out 15% of TRAINING DATA (not test set)
-Purpose: threshold optimization (maximize F1 on calibration)
-Result: panel-specific thresholds applied to test set
+Purpose: threshold optimization (maximize F1 on the %20-patojenik prior)
+Result: global θ=0.8415 applied to test set (jury default); panel-specific thresholds opt-in only
 Isolation: calibration samples NEVER appear in test evaluation
 ```
 

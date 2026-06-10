@@ -35,7 +35,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 ### Group 1: Data and Anonymity (Questions 1–6)
 1. Your column names are hidden — how do you map them to biological categories? Is this "certain knowledge" or a heuristic?
 2. Genomic addresses are hidden — could there be an indirect identifier that leaks labels anyway?
-3. Why is CFTR's training set only 70+70? How did you prevent overfitting?
+3. CFTR has only 111 variants total (90 Pathogenic / 21 Benign), with a test hold-out of n=18. How did you prevent overfitting on such a small, imbalanced panel?
 4. Your adversarial validation shows AUC≈0.50 — does this guarantee no distribution shift, or just approximate it?
 5. gnomAD variants are included in the Benign class — does this introduce any population bias?
 6. How did you handle the 47 duplicate records you removed?
@@ -44,7 +44,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 7. Why VariantGATv2GNN specifically? Not GAT, not GCN?
 8. How is your graph constructed? What do nodes and edges represent?
 9. Your ensemble weights are XGBoost 0.30 / LightGBM 0.30 / GNN 0.25 / DNN 0.15. Why these exact values? Are they optimal for all four panels?
-10. XGBoost alone gives F1=0.84 for CFTR, ensemble gives 0.92. Is this 8% meaningful statistically?
+10. XGBoost alone gives fold-CV F1=0.8876, the OOF-stacking ensemble gives 0.8936. Is this ~0.6pp gain meaningful statistically given the ±std overlap?
 11. Stacking meta-learner is logistic regression. Why not a more powerful combiner?
 12. Your PSR pipeline had an AutoEncoder + SelectKBest(35), but production removed both and now keeps the full 343-feature set (≈+5.3pp recovered under leakage-free CV). Justify dropping dimensionality reduction.
 13. Transfer learning from General→CFTR — what exactly is transferred?
@@ -61,7 +61,7 @@ When this skill is active, act as a TEKNOFEST 2026 jury member. Ask hard, techni
 20. PSR reports MCC=0.892 for the General dataset but your PDR shows MCC=0.5112 — how do you explain this discrepancy?
 21. Your PR-AUC for CFTR — can you show this curve right now?
 22. F1 is the competition metric, but you also report Brier Score. Why? What does it add?
-23. CFTR test set is only 30+30. One misclassification = ~3.3% F1 change. How do you account for this instability?
+23. CFTR test hold-out is only n=18. One misclassification = large F1 swing, and MCC/ROC-AUC are undefined (degenerate). How do you account for this instability?
 
 ### Group 5: Reproducibility (Questions 24–27) — §7.5 JURY HAS AUTHORITY
 24. I want to run your model on the competition test data right now. What command do I type?

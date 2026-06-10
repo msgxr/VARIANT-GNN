@@ -216,7 +216,7 @@ source .venv/bin/activate     # Linux/macOS
 # .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
 
-# 2. Test (277+ yeşil olmalı)
+# 2. Test (416+ statik test fonksiyonu, 39 dosya — yeşil olmalı)
 pytest tests/ -q
 
 # 3. Eğitim (mevcut artifact'lar models/ altında)
@@ -298,10 +298,10 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 |---|---|
 | **Sürüm** | `v1.0.0` |
 | **Durum** | Üretim — gerçek TEKNOFEST 2026 yarışma verisi ile eğitilmiş |
-| **Son güncelleme** | 9 Haziran 2026 — Test F1=0.8367 @ θ=0.8415 (sızıntısız, group-aware); %20-patojenik prior Q&A-II ile doğrulandı |
+| **Son güncelleme** | 10 Haziran 2026 — Test F1=0.8367 @ θ=0.8415 (sızıntısız, group-aware); %20-patojenik prior Q&A-II ile doğrulandı |
 | **Bir sonraki kilometre taşı** | PDR teslimi → 29 Haziran 2026 |
 
 > **Bu Model Card belgesi canlıdır.** Yarışma süresince ve sonrasında kod
-> değişiklikleriyle birlikte güncellenir. Son güncelleme: 9 Haziran 2026
+> değişiklikleriyle birlikte güncellenir. Son güncelleme: 10 Haziran 2026
 > (θ=0.8415 canonical retrain; %20-patojenik test prior'ı Q&A-II transkriptiyle
 > doğrulandı; tüm sayılar `RESULTS_CANONICAL.json` ile tutarlı).

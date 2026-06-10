@@ -1,12 +1,12 @@
 # Yol Haritası — VARIANT-GNN
 
-**Güncelleme tarihi:** 9 Haziran 2026 (PDR teslimine 20 gün)
+**Güncelleme tarihi:** 10 Haziran 2026 (PDR teslimine 19 gün)
 
 ## P0 — PDR Kritik (Mayıs–Haziran 2026)
 
 - [x] Gerçek yarışma verisiyle tam eğitim pipeline çalıştır (20 Mayıs 2026 — Test F1=0.8367)
 - [x] Panel bazlı metrik raporlarını gerçek veriyle üret (`reports/cv_report.json`)
-- [x] External validation raporunu güçlendir (`reports/external_validation_report.json`)
+- [x] External validation raporunu güçlendir (`reports/external_validation.json`)
 - [x] Adversarial validation raporunu belgele (AUC≈0.50, tüm paneller)
 - [x] Ablation analizi yürüt ve raporla (`reports/ablation_report.json`, 8 konfigürasyon)
 - [x] Jüri CSV export formatını doğrula ve test et (7 garantili kolon — predict.py PASSED)
@@ -44,7 +44,7 @@ Final aşamasına hazırlık için geliştirmeler:
 - [ ] GitHub Actions workflow'larını güçlendir
 - [ ] Tüm notebook'ları temizle ve belgele
 - [ ] Config JSON schema doğrulaması ekle (TD-011)
-- [ ] MLflow bağımlılığını aktif kullanım veya kaldırma kararı ver (TD-012)
+- [x] MLflow bağımlılığını gözden geçir — runtime'dan çıkarılıp `requirements-dev.txt`'e taşındı (TD-012, kapandı)
 
 ## Kapsam Dışı (Bu Yarışma için)
 

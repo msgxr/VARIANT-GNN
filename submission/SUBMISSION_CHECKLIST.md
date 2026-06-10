@@ -1,7 +1,7 @@
 # Teslim Kontrol Listesi — VARIANT-GNN
 
-**PDR Teslim Tarihi:** 29 Haziran 2026 (teslime 20 gün)  
-**Son Güncelleme:** 9 Haziran 2026  
+**PDR Teslim Tarihi:** 29 Haziran 2026 (teslime 19 gün)  
+**Son Güncelleme:** 10 Haziran 2026  
 **Model Durumu:** ✅ Gerçek TEKNOFEST verisiyle sızıntısız (group-aware) eğitilmiş (1 Haziran 2026; canonical hizalama 5 Haziran 2026)
 
 ---
@@ -12,7 +12,7 @@
 |---|---|---|
 | Gerçek yarışma verisi alındı (14 Mayıs 2026) | ✅ Tamamlandı | `data/raw/YARISMA_TRAIN_*.csv` (4 panel) |
 | Gerçek veriyle model eğitimi tamamlandı | ✅ Tamamlandı | `reports/cv_report.json` (canonical) |
-| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112, CV F1=0.8812 ± 0.0113 |
+| Gerçek veri üzerinde cv_report.json üretildi | ✅ Tamamlandı | Test F1=0.8367, MCC=0.5112, CV F1=0.8936 ± 0.0004 (OOF-stacking, `reports/stacking_improvement.json`) / 0.8812 ± 0.0113 (bileşen fold-CV, `reports/cv_report.json`) |
 | cv_report.json canonical sonuçları gösteriyor | ✅ Tamamlandı | 5-fold CV + test metrikleri (`reports/cv_report.json`) |
 | Gaussian augmentation DEVRE DIŞI (sızıntı nedeniyle) | ✅ Uyumlu | near-twin satır-bazlı split sızıntısı → kaldırıldı (`reports/leakage_quantification.json`) |
 | Test %20-patojenik prior'ı resmi kaynakla doğrulandı | ✅ Tamamlandı | Q&A-II Üniversite transkripti (2026-06-03); U-008 → çözüldü |

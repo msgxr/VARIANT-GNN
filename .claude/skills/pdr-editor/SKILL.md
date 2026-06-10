@@ -61,7 +61,7 @@ When this skill is active, review or produce PDR content strictly against the of
   - Individual-level SHAP examples (waterfall plot for ≥1 pathogenic + ≥1 benign)
   - GNNExplainer subgraph visualization
   - Panel-based feature group contribution table (not just one chart)
-  - LIME/SHAP overlap rate (numerical, e.g. top-5 agreement: 80%)
+  - LIME/SHAP agreement, quantified (canonical: Spearman ρ=0.89 over 150 samples)
 - [ ] **Decision threshold determination** (PSR §4.4 weak — justify global θ=0.8415 threshold)
 
 ## Section 3 — Results (30 pts): Checklist

@@ -1,6 +1,6 @@
 # ERRORCHECKLIST.md — VARIANT-GNN
 
-**Versiyon:** 2026-06-09  
+**Versiyon:** 2026-06-10  
 **Kullanım:** error-checker skill ve genel hata denetimi için referans  
 **Kapsam:** Domain A–J — tam proje denetim alanları
 
@@ -108,7 +108,7 @@
 - [ ] Eğitim tek komutla: `python main.py --mode train --config configs/pdr.yaml`
 - [ ] Tahmin tek komutla: `python submission/predict.py --input <dosya>`
 - [ ] 5-seed stabilite CV F1=0.8738±0.0034 belgelenmiş
-- [ ] Model artifact'ları repoda mevcut (<7MB, REPRODUCE.md — jüri veri olmadan tahmin üretebilir)
+- [ ] Model artifact'ları repoda mevcut (models/ ~22MB, REPRODUCE.md — jüri veri olmadan tahmin üretebilir)
 
 **FAIL tetikleyici:** Non-deterministik çalışma, eksik requirements, çoklu adım gerektiren çalıştırma
 

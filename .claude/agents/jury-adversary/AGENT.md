@@ -91,7 +91,7 @@ Activate when:
 3. Place competition data at data/ (per data/README.md)
 4. python main.py --config configs/final.yaml
 5. Output: predictions.csv + reports/cv_report.json
-6. F1=0.8367 appears in cv_report.json (test set, General panel)
+6. F1=0.8367 appears in cv_report.json (overall held-out test, pooled — NOT a single panel; General panel = 0.8185)
 7. Run time: ~XX minutes on CPU / ~YY minutes on GPU
 ```
 **Gap:** If any step fails, it's a competition risk. Verify each step produces expected output.

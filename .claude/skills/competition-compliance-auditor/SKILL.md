@@ -77,7 +77,7 @@ WITHDRAWN (leaky): 0.8980/0.9269, MCC 0.5356, θ=0.241
 - [ ] Training: single command → `python main.py --mode train --config configs/pdr.yaml`
 - [ ] Prediction: single command → `python submission/predict.py --input <file>`
 - [ ] 5-seed stability CV F1=0.8738±0.0034 documented
-- [ ] Model artifacts in repo (<7MB, REPRODUCE.md) — jüri veri olmadan tahmin üretebilir
+- [ ] Model artifacts in repo (models/ ≈22MB tracked, REPRODUCE.md) — jüri veri olmadan tahmin üretebilir
 
 **FAIL if:** Non-deterministic run, missing requirements, no single-command entry point.
 

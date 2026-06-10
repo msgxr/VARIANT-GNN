@@ -65,7 +65,7 @@ Note: PSR is CLOSED (submitted 25 March 2026). This skill only analyzes gaps and
 - [ ] SHAP waterfall plot: ≥1 Patojenik + ≥1 Benign prediction (individual-level)
 - [ ] GNNExplainer: concrete subgraph showing which edges/nodes drive prediction
 - [ ] Panel feature contribution table: In-silico% / Evolutionary% / Population% — per MASTER/KANSER/PAH/CFTR
-- [ ] LIME-SHAP overlap: top-5 feature agreement rate quantified as % (e.g., "top-5 features agreed 80% across SHAP and LIME")
+- [ ] LIME-SHAP agreement: quantified (canonical: Spearman ρ=0.89 over 150 samples)
 - [ ] Explicit limitation: anonymous column names prevent biological interpretation — state this clearly
 
 ### 🔴 §4.5 Technical Evolution (3.33/5 — Gap: 1.67 pts)

@@ -1,7 +1,7 @@
 # 04_report_requirements.md — Rapor Gereksinimleri
 
 **Kaynak:** TEKNOFEST 2026 PDR Şablonu (Üniversite) + PSR Şablonu (Üniversite)  
-**Versiyon:** 2026-06-09
+**Versiyon:** 2026-06-10
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## PDR — Proje Detay Raporu
 
-**Teslim:** 29 Haziran 2026, 17:00 (20 gün kaldı — 2026-06-09 itibarıyla)  
+**Teslim:** 29 Haziran 2026, 17:00 (19 gün kaldı — 2026-06-10 itibarıyla)  
 **Şablon:** 2026_PDR_Şablon_Universite_TR_bCw49.docx
 
 ### Zorunlu Bölümler (Şablondan)
@@ -52,7 +52,7 @@
 | Alan | Durum |
 |---|---|
 | Dosya | reports/PDR_VARIANT_GNN_2026.md |
-| Sayılar | ✅ RESULTS_CANONICAL.json ile tutarlı (check_results_consistency.py 5/5 PASS) |
+| Sayılar | ✅ RESULTS_CANONICAL.json ile tutarlı (scripts/check_results_consistency.py PASS — CI consistency-gate) |
 | Kaynakça numaraları | ✅ Düzeltildi (REVEL[2], EVE[9], GATv2[8]) |
 | §3.2 eşik değeri | ✅ GLOBAL θ=0.8415 (canonical; 0.241 supersede) |
 | Figür yolları | ✅ reports/figures/pdr/* |

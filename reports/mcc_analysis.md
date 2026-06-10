@@ -1,11 +1,11 @@
 # MCC Analizi — PDR Jüri Hazırlığı (CANONICAL)
 
-**Tarih:** 9 Haziran 2026 (test %20-patojenik prior'ı Q&A-II ile doğrulandı)  
+**Tarih:** 10 Haziran 2026 (test %20-patojenik prior'ı Q&A-II ile doğrulandı)  
 **Hazırlayan:** XYRA3 (#909249)  
 **Kaynak:** `RESULTS_CANONICAL.json`, `reports/cv_report.json`  
 **Eşik:** GLOBAL **θ = 0.8415** (group-aware OOF, canonical). Tüm sayılar bu eşikte hesaplanır.
 
-> ⚠️ **Sürüm notu:** Bu belge 2 Haziran 2026 **sızıntısız (group-aware)** retrain'e göre yeniden
+> ⚠️ **Sürüm notu:** Bu belge 1 Haziran 2026 **sızıntısız (group-aware)** retrain'ine (Oturum 4, canonical) göre yeniden
 > yazılmıştır. Önceki sürümdeki düşük eşik (0.01–0.28) + yüksek recall (~0.97) anlatısı **geçersizdir**;
 > o sayılar satır-bazlı split sızıntısıyla şişikti (`reports/leakage_quantification.json`).
 

@@ -1,12 +1,12 @@
 # Proje Durumu — VARIANT-GNN
 
-**Güncelleme tarihi:** 9 Haziran 2026
+**Güncelleme tarihi:** 10 Haziran 2026
 
 ## Mevcut Aşama
 
 **PDR (Proje Detay Raporu) Geliştirmesi**
 
-PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 17:00 (teslime **20 gün** kaldı).
+PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 17:00 (teslime **19 gün** kaldı).
 
 > **Son dönem (3–5 Haziran 2026):** Test setinin %20-patojenik/%80-benign dağılımı resmi
 > **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (U-008 → çözüldü); PDR baştan revize edildi
@@ -42,7 +42,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | **Kalibrasyon** | ✅ Çalışıyor | İsotonik Regresyon, Brier=0.1115, ECE=0.0291 |
 | **MC Dropout belirsizlik** | ✅ Çalışıyor | 10 forward pass |
 | **Ablation analizi** | ✅ Tamamlandı | `reports/ablation_report.json`, 8 konfigürasyon |
-| **Submission artifact'ları** | ✅ Tamamlandı | `submission/teknofest/`: manifest, checksums, predict.py |
+| **Submission artifact'ları** | ✅ Tamamlandı | `submission/teknofest/`: manifest, checksums + `submission/predict.py` |
 | **Streamlit UI** | ✅ Çalışıyor | `streamlit run app.py` |
 | **CI pipeline** | ✅ Çalışıyor | GitHub Actions: lint, typecheck, test, security |
 | **Docker** | ✅ Mevcut | CPU ve GPU destekli |

@@ -1,6 +1,6 @@
 # Teknik Borç — VARIANT-GNN
 
-**Güncelleme tarihi:** 9 Haziran 2026
+**Güncelleme tarihi:** 10 Haziran 2026
 
 Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken alanları listeler.
 
@@ -8,7 +8,7 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 
 ### TD-001: Anonim Kolon Modu Test Eksikliği
 - **Durum:** Düzeltildi
-- **Açıklama:** `ColumnAligner` 8 senaryolu stres testinden geçti ve CI/CD'ye entegre edildi.
+- **Açıklama:** `ColumnAligner` 7 senaryolu stres testinden (`scripts/stress_test.py`) geçti ve CI/CD'ye entegre edildi.
 
 ### TD-002: JSON Veri Sözleşmeleri Eksik
 - **Durum:** Düzeltildi
@@ -16,7 +16,7 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 
 ### TD-003: Ablation Raporu Üretilmemiş
 - **Durum:** Düzeltildi
-- **Açıklama:** `scripts/run_ablation.py` ile 11 konfigürasyon test edildi ve raporlandı.
+- **Açıklama:** `scripts/run_ablation.py` ile 8 konfigürasyon (baseline + no_xgb/no_lgbm/no_gnn/no_dnn/no_smote/no_autoencoder/no_feature_selection) test edildi ve raporlandı (`reports/ablation_report.json`).
 
 ### TD-004: LightGBM Artifact CI'da Yok
 - **Durum:** Düzeltildi
@@ -25,9 +25,9 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 ## Orta Öncelikli (PDR sonrası, Finaller öncesi)
 
 ### TD-005: CLI `--test-data` vs `--test_file` Tutarsızlığı
-- **Durum:** Düzeltildi (docs/MODEL_CARD.md güncellendi)
+- **Durum:** Düzeltildi (docs/MODEL_CARD.pdf güncellendi)
 - **Açıklama:** Eski dokümanlarda `--test-data` yazıyordu; gerçek parametre `--test_file`.
-- **Çözüm:** docs/MODEL_CARD.md güncellendi. `argparse` parser'a alias eklenebilir.
+- **Çözüm:** docs/MODEL_CARD.pdf güncellendi. `argparse` parser'a alias eklenebilir.
 
 ### TD-006: Multimodal Sekans Inference Tutarlılığı
 - **Durum:** Açık
@@ -35,11 +35,10 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 - **Risk:** Eğitimde sekans kullanılıp inference'ta sekans verilmezse hatalı tahmin.
 - **Çözüm:** Integration testinde sekansız prediction path'i test et.
 
-### TD-007: `src/core/dnn.py` ve `src/models/dnn.py` Çakışması
-- **Durum:** Açık
-- **Açıklama:** İki farklı konumda DNN modeli var; hangisinin aktif olduğu net değil.
-- **Risk:** Yanlış modeli import eden kod sessizce çalışabilir.
-- **Çözüm:** `src/models/dnn.py` → `src/core/models/dnn.py`'ye proxy haline getirilmeli; belgele.
+### TD-007: DNN Modülü Konum Çakışması
+- **Durum:** Düzeltildi
+- **Açıklama:** DNN modeli artık TEK kaynaktan gelir: `src/models/dnn_model.py` (`class VariantDNN`). Tüm proje bu yoldan import eder (`src/core/ensemble.py`, `src/training/trainer.py`, `src/core/models/__init__.py`). Eski yollar (`src/core/dnn.py`, `src/core/models/dnn.py`, `src/models/dnn.py`) ya kaldırılmış ya da bu modülü yeniden ihraç eden ince shim'lere indirilmiştir (kaynak: `src/models/dnn_model.py` modül docstring'i).
+- **Çözüm:** Konsolidasyon tamamlandı; çift-konum belirsizliği kalmadı.
 
 ### TD-008: `reports/` İçindeki PDF'ler Gitignore'a Eklendi
 - **Durum:** Düzeltildi (`.gitignore` güncellendi)
@@ -61,9 +60,10 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 - **Açıklama:** YAML config dosyaları JSON Schema ile doğrulanmıyor; geçersiz config sessiz hatayla geçebilir.
 - **Çözüm:** `configs/schemas/config_schema.json` oluştur; config yükleme sırasında doğrula.
 
-### TD-012: `mlflow` Bağımlılığı Zorunlu
-- **Açıklama:** `requirements.txt` içinde `mlflow` var ama aktif kullanım yoksa gereksiz ağır bağımlılık.
-- **Çözüm:** MLflow kullanımını belgele veya `requirements-dev.txt`'e taşı.
+### TD-012: `mlflow` Bağımlılığı
+- **Durum:** Düzeltildi
+- **Açıklama:** `mlflow` artık çalışma-zamanı (runtime) `requirements.txt` içinde DEĞİL; geliştirme bağımlılığı olarak `requirements-dev.txt`'e (`mlflow>=2.10.0,<3.0`) taşındı. `requirements.txt` ana çekirdeği ağır dev paketleriyle şişirmez.
+- **Çözüm:** `requirements-dev.txt`'e taşındı (çözüm uygulandı).
 
 ### TD-013: Missing-indicator Pozisyonel Kuplaj — Derin Sağlamlık
 - **Durum:** Açık (HAFİFLETİLDİ ve kabul edildi — deadline öncesi yapısal redesign bilinçli olarak ertelendi)
@@ -80,9 +80,11 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 
 | ID | Açıklama | Çözüm |
 |---|---|---|
-| TD-005 | CLI parametre dokümantasyon tutarsızlığı | docs/MODEL_CARD.md düzeltildi |
+| TD-005 | CLI parametre dokümantasyon tutarsızlığı | docs/MODEL_CARD.pdf düzeltildi |
+| TD-007 | DNN modülü konum çakışması | `src/models/dnn_model.py` tek kaynağa konsolide; eski yollar shim |
 | TD-008 | reports/*.pdf gitignore | .gitignore güncellendi |
-| ARCH-001 | docs/MODEL_CARD.md 3-model/SAGE tutarsızlığı | 4-model GATv2 mimarisine güncellendi |
+| TD-012 | MLflow runtime bağımlılığı | `requirements-dev.txt`'e taşındı |
+| ARCH-001 | docs/MODEL_CARD.pdf 3-model/SAGE tutarsızlığı | 4-model GATv2 mimarisine güncellendi |
 
 ---
 
@@ -92,7 +94,7 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 |---|---|---|
 | TD-001 | Anonim kolon test eksikliği | `scripts/stress_test.py` 7 senaryo eklendi |
 | TD-002 | JSON data contracts eksikliği | `data/contracts/` tam şemalarla dolduruldu |
-| TD-003 | Ablation raporu eksikliği | `scripts/run_ablation.py` — 11 konfigürasyon |
+| TD-003 | Ablation raporu eksikliği | `scripts/run_ablation.py` — 8 konfigürasyon |
 | TD-004 | LightGBM roundtrip test | `tests/unit/test_modelstore_lgbm_roundtrip.py` |
 | TD-009 | venv/ repo boyutu | `.gitignore` güçlendirildi |
 | — | 7-kolonlu jüri çıktısı | `src/api/export.py` — deterministik submission |
@@ -106,9 +108,7 @@ Bu dosya bilinen teknik borçları, geçici çözümleri ve iyileştirme gereken
 | ID | Açıklama | Öncelik |
 |---|---|---|
 | TD-006 | Multimodal sekans inference tutarlılığı | Yüksek |
-| TD-007 | src/core/dnn.py vs src/models/dnn.py çakışması | Orta |
 | TD-010 | Streamlit sayfa smoke testleri | Düşük |
 | TD-011 | YAML config JSON Schema doğrulaması | Düşük |
-| TD-012 | MLflow bağımlılığını gözden geçir | Düşük |
 | — | GPU/TensorRT optimizasyonu (Phase 2) | Yarışma sonrası |
 | — | Federated learning alt yapısı (Phase 3) | Yarışma sonrası |

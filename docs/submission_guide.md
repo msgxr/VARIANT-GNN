@@ -13,7 +13,7 @@ doğrulamasını sağlar.
 
 | Gereksinim | Asgari | Önerilen |
 |------------|--------|----------|
-| Python | 3.9 | 3.10 / 3.11 |
+| Python | 3.10 | 3.11 / 3.12 |
 | RAM | 8 GB | 16 GB |
 | Disk | 5 GB | 10 GB |
 | GPU (opsiyonel) | yok | NVIDIA CUDA 11.8 |
@@ -31,8 +31,8 @@ doğrulamasını sağlar.
 git clone https://github.com/msgxr/VARIANT-GNN.git
 cd VARIANT-GNN
 
-# 2. Sanal ortam kur
-python3.9 -m venv venv
+# 2. Sanal ortam kur (Python >=3.10,<3.13)
+python3.10 -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 
 # 3. Bağımlılıkları yükle (sabit versiyonlar — §7.5)

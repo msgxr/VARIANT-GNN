@@ -55,12 +55,15 @@ Read .claude/settings.local.json:
 
 ### 5. Context Files Audit
 ```
-For files in .claude/context/:
-[ ] 02_project.md has current results and architecture?
-[ ] 05_psr-results.md reflects actual known results?
-[ ] 07_rules.md rules are still all enforced?
+For files in .claude/context/ (01_official_source_map, 02_competition_summary,
+03_university_category_rules, 04_report_requirements, 05_data_and_metric_rules,
+06_team_and_process_rules, 07_uncertainty_log):
+[ ] 02_competition_summary.md has current results and architecture?
+[ ] 05_data_and_metric_rules.md reflects actual canonical metrics (RESULTS_CANONICAL.json)?
+[ ] 06_team_and_process_rules.md identity/process rules still enforced?
 [ ] No context file has outdated information that contradicts current reality?
 ```
+Core rules live in .claude/core/PROJECT_RULES.md.
 
 ## Improvement Proposal Protocol
 
@@ -115,18 +118,24 @@ Recommended changes: [specific edits]
 | sentinel | | | |
 | meta-governor | | | |
 
-### Skill Health
+### Skill Health (16 skills total)
 | Skill | Status | Issues | Recommendation |
 |---|---|---|---|
-| variant-gnn-review | 🟢/🟡/🔴 | | |
-| error-checker | | | |
-| experiment-review | | | |
-| jury-sim | | | |
+| official-source-guardian | 🟢/🟡/🔴 | | |
+| competition-compliance-auditor | | | |
+| data-metric-guardian | | | |
+| psr-editor | | | |
 | pdr-editor | | | |
-| reproducibility | | | |
+| report-template-checker | | | |
+| experiment-review | | | |
+| error-checker | | | |
+| variant-gnn-review | | | |
+| jury-sim | | | |
 | mission-readiness | | | |
 | pre-submission-gate | | | |
+| reproducibility | | | |
 | code-change-verifier | | | |
+| git-identity-guardian | | | |
 | meta-audit | | | |
 
 ### New Skill Proposals

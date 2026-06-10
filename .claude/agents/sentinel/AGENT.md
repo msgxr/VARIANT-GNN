@@ -76,7 +76,7 @@ models/*.onnx
 __pycache__/
 .venv/
 *.pyc
-reports/*.json  # if contains raw competition results
+reports/*.json  # ignore-by-default, BUT canonical metric reports are tracked via explicit !reports/<file>.json allowlist (e.g. !reports/cv_report.json) — CI consistency-gate reads them; never blanket-ignore
 logs/
 .pytest_cache/
 *.egg-info/

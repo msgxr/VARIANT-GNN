@@ -25,8 +25,8 @@ First determine current competition phase:
 [ ] CPU-only execution works (< threshold time)
 [ ] All 4 panels produce results
 [ ] Model checkpoints saved and loadable
-[ ] Config files complete (configs/final.yaml)
-[ ] Requirements.txt accurate and pinned
+[ ] Config files complete (primary: configs/pdr.yaml)
+[ ] Requirements.txt accurate and pinned (torch==2.2.1, torch-geometric==2.5.3, streamlit==1.35.0)
 ```
 
 #### Dimension 2: PDR Readiness (if PDR phase)

@@ -32,7 +32,7 @@
 
 **Proje:** VARIANT-GNN · **Takım:** XYRA3 · **Takım ID:** 909249 · **Başvuru ID:** 4865399
 **Kategori:** Sağlıkta Yapay Zekâ — Üniversite ve Üzeri · Genetik Varyant Patojenite Tahmini
-**Rapor Tarihi:** 3 Haziran 2026
+**Rapor Tarihi:** 10 Haziran 2026
 
 *Biçim (Word): Aptos 12 pt gövde / 14 pt başlık · Satır aralığı 1,15 · İki yana yaslı · Üst 2,8 cm · Diğer 2,5 cm*
 
@@ -148,10 +148,10 @@ DNN ayrıca **Domain-Adversarial (DANN)** eğitilir: gradyan-ters çevirme katma
 
 | Bileşen | Anahtar Hiperparametreler | CV F1 (5-fold) | Ağırlık |
 |:--|:--|:--:|:--:|
-| XGBoost | max_depth 6 / n_est 200 / lr 0,05 / subsample 0,8 | 0,8875 ± 0,0048 | %30 |
-| LightGBM | num_leaves 64 / lr 0,05 / min_child 10 | 0,8828 ± 0,0086 | %30 |
-| VariantGATv2GNN | 3× GATv2Conv / 4 başlık / hidden 128 / k-NN(cos,10) | 0,8114 ± 0,0234 | %25 |
-| VariantDNN (DANN) | 128→64→2 / BatchNorm / Dropout 0,3+0,2 | 0,7596 ± 0,0438 | %15 |
+| XGBoost | max_depth 6 / n_est 200 / lr 0,05 / subsample 0,8 | 0,8876 ± 0,0047 | %30 |
+| LightGBM | num_leaves 64 / lr 0,05 / min_child 10 | 0,8828 ± 0,0082 | %30 |
+| VariantGATv2GNN | 3× GATv2Conv / 4 başlık / hidden 128 / k-NN(cos,10) | 0,8114 ± 0,0228 | %25 |
+| VariantDNN (DANN) | 128→64→2 / BatchNorm / Dropout 0,3+0,2 | 0,7596 ± 0,0441 | %15 |
 | **Meta-öğrenici** | Lojistik Regresyon (şeffaf birleştirme) | — | — |
 
 **Arama yöntemi:** ağaç modelleri için panel-katmanlı `RandomizedSearchCV` (group-aware fold içinde), nöral bileşenler için manuel ızgara + erken durdurma. Seçim ölçütü her zaman group-aware OOF F1'tir (test'e dokunulmaz) → genelleme gücü doğrudan optimize edilir.
@@ -295,7 +295,7 @@ Tam ensemble (Test F1 = 0,8367, CV F1 = 0,8936) referansında bileşen katkılar
 
 ### 3.5 Karşılaştırma (Ensemble vs. Tek Modeller / Baseline)
 
-Tek-model genel CV F1 sıralaması: XGB 0,8875 > LGBM 0,8828 > GNN 0,8114 > DNN 0,7596; **Hibrit OOF-stacking 0,8936** en güçlü tek modeli geçer (çeşitlilik + stacking kazancı). Kendiyle-tutarlılık ($2PR/(P{+}R)=$ F1) ve sızıntısız protokol tüm karşılaştırmalarda korunur.
+Tek-model genel CV F1 sıralaması: XGB 0,8876 > LGBM 0,8828 > GNN 0,8114 > DNN 0,7596; **Hibrit OOF-stacking 0,8936** en güçlü tek modeli geçer (çeşitlilik + stacking kazancı). Kendiyle-tutarlılık ($2PR/(P{+}R)=$ F1) ve sızıntısız protokol tüm karşılaştırmalarda korunur.
 
 ![Şekil 17 [TAM]: Ensemble vs. baseline / tek-model karşılaştırması.](reports/figures/pdr/13_benchmark_comparison.png)
 
@@ -376,4 +376,4 @@ PDR gerçek-veri sonuçları PSR pilot sonuçlarından belirgin farklıdır; bu 
 ---
 
 **RAPOR SONU** · *Takım XYRA3 | Takım ID: 909249 | Başvuru ID: 4865399*
-*TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması — Proje Detay Raporu · 3 Haziran 2026*
+*TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması — Proje Detay Raporu · 10 Haziran 2026*

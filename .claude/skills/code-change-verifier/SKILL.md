@@ -64,8 +64,9 @@ IMPORTANT CHANGE (function logic, parameter change):
 → Verify importers still work
 
 CRITICAL CHANGE (pipeline, preprocessing, GNN, metrics):
-→ Run full smoke test: python main.py --config configs/final.yaml --smoke-test
-→ Verify F1 output matches expected (≈0.8367)
+→ Run quick training: python main.py --mode train --config configs/dev_quick.yaml
+→ Full run: python main.py --mode train --config configs/pdr.yaml
+→ Verify test hold-out F1 output matches expected (≈0.8367 @ θ=0.8415)
 → Verify all 4 panels produce results
 → Verify submission.csv format correct
 ```
@@ -76,9 +77,9 @@ CRITICAL CHANGE (pipeline, preprocessing, GNN, metrics):
 ```
 MUST VERIFY:
 - RobustScaler still fit on train only
-- SelectKBest still fit on train/labels only  
-- AutoEncoder still trained on train only
-- SMOTE still applied after split
+- SimpleImputer (median) still fit on train only
+- SMOTE still applied after split (train fold only)
+- Full 343-feature set preserved (SelectKBest + AutoEncoder REMOVED — do NOT reintroduce dimensionality reduction)
 - Output feature dimensions consistent with GNN input expectations
 ```
 
@@ -87,8 +88,8 @@ MUST VERIFY:
 MUST VERIFY:
 - GATv2Conv still used (not replaced with SAGEConv)
 - 4 attention heads maintained
-- hidden_dim=128 maintained (or change documented)
-- MC Dropout still uses 30 forward passes
+- hidden_dim=64 maintained (src/core/gnn.py default; or change documented)
+- MC Dropout still uses 10 forward passes (canonical)
 - train/val/test masks still non-overlapping
 - Loss computed only on train_mask
 ```

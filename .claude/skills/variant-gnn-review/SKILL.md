@@ -1,5 +1,5 @@
 ---
-name: teknofest-2026-health-ai-compliance
+name: variant-gnn-review
 description: Use when reviewing, improving, documenting, testing, refactoring, or preparing the VARIANT-GNN repository for full compliance with the TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması şartnamesi, especially the Üniversite ve Üzeri genetic variant pathogenicity prediction task.
 ---
 

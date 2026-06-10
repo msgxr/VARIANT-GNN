@@ -30,10 +30,10 @@ Simulate: "I am a jury member. I have Python and Git. I cloned your repo. I want
 - [ ] `.gitignore` correct? (no large model files excluded without alternative access)
 
 ### Step 1: Environment Setup
-- [ ] `requirements.txt` exists and all versions pinned (e.g., `torch==2.2.0`, not `torch>=2.0`)
+- [ ] `requirements.txt` exists and all versions pinned (e.g., `torch==2.2.1`, not `torch>=2.0`)
 - [ ] `environment.yml` exists for conda users?
-- [ ] Python version clearly stated (must be 3.10 per PSR)
-- [ ] torch-geometric 2.5.0 installation instructions clear?
+- [ ] Python version clearly stated (requirement: >=3.10,<3.13)
+- [ ] torch-geometric 2.5.3 installation instructions clear?
 - [ ] `pip install -r requirements.txt` works on clean env?
 
 ### Step 2: Data Placement
@@ -42,8 +42,8 @@ Simulate: "I am a jury member. I have Python and Git. I cloned your repo. I want
 - [ ] Does code fail gracefully if data is missing?
 
 ### Step 3: Single-Command Run
-- [ ] One command produces predictions: `python submission/predict.py --panel genel --input test.csv`
-- [ ] Or: `bash run_all.sh` / `python main.py --all`
+- [ ] One command produces predictions: `python submission/predict.py --input test.csv`
+- [ ] Or training/inference via `python main.py --mode train --config configs/pdr.yaml` then `python main.py --mode predict --test_file <file>`
 - [ ] Command documented in README
 - [ ] Output format documented (CSV columns: variant_id, prediction, probability)
 
@@ -78,7 +78,7 @@ Simulate: "I am a jury member. I have Python and Git. I cloned your repo. I want
 
 ### Step 9: Docker (Optional but Strong)
 - [ ] `docker build -t variant-gnn .` works?
-- [ ] `docker run variant-gnn --panel genel --input test.csv` works?
+- [ ] `docker run variant-gnn --input test.csv` works?
 - [ ] Docker image tested on clean machine?
 
 ## Blockers vs. Warnings
@@ -124,9 +124,9 @@ Simulate: "I am a jury member. I have Python and Git. I cloned your repo. I want
 
 ```
 ENVIRONMENT
-[ ] requirements.txt with pinned versions
-[ ] Python 3.10 stated
-[ ] torch-geometric 2.5.0 install instructions
+[ ] requirements.txt with pinned versions (torch==2.2.1, torch-geometric==2.5.3, streamlit==1.35.0)
+[ ] Python >=3.10,<3.13 stated
+[ ] torch-geometric 2.5.3 install instructions
 [ ] Clean env test passed
 
 SEED

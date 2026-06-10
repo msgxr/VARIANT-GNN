@@ -1,6 +1,6 @@
 # Açıklanabilirlik Örnekleri — PDR §4.4
 
-**Tarih:** 9 Haziran 2026 (canonical θ=0.8415 ile hizalandı)  
+**Tarih:** 10 Haziran 2026 (canonical θ=0.8415 ile hizalandı; §10 açıklanabilirlik çerçevesi netleştirildi)  
 **Hazırlayan:** XYRA3 (#909249)  
 **Kapsam:** SHAP Waterfall Analizi (2 örnek) + GNNExplainer Subgraph Analizi
 
@@ -148,14 +148,18 @@ LIME ve SHAP arasındaki özellik sırası tutarlılığı, 150 test örneği ü
 
 ---
 
-## 6. Klinik Yorumlama Örneği (Türkçe Rapor)
+## 6. Açıklanabilirlik Yorumlama Örneği (Türkçe — araştırma/eğitim amaçlı)
+
+> **Not (§10 etik):** Aşağıdaki otomatik açıklama yalnızca **araştırma/eğitim amaçlı
+> açıklanabilirlik** çıktısıdır; klinik tanı, klinik karar veya karar-destek değildir ve
+> hekim değerlendirmesinin yerini almaz.
 
 **Otomatik oluşturulan açıklama (VAR_001847 için):**
 
-> *Bu varyant, **yüksek in-silico risk skorları** (CADD, REVEL, MutPred2 uzlaşısı), **güçlü evrimsel korunmuşluk** (GERP_RS yüksek, PhyloP tüm omurgalılarda pozitif) ve **nadir popülasyon frekansı** (gnomAD < 0.001) kombinasyonu nedeniyle **Patojenik** olarak sınıflandırılmıştır.*
+> *Bu varyant, **yüksek in-silico risk skorları** (CADD, REVEL, MutPred2 uzlaşısı), **güçlü evrimsel korunmuşluk** (GERP_RS yüksek, PhyloP tüm omurgalılarda pozitif) ve **nadir popülasyon frekansı** (gnomAD < 0.001) kombinasyonu nedeniyle model tarafından **Patojenik** olarak sınıflandırılmıştır.*
 >
 > *Model güveni: **Yüksek** (olasılık: 0.947)*  
-> *Belirsizlik skoru (MC Dropout): **0.08** — güvenilir tahmin*  
+> *Belirsizlik skoru (MC Dropout): **0.08** — düşük belirsizlik*  
 > *GNN komşuluk uyumu: **Güçlü** — benzer risk profilli 3 varyantla kümeleniyor*
 
 ---

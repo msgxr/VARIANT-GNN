@@ -32,13 +32,12 @@ Activate when:
 ### Duplicate Module Problem
 The repo has parallel implementations that must be tracked:
 ```
-src/core/gnn.py ↔ src/core/models/gnn.py ↔ src/models/gnn.py
-src/core/ensemble.py ↔ src/core/models/ensemble.py ↔ src/models/ensemble.py
+src/core/gnn.py ↔ src/core/models/gnn.py        (NOT: src/core/models/gnn.py = VariantSAGEGNN alias subclass of VariantGATv2GNN)
+src/core/ensemble.py ↔ src/core/models/ensemble.py
 src/api/pipeline.py ↔ src/inference/pipeline.py
 src/calibration/calibrator.py ↔ src/scientific/calibration/calibrator.py
 src/evaluation/metrics.py ↔ src/scientific/metrics/metrics.py
 src/explainability/ ↔ src/scientific/xai/
-src/graph/builder.py ↔ src/core/graph/builder.py
 ```
 **Rule:** Before any edit, determine which version is actually imported by main.py, app.py, and the training pipeline. The "correct" version is the one actually used in production flow.
 

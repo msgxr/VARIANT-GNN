@@ -227,8 +227,7 @@ When the user provides code, Claude inspects in the following order:
 ### Step 3: Preprocessing Pipeline
 - Are scaler, imputer, encoder fitted only on train data?
 - Is SMOTE applied only on train data after the split?
-- Is feature selection applied only on train data?
-- Is AutoEncoder trained on the entire dataset?
+- Is the full 343-feature set preserved? (SelectKBest + AutoEncoder were REMOVED — flag any reintroduced dimensionality reduction fitted on full data as leakage risk)
 
 ### Step 4: Train/Validation/Test Split
 - Has a split been made?

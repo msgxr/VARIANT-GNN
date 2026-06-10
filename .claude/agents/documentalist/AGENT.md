@@ -37,7 +37,7 @@ Activate when:
 Mapping of claims to verification sources:
 | Document Claim | Must Verify In |
 |---|---|
-| "Binary F1: 0.833" / "CV F1: 0.8936" | `RESULTS_CANONICAL.json` → `reports/cv_report.json` |
+| "Binary F1: 0.8367" / "CV F1: 0.8936" | `RESULTS_CANONICAL.json` → `reports/cv_report.json` |
 | "Global threshold θ=0.8415" | `models/threshold.json` (canonical) |
 | "VariantGATv2GNN" | `src/core/gnn.py` — class name |
 | "CategoricalBioFeaturizer" | `src/features/categorical_bio_features.py` |

@@ -61,7 +61,7 @@ python main.py --mode train --data_file data/train_variants.csv
 
 ### 3.3 Panel Bazlı Değerlendirme (§3.2 dört panel)
 
-Şartname §3.2 dört bağımsız test seti tanımlar:
+Şartname §3.2 yayınlanan haliyle dört bağımsız test seti tanımlar:
 
 | Panel | Test Patojenik | Test Benign | Toplam |
 |-------|----------------|-------------|--------|
@@ -69,6 +69,12 @@ python main.py --mode train --data_file data/train_variants.csv
 | Hereditary_Cancer | 100 | 100 | 200 |
 | PAH | 100 | 100 | 200 |
 | CFTR | 30 | 30 | 60 |
+
+> **Not (Q&A-II güncellemesi, 2026-06-03):** Yukarıdaki **50/50** (1000/1000 vb.) oran,
+> organizatör tarafından **ESKİ/hatalı** kabul edildi ve yeniden gönderilecek; resmi test
+> seti **~%20-patojenik / %80-benign** olacaktır (Q&A-II transkripti ile ✅ DOĞRULANDI —
+> `RESULTS_CANONICAL.json` `provenance_verified`). Resmi skorlama her panelin %20-prior
+> Binary F1'inin 4-panel **ORTALAMASI**dır.
 
 `evaluate_per_panel()` her panel için bağımsız Binary F1 + Macro F1
 hesaplar. Panel-bazlı eşik optimizasyonu da otomatik yapılır
@@ -128,8 +134,11 @@ python main.py --mode ablation --data_file data/train_variants.csv
 | no_gnn | Genelde -1 ile -3 puan (small panellerde daha çok) |
 | no_dnn | Genelde -0.3 ile -1 puan |
 | no_smote | Dengeli veride etki yok |
-| no_autoencoder | -0.5 ile -1.5 puan |
-| no_feature_selection | Genelde küçük etki |
+
+> **Not:** `no_autoencoder` ve `no_feature_selection` ablasyon spec'leri **kaldırıldı**
+> — AutoEncoder + SelectKBest canonical hatta zaten **kapalı** (343 tam öznitelik), bu
+> yüzden override delta'sı ≈0 üretip §4.5 ablasyon tablosunu yanıltırdı
+> (`src/evaluation/ablation.py` `ablation_specs`).
 
 - **Çıktı:** `reports/ablation_report.json`.
 
@@ -196,7 +205,9 @@ için kullanılabilir.
 ## 6. Metrik Hesaplama Kanonik Yolu
 
 ```python
-from src.evaluation.metrics import evaluate, find_best_threshold
+# Canlı CLI'nin import ettiği yol (src.scientific.metrics.metrics, alttaki
+# src.evaluation.metrics implementasyonunu re-export eder — §1 ile birebir).
+from src.scientific.metrics.metrics import evaluate, find_best_threshold
 
 # y_prob: (N, 2) array — [P(Benign), P(Pathogenic)]
 # y_true: (N,)  binary labels
