@@ -1059,7 +1059,7 @@ python submission/predict.py --input <jury_test.csv> --output submission/predict
 # → reports/predictions_full.csv ; global θ=0.8415 otomatik uygulanır
 
 # 2) Sıfırdan eğitim (NDA verisine sahip olanlar)
-python main.py --mode train --config configs/pdr.yaml --data data/train_variants.csv
+python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv
 # Beklenen: "Binary F1 (§7.3) = 0.8936 ± 0.0004" + "Leakage guard PASSED: 0 straddle"
 
 # 3) Sonuç tutarlılık kapısı (CI gate)

@@ -39,7 +39,7 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Testleri çalıştır (416 test fonksiyonu, 39 dosya; toplanan item sayısı CI junit artefaktında)
+# 4. Testleri çalıştır (418 test fonksiyonu, 39 dosya; toplanan item sayısı CI junit artefaktında)
 pytest tests/ -q
 
 # 5. Eğitim (gerçek yarışma verisi paylaşıldıktan sonra)

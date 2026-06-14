@@ -46,7 +46,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 | **Streamlit UI** | ✅ Çalışıyor | `streamlit run app.py` |
 | **CI pipeline** | ✅ Çalışıyor | GitHub Actions: lint, typecheck, test, security |
 | **Docker** | ✅ Mevcut | CPU ve GPU destekli |
-| **Test altyapısı** | ✅ 416 test fonksiyonu (statik `def test_` sayımı, 39 dosya); parametrize sonrası toplanan item sayısı CI junit artefaktıyla doğrulanır | Smoke, unit, integration testler (2 Haziran 2026) |
+| **Test altyapısı** | ✅ 418 test fonksiyonu (statik `def test_` sayımı, 39 dosya); parametrize sonrası toplanan item sayısı CI junit artefaktıyla doğrulanır | Smoke, unit, integration testler (2 Haziran 2026) |
 | **configs/ — binary F1** | ✅ Düzeltildi | `optimize_metric: binary_f1`, GLOBAL cal-türevli eşik θ=0.8415 (canonical; panel-spesifik test'te daha kötü, opt-in) |
 | **PDR belge hataları** | ✅ Tümü kapatıldı | BUG-01..12 CLOSED (24 Mayıs 2026) |
 | **Bağımsız klinik validasyon** | ❌ Kapsam dışı | Araştırma prototipi; kasıtlı kapsam dışı |

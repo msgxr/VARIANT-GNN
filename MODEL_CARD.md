@@ -216,7 +216,7 @@ source .venv/bin/activate     # Linux/macOS
 # .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
 
-# 2. Test (416+ statik test fonksiyonu, 39 dosya — yeşil olmalı)
+# 2. Test (418 statik test fonksiyonu, 39 dosya — yeşil olmalı)
 pytest tests/ -q
 
 # 3. Eğitim (mevcut artifact'lar models/ altında)
