@@ -173,8 +173,9 @@ submission/archive/
 *.ipynb
 !docs/**/*.ipynb
 
-# Streamlit cache
-.streamlit/
+# Streamlit cache (config.toml hariç — jüri tekrar-çalıştırma için tema sabitlenir, §7.5)
+.streamlit/*
+!.streamlit/config.toml
 
 # Büyük yarışma dosyaları (NDA gereği repoda olmamalı)
 *.docx

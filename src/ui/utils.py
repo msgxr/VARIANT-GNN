@@ -31,17 +31,17 @@ def section_header(icon: str, title: str) -> None:
     )
 
 
-def plot_dark(fig: plt.Figure, ax: plt.Axes) -> None:
-    """Matplotlib grafiklerini koyu temaya (UI ile uyumlu) dönüştürür."""
-    fig.patch.set_facecolor("#1a2744")
-    ax.set_facecolor("#1a2744")
-    ax.tick_params(colors="#94a3b8")
-    ax.xaxis.label.set_color("#94a3b8")
-    ax.yaxis.label.set_color("#94a3b8")
-    ax.title.set_color("#e2e8f0")
+def style_plot(fig: plt.Figure, ax: plt.Axes) -> None:
+    """Matplotlib grafiklerini açık temaya (Design System ile uyumlu) dönüştürür."""
+    fig.patch.set_facecolor("#ffffff")
+    ax.set_facecolor("#ffffff")
+    ax.tick_params(colors="#475569")
+    ax.xaxis.label.set_color("#475569")
+    ax.yaxis.label.set_color("#475569")
+    ax.title.set_color("#0f172a")
     for spine in ax.spines.values():
-        spine.set_edgecolor((0.388, 0.702, 0.929, 0.15))
-    ax.grid(True, color=(1.0, 1.0, 1.0, 0.05), linewidth=0.5)
+        spine.set_edgecolor((0.886, 0.910, 0.941, 1.0))  # ~#e2e8f0 border
+    ax.grid(True, color=(0.059, 0.090, 0.165, 0.06), linewidth=0.5)  # slate @ 6%
 
 
 def hex_to_rgb(hex_color: str) -> str:

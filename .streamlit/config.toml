@@ -1,0 +1,11 @@
+# VARIANT-GNN Design System — açık tema (kanonik).
+# Streamlit widget chrome'unu (dataframe, selectbox, slider, file-uploader) açık temaya
+# sabitler; CSS enjeksiyonunun (src/ui/styles.py) tutamadığı yerlerde tutarlılık sağlar.
+# Jüri tekrar-çalıştırma senaryosunda deterministik görünüm (§7.5).
+[theme]
+base = "light"
+primaryColor = "#e63946"
+backgroundColor = "#f0f2f8"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#0f172a"
+font = "sans serif"

@@ -57,26 +57,16 @@ def render_about_tab() -> None:
     # ── Hero ────────────────────────────────────────────────────────────────
     st.markdown(
         f"""
-    <div style="background:linear-gradient(135deg,#0f2044 0%,#1a3a6e 40%,#0d2855 100%);
-                border:1px solid rgba(99,179,237,0.3); border-radius:16px;
-                padding:36px 40px; margin-bottom:28px;">
-        <p style="font-size:2rem; font-weight:700; color:#e2e8f0; margin:0 0 8px 0;">
-            🧬 <span style="color:#63b3ed;">VARIANT-GNN</span>
-        </p>
-        <p style="font-size:1.05rem; color:#94a3b8; margin:0; line-height:1.7;">
+    <div class="hero-banner">
+        <p class="hero-title">🧬 <span>VARIANT-GNN</span></p>
+        <p class="hero-subtitle">
             Missense Genetik Varyant Patojenite Tahmini için<br>
-            <strong style="color:#93c5fd;">Hibrit GATv2 Grafik Sinir Ağı Ensemble Sistemi</strong>
+            <strong>Hibrit GATv2 Grafik Sinir Ağı Ensemble Sistemi</strong>
         </p>
-        <div style="margin-top:14px;">
-            <span style="background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                  color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px;
-                  border-radius:20px; margin-right:8px;">🏆 TEKNOFEST 2026</span>
-            <span style="background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                  color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px;
-                  border-radius:20px; margin-right:8px;">🔬 PSR: 93/100</span>
-            <span style="background:rgba(99,179,237,0.15); border:1px solid rgba(99,179,237,0.4);
-                  color:#63b3ed; font-size:0.75rem; font-weight:600; padding:4px 12px;
-                  border-radius:20px;">⚡ Jüri beklentisi (4-panel %20-F1) = {jury_f1}</span>
+        <div>
+            <span class="hero-badge">🏆 TEKNOFEST 2026</span>
+            <span class="hero-badge">🔬 PSR: 93/100</span>
+            <span class="hero-badge">⚡ Jüri beklentisi (4-panel %20-F1) = {jury_f1}</span>
         </div>
         <p style="font-size:0.78rem; color:#64748b; margin:12px 0 0 0;">
             İç hold-out ayrım gücü Test F1 = {test_f1} (jüri skoru DEĞİL; resmi metrik %20-patojenik
@@ -144,7 +134,7 @@ def render_about_tab() -> None:
             <div class="model-card">
                 <h4>{title}</h4>
                 <p>{desc}<br>
-                <span style="color:#63b3ed; font-weight:600;">Ağırlık: {w}</span></p>
+                <span style="color:#2563eb; font-weight:600;">Ağırlık: {w}</span></p>
             </div>
             """,
                 unsafe_allow_html=True,
@@ -253,15 +243,16 @@ def render_about_tab() -> None:
         f"""
     <div style="text-align:center; margin-top:24px; margin-bottom:12px;">
         <a href="{REPO_URL}" target="_blank"
-           style="display:inline-block; background:linear-gradient(135deg,#2b6cb0,#3182ce);
+           style="display:inline-block; background:linear-gradient(135deg,#e63946,#c1121f);
                   color:white; text-decoration:none; font-weight:600; font-size:0.95rem;
-                  padding:12px 32px; border-radius:10px; letter-spacing:0.3px;">
+                  padding:12px 32px; border-radius:11px; letter-spacing:0.3px;
+                  box-shadow:0 4px 14px rgba(230,57,70,.35);">
             ⭐ GitHub: msgxr/VARIANT-GNN
         </a>
     </div>
-    <div style="padding:16px; background:rgba(229,62,62,0.05); border-radius:10px;
-                border:1px solid rgba(229,62,62,0.2); font-size:0.82rem; color:#fc8181;
-                text-align:center; margin-top:16px;">
+    <div style="padding:16px; background:rgba(220,38,38,0.05); border-radius:10px;
+                border:1px solid rgba(220,38,38,0.2); border-left:3px solid #dc2626;
+                font-size:0.82rem; color:#b91c1c; text-align:center; margin-top:16px;">
         ⚠️ Bu sistem araştırma amacıyla geliştirilmiştir. Klinik teşhis, tedavi veya
         tıbbi karar desteği için kullanılamaz (TEKNOFEST §10).
         <br><strong>TEKNOFEST 2026</strong> | XYRA3 Takımı | PDR Teslimi: 29 Haziran 2026

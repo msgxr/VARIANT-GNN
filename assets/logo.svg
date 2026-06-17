@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="360" height="80" role="img" aria-label="VARIANT-GNN logo">
+  <defs>
+    <linearGradient id="g-logo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e63946"></stop>
+      <stop offset="100%" stop-color="#c1121f"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="14" width="52" height="52" rx="13" fill="url(#g-logo)"></rect>
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+    <path d="M18 22 C 30 30, 30 30, 46 30 M18 30 C 30 38, 30 38, 46 38 M18 38 C 30 46, 30 46, 46 46 M18 46 C 30 54, 30 54, 46 54" opacity="0.9"></path>
+    <path d="M46 22 C 30 30, 30 30, 18 30 M46 30 C 30 38, 30 38, 18 38 M46 38 C 30 46, 30 46, 18 46 M46 46 C 30 54, 30 54, 18 54" opacity="0.55"></path>
+  </g>
+  <text x="76" y="48" font-family="Outfit, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#0f172a" letter-spacing="-0.5">VARIANT</text>
+  <text x="206" y="48" font-family="Outfit, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#e63946" letter-spacing="-0.5">-GNN</text>
+  <text x="76" y="64" font-family="Outfit, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#94a3b8" letter-spacing="1.4">CLINICAL DECISION SUPPORT · TEKNOFEST 2026</text>
+</svg>

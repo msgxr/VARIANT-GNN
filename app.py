@@ -42,7 +42,7 @@ st.set_page_config(
 
 def main() -> None:
     cfg = get_settings()
-    inject_styles()
+    inject_styles("light")  # VARIANT-GNN Design System — kanonik açık tema
     render_hero()
     pipeline = load_pipeline()
     _df_uploaded, opts = render_sidebar()

@@ -62,10 +62,10 @@ def render_clinvar_tab() -> None:
         <div class="section-icon">🔍</div>
         <h3>ClinVar Veritabanı Araması</h3>
     </div>
-    <div style="background:rgba(99,179,237,0.05); border:1px solid rgba(99,179,237,0.2);
+    <div style="background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.2);
                 border-radius:10px; padding:16px; margin-bottom:20px;">
-        <div style="color:#63b3ed; font-weight:600; margin-bottom:6px;">📡 NCBI ClinVar API Entegrasyonu</div>
-        <div style="color:#94a3b8; font-size:0.85rem; line-height:1.6;">
+        <div style="color:#1d4ed8; font-weight:600; margin-bottom:6px;">📡 NCBI ClinVar API Entegrasyonu</div>
+        <div style="color:#475569; font-size:0.85rem; line-height:1.6;">
             Gen adı, varyant adı veya rsID ile NCBI ClinVar veritabanında gerçek zamanlı arama yapabilirsiniz.<br>
             Örnek: <code>BRCA1</code>, <code>rs28897672</code>
         </div>
@@ -117,11 +117,11 @@ def render_clinvar_tab() -> None:
             variation_id: str = str(variation_list[0].get("variation_id", "N/A"))
 
             sig_color: str = {
-                "Pathogenic": "#fc8181",
-                "Likely pathogenic": "#f6ad55",
-                "Benign": "#68d391",
-                "Likely benign": "#9ae6b4",
-            }.get(clin_sig, "#63b3ed")
+                "Pathogenic": "#dc2626",
+                "Likely pathogenic": "#ea580c",
+                "Benign": "#1d4ed8",
+                "Likely benign": "#15803d",
+            }.get(clin_sig, "#2563eb")
 
             # Alignment Score — yalnız aranan varyant model sonucundaki BELİRLİ bir
             # satıra Variant_ID ile eşlendiğinde hesaplanır. Eskiden df_result.iloc[0]
@@ -148,21 +148,21 @@ def render_clinvar_tab() -> None:
             <div class="model-card">
                 <h4 style="font-size:1rem; text-transform:none;">{title_}</h4>
                 <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">KLİNİK ANLAM</div>
+                    <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">KLİNİK ANLAM</div>
                         <div style="font-weight:700; color:{sig_color}; font-size:0.95rem;">{clin_sig}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">IN-SILICO ALIGNMENT</div>
-                        <div style="font-weight:700; color:#63b3ed; font-size:0.95rem;">{alignment_score}</div>
+                    <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">IN-SILICO ALIGNMENT</div>
+                        <div style="font-weight:700; color:#2563eb; font-size:0.95rem;">{alignment_score}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">GEN</div>
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">{gene_sort}</div>
+                    <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">GEN</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.95rem;">{gene_sort}</div>
                     </div>
-                    <div style="background:rgba(99,179,237,0.1); border-radius:8px; padding:10px 16px;">
-                        <div style="font-size:0.7rem; color:#718096; margin-bottom:3px;">İNCELEME DURUMU</div>
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.9rem;">{review_stat}</div>
+                    <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px;">
+                        <div style="font-size:0.7rem; color:#64748b; margin-bottom:3px;">İNCELEME DURUMU</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.9rem;">{review_stat}</div>
                     </div>
                 </div>
             </div>

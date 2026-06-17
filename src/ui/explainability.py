@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.ui.utils import plot_dark
+from src.ui.utils import style_plot
 
 
 # Define a Protocol for the pipeline for better type checking if needed
@@ -50,8 +50,8 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
             names_ = [t[0] for t in top]
             vals_ = [t[1] for t in top]
             fig, ax = plt.subplots(figsize=(9, 4.5))
-            plot_dark(fig, ax)
-            colors_ = ["#fc8181" if v > np.median(vals_) else "#63b3ed" for v in vals_]
+            style_plot(fig, ax)
+            colors_ = ["#e63946" if v > np.median(vals_) else "#2563eb" for v in vals_]
             bars = ax.barh(names_[::-1], vals_[::-1], color=colors_[::-1], alpha=0.9, height=0.65)
             ax.set_xlabel("Ortalama |SHAP Değeri|")
             ax.set_title("Top-15 Özellik (XGBoost SHAP)", fontsize=12, fontweight="bold", pad=14)
@@ -62,7 +62,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
                     f"{val:.3f}",
                     va="center",
                     ha="left",
-                    color="#94a3b8",
+                    color="#475569",
                     fontsize=8,
                 )
             plt.tight_layout()
@@ -137,13 +137,14 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
 
         st.markdown(
             f"""
-        <div style="background:rgba(99,179,237,0.06); border:1px solid rgba(99,179,237,0.2);
+        <div style="background:#ffffff; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(15,23,42,0.06);
                     border-radius:14px; padding:22px 26px; margin-bottom:18px;">
             <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
                 <div style="font-size:1.8rem; font-weight:800; color:{insight["zone_color"]};">{insight["zone_label"]}</div>
-                <div style="font-size:1.4rem; font-weight:700; color:#e2e8f0;">{risk_val:.1f} / 100</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#0f172a;
+                            font-family:'JetBrains Mono',monospace;">{risk_val:.1f} / 100</div>
             </div>
-            <div style="color:#cbd5e0; font-size:0.92rem; line-height:1.8;">{insight["summary"]}</div>
+            <div style="color:#475569; font-size:0.92rem; line-height:1.8;">{insight["summary"]}</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -154,21 +155,21 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
             for fi, finding in enumerate(insight["key_findings"], 1):
                 st.markdown(
                     f"""
-                <div style="background:rgba(26,39,68,0.7); border:1px solid rgba(99,179,237,0.15);
-                            border-left:4px solid {"#fc8181" if finding["direction"] == "artırdı" else "#68d391"};
+                <div style="background:#ffffff; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(15,23,42,0.05);
+                            border-left:4px solid {"#dc2626" if finding["direction"] == "artırdı" else "#16a34a"};
                             border-radius:10px; padding:14px 18px; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.88rem;">{fi}. <code style='color:#63b3ed;'>{finding["feature"]}</code></div>
-                        <div style="font-size:0.78rem; color:{"#fc8181" if finding["direction"] == "artırdı" else "#68d391"}; font-weight:600;">Riski {finding["direction"]}</div>
+                        <div style="font-weight:600; color:#0f172a; font-size:0.88rem;">{fi}. <code style='color:#2563eb;'>{finding["feature"]}</code></div>
+                        <div style="font-size:0.78rem; color:{"#dc2626" if finding["direction"] == "artırdı" else "#16a34a"}; font-weight:600;">Riski {finding["direction"]}</div>
                     </div>
-                    <div style="margin-top:8px; color:#94a3b8; font-size:0.83rem; line-height:1.65;">{finding["insight"]}</div>
+                    <div style="margin-top:8px; color:#475569; font-size:0.83rem; line-height:1.65;">{finding["insight"]}</div>
                 </div>
                 """,
                     unsafe_allow_html=True,
                 )
 
         st.markdown(
-            f"<div style='background:rgba(66,153,225,0.08); border:1px solid rgba(66,153,225,0.25); border-radius:10px; padding:14px 18px;'>{insight.get('recommendation', '')}</div>",
+            f"<div style='background:rgba(37,99,235,0.05); border:1px solid #e2e8f0; border-left:3px solid #2563eb; border-radius:10px; padding:14px 18px; color:#475569;'>{insight.get('recommendation', '')}</div>",
             unsafe_allow_html=True,
         )
     except Exception as exc:
@@ -239,10 +240,10 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
         <div class="section-icon">🧪</div>
         <h3>Interactive 'What-If' Varyant Simülatörü</h3>
     </div>
-    <div style="background:rgba(159,122,234,0.05); border:1px solid rgba(159,122,234,0.2);
-                border-radius:10px; padding:12px 18px; margin-bottom:20px;">
-        <div style="color:#9f7aea; font-weight:600; margin-bottom:4px;">🕹️ Deneysel Analiz Modu</div>
-        <div style="color:#94a3b8; font-size:0.85rem;">
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2);
+                border-left:3px solid #7c3aed; border-radius:10px; padding:12px 18px; margin-bottom:20px;">
+        <div style="color:#7c3aed; font-weight:600; margin-bottom:4px;">🕹️ Deneysel Analiz Modu</div>
+        <div style="color:#475569; font-size:0.85rem;">
             Seçili varyantın özelliklerini manuel olarak değiştirerek modelin kararının nasıl değiştiğini gözlemleyin.
             Bu mod, modelin hangi biyolojik eşiklere hassas olduğunu anlamanızı sağlar.
         </div>
@@ -292,14 +293,16 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
         # KANONİK global θ (0.5 DEĞİL) — what-if etiketi gerçek model kararıyla AYNI
         # eşiği kullanmalı; aksi halde 0.5–θ arası prob'lar yanlışlıkla PATHOGENIC görünür.
         _thr = float(opts.get("threshold", 0.8415))
-        risk_color = "#fc8181" if prob_p > _thr else "#68d391"
+        risk_color = "#dc2626" if prob_p > _thr else "#16a34a"
 
         st.markdown(
             f"""
-        <div style="background:rgba(26,32,44,0.6); border:2px solid {risk_color}; border-radius:15px; padding:25px; text-align:center;">
-            <div style="font-size:0.8rem; color:#a0aec0; margin-bottom:8px;">YENİ TAHMİNİ RİSK</div>
-            <div style="font-size:2.8rem; font-weight:800; color:{risk_color}; line-height:1;">{prob_p * 100:.1f}%</div>
-            <div style="margin-top:15px; font-weight:600; color:#e2e8f0;">
+        <div style="background:#ffffff; border:2px solid {risk_color}; border-radius:15px;
+                    padding:25px; text-align:center; box-shadow:0 4px 24px rgba(15,23,42,0.08);">
+            <div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">YENİ TAHMİNİ RİSK</div>
+            <div style="font-size:2.8rem; font-weight:800; color:{risk_color}; line-height:1;
+                        font-family:'JetBrains Mono',monospace;">{prob_p * 100:.1f}%</div>
+            <div style="margin-top:15px; font-weight:600; color:#0f172a;">
                 {"🔴 PATHOGENIC" if prob_p > _thr else "🟢 BENIGN"}
             </div>
         </div>
