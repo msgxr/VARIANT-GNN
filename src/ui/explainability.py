@@ -124,7 +124,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
         probs_row: np.ndarray = xgb_model.predict_proba(X_scaled[idx : idx + 1])[0]
         prob_val: float = float(probs_row[1])
         risk_val: float = prob_val * 100
-        prediction: str = "Pathogenic" if prob_val >= float(opts.get("threshold", 0.5)) else "Benign"
+        prediction: str = "Pathogenic" if prob_val >= float(opts.get("threshold", 0.8415)) else "Benign"
         v_id: Optional[Any] = df_features["Variant_ID"].iloc[idx] if "Variant_ID" in df_features.columns else None
 
         insight: Dict[str, Any] = generate_clinical_insight(
@@ -289,7 +289,10 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
             prob_p = probs[0, 1]
             conf = 0.0  # No uncertainty support in old model
 
-        risk_color = "#fc8181" if prob_p > 0.5 else "#68d391"
+        # KANONİK global θ (0.5 DEĞİL) — what-if etiketi gerçek model kararıyla AYNI
+        # eşiği kullanmalı; aksi halde 0.5–θ arası prob'lar yanlışlıkla PATHOGENIC görünür.
+        _thr = float(opts.get("threshold", 0.8415))
+        risk_color = "#fc8181" if prob_p > _thr else "#68d391"
 
         st.markdown(
             f"""
@@ -297,7 +300,7 @@ def render_xai(pipeline: Any, df_features: pd.DataFrame, opts: Dict[str, Any]) -
             <div style="font-size:0.8rem; color:#a0aec0; margin-bottom:8px;">YENİ TAHMİNİ RİSK</div>
             <div style="font-size:2.8rem; font-weight:800; color:{risk_color}; line-height:1;">{prob_p * 100:.1f}%</div>
             <div style="margin-top:15px; font-weight:600; color:#e2e8f0;">
-                {"🔴 PATHOGENIC" if prob_p > 0.5 else "🟢 BENIGN"}
+                {"🔴 PATHOGENIC" if prob_p > _thr else "🟢 BENIGN"}
             </div>
         </div>
         """,

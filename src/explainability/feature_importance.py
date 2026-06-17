@@ -342,7 +342,7 @@ class FeatureImportanceAnalyzer:
         gnn_model: Optional[torch.nn.Module],
         X: np.ndarray,
         y: np.ndarray,
-        knn_k: int = 5,
+        knn_k: int = 10,  # kanonik graf spec (docstring + compute_gnn_gradients ile uyumlu; eskiden 5)
         top_n: int = 20,
         device: Optional[torch.device] = None,
     ) -> Dict[str, Path]:
