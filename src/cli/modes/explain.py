@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
+from typing import Any
 
 from src.api.pipeline import InferencePipeline
 from src.data.loader import load_csv
 
 
-def mode_explain(args, cfg):
+def mode_explain(args: argparse.Namespace, cfg: Any) -> None:
     """Explainability mode — §4.4.
 
     Produces: SHAP summary/waterfall, group SHAP (6 categories), GNNExplainer
@@ -32,6 +34,8 @@ def mode_explain(args, cfg):
 
     preprocessor = pipeline._preprocessor
     ensemble = pipeline._ensemble
+    assert preprocessor is not None
+    assert ensemble is not None
     X_np = ds.features.values
     X_scaled = preprocessor.transform(X_np)
     feature_names = list(ds.feature_columns)
@@ -78,7 +82,10 @@ def mode_explain(args, cfg):
         pred = df_pred["Prediction"].iloc[i]
         prob = float(df_pred["Probability"].iloc[i])
         sv_i = shap_vals[i] if shap_vals.ndim == 2 else shap_vals
-        text = instance_explanation_tr(sv_i, feature_names, pred, prob, vid)
+        # HATA DÜZELTME: vid eskiden 5. POZİSYONEL argümana (uncertainty) geçiyordu →
+        # instance_explanation_tr içinde float(vid) except ile 0.0'a düşüyor, variant_id
+        # None kalıyordu (klinik metinde varyant kimliği GÖRÜNMÜYORDU). Keyword ile geçir.
+        text = instance_explanation_tr(sv_i, feature_names, pred, prob, variant_id=vid)
         logging.info("[Sample %d] %s", i, text)
         explain_records.append(
             {
@@ -115,7 +122,7 @@ def mode_explain(args, cfg):
 # ── Private helpers ──────────────────────────────────────────────────────────
 
 
-def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
+def _run_gnn_explainer(ensemble: Any, X_scaled: Any, feature_names: list[str], cfg: Any) -> None:
     try:
         from src.core.graph.builder import SampleKNNGraphBuilder
         from src.explainability.gnn_explainer import GNNExplainerWrapper
@@ -156,7 +163,9 @@ def _run_gnn_explainer(ensemble, X_scaled, feature_names, cfg):
         logging.warning("GNNExplainer failed: %s", exc)
 
 
-def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
+def _run_pdf_reports(
+    df_pred: Any, explain_records: list[dict[str, Any]], shap_vals: Any, feature_names: list[str], cfg: Any
+) -> None:
     try:
         from src.explainability.clinical_insight import generate_clinical_insight
         from src.explainability.group_shap import instance_shap_table
@@ -200,7 +209,7 @@ def _run_pdf_reports(df_pred, explain_records, shap_vals, feature_names, cfg):
         logging.warning("PDF report failed: %s", exc)
 
 
-def _plot_learning_curve(cfg):
+def _plot_learning_curve(cfg: Any) -> None:
     lc_path = cfg.paths.reports_dir / "gnn_learning_curve.json"
     if not lc_path.exists():
         logging.info("gnn_learning_curve.json not found — run training first.")
@@ -242,7 +251,7 @@ def _plot_learning_curve(cfg):
         logging.warning("Learning curve plot failed: %s", exc)
 
 
-def _run_acmg_mapper(X_sample, shap_vals, feature_names, cfg):
+def _run_acmg_mapper(X_sample: Any, shap_vals: Any, feature_names: list[str], cfg: Any) -> None:
     try:
         from src.scientific.acmg_mapper import ACMGMapper
 
@@ -261,7 +270,7 @@ def _run_acmg_mapper(X_sample, shap_vals, feature_names, cfg):
         logging.warning("ACMG mapper failed: %s", exc)
 
 
-def _run_ood_detector(X_scaled, X_sample, feature_names, cfg):
+def _run_ood_detector(X_scaled: Any, X_sample: Any, feature_names: list[str], cfg: Any) -> None:
     try:
         from src.scientific.ood_detector import OODDetector
 
@@ -289,7 +298,7 @@ def _run_ood_detector(X_scaled, X_sample, feature_names, cfg):
         logging.warning("OOD detector failed: %s", exc)
 
 
-def _run_pubmed_rag(explain_records, cfg):
+def _run_pubmed_rag(explain_records: list[dict[str, Any]], cfg: Any) -> None:
     try:
         from src.scientific.pubmed_rag import PubMedRAG
 

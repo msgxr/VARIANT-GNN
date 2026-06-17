@@ -47,23 +47,23 @@ except ImportError:
 
     # Stub — FastAPI kurulu değilken modül import hatası vermesin
     class FastAPI:  # type: ignore
-        def __init__(self, *a, **kw):
+        def __init__(self, *a: Any, **kw: Any) -> None:
             pass
 
-        def get(self, *a, **kw):
+        def get(self, *a: Any, **kw: Any) -> Any:
             return lambda f: f
 
-        def post(self, *a, **kw):
+        def post(self, *a: Any, **kw: Any) -> Any:
             return lambda f: f
 
-        def add_middleware(self, *a, **kw):
+        def add_middleware(self, *a: Any, **kw: Any) -> None:
             pass
 
-    class BaseModel:
-        pass  # type: ignore
+    class BaseModel:  # type: ignore[no-redef]  # fallback stub when pydantic missing
+        pass
 
-    def Field(*a, **kw):
-        return None  # type: ignore
+    def Field(*a: Any, **kw: Any) -> Any:
+        return None
 
 
 # ── Application ──────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ _MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 _pipeline = None
 
 
-def _get_pipeline():
+def _get_pipeline() -> Any:
     global _pipeline
     if _pipeline is None:
         from src.api.pipeline import InferencePipeline
@@ -146,7 +146,7 @@ class PredictResponse(BaseModel):
 
 # ── Health & Info ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
-def health():
+def health() -> dict[str, Any]:
     """Sistem sağlık kontrolü — yük dengeleyici ve Kubernetes probe için."""
     return {
         "status": "healthy",
@@ -157,7 +157,7 @@ def health():
 
 
 @app.get("/info", tags=["System"])
-def info():
+def info() -> dict[str, Any]:
     """Model versiyonu ve konfigürasyon bilgisi."""
     try:
         from src.config import get_settings
@@ -190,7 +190,7 @@ def info():
 
 # ── CSV Upload Predict ────────────────────────────────────────────────────────
 @app.post("/predict", response_model=PredictResponse, tags=["Prediction"])
-async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosyası")):
+async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosyası")) -> dict:
     """
     CSV dosyası yükle → tahmin al.
 
@@ -227,7 +227,7 @@ async def predict_csv(file: UploadFile = File(..., description="CSV varyant dosy
 
 # ── JSON Body Predict ─────────────────────────────────────────────────────────
 @app.post("/predict/json", response_model=PredictResponse, tags=["Prediction"])
-def predict_json(request: PredictJsonRequest):
+def predict_json(request: PredictJsonRequest) -> dict:
     """
     JSON body ile tahmin.
 
@@ -243,7 +243,7 @@ def predict_json(request: PredictJsonRequest):
 
 # ── Sample Predict (demo) ─────────────────────────────────────────────────────
 @app.get("/predict/sample", tags=["Prediction"])
-def predict_sample():
+def predict_sample() -> dict:
     """
     Rastgele oluşturulmuş örnek veri ile demo tahmini.
     Model yüklü olmalıdır.
@@ -314,7 +314,7 @@ def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
     expert_n = sum(1 for r in results if "Uzman" in r.Clinical_Flag)
     hc_n = sum(1 for r in results if "Yuksek" in r.Clinical_Flag)
 
-    return PredictResponse(
+    response: dict = PredictResponse(
         timestamp=datetime.now(timezone.utc).isoformat(),
         n_variants=n,
         latency_ms=round(latency_ms, 2),
@@ -332,3 +332,4 @@ def _run_prediction(df_raw: pd.DataFrame, t0: float) -> dict:
             ),
         },
     ).model_dump()
+    return response

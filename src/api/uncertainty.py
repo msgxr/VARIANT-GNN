@@ -122,7 +122,8 @@ class MCDropoutEstimator:
         eps = 1e-10
         entropy = -np.sum(probs * np.log(probs + eps), axis=1)
         max_entropy = np.log(probs.shape[1])
-        return entropy / max_entropy
+        normalized: np.ndarray = entropy / max_entropy
+        return normalized
 
     @staticmethod
     def uncertainty_category(scores: np.ndarray) -> np.ndarray:

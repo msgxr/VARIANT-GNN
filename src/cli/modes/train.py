@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any, Optional, Sequence, cast
 
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from src.data.loader import load_csv
+from src.data.loader import LoadedDataset, load_csv
 from src.scientific.calibration.calibrator import EnsembleCalibrator
 from src.scientific.metrics.metrics import evaluate, evaluate_per_panel, find_best_threshold
 from src.scientific.metrics.plots import save_all_plots
@@ -19,7 +21,7 @@ from src.utils.seeds import set_global_seed
 from src.utils.serialization import ModelStore
 
 
-def _get_labelled_data(data_file, cfg):
+def _get_labelled_data(data_file: Any, cfg: Any) -> LoadedDataset:
     """Load a labelled dataset; search default paths if data_file is None."""
     candidates = []
     if data_file:
@@ -40,9 +42,10 @@ def _get_labelled_data(data_file, cfg):
     sys.exit(1)
 
 
-def mode_train(args, cfg):
+def mode_train(args: argparse.Namespace, cfg: Any) -> None:
     """Leakage-free training + 5-fold CV + calibration + test evaluation."""
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data sys.exit()s when labels are None
 
     from src.features.feature_validator import FeatureValidator
 
@@ -63,10 +66,12 @@ def mode_train(args, cfg):
             nuc_sequences=([ds.nuc_sequences[i] for i in valid_positions] if ds.nuc_sequences else None),
             aa_sequences=([ds.aa_sequences[i] for i in valid_positions] if ds.aa_sequences else None),
         )
+        assert ds.labels is not None  # set above from ds.labels[mask.values]
         logging.info("Panel filter: %s (%d variants)", panel, len(ds.labels))
 
     X = ds.features.values
     y = ds.labels
+    assert y is not None  # labels guaranteed non-None (see assert after load)
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 
@@ -281,7 +286,7 @@ def mode_train(args, cfg):
         # RESMİ SKORLAMA (TEKNOFEST Q&A): her panel kendi %20-patojenik test setinde
         # ayrı F1, sonra 4-panel ORTALAMASI = nihai yarışma skoru. Genel %20-F1'den farklı.
         try:
-            _off = {}
+            _off: dict[str, Optional[float]] = {}
             for _pn in np.unique(test_panels):
                 _m = test_panels == _pn
                 _yp = y_test[_m]
@@ -327,8 +332,8 @@ def mode_train(args, cfg):
             _calp = ds.metadata["Panel"].values[cal_indices] if len(ds.metadata) == len(X) else np.array([])
             if len(_calp) == len(y_cal):
                 _rc = raw_cal_proba[:, 1]
-                _ppth = {}
-                _ppf1 = {}
+                _ppth: dict[str, Optional[float]] = {}
+                _ppf1: dict[str, Optional[float]] = {}
                 for _pn in np.unique(test_panels):
                     _cm = _calp == _pn
                     _ycal_p = y_cal[_cm]
@@ -388,7 +393,9 @@ def mode_train(args, cfg):
             cal_panels = ds.metadata["Panel"].values[cal_indices]
 
         if len(cal_panels) == len(y_cal):
-            panel_thresholds_dict = ensemble.optimise_panel_thresholds(X_cal_proc, y_cal, cal_panels)
+            panel_thresholds_dict = ensemble.optimise_panel_thresholds(
+                X_cal_proc, y_cal, cast(Sequence[str], cal_panels)
+            )
             store.save_panel_thresholds(panel_thresholds_dict)
         else:
             logging.warning(
@@ -428,7 +435,7 @@ def mode_train(args, cfg):
     logging.info("Training complete.")
 
 
-def mode_train_panels(args, cfg):
+def mode_train_panels(args: argparse.Namespace, cfg: Any) -> None:
     """DEPRECATED — mode_train'e yönlendirilir.
 
     Eski uygulama; (a) trainer.train'i ``groups=`` OLMADAN çağırıyor, (b) kalibrasyon

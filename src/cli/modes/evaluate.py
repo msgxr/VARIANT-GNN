@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
+from typing import Any
 
 import numpy as np
 
@@ -15,9 +17,10 @@ from src.data.loader import load_csv
 from src.scientific.metrics.metrics import evaluate, evaluate_per_panel
 
 
-def mode_eval(args, cfg):
+def mode_eval(args: argparse.Namespace, cfg: Any) -> None:
     """Evaluate saved model on a labelled CSV, write eval_results.csv."""
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data exits if labels is None
     pipeline = InferencePipeline()
     pipeline.load()
     df_result = pipeline.predict_from_dataset(ds)
@@ -32,12 +35,13 @@ def mode_eval(args, cfg):
     logging.info("Eval results → %s (thr=%.4f)", out, threshold)
 
 
-def mode_crossval(args, cfg):
+def mode_crossval(args: argparse.Namespace, cfg: Any) -> None:
     """Standalone 5-fold cross-validation on a labelled CSV."""
     from src.training.trainer import VariantTrainer
     from src.utils.seeds import set_global_seed
 
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data exits if labels is None
     trainer = VariantTrainer()
     set_global_seed(cfg.seed)
     folds = trainer._cross_validate(ds.features.values, ds.labels)
@@ -56,7 +60,7 @@ def mode_crossval(args, cfg):
         )
 
 
-def mode_external_val(args, cfg):
+def mode_external_val(args: argparse.Namespace, cfg: Any) -> None:
     """External validation — TEKNOFEST jury scenario (§7.5).
 
     Uses the training-time F1-optimal threshold; never re-tunes on test data.
@@ -154,7 +158,7 @@ def mode_external_val(args, cfg):
     logging.info("External validation complete.")
 
 
-def mode_adversarial_val(args, cfg):
+def mode_adversarial_val(args: argparse.Namespace, cfg: Any) -> None:
     """Adversarial validation — train/test domain shift detection.
 
     AUC ~0.5 → no shift (good). AUC ~1.0 → severe shift (bad).

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
+from typing import Any
 
 from src.cli.modes.train import _get_labelled_data
 from src.utils.seeds import set_global_seed
 
 
-def mode_tune(args, cfg):
+def mode_tune(args: argparse.Namespace, cfg: Any) -> None:
     """Optuna hyperparameter search for XGBoost (group-aware, train-fold only)."""
     import numpy as np
 
@@ -17,6 +19,7 @@ def mode_tune(args, cfg):
     from src.training.tune import ModelTuner
 
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data exits if labels are missing
     X_all, y_all = ds.features.values, ds.labels
 
     # Group-aware train/holdout split by Variant_ID — preprocessor (imputer/scaler) VE
@@ -53,11 +56,12 @@ def mode_tune(args, cfg):
     logging.info("Best XGB params → %s", out_path)
 
 
-def mode_panel_transfer(args, cfg):
+def mode_panel_transfer(args: argparse.Namespace, cfg: Any) -> None:
     """Panel transfer (generalization) matrix — §3.2."""
     from src.evaluation.panel_transfer import CrossPanelEvaluator
 
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data exits if labels are missing
     if "Panel" not in ds.metadata.columns:
         logging.error("Dataset missing 'Panel' column.")
         return
@@ -79,7 +83,7 @@ def mode_panel_transfer(args, cfg):
     logging.info("Panel transfer matrix → %s", report_path)
 
 
-def mode_label_quality(args, cfg):
+def mode_label_quality(args: argparse.Namespace, cfg: Any) -> None:
     """Label quality detection via Confident Learning (§3.2 leakage prevention)."""
     try:
         import xgboost as xgb
@@ -88,6 +92,7 @@ def mode_label_quality(args, cfg):
         from src.scientific.label_quality import ConfidentLearner
 
         ds = _get_labelled_data(args.data_file, cfg)
+        assert ds.labels is not None  # _get_labelled_data exits if labels are missing
         X = ds.features.values
         y = ds.labels
 
@@ -129,13 +134,14 @@ def mode_label_quality(args, cfg):
         raise SystemExit(1)
 
 
-def mode_ablation(args, cfg):
+def mode_ablation(args: argparse.Namespace, cfg: Any) -> None:
     """Ablation analysis — model + preprocessing contributions (§4.5)."""
     from pathlib import Path
 
     from src.evaluation.ablation import run_ablation
 
     ds = _get_labelled_data(args.data_file, cfg)
+    assert ds.labels is not None  # _get_labelled_data exits if labels are missing
     set_global_seed(cfg.seed)
     cfg.paths.create_dirs()
 

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import argparse
 import logging
 import sys
+from typing import Any
 
 from src.api.export import JURY_COLUMNS, export_predictions
 from src.api.pipeline import InferencePipeline
 
 
-def mode_predict(args, cfg):
+def mode_predict(args: argparse.Namespace, cfg: Any) -> None:
     """Jury mode: unlabelled CSV → deterministic 7-column submission CSV.
 
     Usage:

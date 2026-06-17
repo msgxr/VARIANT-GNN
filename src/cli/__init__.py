@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 __all__ = ["main"]
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # yalnizca tip denetleyiciler icin; calisma zamaninda import 
     from src.cli.runner import main
 
 
-def __getattr__(name: str):  # PEP 562 — tembel oznitelik erisimi
+def __getattr__(name: str) -> Any:  # PEP 562 — tembel oznitelik erisimi
     # `from src.cli import main` calismaya devam eder, ANCAK src.cli paketini
     # (veya src.cli.interactive gibi hafif bir alt modulu) import etmek artik
     # agir bagimlilik zincirini (numpy/torch ...) ONCEDEN tetiklemez. Bu, argumansiz
