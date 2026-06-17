@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -412,8 +412,8 @@ def instance_shap_table(
 def lime_shap_concordance(
     shap_values: np.ndarray,
     feature_names: List[str],
-    lime_explainer,
-    predict_fn,
+    lime_explainer: Any,
+    predict_fn: Any,
     X_test: np.ndarray,
     n_samples: int = 150,
     random_state: int = 42,

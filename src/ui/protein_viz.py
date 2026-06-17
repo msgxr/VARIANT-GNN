@@ -73,7 +73,7 @@ def get_pdb_for_gene(gene_symbol: str) -> str:
             pdb_ids = [ref["id"] for ref in db_refs if ref["database"] == "PDB"]
 
             if pdb_ids:
-                return pdb_ids[0]
+                return str(pdb_ids[0])
 
     except Exception:
         # Bağlantı hatası veya API değişikliği durumunda güvenli fallback

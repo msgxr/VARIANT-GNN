@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -78,8 +78,9 @@ def _gnn_gradient_importance(
 
     score.backward()
 
-    grads = x_tensor.grad.detach().cpu().numpy()  # [N, N_features]
-    return np.abs(grads).mean(axis=0)  # [N_features]
+    grads: np.ndarray = x_tensor.grad.detach().cpu().numpy()  # [N, N_features]
+    importance: np.ndarray = np.abs(grads).mean(axis=0)  # [N_features]
+    return importance
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +118,7 @@ class FeatureImportanceAnalyzer:
 
     def compute_shap(
         self,
-        xgb_model,
+        xgb_model: Any,
         X: np.ndarray,
         max_samples: int = 500,
     ) -> None:
@@ -206,7 +207,8 @@ class FeatureImportanceAnalyzer:
             if arr is None:
                 return np.zeros(len(self.feature_names))
             rng = arr.max() - arr.min()
-            return (arr - arr.min()) / (rng + 1e-12)
+            normed: np.ndarray = (arr - arr.min()) / (rng + 1e-12)
+            return normed
 
         shap_n = _norm(self._shap_scores)
         gnn_n = _norm(self._gnn_scores)
@@ -239,11 +241,12 @@ class FeatureImportanceAnalyzer:
 
         Returns the path to the written file.
         """
-        if self._merged_scores is None:
-            self.build_ranking()
+        df = self._merged_scores
+        if df is None:
+            df = self.build_ranking()
 
         out = self.reports_dir / filename
-        self._merged_scores.to_csv(out, index=False)
+        df.to_csv(out, index=False)
         logger.info("Feature importance CSV saved -> %s", out)
         return out
 
@@ -258,10 +261,11 @@ class FeatureImportanceAnalyzer:
 
         Returns the path to the written file.
         """
-        if self._merged_scores is None:
-            self.build_ranking()
+        ranking = self._merged_scores
+        if ranking is None:
+            ranking = self.build_ranking()
 
-        df = self._merged_scores.head(top_n)
+        df = ranking.head(top_n)
         out = self.reports_dir / filename
 
         fig, ax = plt.subplots(figsize=figsize)
@@ -283,7 +287,7 @@ class FeatureImportanceAnalyzer:
 
     def explain_sample(
         self,
-        xgb_model,
+        xgb_model: Any,
         x_sample: np.ndarray,
         sample_id: str = "sample",
         filename_prefix: Optional[str] = None,
@@ -338,7 +342,7 @@ class FeatureImportanceAnalyzer:
 
     def run(
         self,
-        xgb_model,
+        xgb_model: Any,
         gnn_model: Optional[torch.nn.Module],
         X: np.ndarray,
         y: np.ndarray,

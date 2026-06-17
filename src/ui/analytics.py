@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Iterable, List, cast
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -70,7 +70,7 @@ def render_risk_histogram(df_result: pd.DataFrame) -> None:
     risks: pd.Series = df_result["Calibrated_Risk"]
     n, bins, patches = ax.hist(risks, bins=30, edgecolor="none")
 
-    for patch, left in zip(patches, bins[:-1]):
+    for patch, left in zip(cast(Iterable[Any], patches), bins[:-1]):
         if left < 50:
             patch.set_facecolor("#68d391")
         elif left < 75:
