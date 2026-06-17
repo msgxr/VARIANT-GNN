@@ -29,7 +29,7 @@ def _model_status_badge() -> None:
     if not prov.exists():
         st.markdown(
             '<div style="background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.3);'
-            'border-left:3px solid #e63946;border-radius:8px;padding:10px 14px;font-size:0.78rem;'
+            "border-left:3px solid #e63946;border-radius:8px;padding:10px 14px;font-size:0.78rem;"
             'color:#ff6b6b;margin-bottom:12px;">'
             '⚠️ Model bulunamadı<br><span style="color:#8892a4;">python main.py --mode train</span></div>',
             unsafe_allow_html=True,

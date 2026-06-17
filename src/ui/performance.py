@@ -13,8 +13,8 @@ import streamlit as st
 def _metric_card(label: str, value: str, sub: str = "", color: str = "#2563eb") -> str:
     sub_html = f'<div style="font-size:0.68rem;color:#64748b;margin-top:2px;">{sub}</div>' if sub else ""
     return (
-        '<div style="background:#ffffff;border:1px solid #e2e8f0;border-left:3px solid ' + color + ';'
-        'border-radius:12px;padding:16px 18px;text-align:center;flex:1;min-width:110px;'
+        '<div style="background:#ffffff;border:1px solid #e2e8f0;border-left:3px solid ' + color + ";"
+        "border-radius:12px;padding:16px 18px;text-align:center;flex:1;min-width:110px;"
         'box-shadow:0 2px 8px rgba(15,23,42,0.06);">'
         f'<div style="font-size:1.6rem;font-weight:800;color:{color};letter-spacing:-1px;'
         f"font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;\">{value}</div>"
