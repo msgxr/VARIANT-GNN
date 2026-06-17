@@ -15,7 +15,6 @@ The manifest records:
 
 from __future__ import annotations
 
-import importlib
 import json
 import logging
 import platform
@@ -62,12 +61,17 @@ def _git_commit_hash() -> str:
 
 
 def _package_versions() -> Dict[str, str]:
+    # Resolve versions by PyPI *distribution* name via importlib.metadata, which
+    # normalises '-'/'_' and avoids the import-name mismatch that previously made
+    # scikit-learn (import name 'sklearn') always record as 'not_installed'.
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _dist_version
+
     versions: Dict[str, str] = {}
     for pkg in _TRACKED_PACKAGES:
         try:
-            mod = importlib.import_module(pkg.replace("-", "_").split(".")[0])
-            versions[pkg] = getattr(mod, "__version__", "unknown")
-        except ImportError:
+            versions[pkg] = _dist_version(pkg)
+        except PackageNotFoundError:
             versions[pkg] = "not_installed"
     return versions
 

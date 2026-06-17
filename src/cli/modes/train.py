@@ -429,71 +429,17 @@ def mode_train(args, cfg):
 
 
 def mode_train_panels(args, cfg):
-    """Train on all panels combined, evaluate per-panel (§3.2)."""
-    ds = _get_labelled_data(args.data_file, cfg)
+    """DEPRECATED — mode_train'e yönlendirilir.
 
-    X = ds.features.values
-    y = ds.labels
-    set_global_seed(cfg.seed)
-    cfg.paths.create_dirs()
-
-    trainer = VariantTrainer()
-    result = trainer.train(X, y, nuc_seqs=ds.nuc_sequences, aa_seqs=ds.aa_sequences)
-    logging.info("CV summary — Binary F1 (§7.3): %.4f ± %.4f", result.mean_cv_f1, result.std_cv_f1)
-
-    preprocessor = result.preprocessor
-    ensemble = result.ensemble
-
-    X_tr, _, y_tr, _ = train_test_split(X, y, test_size=cfg.training.test_size, stratify=y, random_state=cfg.seed)
-    _, X_cal, _, y_cal = train_test_split(X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=cfg.seed + 99)
-    X_cal_proc = preprocessor.transform(X_cal)
-    _, raw_cal_proba = ensemble.predict(X_cal_proc)
-    calibrator = EnsembleCalibrator(method=cfg.calibration.method)
-    calibrator.fit(raw_cal_proba, y_cal)
-
-    cal_cal_proba = calibrator.transform(raw_cal_proba)
-    best_thr, _ = find_best_threshold(y_cal, cal_cal_proba[:, 1], metric="f1")
-    logging.info("train_panels threshold (cal set): %.4f", best_thr)
-
-    store = ModelStore(cfg.paths.models_dir)
-    store.save_all(preprocessor, ensemble, calibrator)
-    store.save_threshold(best_thr)
-
-    if "Panel" in ds.metadata.columns:
-        panels = ds.metadata["Panel"].unique()
-        panel_summary = {}
-        for panel_name in panels:
-            mask = ds.metadata["Panel"] == panel_name
-            mask_vals = mask.values
-            X_p_all, y_p_all = X[mask_vals], y[mask_vals]
-            if len(y_p_all) < 10:
-                logging.warning("Panel %s: too few samples (%d), skipping.", panel_name, len(y_p_all))
-                continue
-            all_panel_idx = np.where(mask_vals)[0]
-            _, panel_test_idx = train_test_split(
-                all_panel_idx,
-                test_size=cfg.training.test_size,
-                stratify=y[all_panel_idx] if len(np.unique(y[all_panel_idx])) > 1 else None,
-                random_state=cfg.seed,
-            )
-            X_p, y_p = X[panel_test_idx], y[panel_test_idx]
-            if len(y_p) < 5:
-                X_p, y_p = X_p_all, y_p_all
-            X_p_proc = preprocessor.transform(X_p)
-            _, proba_p = ensemble.predict(X_p_proc)
-            cal_proba_p = calibrator.transform(proba_p)
-            report_p = evaluate(y_p, cal_proba_p, threshold=best_thr)
-            report_p.log(prefix=f"PANEL_{panel_name}")
-            panel_summary[panel_name] = {
-                "n_samples": int(len(y_p)),
-                "metrics": report_p.as_dict(),
-            }
-
-        report_path = cfg.paths.reports_dir / "panel_evaluation.json"
-        with open(report_path, "w") as fh:
-            json.dump(panel_summary, fh, indent=2, default=str, ensure_ascii=False)
-        logging.info("Panel evaluation report → %s", report_path)
-    else:
-        logging.warning("No 'Panel' column — skipping per-panel evaluation.")
-
-    logging.info("train_panels mode complete.")
+    Eski uygulama; (a) trainer.train'i ``groups=`` OLMADAN çağırıyor, (b) kalibrasyon
+    ve per-panel test bölmelerini SATIR-BAZLI ``train_test_split`` ile yapıyor (aynı
+    Variant_ID train/test'i çaprazlayıp withdrawn-leaky sayıları geri sokuyordu), ve
+    (c) eşiği KALİBRE olasılıkta türetiyordu (kanonik mode_train HAM'da türetir →
+    derivation==inference). Kanonik ``mode_train`` zaten group-aware eğitim + per-panel
+    değerlendirme (evaluate_per_panel, panel eşikleri) yapar; bu mod ona delege edilir.
+    """
+    logging.warning(
+        "mode_train_panels DEPRECATED (satır-bazlı split + calibrated-threshold sızıntısı). "
+        "Kanonik group-aware mode_train kullanılıyor; per-panel değerlendirme zaten dahil."
+    )
+    return mode_train(args, cfg)

@@ -145,9 +145,30 @@ class TestHybridEnsemble:
         assert np.allclose(result.sum(axis=1), 1.0, atol=1e-5)
 
     def test_predict_with_uncertainty(self):
-        # This test requires a mocked pipeline/model state
-        # For now, ensure it doesn't crash on simple Mock
-        pass
+        # Boş `pass` stub (her zaman geçerdi) yerine AÇIK skip — sahte/boş doğrulama
+        # yapmaz. Gerçek test fitted alt-model durumu (mock pipeline) gerektirir.
+        import pytest
+
+        pytest.skip("predict_with_uncertainty için fitted alt-model durumu gerekli; mock henüz yok.")
+
+    def test_canonical_ensemble_weights_pinned(self):
+        """Kanonik topluluk ağırlıkları 30/30/25/15 (XGB/LGB/GNN/DNN) PINLENIR.
+
+        Eskiden hiçbir test dokümante edilen ağırlıkları sabitlemiyordu; testler
+        ayrık vektörler ([0.3,0.3,0.3,0.1]) hardcode ediyordu → ağırlık kayması
+        (örn. config'te 0.25→0.30) sessizce kaçabilirdi.
+        """
+        from pathlib import Path
+
+        import yaml
+
+        for cfg_name in ("pdr.yaml", "default.yaml"):
+            cfg_path = Path(__file__).resolve().parents[2] / "configs" / cfg_name
+            if not cfg_path.exists():
+                continue
+            cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+            weights = cfg.get("ensemble", {}).get("weights")
+            assert weights == [0.30, 0.30, 0.25, 0.15], f"{cfg_name} ağırlıkları kaymış: {weights}"
 
 
 # ---------------------------------------------------------------------------

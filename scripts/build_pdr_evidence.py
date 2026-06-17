@@ -78,7 +78,7 @@ def build_package() -> None:
     files_to_collect = [
         "reports/evaluation_report.json",
         "reports/confusion_matrix.png",
-        "reports/ablation_report.md",
+        "reports/ablation_report.json",  # run_ablation.py .json yazar (.md DEĞİL)
         "reports/shap_summary.png",
         "reports/gnn_explainer_results.json",
         "reports/threshold_report.json",
@@ -100,23 +100,41 @@ def build_package() -> None:
         except ValueError as e:
             logger.error("Path rejected: %s", e)
 
-    # 5. System Compliance Report
-    compliance_md = """# TEKNOFEST 2026 PDR System Compliance Report
+    # 5. System Compliance Report — iddialar GERÇEK artefakt varlığından üretilir
+    # (eskiden hardcoded "SHA256 ile imzalanmistir" koşulsuz yazılıyordu).
+    def _exists(rel: str) -> bool:
+        try:
+            return _safe_path(rel).exists()
+        except ValueError:
+            return False
 
-## 1. Juri Modu ve Pipeline
+    def _mark(ok: bool) -> str:
+        return "✅" if ok else "⚠️ (artefakt bulunamadı)"
+
+    sha_ok = _exists("models/manifest.json") or _exists("submission/teknofest/artifact_manifest.json")
+    ablation_ok = _exists("reports/ablation_report.json")
+    stress_ok = _exists("tests/unit/test_column_aligner_stress.py")
+    shap_ok = _exists("reports/shap_group_contributions.json") or _exists("reports/shap_summary.png")
+    gnn_ok = _exists("reports/gnn_explainer_results.json")
+
+    compliance_md = f"""# TEKNOFEST 2026 PDR System Compliance Report
+
+## 1. Juri Modu ve Pipeline {_mark(True)}
 Sistem --mode predict ve --mode external_val komutlarini destekler.
 
-## 2. Veri Dayanikliligi
-ColumnAligner 8 kritik senaryoya karsi test edilmistir.
+## 2. Veri Dayanikliligi {_mark(stress_ok)}
+ColumnAligner 8 kritik senaryoya karsi test edilmistir (tests/unit/test_column_aligner_stress.py).
 
-## 3. Mimari Dogrulama
-Ablation calismasi ile GATv2 modelinin katkisi kanitlanmistir.
+## 3. Mimari Dogrulama {_mark(ablation_ok)}
+Ablation calismasi (reports/ablation_report.json) ile GATv2 modelinin katkisi gosterilir.
 
-## 4. Guvenlik ve CI/CD
-Model agirliklari SHA256 ile imzalanmistir.
+## 4. Guvenlik ve CI/CD {_mark(sha_ok)}
+Model artefaktlarinin SHA256 ozetleri manifest dosyasinda kayitlidir
+(models/manifest.json / submission/teknofest/artifact_manifest.json).
 
-## 5. Klinik Anlasılabilirlik
-SHAP ve GNN-Explainer ile varyant bazli aciklamalar uretilir.
+## 5. Klinik Anlasilabilirlik {_mark(shap_ok and gnn_ok)}
+SHAP (reports/shap_group_contributions.json) ve GNN-Explainer
+(reports/gnn_explainer_results.json) ile varyant bazli aciklamalar uretilir.
 """
     with open(evidence_dir / "system_compliance_report.md", "w", encoding="utf-8") as fh:
         fh.write(compliance_md)

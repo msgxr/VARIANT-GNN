@@ -204,9 +204,9 @@ def plot_roc_curve(
 
     # Optimal threshold noktası (Youden J)
     j_idx = np.argmax(tpr - fpr)
-    ax.plot(
-        fpr[j_idx], tpr[j_idx], "o", color=_RED, markersize=9, zorder=6, label=f"Optimal (thr≈{_:=})" if False else ""
-    )
+    # J-optimal noktası işaretlenir; etiket annotate ile verilir (eskiden ölü/kırık
+    # f-string `{_:=}` + `if False` vardı — kaldırıldı).
+    ax.plot(fpr[j_idx], tpr[j_idx], "o", color=_RED, markersize=9, zorder=6, label="")
     ax.annotate(
         f"J-Optimal\n(FPR={fpr[j_idx]:.2f}, TPR={tpr[j_idx]:.2f})",
         xy=(fpr[j_idx], tpr[j_idx]),
@@ -414,8 +414,13 @@ def plot_calibration(
         from sklearn.metrics import brier_score_loss
 
         if y_true is not None and y_prob_cal is not None:
+            from src.evaluation.metrics import expected_calibration_error
+
             p_cal = y_prob_cal[:, 1] if y_prob_cal.ndim == 2 else y_prob_cal
-            ece_after = report.ece  # gerçek hesaplama yoksa rapordan al
+            # KALİBRE proba üzerinde YENİDEN hesapla. Eskiden report.ece (kalibrasyon
+            # ÖNCESİ, HAM proba ECE'si) kullanılıyordu → "sonra" eğrisi yanlış ECE ile
+            # etiketleniyor, kalibrasyon iyileştirmesi görünmüyordu (Brier doğruydu).
+            ece_after = expected_calibration_error(y_true, p_cal)
             brier_after = brier_score_loss(y_true, p_cal)
             label_after = f"Kalibrasyondan sonra (ECE≈{ece_after:.4f}, Brier={brier_after:.4f})"
         else:
@@ -922,10 +927,12 @@ def save_all_plots(
     saved: Dict[str, Path] = {}
 
     def _try(name: str, fn, *args, **kwargs) -> None:
+        # Tek grafik hatası diğerlerini düşürmesin (resilience) — AMA hatayı ERROR
+        # seviyesinde + tür bilgisiyle görünür kıl (eskiden sessiz warning idi).
         try:
             saved[name] = fn(*args, **kwargs)
         except Exception as exc:
-            logger.warning("Grafik üretilemedi [%s]: %s", name, exc)
+            logger.error("Grafik üretilemedi [%s] (%s): %s", name, type(exc).__name__, exc)
 
     # 1. Karışıklık matrisi
     _try("confusion_matrix", plot_confusion_matrix, report, fig_dir / "confusion_matrix.png")

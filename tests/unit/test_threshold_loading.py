@@ -2,8 +2,9 @@
 
 Guards against two bugs that caused the jury inference path to reproduce NONE of
 the reported numbers:
-  1. load_threshold read key 'classification_threshold' while the shipped
-     models/threshold.json uses key 'threshold'  -> silent fallback to default.
+  1. load_threshold read ONLY key 'threshold' while the shipped
+     models/threshold.json (save_threshold) uses key 'classification_threshold'
+     -> silent fallback to default. (Fix: load_threshold now reads BOTH keys.)
   2. load_panel_thresholds expected a {"panel_thresholds": {...}} wrapper while
      the shipped models/panel_thresholds.json is flat -> returned {} -> a single
      global threshold was applied to all four panels.

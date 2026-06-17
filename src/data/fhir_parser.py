@@ -44,8 +44,10 @@ class FHIRParser:
                 {
                     "Chr": var.get("referenceSeq", {}).get("referenceSeqId", {}).get("value", "."),
                     "Pos": var.get("start", 0) + 1,  # FHIR 0-indexed, biz 1-indexed kullanıyoruz
-                    "Ref": var.get("observedAllele", "."),
-                    "Alt": var.get("referenceAllele", "."),
+                    # FHIR MolecularSequence: referenceAllele=REF, observedAllele=ALT.
+                    # Eskiden ters eşlenmişti (Ref↔Alt takas) — düzeltildi.
+                    "Ref": var.get("referenceAllele", "."),
+                    "Alt": var.get("observedAllele", "."),
                     "FHIR_Score": var.get("score", 0),
                 }
             )

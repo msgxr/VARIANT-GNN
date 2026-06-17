@@ -151,7 +151,7 @@ class FeatureImportanceAnalyzer:
         gnn_model: torch.nn.Module,
         X: np.ndarray,
         y: np.ndarray,
-        knn_k: int = 5,
+        knn_k: int = 10,
         device: Optional[torch.device] = None,
     ) -> None:
         """
@@ -162,7 +162,8 @@ class FeatureImportanceAnalyzer:
         gnn_model : Fitted VariantGATv2GNN model.
         X         : [N, F] processed feature matrix.
         y         : [N] integer labels.
-        knn_k     : k used for cosine kNN graph construction.
+        knn_k     : k used for cosine kNN graph construction (varsayılan 10 — dokümante
+                    edilen kanonik graf spec'i ile uyumlu; eskiden 5 idi).
         device    : Torch device; defaults to CPU.
         """
         if device is None:

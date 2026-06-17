@@ -436,30 +436,32 @@ class ColumnAligner:
                 len(df),
                 chunk_size,
             )
-            chunks, agg_report = [], None
-            for start in range(0, len(df), chunk_size):
-                chunk = df.iloc[start : start + chunk_size]
-                aligned_chunk, rep = self._apply_single(chunk)
-                chunks.append(aligned_chunk)
-                if agg_report is None:
-                    agg_report = rep
+            # KRİTİK: mapping'i TÜM df üzerinde BİR KEZ hesapla, sonra aynı SABİT
+            # mapping'i her chunk'a uygula. Eskiden her chunk build_mapping'i BAĞIMSIZ
+            # çalıştırıyordu → distributional/positional fallback per-chunk istatistiğe
+            # bağlı olduğundan aynı anonim kolon farklı chunk'larda FARKLI hedeflere
+            # eşlenip jüri blind-test (>2000 satır) çıktısını bozabiliyordu.
+            numeric_cols, mapping, agg_report = self._build_mapping(df)
+            self._log_mapping_warnings(agg_report)
+            chunks = [
+                self._apply_mapping(df.iloc[start : start + chunk_size], numeric_cols, mapping)
+                for start in range(0, len(df), chunk_size)
+            ]
             combined = pd.concat(chunks, ignore_index=True)
-            return combined, agg_report  # type: ignore[return-value]
+            return combined, agg_report
 
         return self._apply_single(df)
 
-    def _apply_single(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, AlignmentReport]:
-        """apply() sarmalayıcısı — tek chunk için."""
+    def _build_mapping(self, df: pd.DataFrame) -> Tuple[list, dict, AlignmentReport]:
+        """Kolon eşlemesini bir kez hesapla → (numeric_cols, mapping, report)."""
         # Yalnızca sayısal kolonlarla eşleştir (Senaryo 4: gürültülü kolonlar drop)
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-
-        # Sayısal sütunları önce dene; sonra tümünü
         source = df[numeric_cols] if numeric_cols else df
-
         mapping, report = self.build_mapping(source.columns.tolist(), incoming_df=source)
+        return numeric_cols, mapping, report
 
+    def _log_mapping_warnings(self, report: AlignmentReport) -> None:
         for msg in report.warnings():
-            # Türkçe uyarı ön eki ekle
             tr_msg = (
                 msg.replace("NOT FOUND", "BULUNAMADI — otomatik sıfır doldurma ile devam")
                 .replace("positional", "konum bazlı (anonim)")
@@ -467,6 +469,9 @@ class ColumnAligner:
             )
             logger.warning("ColumnAligner: %s", tr_msg)
 
+    def _apply_mapping(self, df: pd.DataFrame, numeric_cols: list, mapping: dict) -> pd.DataFrame:
+        """Önceden hesaplanmış SABİT mapping'i bir chunk'a uygula."""
+        source = df[numeric_cols] if numeric_cols else df
         renamed = source.rename(columns=mapping)
         aligned = pd.DataFrame(index=df.index)
         for exp_col in self.expected_columns:
@@ -474,5 +479,10 @@ class ColumnAligner:
                 aligned[exp_col] = renamed[exp_col].values
             else:
                 aligned[exp_col] = np.nan  # Senaryo 3/4: eksik → NaN → imputer
+        return aligned
 
-        return aligned, report
+    def _apply_single(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, AlignmentReport]:
+        """apply() sarmalayıcısı — tek chunk için (mapping bu df'den hesaplanır)."""
+        numeric_cols, mapping, report = self._build_mapping(df)
+        self._log_mapping_warnings(report)
+        return self._apply_mapping(df, numeric_cols, mapping), report

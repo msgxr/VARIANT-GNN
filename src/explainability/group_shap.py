@@ -141,13 +141,22 @@ _GROUP_ORDER = [
 def assign_feature_group(feature_name: str) -> str:
     """Özellik adını 6 biyolojik kategoriden birine atar.
 
-    TEKNOFEST 2026 anonim kolon şeması (PSR §4.4 dağılımına göre):
+    ⚠️ HEURİSTİK / YAKLAŞIM — GERÇEK GRUP EŞLEMESİ DEĞİL. Kolon adları anonim
+    (AL_x/CAT_x/EK_x/AA_x); gerçek özellik→grup eşlemesi BİLİNMİYOR (models/
+    feature_names.json yok). AL_x indeks aralıkları PSR §4.4 beklenen dağılımına
+    (%38/%27/%18/%11/%6) GÖRE seçilmiştir; dolayısıyla bu fonksiyondan üretilen
+    "grup SHAP katkıları" beklentiyi YENİDEN ÜRETME eğilimindedir (dairesel kanıt).
+    Sonuçlar GÖSTERGE niteliğindedir; jüriye "doğrulanmış grup katkısı" olarak
+    SUNULMAMALIDIR. Gerçek eşleme ColumnAligner/feature_names.json mevcut olduğunda
+    oradan yüklenmelidir.
+
+    Anonim kolon şeması (heuristik):
       AL_x   : Pozisyonel atama — indeks aralığına göre (334 toplam AL kolonu)
-                 1–127  → in_silico_risk        (%38)
-                 128–217 → evolutionary_conservation (%27)
-                 218–278 → population_data      (%18)
-                 279–314 → biochemical_structural (%11)
-                 315–334 → sequence_context     (%6)
+                 1–127  → in_silico_risk
+                 128–217 → evolutionary_conservation
+                 218–278 → population_data
+                 279–314 → biochemical_structural
+                 315–334 → sequence_context
       CAT_x  : Kategorik amino asit değişim tipi → biochemical_structural
       EK_x   : Ek in-silico skorlar              → in_silico_risk
       AA_x   : Amino asit özellikleri            → biochemical_structural

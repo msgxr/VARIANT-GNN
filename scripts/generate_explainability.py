@@ -48,7 +48,7 @@ from sklearn.metrics import (  # noqa: E402
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import train_test_split  # noqa: E402
+from sklearn.model_selection import GroupShuffleSplit  # noqa: E402
 
 from src.config import get_settings, reset_settings  # noqa: E402
 from src.data.loader import load_csv  # noqa: E402
@@ -83,13 +83,23 @@ X_all = ds.features.values
 y_all = ds.labels
 feat_cols = list(ds.features.columns)  # ['AL_1', 'AL_2', ..., 'AA_2']
 
-# Orijinal CSV'den panel bilgisi al (load_csv panel döndürmüyor)
-raw_df = __import__("pandas").read_csv(str(REPO / "data" / "train_variants.csv"))
-panel_all = raw_df.get("Panel", __import__("pandas").Series(["General"] * len(y_all))).values
+# Orijinal CSV'den panel + Variant_ID bilgisi al (load_csv panel döndürmüyor)
+import pandas as _pd  # noqa: E402
 
-X_tr, X_te, y_tr, y_te, pan_tr, pan_te = train_test_split(
-    X_all, y_all, panel_all, test_size=0.2, stratify=y_all, random_state=42
+raw_df = _pd.read_csv(str(REPO / "data" / "train_variants.csv"))
+panel_all = raw_df.get("Panel", _pd.Series(["General"] * len(y_all))).values
+
+# GROUP-AWARE split by Variant_ID ('_aug' near-twin suffix soyulur) — kanonik mode_train
+# protokolü; satır-bazlı stratified split sızıntısını (withdrawn numbers) önler.
+_vid = raw_df.get("Variant_ID", _pd.Series([f"v{i}" for i in range(len(y_all))])).astype(str)
+_base_ids = _vid.str.replace(r"_aug\d*$", "", regex=True).to_numpy()
+_tr_idx, _te_idx = next(
+    GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42).split(X_all, y_all, groups=_base_ids)
 )
+assert len(set(_base_ids[_tr_idx]) & set(_base_ids[_te_idx])) == 0, "Group-aware split sızıntısı!"
+X_tr, X_te = X_all[_tr_idx], X_all[_te_idx]
+y_tr, y_te = y_all[_tr_idx], y_all[_te_idx]
+pan_tr, pan_te = panel_all[_tr_idx], panel_all[_te_idx]
 
 import joblib  # noqa: E402
 
@@ -106,15 +116,13 @@ _pred_out = ensemble.predict(X_te_p)
 # HybridEnsemble.predict returns (labels, proba_2d)
 proba_te = _pred_out[1][:, 1] if isinstance(_pred_out, tuple) else _pred_out[:, 1]
 
-# ── Üretim threshold'ları ──────────────────────────────────────────────────
-thresholds_dict = json.loads((REPO / "models" / "panel_thresholds.json").read_text())
-THRESH = {
-    "General": thresholds_dict.get("General", 0.3990),
-    "Hereditary_Cancer": thresholds_dict.get("Hereditary_Cancer", 0.4532),
-    "PAH": thresholds_dict.get("PAH", 0.4434),
-    "CFTR": thresholds_dict.get("CFTR", 0.1922),
-}
-GLOBAL_THRESH = thresholds_dict.get("__global__", 0.8415)
+# ── Karar eşiği: KANONİK GLOBAL θ=0.8415 ───────────────────────────────────
+# Opt-in panel eşikleri (panel_thresholds.json) JÜRİ skorunda KULLANILMAZ; kanonik
+# karar tek global θ'dır. Tüm paneller için aynı θ uygulanır (RESULTS_CANONICAL.json).
+GLOBAL_THRESH = float(
+    json.loads((REPO / "models" / "threshold.json").read_text()).get("classification_threshold", 0.8415)
+)
+THRESH = {p: GLOBAL_THRESH for p in ("General", "Hereditary_Cancer", "PAH", "CFTR")}
 
 PANEL_MAP = {
     "General": "General",
@@ -162,49 +170,17 @@ for panel_name, thresh in THRESH.items():
     updated_panel_metrics[panel_name] = m
     print(f"  {panel_name:20s} θ={thresh:.3f} | F1={m['binary_f1']:.4f} | MCC={m['mcc']:.4f} | n={m['n']}")
 
-# Global metrik (panel-aware threshold)
-preds_global = np.array(
-    [1 if p >= THRESH.get(panel_key(pan), GLOBAL_THRESH) else 0 for p, pan in zip(proba_te, pan_te)]
-)
+# Global metrik (kanonik global θ)
+preds_global = (proba_te >= GLOBAL_THRESH).astype(int)
 global_f1 = float(f1_score(y_te, preds_global, pos_label=1, zero_division=0))
 global_mcc = float(matthews_corrcoef(y_te, preds_global))
-global_pr = float(average_precision_score(y_te, proba_te))
-global_roc = float(roc_auc_score(y_te, proba_te))
-print(f"\n  GLOBAL (panel-aware) θ    | F1={global_f1:.4f} | MCC={global_mcc:.4f}")
+print(f"\n  GLOBAL θ={GLOBAL_THRESH:.4f} | F1={global_f1:.4f} | MCC={global_mcc:.4f}")
 
-# ── cv_report.json güncelle ─────────────────────────────────────────────────
-cv_path = REPO / "reports" / "cv_report.json"
-cv = json.loads(cv_path.read_text())
-
-# Panel metriklerini güncelle
-if "panel_metrics" not in cv:
-    cv["panel_metrics"] = {}
-for pname, m in updated_panel_metrics.items():
-    cv["panel_metrics"][pname] = m
-
-# Global metrikleri güncelle (threshold 0.01 kaydını düzelt)
-if "test_metrics" in cv:
-    cv["test_metrics"]["mcc"] = round(global_mcc, 6)
-    cv["test_metrics"]["binary_f1"] = round(global_f1, 6)
-    cv["test_metrics"]["pr_auc"] = round(global_pr, 6)
-    cv["test_metrics"]["roc_auc"] = round(global_roc, 6)
-    cv["test_metrics"]["threshold"] = "panel-specific"
-cv["test_mcc"] = round(global_mcc, 4)
-cv["test_pr_auc"] = round(global_pr, 4)
-cv["test_binary_f1"] = round(global_f1, 4)
-
-# Panel summary güncelle
-cv["panel_mcc"] = {k: round(v["mcc"], 4) for k, v in updated_panel_metrics.items()}
-cv["panel_f1"] = {k: round(v["binary_f1"], 4) for k, v in updated_panel_metrics.items()}
-
-cv["threshold_note"] = (
-    "Karar eşiği: GLOBAL θ=0.8415 (canonical, §3.2). "
-    "Test prior: %20-patojenik. Resmi jüri skoru (4-panel %20-F1 ort.): 0.6202. "
-    "Havuzlanmış: 0.6042±0.0324. İç hold-out F1=0.8367, MCC=0.5112."
-)
-
-cv_path.write_text(json.dumps(cv, indent=2, ensure_ascii=False))
-print(f"\n  ✅ cv_report.json güncellendi → General MCC: {updated_panel_metrics.get('General', {}).get('mcc', 'N/A')}")
+# NOT: Bu script ARTIK reports/cv_report.json'u DEĞİŞTİRMEZ. cv_report.json yalnız
+# kanonik group-aware eğitim hattınca (src/cli/modes/train.py) yazılır ve
+# check_results_consistency.py ile RESULTS_CANONICAL.json'a karşı doğrulanır.
+# Buradaki metrikler SALT-GÖSTERİM tanılarıdır (açıklanabilirlik figürleri içindir).
+print("  ℹ️  cv_report.json DEĞİŞTİRİLMEDİ (kanonik dosya yalnız eğitim hattınca yazılır).")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -417,7 +393,7 @@ else:
     print("  ✅ 16_shap_group_contributions.png kaydedildi")
 
 print("\n" + "=" * 60)
-print("EXPLAINABILITY + METRİK GÜNCELLEMESİ TAMAMLANDI ✅")
+print("EXPLAINABILITY FİGÜRLERİ TAMAMLANDI ✅")
 print(f"  Figürler: {FIGS}")
 print("  JSON    : reports/shap_group_contributions.json")
-print("  JSON    : reports/cv_report.json (güncellendi)")
+print("  NOT     : reports/cv_report.json DEĞİŞTİRİLMEDİ (kanonik dosya korunur).")

@@ -59,7 +59,9 @@ def mode_predict(args, cfg):
         else:
             df_result = pipeline.predict_from_csv(args.test_file)
     except Exception as exc:
-        logging.error("Prediction error: %s", exc)
+        # Hata TÜRÜNÜ + traceback'i göster (eskiden tek opak "Prediction error" idi;
+        # TTA join / feature-mismatch gibi gerçek buglar teşhis edilemiyordu).
+        logging.error("Prediction error (%s): %s", type(exc).__name__, exc, exc_info=True)
         sys.exit(1)
 
     cfg.paths.create_dirs()

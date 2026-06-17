@@ -82,8 +82,11 @@ def mode_external_val(args, cfg):
 
     threshold = pipeline.store.load_threshold(default=cfg.thresholds.classification)
     panel_thresholds = pipeline.store.load_panel_thresholds()
-    effective_threshold = panel_thresholds if panel_thresholds else threshold
-    logging.info("External val: using saved threshold (%s)", effective_threshold)
+    # JÜRİ DAVRANIŞI: tek GLOBAL θ. Opt-in panel eşikleri (panel_thresholds.json) jüri
+    # skorunda KULLANILMAZ; yalnız bilgilendirici kaydedilir. Headline VE per-panel
+    # değerlendirme AYNI global θ ile yapılır (eskiden headline global, per-panel panel
+    # eşikleriyle → tutarsız karar uzayı + yanıltıcı "using saved threshold" logu).
+    logging.info("External val: GLOBAL karar eşiği θ=%.4f (panel eşikleri yalnız bilgi).", threshold)
 
     report = evaluate(y_true, y_prob, threshold=threshold)
     report.log(prefix="EXTERNAL_VAL")
@@ -91,7 +94,7 @@ def mode_external_val(args, cfg):
     panel_metrics: dict = {}
     if "Panel" in ds.metadata.columns and len(ds.metadata) == len(y_true):
         panels_arr = ds.metadata["Panel"].values
-        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=effective_threshold)
+        panel_reports = evaluate_per_panel(y_true, y_prob, panels_arr, threshold=threshold)
         for pname, prep in panel_reports.items():
             prep.log(prefix=f"PANEL_{pname}")
             panel_metrics[pname] = prep.as_dict()
@@ -138,7 +141,8 @@ def mode_external_val(args, cfg):
         "test_file": str(test_path),
         "n_samples": int(len(y_true)),
         "threshold_used": threshold,
-        "threshold_source": "training_artifact",
+        "threshold_source": "training_artifact_global_theta",
+        "panel_thresholds_informational": panel_thresholds or {},
         "metrics": report.as_dict(),
         "confusion_matrix": (report.conf_matrix.tolist() if report.conf_matrix is not None else None),
         "panel_metrics": panel_metrics,

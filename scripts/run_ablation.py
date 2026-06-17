@@ -24,7 +24,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, matthews_corrcoef, precision_score, recall_score, roc_auc_score
-from sklearn.model_selection import train_test_split
+
+# NOT: bölme artık run_ablation() içinde GroupShuffleSplit ile yapılır (group-aware).
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -44,70 +45,74 @@ logger = logging.getLogger(__name__)
 # Ablation konfigürasyonları (PDR §4.5)
 # ---------------------------------------------------------------------------
 
+# NOT: Kanonik pipeline AutoEncoder + SelectKBest'i KALDIRDI (group-aware leakage-free
+# CV'de ~5.3pp F1 KAYBETTİRİYORLARDI). Bu yüzden baseline ve model-drop satırları
+# autoencoder=False, feature_selection=False (shipped model ile birebir). AE/SelectKBest
+# satırları "legacy_*" olarak relabel edildi — onları ETKİNLEŞTİRİP maliyetini gösterir.
 ABLATION_SPECS = [
     {
         "name": "baseline",
-        "description": "Tam Ensemble (XGB + LGB + GNN + DNN) + tüm preprocessing",
-        "drop_models": [],
-        "smote": True,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_xgb",
-        "description": "XGBoost devre dışı",
-        "drop_models": ["xgb"],
-        "smote": True,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_lgbm",
-        "description": "LightGBM devre dışı",
-        "drop_models": ["lgbm"],
-        "smote": True,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_gnn",
-        "description": "GATv2 GNN devre dışı",
-        "drop_models": ["gnn"],
-        "smote": True,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_dnn",
-        "description": "DNN devre dışı",
-        "drop_models": ["dnn"],
-        "smote": True,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_smote",
-        "description": "SMOTE oversampling devre dışı",
-        "drop_models": [],
-        "smote": False,
-        "autoencoder": True,
-        "feature_selection": True,
-    },
-    {
-        "name": "no_autoencoder",
-        "description": "AutoEncoder latent feature devre dışı",
+        "description": "Kanonik Ensemble (XGB + LGB + GNN + DNN), tüm 343 özellik, AE/SelectKBest YOK",
         "drop_models": [],
         "smote": True,
         "autoencoder": False,
-        "feature_selection": True,
+        "feature_selection": False,
     },
     {
-        "name": "no_feature_selection",
-        "description": "SelectKBest (ANOVA F-test) devre dışı",
+        "name": "no_xgb",
+        "description": "XGBoost devre dışı (kanonik baseline)",
+        "drop_models": ["xgb"],
+        "smote": True,
+        "autoencoder": False,
+        "feature_selection": False,
+    },
+    {
+        "name": "no_lgbm",
+        "description": "LightGBM devre dışı (kanonik baseline)",
+        "drop_models": ["lgbm"],
+        "smote": True,
+        "autoencoder": False,
+        "feature_selection": False,
+    },
+    {
+        "name": "no_gnn",
+        "description": "GATv2 GNN devre dışı (kanonik baseline)",
+        "drop_models": ["gnn"],
+        "smote": True,
+        "autoencoder": False,
+        "feature_selection": False,
+    },
+    {
+        "name": "no_dnn",
+        "description": "DNN devre dışı (kanonik baseline)",
+        "drop_models": ["dnn"],
+        "smote": True,
+        "autoencoder": False,
+        "feature_selection": False,
+    },
+    {
+        "name": "no_smote",
+        "description": "SMOTE oversampling devre dışı (kanonik baseline)",
+        "drop_models": [],
+        "smote": False,
+        "autoencoder": False,
+        "feature_selection": False,
+    },
+    {
+        "name": "legacy_with_autoencoder",
+        "description": "HISTORICAL: AutoEncoder GERİ eklendi — geri çekilen darboğazın maliyetini gösterir",
         "drop_models": [],
         "smote": True,
         "autoencoder": True,
         "feature_selection": False,
+    },
+    {
+        "name": "legacy_with_selectkbest",
+        "description": "HISTORICAL: SelectKBest(35) GERİ eklendi — geri çekilen darboğazın maliyetini gösterir",
+        "drop_models": [],
+        "smote": True,
+        "autoencoder": False,
+        "feature_selection": True,
     },
 ]
 
@@ -140,7 +145,7 @@ LABEL_MAP = {
 }
 
 
-def _load_data(data_path: Path) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def _load_data(data_path: Path) -> tuple[np.ndarray, np.ndarray, list[str], np.ndarray]:
     df = pd.read_csv(data_path)
 
     # Etiket kolonu bul
@@ -164,6 +169,12 @@ def _load_data(data_path: Path) -> tuple[np.ndarray, np.ndarray, list[str]]:
     feat_df = feat_df.select_dtypes(include=[np.number])
     X = feat_df.values.astype(np.float32)
 
+    # Group-aware split için base Variant_ID ('_aug' near-twin suffix soyulur).
+    if "Variant_ID" in df.columns:
+        groups = df["Variant_ID"].astype(str).str.replace(r"_aug\d*$", "", regex=True).to_numpy()
+    else:
+        groups = np.arange(len(X)).astype(str)
+
     logger.info(
         "Veri yüklendi: %d örnek, %d özellik | Pozitif=%d (%.1f%%)",
         len(X),
@@ -171,7 +182,7 @@ def _load_data(data_path: Path) -> tuple[np.ndarray, np.ndarray, list[str]]:
         int(y.sum()),
         100 * y.mean(),
     )
-    return X, y, list(feat_df.columns)
+    return X, y, list(feat_df.columns), groups
 
 
 def _run_single(
@@ -288,8 +299,17 @@ def run_ablation(
     logger.info("=== ABLATION ANALİZİ BAŞLIYOR — PDR §4.5 ===")
     logger.info("Veri: %s | Config: %s", data_path, config_path)
 
-    X, y, feature_names = _load_data(data_path)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=seed)
+    X, y, feature_names, groups = _load_data(data_path)
+    # GROUP-AWARE split by Variant_ID — satır-bazlı split, augment near-twin ('_aug')
+    # ve panel-overlap varyantlarını train/test'in iki yanına düşürüp withdrawn-leaky
+    # sayıları geri sokuyordu. GroupShuffleSplit + 0-straddle guard.
+    from sklearn.model_selection import GroupShuffleSplit
+
+    tr_idx, te_idx = next(
+        GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed).split(X, y, groups=groups)
+    )
+    assert len(set(groups[tr_idx]) & set(groups[te_idx])) == 0, "Ablation group-aware split sızıntısı!"
+    X_train, X_test, y_train, y_test = X[tr_idx], X[te_idx], y[tr_idx], y[te_idx]
 
     results = []
     baseline_f1 = None

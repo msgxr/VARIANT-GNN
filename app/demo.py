@@ -30,9 +30,11 @@ def load_pipeline():
     reset_settings()
     cfg = get_settings(str(REPO / "configs" / "pdr.yaml"))
     store = ModelStore(cfg.paths.models_dir)
-    preproc, ensemble, _ = store.load_all()
-    thresholds = json.loads((REPO / "models" / "panel_thresholds.json").read_text())
-    return preproc, ensemble, thresholds
+    preproc, ensemble, _calib = store.load_all()
+    # KANONİK karar: tek GLOBAL θ (models/threshold.json). Opt-in panel eşikleri
+    # (panel_thresholds.json, 0.399 vb.) jüri skorunda KULLANILMAZ.
+    theta = store.load_threshold(default=0.8415)
+    return preproc, ensemble, theta
 
 @st.cache_data(show_spinner=False)
 def load_metrics():
@@ -83,23 +85,20 @@ if page == "🔬 Tahmin":
 
         if st.button("🚀 Tahmin Yap", type="primary"):
             try:
-                preproc, ensemble, thresholds = load_pipeline()
+                preproc, ensemble, theta = load_pipeline()
                 panel_col = "Panel" if "Panel" in df_input.columns else None
-                label_col = "label" if "label" in df_input.columns else None
 
                 feature_cols = [c for c in df_input.columns if c not in ["Panel", "label", "Variant_ID"]]
                 X = df_input[feature_cols].values.astype(float)
 
                 with st.spinner("Preprocessing ve tahmin..."):
                     X_p = preproc.transform(X)
-                    probas = ensemble.predict_proba(X_p)[:, 1]
+                    # HybridEnsemble.predict → (labels, proba_2d). predict_proba YOK.
+                    _, proba2d = ensemble.predict(X_p, threshold=theta)
+                    probas = proba2d[:, 1]
 
-                # Panel-bazlı eşik
-                panel_vals = df_input[panel_col].values if panel_col else ["General"] * len(df_input)
-                preds = []
-                for prob, pnl in zip(probas, panel_vals):
-                    t = thresholds.get(pnl, thresholds.get("__global__", 0.8415))
-                    preds.append(1 if prob >= t else 0)
+                # KANONİK karar: tek GLOBAL θ (panel-bazlı eşik DEĞİL).
+                preds = [1 if prob >= theta else 0 for prob in probas]
 
                 result_df = df_input[["Panel"] if panel_col else []].copy()
                 if "Variant_ID" in df_input.columns:
@@ -142,11 +141,18 @@ elif page == "📊 Model Performansı":
         cv, _, _ = load_metrics()
 
         st.subheader("Genel Test Sonuçları")
+        # NOT: cv_report.json'da test_mcc/test_pr_auc TOP-LEVEL DEĞİL; cv['test_metrics']
+        # altındadır (eskiden cv['test_mcc'] → KeyError → sayfa boş kalıyordu).
+        tm = cv.get("test_metrics", {})
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Binary F1 (birincil §7.3)", f"{cv['test_binary_f1']:.4f}", delta="iç hold-out F1=0.8367 @ θ=0.8415")
-        m2.metric("MCC", f"{cv['test_mcc']:.4f}")
-        m3.metric("PR-AUC", f"{cv['test_pr_auc']:.4f}")
-        m4.metric("5-CV F1", f"{cv['mean_cv_binary_f1']:.4f} ±{cv['std_cv_binary_f1']:.4f}")
+        m1.metric(
+            "Binary F1 (birincil §7.3)",
+            f"{cv.get('test_binary_f1', tm.get('binary_f1', 0)):.4f}",
+            delta="iç hold-out F1=0.8367 @ θ=0.8415",
+        )
+        m2.metric("MCC", f"{tm.get('mcc', cv.get('test_mcc', 0)):.4f}")
+        m3.metric("PR-AUC", f"{tm.get('pr_auc', cv.get('test_pr_auc', 0)):.4f}")
+        m4.metric("5-CV F1", f"{cv.get('mean_cv_binary_f1', 0):.4f} ±{cv.get('std_cv_binary_f1', 0):.4f}")
 
         st.divider()
         st.subheader("Panel Bazlı Sonuçlar")
@@ -215,15 +221,21 @@ elif page == "🛡️ Konformal Garanti":
             "Hedef kapsamanın *en az* hedef değer kadar gerçekleşmesi matematiksel olarak garanti edilir."
         )
 
+        # GERÇEK JSON şekli: per-level dict'ler conf['levels'] ALTINDA; anahtarlar
+        # target / empirical_coverage / abstain_pct / valid_marginal (singleton_pct YOK).
+        # Eskiden conf.items() (top-level) iteratlanıp olmayan anahtarlara erişiliyor +
+        # 94.3/81.1/18.9 hardcoded yazılıyordu.
+        levels = conf.get("levels", {})
         rows = []
-        for level, data in conf.items():
+        for level, data in levels.items():
+            abstain = float(data.get("abstain_pct", 0.0))
             rows.append({
                 "Güven Seviyesi": level,
-                "Hedef Kapsama": f"%{data['target_coverage']*100:.0f}",
-                "Gerçekleşen Kapsama": f"%{data['empirical_coverage']*100:.1f}",
-                "Garanti ✓/✗": "✅ GEÇERLİ" if data["is_valid"] else "❌ GEÇERSİZ",
-                "Kesin Tahmin (Singleton)": f"%{data['singleton_pct']:.1f}",
-                "Çift Küme (Abstain)": f"%{data['abstain_pct']:.1f}",
+                "Hedef Kapsama": f"%{float(data.get('target', 0)) * 100:.0f}",
+                "Gerçekleşen Kapsama": f"%{float(data.get('empirical_coverage', 0)) * 100:.1f}",
+                "Garanti ✓/✗": "✅ GEÇERLİ" if data.get("valid_marginal") else "❌ GEÇERSİZ",
+                "Kesin Tahmin (Singleton)": f"%{max(0.0, 100.0 - abstain):.1f}",
+                "Çift Küme (Abstain)": f"%{abstain:.1f}",
             })
         df_conf = pd.DataFrame(rows)
 
@@ -237,20 +249,24 @@ elif page == "🛡️ Konformal Garanti":
 
         st.divider()
         st.subheader("Yorumlama")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("90% Hedef", "94.3% Gerçekleşen", delta="+4.3% üstünde ✅")
-        with col2:
-            st.metric("95% Hedef", "94.3% Gerçekleşen", delta="+0.0% sınırda ✅")
-        with col3:
-            st.metric("99% Hedef", "99.1% Gerçekleşen", delta="+0.1% üstünde ✅")
+        # DİNAMİK (hardcoded değerler kaldırıldı) — doğrudan levels'tan.
+        cols = st.columns(max(1, len(levels)))
+        for col, (level, data) in zip(cols, levels.items()):
+            tgt = float(data.get("target", 0)) * 100
+            emp = float(data.get("empirical_coverage", 0)) * 100
+            valid = data.get("valid_marginal")
+            col.metric(
+                f"{level} Hedef",
+                f"%{emp:.1f} Gerçekleşen",
+                delta=f"{emp - tgt:+.1f}pp {'✅' if valid else '⚠️'}",
+            )
 
-        st.markdown("""
-        **Tüm 3 garanti seviyesinde kapsama hedefi karşılandı.**
-        - **%81.1 kesin tahmin:** Model, 10 varyanttan 8.1'ini tek sınıflı (kesin) olarak sınıflandırıyor
-        - **%18.9 abstain (çift küme):** Sınır varyantlarda model ikisini de önerir → uzman incelemesi önerilir
-        - **%0 boş küme:** Hiçbir örnek başarısız değil
-        """)
+        caveats = conf.get("honest_caveats")
+        if caveats:
+            if isinstance(caveats, (list, tuple)):
+                st.markdown("**Dürüst notlar:**\n" + "\n".join(f"- {c}" for c in caveats))
+            else:
+                st.markdown(f"**Dürüst notlar:** {caveats}")
 
     except Exception as e:
         st.error(f"Konformal sonuçlar yüklenemedi: {e}")
@@ -325,7 +341,7 @@ elif page == "🕸️ GNN Graf Açıklaması":
 
         if st.button("🔍 Graf Oluştur", type="primary"):
             with st.spinner("Graf hesaplanıyor..."):
-                preproc, ensemble, _ = load_pipeline()
+                preproc, ensemble, theta = load_pipeline()
                 import numpy as np
                 rng = np.random.default_rng(42)
 
@@ -363,8 +379,8 @@ elif page == "🕸️ GNN Graf Açıklaması":
                 """)
 
                 for i, (vid, prob) in enumerate(zip(var_ids[:n_nodes], probas)):
-                    color = "#ef4444" if prob >= 0.5 else "#22c55e"
-                    label_str = "P" if prob >= 0.5 else "B"
+                    color = "#ef4444" if prob >= theta else "#22c55e"  # kanonik global θ (0.5 değil)
+                    label_str = "P" if prob >= theta else "B"
                     net.add_node(i, label=f"{label_str}\n{prob:.2f}",
                                  title=f"{vid}\nP(patojenik)={prob:.3f}",
                                  color=color, size=18 + int(prob * 10))

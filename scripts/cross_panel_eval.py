@@ -48,10 +48,24 @@ logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s |
 logger = logging.getLogger(__name__)
 
 
-def evaluate_panel(ensemble, preprocessor, X_test_raw: pd.DataFrame, y_test: np.ndarray):
-    """Predict on a held-out panel and compute metrics."""
+def _global_theta(default: float = 0.8415) -> float:
+    """Kanonik karar eşiği θ=0.8415 (models/threshold.json). Jüri global θ kullanır."""
+    p = REPO_ROOT / "models" / "threshold.json"
+    if p.exists():
+        d = json.loads(p.read_text(encoding="utf-8"))
+        return float(d.get("classification_threshold", d.get("threshold", default)))
+    return default
+
+
+GLOBAL_THETA = _global_theta()
+
+
+def evaluate_panel(
+    ensemble, preprocessor, X_test_raw: pd.DataFrame, y_test: np.ndarray, threshold: float = GLOBAL_THETA
+):
+    """Predict on a held-out panel and compute metrics (kanonik global θ)."""
     X_test_proc = preprocessor.transform(X_test_raw.values if hasattr(X_test_raw, "values") else X_test_raw)
-    preds, probs = ensemble.predict(X_test_proc, threshold=0.5)
+    preds, probs = ensemble.predict(X_test_proc, threshold=threshold)
 
     return {
         "n_samples": int(len(y_test)),

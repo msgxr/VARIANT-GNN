@@ -73,28 +73,31 @@ class TestPreprocessorNoLeakage:
 
     def test_scaler_stats_from_train_not_val(self):
         """
-        Scaler statistics (mean/std) must come from training data.
-        This is the most common leakage source: fitting scaler on all data.
+        Scaler statistics (median/IQR) must come from TRAINING data only.
+
+        DIFFERENTIAL kontrol (no-op preprocessor'da da geçen zayıf `mean>0.5`
+        kontrolü değil): aynı kaydırılmış val'i hem train-fit hem val-fit
+        preprocessor'dan geçir. Train-fit shift'i BÜYÜK bırakmalı; val-fit (LEAKED)
+        shift'i MERKEZLEMELİ. İkisi eşitse (no-op/identity) test BAŞARISIZ olur.
         """
         from src.features.preprocessing import VariantPreprocessor
 
-        X_train, y_train, X_val, _ = _make_split()
-
-        # Shift val data significantly
+        X_train, y_train, X_val, y_val = _make_split()
         X_val_shifted = X_val + 100.0
 
-        pre = VariantPreprocessor(
-            use_autoencoder=False,
-            smote_enabled=False,
-            k_best_features=8,
-            use_bio_scoring=False,
-        )
-        pre.fit_resample_train(X_train, y_train)
+        pre_train = VariantPreprocessor(use_autoencoder=False, smote_enabled=False, use_bio_scoring=False)
+        pre_train.fit_resample_train(X_train, y_train)
+        out_train_fit = pre_train.transform(X_val_shifted)
 
-        # transform-only: scaler uses train stats, so large shift remains
-        X_val_transformed = pre.transform(X_val_shifted)
-        # After scaling with train mean/std, shifted values should still be large
-        assert np.mean(X_val_transformed) > 0.5, "Scaler appears to be using val statistics — possible leakage"
+        pre_leaked = VariantPreprocessor(use_autoencoder=False, smote_enabled=False, use_bio_scoring=False)
+        pre_leaked.fit_resample_train(X_val_shifted, y_val[: len(X_val_shifted)])
+        out_val_fit = pre_leaked.transform(X_val_shifted)
+
+        # Train-fit (doğru) >> val-fit (leaked, merkezlenmiş). Eşitlik → no-op/leakage.
+        assert np.mean(out_train_fit) > np.mean(out_val_fit) + 1.0, (
+            "Train-fit scaler kaydırılmış val'i büyük bırakmalı; val-fit merkezlemeli. "
+            "Çıktılar benzerse no-op/identity preprocessor veya scaler leakage var."
+        )
 
     def test_smote_not_applied_to_val(self):
         """

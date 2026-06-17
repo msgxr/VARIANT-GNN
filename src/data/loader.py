@@ -138,7 +138,15 @@ def load_csv(
             if not _lr.is_clean:
                 logger.warning("[LeakageFirewall] %s modunda sızıntı kolonları temizlendi.", sanitize)
         except Exception as _san_exc:
-            logger.warning("[LeakageFirewall] sanitize atlandı (non-fatal): %s", _san_exc)
+            # Sızıntı temizleme yüklemeyi kıramaz; AMA sessizce atlanmamalı — ERROR'la
+            # görünür kıl. Anonim §3.2'de no-op; jüri koordinat/etiket kolonu eklediyse
+            # ve sanitize PATLARSA bu kolonlar geçebilir → leakage riski açıkça loglanır.
+            logger.error(
+                "[LeakageFirewall] sanitize BAŞARISIZ (%s: %s) — sızıntı kolonları "
+                "temizlenememiş olabilir; girdiyi kontrol edin.",
+                type(_san_exc).__name__,
+                _san_exc,
+            )
 
     result = validate_dataset(
         df,

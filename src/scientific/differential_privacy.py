@@ -2,6 +2,10 @@
 src/scientific/differential_privacy.py
 Diferansiyel Gizlilik — Laplace Mekanizması
 
+NOT (durum): Deneysel/referanssız modül — kanonik eğitim/çıkarım hattı bunu
+KULLANMAZ (yarışma verisi zaten anonim §3.2). apply() NaN'leri sessizce 0'a çevirir;
+gerçek veride kullanılacaksa NaN davranışı gözden geçirilmelidir.
+
 KVKK (6698 sayılı Kişisel Verilerin Korunması Kanunu) ve
 GDPR Madde 89 uyumlu veri anonimleştirme modülü.
 

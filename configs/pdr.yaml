@@ -95,7 +95,9 @@ training:
   focal_gamma: 2.0
 
 thresholds:
-  classification: 0.40
+  # Kanonik karar eşiği θ=0.8415 (models/threshold.json önceliklidir; bu yalnız fallback).
+  # %20-patojenik resmi prior'da F1-optimal, HAM olasılıkta türetildi.
+  classification: 0.8415
   high_risk: 0.70
 
 schema:

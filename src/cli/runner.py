@@ -46,11 +46,11 @@ def main() -> None:
     # MC-Dropout inference drifted run-to-run (could change ~199/200 jury rows).
     from src.utils.reproducibility import setup_reproducibility
 
-    _det = True
-    try:
-        _det = bool(cfg.reproducibility.deterministic_torch)
-    except Exception:
-        pass
+    # Settings'te reproducibility bölümü olmayabilir → getattr ile AÇIK oku (eskiden
+    # bare `except Exception: pass` AttributeError'ı yutup flag'i sessizce hep True
+    # yapıyordu). Varsayılan True (determinizm açık) zaten istenen davranıştır.
+    _repro = getattr(cfg, "reproducibility", None)
+    _det = bool(getattr(_repro, "deterministic_torch", True)) if _repro is not None else True
     setup_reproducibility(cfg.seed, deterministic_torch=_det)
 
     # Lock ClinVar API during training/inference — §3.2 genomic address restriction

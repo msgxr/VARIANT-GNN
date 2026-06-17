@@ -129,12 +129,17 @@ def _package_versions() -> Dict[str, str]:
         "matplotlib",
         "shap",
     ]
+    # Resolve by PyPI *distribution* name (importlib.metadata) rather than by
+    # __import__, which fails for dist-name != import-name packages such as
+    # scikit-learn (import 'sklearn') — previously always 'not_installed'.
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _dist_version
+
     versions: Dict[str, str] = {}
     for name in pkgs:
         try:
-            mod = __import__(name.replace("-", "_"))
-            versions[name] = getattr(mod, "__version__", "unknown")
-        except ImportError:
+            versions[name] = _dist_version(name)
+        except PackageNotFoundError:
             versions[name] = "not_installed"
     return versions
 
@@ -419,7 +424,10 @@ def verify_manifest_chain(
         actual = _sha256_file(path) if path.exists() else None
         artifact_matches[filename] = actual == expected_hash
 
-    all_match = integrity and all(artifact_matches.values())
+    # An empty artifact_hashes must NOT pass: all([]) is True, which would
+    # report "verification PASSED" when ZERO artefacts were actually checked.
+    no_artifacts_recorded = not artifact_matches
+    all_match = integrity and bool(artifact_matches) and all(artifact_matches.values())
 
     # Git alignment (informational)
     current_git = _git_info()
@@ -431,6 +439,7 @@ def verify_manifest_chain(
         "manifest_integrity": integrity,
         "artifact_matches": artifact_matches,
         "all_match": all_match,
+        "no_artifacts_recorded": no_artifacts_recorded,
         "git_aligned": git_aligned,
         "git_current": current_git.get("commit"),
         "git_manifest": manifest.git.get("commit"),

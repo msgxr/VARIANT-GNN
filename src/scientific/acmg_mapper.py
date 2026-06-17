@@ -62,7 +62,9 @@ _THRESHOLDS_CLASSIFICATION = {
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Feature index lookup (43-feature schema)
+# Feature index lookup (43-feature ADLANDIRILMIŞ şema) — yalnız NAMED-feature yolu.
+# ⚠️ Anonim §3.2 yarışma verisi (343 AL_x kolonu) bu pozisyonel şemaya UYMAZ;
+# orada bu mapper yalnızca GÖSTERGE'dir (ACMGMapper.classify uyumsuzlukta uyarır).
 # ─────────────────────────────────────────────────────────────────────────────
 
 _FEAT_IDX: Dict[str, int] = {
@@ -393,6 +395,20 @@ class ACMGMapper:
         """
         x = np.asarray(feature_row, dtype=float)
         shap = np.asarray(shap_values, dtype=float) if shap_values is not None else np.zeros_like(x)
+
+        # ŞEMA UYARISI: bu mapper SABİT 43-özellikli ADLANDIRILMIŞ şemaya (_FEAT_IDX)
+        # göre POZİSYONEL okur. Anonim §3.2 verisi (343 AL_x kolonu) bu şemayla
+        # UYUŞMAZ → pozisyonel okumalar anlamsız olur. feature_names verilmediyse ve
+        # genişlik 43 değilse SESSİZCE yanlış ACMG üretmek yerine görünür uyarı ver.
+        if feature_names is None and len(x) != len(_FEAT_IDX):
+            import logging as _logging
+
+            _logging.getLogger(__name__).warning(
+                "ACMGMapper: girdi genişliği %d, beklenen adlandırılmış şema %d. Anonim/"
+                "uyumsuz veride pozisyonel ACMG eşlemesi GÜVENİLİR DEĞİLDİR (gösterge).",
+                len(x),
+                len(_FEAT_IDX),
+            )
 
         criteria: List[ACMGCriterion] = [fn(x, shap) for fn in _ALL_EVALUATORS]
 

@@ -26,6 +26,11 @@ class MCDropoutEstimator:
     """
     Monte Carlo Dropout ile epistemic belirsizlik tahmini.
 
+    NOT (durum): Kanonik hat MC-Dropout'u doğrudan VariantGATv2GNN
+    (src/core/gnn.py predict_with_uncertainty) içinde uygular; bu yardımcı sınıf
+    üretim akışında KULLANILMAZ (referanssız). Farklı bir belirsizlik metriği
+    döndürdüğünden kanonik çıktıyla karıştırılmamalıdır.
+
     Kullanım:
         estimator = MCDropoutEstimator(model, n_forward=30)
         mean_probs, uncertainty = estimator.estimate(x, edge_index)

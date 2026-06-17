@@ -1,8 +1,11 @@
+import logging
 import os
 from typing import Any, Dict, List
 
 import pandas as pd
 import vcfpy
+
+logger = logging.getLogger(__name__)
 
 
 class VCFParser:
@@ -22,27 +25,33 @@ class VCFParser:
         except Exception as e:
             raise ValueError(f"VCF okuma hatası: {e}")
 
+        malformed = 0
         for record in reader:
-            # Temel varyant bilgilerini çek
-            # Not: VCF dosyasında çoklu ALT olabilir, biz ilkini alıyoruz.
-            alt = record.ALT[0].value if record.ALT else "."
+            # Bozuk tek kayıt TÜM dosyayı düşürmesin: kayıt-bazlı try/except ile atla.
+            try:
+                # Not: VCF dosyasında çoklu ALT olabilir, biz ilkini alıyoruz.
+                alt = record.ALT[0].value if record.ALT else "."
+                variant_data = {
+                    "CHROM": str(record.CHROM),
+                    "POS": int(record.POS),
+                    "ID": record.ID[0] if record.ID else ".",
+                    "REF": str(record.REF),
+                    "ALT": str(alt),
+                    # QUAL eksikse None → "." (yanıltıcı 0 yazma). FILTER boşsa "."
+                    # (BİLİNMİYOR) — eskiden "PASS" yazılıyordu; boş FILTER PASS DEĞİLDİR.
+                    "QUAL": record.QUAL if record.QUAL is not None else ".",
+                    "FILTER": record.FILTER[0] if record.FILTER else ".",
+                }
+                # INFO alanlarından ek özellikleri çek (opsiyonel)
+                for key, value in record.INFO.items():
+                    variant_data[f"INFO_{key}"] = value
+                variants.append(variant_data)
+            except Exception as _rec_exc:
+                malformed += 1
+                logger.warning("VCF: bozuk kayıt atlandı (%s): %s", type(_rec_exc).__name__, _rec_exc)
 
-            variant_data = {
-                "CHROM": str(record.CHROM),
-                "POS": int(record.POS),
-                "ID": record.ID[0] if record.ID else ".",
-                "REF": str(record.REF),
-                "ALT": str(alt),
-                "QUAL": record.QUAL,
-                "FILTER": record.FILTER[0] if record.FILTER else "PASS",
-            }
-
-            # INFO ve Genotype alanlarından ek özellikleri çek (opsiyonel)
-            # Bu kısım modelin beklediği spesifik sütunlara göre genişletilebilir.
-            for key, value in record.INFO.items():
-                variant_data[f"INFO_{key}"] = value
-
-            variants.append(variant_data)
+        if malformed:
+            logger.warning("VCF: toplam %d bozuk kayıt atlandı (%d geçerli).", malformed, len(variants))
 
         df = pd.DataFrame(variants)
         return df

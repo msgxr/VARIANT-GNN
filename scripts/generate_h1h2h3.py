@@ -28,9 +28,11 @@ import numpy as np  # noqa: E402
 matplotlib.use("Agg")
 from pathlib import Path  # noqa: E402
 
+import joblib  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import pandas as pd  # noqa: E402
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score  # noqa: E402
-from sklearn.model_selection import train_test_split  # noqa: E402
+from sklearn.model_selection import GroupShuffleSplit  # noqa: E402
 
 from src.config import get_settings, reset_settings  # noqa: E402
 from src.data.loader import load_csv  # noqa: E402
@@ -50,20 +52,37 @@ print("Veri yükleniyor (orijinal, augmented değil)...")
 ds = load_csv(str(REPO / "data" / "train_variants.csv"))
 X, y = ds.features.values, ds.labels
 
-# Orijinal veri: PDR confusion matrix (N=760) ile tutarlı bölme
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
-X_tr2, X_cal, y_tr2, y_cal = train_test_split(X_tr, y_tr, test_size=0.15, stratify=y_tr, random_state=42 + 99)
+# GROUP-AWARE split by Variant_ID ('_aug' near-twin suffix soyulur) — satır-bazlı
+# stratified split sızıntısını (withdrawn numbers) önler. Kanonik mode_train protokolü.
+_raw = pd.read_csv(str(REPO / "data" / "train_variants.csv"))
+_vid = _raw.get("Variant_ID", pd.Series([f"v{i}" for i in range(len(y))])).astype(str)
+_base = _vid.str.replace(r"_aug\d*$", "", regex=True).to_numpy()
+_tr_idx, _te_idx = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42).split(X, y, groups=_base))
+X_tr, X_te, y_tr, y_te = X[_tr_idx], X[_te_idx], y[_tr_idx], y[_te_idx]
+_base_tr = _base[_tr_idx]
+_tr2_idx, _cal_idx = next(
+    GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42 + 99).split(X_tr, y_tr, groups=_base_tr)
+)
+X_tr2, X_cal, y_tr2, y_cal = X_tr[_tr2_idx], X_tr[_cal_idx], y_tr[_tr2_idx], y_tr[_cal_idx]
+assert len(set(_base[_te_idx]) & set(_base_tr)) == 0, "Group-aware split sızıntısı!"
 
 store = ModelStore(cfg.paths.models_dir)
 preproc = store.load_preprocessor()
-xgb = store.load_xgb()
+# Tüm ensemble (XGB-only DEĞİL) — figürler kanonik stacked ensemble kararını yansıtsın.
+ensemble = joblib.load(str(REPO / "models" / "ensemble.pkl"))
+
+
+def _ens_proba(Xp: np.ndarray) -> np.ndarray:
+    _out = ensemble.predict(Xp)
+    return _out[1] if isinstance(_out, tuple) else _out  # (N, 2)
+
 
 print("Preprocessing...")
 X_te_p = preproc.transform(X_te)
 X_cal_p = preproc.transform(X_cal)
 
-proba_te = xgb.predict_proba(X_te_p)  # (N, 2)
-proba_cal = xgb.predict_proba(X_cal_p)
+proba_te = _ens_proba(X_te_p)  # (N, 2)
+proba_cal = _ens_proba(X_cal_p)
 
 print(f"Test: {X_te_p.shape} | Cal: {X_cal_p.shape}")
 
@@ -148,16 +167,16 @@ tn, fp, fn, tp = cm.ravel()
 fp_mask = (preds_opt == 1) & (y_te == 0)  # Benign → Patojenik dedi
 fn_mask = (preds_opt == 0) & (y_te == 1)  # Patojenik → Benign dedi
 
-# Özellik grubu analizi (SHAP yerine basit istatistiksel)
-# Feature gruplarını pozisyon bazlı tahmin et (AL_X anonim)
-# Toplam ~343 numerik feature → eşit gruplar
+# Özellik bloğu analizi — anonim kolonlar için POZİSYONEL heuristik bloklar
+# (gerçek biyolojik grup eşlemesi DEĞİL; kolon adları anonim). Etiketler yalnız
+# pozisyon aralığını gösterir, PSR yüzdelerini GERÇEK katkı olarak iddia ETMEZ.
 n_feat = X_te_p.shape[1]
 groups = {
-    "In-Silico Risk\nSkorları (~%38)": slice(0, int(n_feat * 0.38)),
-    "Evrimsel\nKorunmuşluk (~%27)": slice(int(n_feat * 0.38), int(n_feat * 0.65)),
-    "Popülasyon\nVerileri (~%18)": slice(int(n_feat * 0.65), int(n_feat * 0.83)),
-    "Sekans &\nDeğişim (~%12)": slice(int(n_feat * 0.83), int(n_feat * 0.95)),
-    "Biyokimyasal\n& Yapısal (~%5)": slice(int(n_feat * 0.95), n_feat),
+    "Blok A\n(poz. 0–38%)": slice(0, int(n_feat * 0.38)),
+    "Blok B\n(poz. 38–65%)": slice(int(n_feat * 0.38), int(n_feat * 0.65)),
+    "Blok C\n(poz. 65–83%)": slice(int(n_feat * 0.65), int(n_feat * 0.83)),
+    "Blok D\n(poz. 83–95%)": slice(int(n_feat * 0.83), int(n_feat * 0.95)),
+    "Blok E\n(poz. 95–100%)": slice(int(n_feat * 0.95), n_feat),
 }
 
 fp_means, fn_means, tp_means = [], [], []
@@ -205,7 +224,11 @@ b1 = ax2.bar(x - w / 2, fp_means, w, label=f"Yanlış Pozitif (n={fp})", color="
 b2 = ax2.bar(x + w / 2, fn_means, w, label=f"Kaçırılan Patojenik (n={fn})", color="#ef4444", alpha=0.85)
 ax2.set_xticks(x)
 ax2.set_xticklabels(group_names, color="white", fontsize=8)
-ax2.set_title("Özellik Grubu Bazında Hata Yoğunluğu\n(Ortalama mutlak özellik aktivasyonu)", color="white", fontsize=11)
+ax2.set_title(
+    "Pozisyonel Özellik Bloğu Bazında Hata Yoğunluğu (anonim kolon, heuristik)\n(Ortalama mutlak özellik aktivasyonu)",
+    color="white",
+    fontsize=10,
+)
 ax2.tick_params(colors="white")
 ax2.set_ylabel("Ortalama |Özellik Değeri|", color="white")
 for spine in ax2.spines.values():

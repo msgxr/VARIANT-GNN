@@ -10,14 +10,39 @@ from src.utils.seeds import set_global_seed
 
 
 def mode_tune(args, cfg):
-    """Optuna hyperparameter search for XGBoost."""
+    """Optuna hyperparameter search for XGBoost (group-aware, train-fold only)."""
+    import numpy as np
+
     from src.features.preprocessing import build_preprocessor_from_config
     from src.training.tune import ModelTuner
 
     ds = _get_labelled_data(args.data_file, cfg)
+    X_all, y_all = ds.features.values, ds.labels
+
+    # Group-aware train/holdout split by Variant_ID — preprocessor (imputer/scaler) VE
+    # SMOTE YALNIZ train-fold'da fit edilir. Eskiden tüm etiketli sette fit+SMOTE
+    # yapılıyordu → test satırlarının istatistikleri tuning'e sızıyordu.
+    groups = None
+    if "Variant_ID" in ds.metadata.columns and len(ds.metadata) == len(X_all):
+        groups = ds.metadata["Variant_ID"].astype(str).str.replace(r"_aug\d*$", "", regex=True).values
+    if groups is not None:
+        from sklearn.model_selection import GroupShuffleSplit
+
+        tr_idx, _ = next(
+            GroupShuffleSplit(n_splits=1, test_size=cfg.training.test_size, random_state=cfg.seed).split(
+                X_all, y_all, groups=groups
+            )
+        )
+    else:
+        from sklearn.model_selection import train_test_split
+
+        tr_idx, _ = train_test_split(
+            np.arange(len(y_all)), test_size=cfg.training.test_size, stratify=y_all, random_state=cfg.seed
+        )
+
     preprocessor = build_preprocessor_from_config()
     preprocessor.use_autoencoder = False
-    X, y_res = preprocessor.fit_resample_train(ds.features.values, ds.labels)
+    X, y_res = preprocessor.fit_resample_train(X_all[tr_idx], y_all[tr_idx])
     n_trials = getattr(args, "n_trials", 30)
     tuner = ModelTuner(X, y_res, n_trials=n_trials)
     best = tuner.optimise_xgboost()
@@ -38,7 +63,13 @@ def mode_panel_transfer(args, cfg):
         return
 
     evaluator = CrossPanelEvaluator(random_state=cfg.seed)
-    result = evaluator.evaluate(ds.features.values, ds.labels, ds.metadata["Panel"].values)
+    # Variant_ID grupları (group-aware within-panel split için) — '_aug' suffix soyulur.
+    _groups = (
+        ds.metadata["Variant_ID"].astype(str).str.replace(r"_aug\d*$", "", regex=True).values
+        if "Variant_ID" in ds.metadata.columns
+        else None
+    )
+    result = evaluator.evaluate(ds.features.values, ds.labels, ds.metadata["Panel"].values, groups=_groups)
     cfg.paths.create_dirs()
     report_path = cfg.paths.reports_dir / "panel_transfer_matrix.json"
     plot_path = cfg.paths.reports_dir / "panel_transfer.png"

@@ -3,6 +3,9 @@ src/training/sam.py
 ====================
 Sharpness-Aware Minimization (SAM)
 
+NOT (durum): Kanonik eğitim hattı (src/training/trainer.py) bu modülü İÇE AKTARMAZ —
+opsiyonel/deneysel kitaplık modülüdür. Pipeline'a dahil DEĞİLDİR.
+
 Referans:
   Foret, Kleiner, Mobahi & Neyshabur (2021).
   "Sharpness-Aware Minimization for Efficiently Improving Generalization."

@@ -8,7 +8,8 @@ context around the variant site.  This module:
   2. Passes each sequence through a learnable Embedding layer.
   3. Extracts local motif features via a small 1D-CNN block.
   4. The resulting compact vectors are concatenated to the numeric node
-     features when building the GNN input (see VariantSAGEGNN).
+     features when building the GNN input (see VariantGATv2GNN / GATv2Conv —
+     "VariantSAGEGNN" geri çekilen eski isimdi).
 
 Usage
 -----

@@ -120,12 +120,17 @@ class _LGBMBoosterWrapper:
 
 def _safe_torch_load(path: Path, device: torch.device) -> dict:
     """Load a PyTorch state dict safely."""
+    import pickle
+
     try:
         # weights_only=True prevents arbitrary code execution (CVE-safe)
         return cast(dict, torch.load(str(path), map_location=device, weights_only=True))
-    except TypeError:
-        # PyTorch < 2.0 does not support weights_only
-        logger.warning("weights_only not supported; falling back to legacy load.")
+    except (TypeError, pickle.UnpicklingError):
+        # TypeError: PyTorch < 2.0 has no weights_only kwarg.
+        # UnpicklingError: torch >= 2.6 raises "Weights only load failed" when the
+        # checkpoint stores non-tensor globals. These are our own shipped artefacts,
+        # so a legacy (full) load is acceptable here.
+        logger.warning("weights_only load failed; falling back to legacy load.")
         return cast(dict, torch.load(str(path), map_location=device))  # nosec B614
 
 
@@ -350,8 +355,12 @@ class ModelStore:
             json.dump({"classification_threshold": threshold}, fh)
         logger.info("Threshold -> %s  (thr=%.4f)", self._threshold_path, threshold)
 
-    def load_threshold(self, default: float = 0.50) -> float:
+    def load_threshold(self, default: float = 0.8415) -> float:
         """Load saved threshold; return default if not found.
+
+        The default is the canonical θ=0.8415 (NOT 0.50): if the artifact is
+        missing, a wrong-but-plausible 0.50 would silently produce wrong
+        decisions, whereas 0.8415 at least matches the reported operating point.
 
         Tolerant of both key conventions: 'classification_threshold' (written by
         save_threshold) and 'threshold' (written by the calibration/optimisation

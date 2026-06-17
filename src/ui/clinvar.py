@@ -123,18 +123,25 @@ def render_clinvar_tab() -> None:
                 "Likely benign": "#9ae6b4",
             }.get(clin_sig, "#63b3ed")
 
-            # Alignment Score Calculation
-            alignment_score = "N/A"
-            if "df_result" in st.session_state:
+            # Alignment Score — yalnız aranan varyant model sonucundaki BELİRLİ bir
+            # satıra Variant_ID ile eşlendiğinde hesaplanır. Eskiden df_result.iloc[0]
+            # (ARANAN varyantla alakasız ilk satır) ile karşılaştırıp "100% Tam
+            # Konsensüs" diyordu → yanıltıcı. Serbest gen/varyant aramasında güvenilir
+            # eşleşme yok; bu yüzden tek-varyant hizalaması N/A olarak gösterilir.
+            alignment_score = "N/A — varyant düzeyi hizalama Variant_ID eşleşmesi gerektirir"
+            _searched_vid = st.session_state.get("clinvar_searched_variant_id")
+            if _searched_vid and "df_result" in st.session_state:
                 df_res = st.session_state["df_result"]
-                # Basit bir eşleşme kontrolü (Gene bazında veya Variant ID bazında)
-                model_pred = df_res["Prediction"].iloc[0] if len(df_res) > 0 else "N/A"
-                if clin_sig in ["Pathogenic", "Likely pathogenic"] and model_pred == "Pathogenic":
-                    alignment_score = "100% (Tam Konsensüs)"
-                elif clin_sig in ["Benign", "Likely benign"] and model_pred == "Benign":
-                    alignment_score = "100% (Tam Konsensüs)"
-                else:
-                    alignment_score = "Düşük (Çelişkili Bulgular)"
+                if "Variant_ID" in df_res.columns:
+                    _match = df_res[df_res["Variant_ID"].astype(str) == str(_searched_vid)]
+                    if len(_match) == 1:
+                        model_pred = _match["Prediction"].iloc[0]
+                        pat = clin_sig in ["Pathogenic", "Likely pathogenic"]
+                        ben = clin_sig in ["Benign", "Likely benign"]
+                        if (pat and model_pred == "Pathogenic") or (ben and model_pred == "Benign"):
+                            alignment_score = "Uyumlu (model ↔ ClinVar)"
+                        else:
+                            alignment_score = "Çelişkili (model ↔ ClinVar)"
 
             st.markdown(
                 f"""

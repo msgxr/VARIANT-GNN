@@ -849,7 +849,16 @@ class VariantTrainer:
             if lgbm_model_fold is not None:
                 _oof[val_idx, 1] = lgbm_model_fold.predict_proba(_to_lgbm_frame(X_val_proc))[:nv, 1]
             else:
-                _oof[val_idx, 1] = xgb_probs[:nv, 1]
+                # FAIL-LOUD: LGBM bu fold'da yok → OOF LGBM kolonunu XGB ile DOLDURMA
+                # (eskiden kolon 0'ın kopyası oluyordu → weight-opt/conformal sahte bir
+                # "bağımsız LGBM sinyali" görüyordu). NaN bırak; downstream tutarsızlığı
+                # sessizce gizlemek yerine açıkça ortaya çıksın.
+                logger.error(
+                    "Fold %d: LightGBM modeli YOK — OOF LGBM kolonu (1) NaN bırakıldı. "
+                    "oof_per_model.npz eksik; weight-opt/conformal güvenilmez.",
+                    fold_idx,
+                )
+                _oof[val_idx, 1] = np.nan
             _oof[val_idx, 2] = np.asarray(gnn_probs_fold)[:nv, 1]
             _oof[val_idx, 3] = np.asarray(dnn_probs_fold)[:nv, 1]
 

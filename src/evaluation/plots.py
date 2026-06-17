@@ -18,7 +18,8 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import precision_recall_curve, roc_curve
 
-from src.scientific.metrics.metrics import EvaluationReport
+# EvaluationReport aynı ağaçtaki kanonik kaynaktan (cross-tree shim DEĞİL) içe aktarılır.
+from src.evaluation.metrics import EvaluationReport
 
 logger = logging.getLogger(__name__)
 

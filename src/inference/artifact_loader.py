@@ -126,16 +126,18 @@ class ArtifactLoader:
         except Exception:
             return self._load_pickle("calibrator.pkl")
 
-    def load_threshold(self, default: float = 0.5) -> float:
+    def load_threshold(self, default: float = 0.8415) -> float:
         """
         F1-optimal sınıflandırma eşiğini yükle.
 
         ModelStore ``classification_threshold`` anahtarıyla kaydeder;
         geriye dönük uyumluluk için ``threshold`` anahtarını da kontrol eder.
+        Fallback kanonik θ=0.8415'tir (eski 0.5 DEĞİL): dosya yoksa yanlış-ama-makul
+        bir 0.5 sessizce yanlış jüri kararları üretir.
         """
         path = self.model_dir / "threshold.json"
         if not path.exists():
-            logger.warning("No threshold.json found; using default %.2f", default)
+            logger.warning("No threshold.json found; using canonical default θ=%.4f", default)
             return default
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)

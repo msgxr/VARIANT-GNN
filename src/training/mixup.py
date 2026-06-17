@@ -3,6 +3,9 @@ src/training/mixup.py
 ======================
 Mixup Data Augmentation (Tabular Variants)
 
+NOT (durum): Kanonik eğitim hattı (src/training/trainer.py) bu modülü İÇE AKTARMAZ —
+opsiyonel/deneysel kitaplık modülüdür. Pipeline'a dahil DEĞİLDİR.
+
 Referanslar:
   - Zhang, Cisse, Dauphin & Lopez-Paz (2018).
     "mixup: Beyond Empirical Risk Minimization." ICLR 2018.

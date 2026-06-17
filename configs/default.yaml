@@ -83,7 +83,7 @@ training:
   focal_gamma: 2.0              # FocalLoss gamma parametresi (sadece loss_function=focal)
 
 thresholds:
-  classification: 0.50                # TEKNOFEST 2026 §7.3: Dengeli veri için F1-optimal eşik
+  classification: 0.8415              # Kanonik θ (models/threshold.json önceliklidir; yalnız fallback)
   high_risk: 0.7
 
 schema:

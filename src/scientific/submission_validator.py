@@ -64,6 +64,22 @@ JURY_COLUMNS: List[str] = [
 # Resmi format açıklanınca bu liste güncellenecek.
 JURY_MINIMAL_COLUMNS: List[str] = ["Variant_ID", "prediction_label"]
 
+
+def _load_decision_threshold(default: float = 0.8415) -> float:
+    """Kanonik karar eşiğini models/threshold.json'dan oku (fallback θ=0.8415).
+
+    Submission doğrulaması depo kökünden çalışır; models/ yoksa kanonik θ kullanılır.
+    """
+    try:
+        p = Path("models/threshold.json")
+        if p.exists():
+            data = json.loads(p.read_text(encoding="utf-8"))
+            return float(data.get("classification_threshold", data.get("threshold", default)))
+    except Exception:  # pragma: no cover - tolerant okuma
+        pass
+    return default
+
+
 # Şartname §3.2: Panel boyutları (eğitim ve test)
 PANEL_SPEC: Dict[str, Dict[str, int]] = {
     "General": {"train_p": 1500, "train_b": 1500, "test_p": 1000, "test_b": 1000},
@@ -466,20 +482,27 @@ class SubmissionValidator:
         probs = pd.to_numeric(df["pathogenic_probability"], errors="coerce")
         labels = pd.to_numeric(df["prediction_label"], errors="coerce")
 
-        # Etiket=1 iken prob < 0.5 veya etiket=0 iken prob >= 0.5
-        inconsistent = (((labels == 1) & (probs < 0.40)) | ((labels == 0) & (probs > 0.60))).sum()
+        # θ-FARKINDA tutarlılık: kanonik karar label=1 ⇔ HAM olasılık ≥ θ (θ=0.8415).
+        # Eski sabit ~0.5 kontrolü (label=0 & prob>0.60) 0.60–θ arası DOĞRU Benign'leri
+        # yanlışlıkla uyarıyordu. θ etrafında ±margin ölü-bölge ile yalnız GROSS
+        # çelişkiler işaretlenir (örn. label=1 ama prob çok düşük).
+        theta = _load_decision_threshold()
+        margin = 0.10
+        inconsistent = int(
+            (((labels == 1) & (probs < theta - margin)) | ((labels == 0) & (probs > theta + margin))).sum()
+        )
 
         report.checks.append(
             ValidationCheck(
                 name="etiket_olasilik_tutarliligi",
-                passed=int(inconsistent) == 0,
+                passed=inconsistent == 0,
                 message=(
-                    "prediction_label ve pathogenic_probability tutarlı."
+                    f"prediction_label ve pathogenic_probability tutarlı (θ={theta:.4f})."
                     if inconsistent == 0
                     else (
                         f"{inconsistent} satırda etiket ile olasılık çelişiyor "
-                        f"(örn. label=1 ama prob<0.40 veya label=0 ama prob>0.60). "
-                        "Eşik/kalibrasyon kontrol edin."
+                        f"(label=1 ama prob<{theta - margin:.2f} veya label=0 ama prob>{theta + margin:.2f}, "
+                        f"θ={theta:.4f}). Eşik/kalibrasyon kontrol edin."
                     )
                 ),
                 severity="WARNING",

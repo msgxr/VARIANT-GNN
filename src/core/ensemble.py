@@ -246,7 +246,13 @@ class HybridEnsemble:
                     meta_proba = self.meta_learner.predict_proba(meta_X)  # (N, 2)
                     return cast(np.ndarray, meta_proba)
                 except Exception as exc:
-                    logger.warning("Meta-öğrenici tahmin başarısız (%s) — ağırlıklı ortalamaya geçildi.", exc)
+                    # Fallback meşru bir dayanıklılık mekanizması, ama meta-öğrenici
+                    # hatası GİZLENMEMELİ → ERROR seviyesinde + tür bilgisiyle logla.
+                    logger.error(
+                        "Meta-öğrenici tahmin BAŞARISIZ (%s: %s) — ağırlıklı ortalamaya geçildi.",
+                        type(exc).__name__,
+                        exc,
+                    )
 
         # ── Ağırlıklı ortalama ────────────────────────────────────────
         pairs = [

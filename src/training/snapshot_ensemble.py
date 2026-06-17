@@ -3,6 +3,9 @@ src/training/snapshot_ensemble.py
 ==================================
 Snapshot Ensembles — Cyclic Cosine Annealing Training
 
+NOT (durum): Kanonik eğitim hattı (src/training/trainer.py) bu modülü İÇE AKTARMAZ —
+opsiyonel/deneysel kitaplık modülüdür. Pipeline'a dahil DEĞİLDİR.
+
 Referans:
   Huang, Li, Pleiss, Liu, Hopcroft & Weinberger (2017).
   "Snapshot Ensembles: Train 1, Get M for Free."  ICLR 2017.

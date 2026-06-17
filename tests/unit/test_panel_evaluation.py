@@ -108,7 +108,13 @@ class TestPanelEvaluationF1:
         assert len(reports) == 4
 
     def test_panel_counts_match_spec(self):
-        """Şartname §3.2 test seti sayıları doğrulanmalı."""
+        """SENTETİK fixture'ın panel boyutları §3.2 test sayılarını YANSITIR.
+
+        NOT: Bu test SENTETİK _make_panel_data() üreticisinin §3.2 test boyutlarını
+        (2000/200/200/60) ürettiğini doğrular — GERÇEK yarışma verisinin §3.2 uyumunu
+        DEĞİL (o, gerçek veri yüklenince ayrıca kontrol edilmeli). Eskiden "şartname
+        §3.2 doğrulanmalı" diye etiketlenip yanlış güven veriyordu.
+        """
         _, _, panels = _make_panel_data()
         counts = {p: (panels == p).sum() for p in np.unique(panels)}
         assert counts["General"] == 2000

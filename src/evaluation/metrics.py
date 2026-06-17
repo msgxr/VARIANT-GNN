@@ -56,6 +56,15 @@ class EvaluationReport:
     calibration_mean_pred: Optional[np.ndarray] = None
 
     def as_dict(self) -> Dict[str, object]:
+        # Confusion bileşenleri (tp/fp/fn/tn) zaten hesaplanmış conf_matrix'ten
+        # TÜRETİLİR (fabrike DEĞİL). generate_pdr_figures.fig_04 bunları okur; yoksa
+        # figürü fabrike etmek yerine atlar. sklearn confusion_matrix → [[tn,fp],[fn,tp]];
+        # 2x2 değilse (tek-sınıf dejenere panel) sayılar 0 bırakılır.
+        tp = fp = fn = tn = 0
+        if self.conf_matrix is not None:
+            _cm = np.asarray(self.conf_matrix)
+            if _cm.shape == (2, 2):
+                tn, fp, fn, tp = (int(_cm[0, 0]), int(_cm[0, 1]), int(_cm[1, 0]), int(_cm[1, 1]))
         return {
             # §7.3 primary competition metric first
             "binary_f1": self.binary_f1,
@@ -68,6 +77,11 @@ class EvaluationReport:
             "ece": self.ece,
             "mcc": self.mcc,
             "threshold": self.threshold_used,
+            # Gerçek confusion sayıları (conf_matrix'ten; PDR fig_04 için)
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+            "tn": tn,
         }
 
     def log(self, prefix: str = "") -> None:
@@ -114,8 +128,13 @@ def expected_calibration_error(
     ece = 0.0
     n = len(y_true)
 
-    for lo, hi in zip(bins[:-1], bins[1:]):
-        mask = (y_prob >= lo) & (y_prob < hi)
+    for i, (lo, hi) in enumerate(zip(bins[:-1], bins[1:])):
+        # Son binin ÜST sınırı DAHİL: p==1.0 (isotonik kalibrasyon üretebilir) eskiden
+        # yarı-açık `< hi` ile hiçbir bine düşmüyor, ECE eksik sayılıyordu.
+        if i == n_bins - 1:
+            mask = (y_prob >= lo) & (y_prob <= hi)
+        else:
+            mask = (y_prob >= lo) & (y_prob < hi)
         if mask.sum() == 0:
             continue
         acc = y_true[mask].mean()

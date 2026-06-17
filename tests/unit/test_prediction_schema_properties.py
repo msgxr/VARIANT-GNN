@@ -98,7 +98,7 @@ def test_all_benign_prediction():
 
 def test_probability_boundary_threshold():
     """Prob exactly at threshold must be Pathogenic (>= boundary)."""
-    theta = 0.241
+    theta = 0.8415  # kanonik karar eşiği (eski 0.241 GERİ ÇEKİLDİ — leaky pipeline)
     probs = np.array([theta - 1e-9, theta, theta + 1e-9])
     df = _make_frame(3, pathogenic_prob=probs, threshold=theta)
     assert df["Prediction"].iloc[0] == "Benign"

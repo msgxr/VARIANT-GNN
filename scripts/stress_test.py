@@ -140,12 +140,15 @@ def scenario_corrupt_columns(pipeline) -> dict:
     t0 = time.perf_counter()
     try:
         result = pipeline.predict_from_dataframe(df_corrupt)
+        # Bu bir SURVIVAL testidir: pipeline anlamsız sütun adlarıyla çökmeden çıktı
+        # üretti mi? Eşleşme KALİTESİ (dağılımsal vs sıfır-doldurma) bu testte
+        # doğrulanmaz — eskiden "dağılımsal imza ile eşleştirdi" diye ASSERT ediliyordu.
         status = "PASSED"
-        note = "ColumnAligner bozuk sütunları dağılımsal imza ile eşleştirdi."
+        note = f"Pipeline çökmeden {len(result)} tahmin üretti (eşleşme kalitesi bu testte doğrulanmaz)."
     except Exception as exc:
         result = pd.DataFrame()
         status = "PARTIAL"
-        note = f"Pipeline sıfır-doldurma ile devam etti: {exc}"
+        note = f"Pipeline hata verdi / sıfır-doldurma ile devam edemedi: {exc}"
     elapsed = time.perf_counter() - t0
 
     return {

@@ -54,13 +54,19 @@ class ExternalValidationRunner:
         self.model_dir = Path(model_dir)
         self.reports_dir = Path(reports_dir)
 
+        # §3.2 defense-in-depth: jüri submission yolu (UI DEĞİL) ClinVar API'sini
+        # AÇIKÇA kilitler — harici etiket/genomik-adres sızıntısı engellenir.
+        from src.explainability.clinvar_api import set_inference_mode
+
+        set_inference_mode(True)
+
         loader = ArtifactLoader(self.model_dir)
         loader.validate_artifacts()
 
         self._preprocessor = loader.load_preprocessor()
         self._ensemble = loader.load_ensemble()
         self._calibrator = loader.load_calibrator()
-        self._threshold = loader.load_threshold(default=0.5)
+        self._threshold = loader.load_threshold(default=0.8415)  # kanonik θ fallback (0.5 değil)
         self._feature_names: Optional[list[str]] = loader.load_feature_names()
         self._model_version: str = loader.load_model_version()
 
@@ -203,6 +209,10 @@ class ExternalValidationRunner:
 
         # Ensure Variant_ID present
         if "Variant_ID" not in meta_df.columns:
+            logger.warning(
+                "Variant_ID kolonu YOK — sentetik 'V{i}' kimlikler üretildi. Jüri submission'ı "
+                "GERÇEK Variant_ID gerektirir; bu çıktı SKORLANAMAYABİLİR. Girdi CSV'sine Variant_ID ekleyin."
+            )
             meta_df["Variant_ID"] = [f"V{i}" for i in range(len(clean_df))]
 
         # Ensure Panel present
@@ -217,12 +227,17 @@ class ExternalValidationRunner:
         X_scaled = self._preprocessor.transform(X)
 
         # ── Ensemble prediction ────────────────────────────────────────────
-        try:
+        # Yetenek kontrolü AÇIK (hasattr) yapılır: predict_with_uncertainty VARSA
+        # kullanılır ve İÇİNDE oluşan GERÇEK hatalar (GNN graf hatası, None alt-model,
+        # bozuk proba şekli) PROPAGATE edilir — yutulmaz. Eskiden geniş
+        # `except (AttributeError, TypeError)` bu gerçek hataları "uncertainty
+        # desteklenmiyor"a indirgeyip sessizce sıfır-belirsizliğe düşüyordu.
+        if hasattr(self._ensemble, "predict_with_uncertainty"):
             preds_bin, raw_proba, uncertainty = self._ensemble.predict_with_uncertainty(
                 X_scaled, n_iter=10, threshold=self._threshold
             )
             pathogenic_prob = raw_proba[:, 1]
-        except (AttributeError, TypeError):
+        else:
             preds_bin, raw_proba = self._ensemble.predict(X_scaled, threshold=self._threshold)
             pathogenic_prob = raw_proba[:, 1] if raw_proba.ndim == 2 else raw_proba
             uncertainty = np.zeros(len(preds_bin), dtype=float)
@@ -308,9 +323,21 @@ class ExternalValidationRunner:
             key = str(v).strip().lower()
             if key in label_map:
                 return label_map[key]
-            return int(float(str(v)))
+            try:
+                return int(float(str(v)))
+            except (ValueError, TypeError):
+                return -1  # eşlenemeyen (örn. 'VUS') → yerel metrikten dışla, CRASH etme
 
-        y = np.array([_to_label(v) for v in labels], dtype=int)
+        y_raw = np.array([_to_label(v) for v in labels], dtype=int)
+        _valid = y_raw >= 0
+        if not _valid.all():
+            logger.warning(
+                "%d satırda eşlenemeyen etiket (örn. VUS) — yerel doğrulama metriğinden dışlandı.",
+                int((~_valid).sum()),
+            )
+        y = y_raw[_valid]
+        pred_binary = pred_binary[_valid]
+        prob = prob[_valid]
 
         f1 = f1_score(y, pred_binary, average="binary", pos_label=1, zero_division=0)
         try:

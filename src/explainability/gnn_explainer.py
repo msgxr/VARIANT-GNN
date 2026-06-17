@@ -135,9 +135,13 @@ class GNNExplainerWrapper:
         }
 
         for node in range(n_nodes):
-            mask = src == node
-            neighbors = dst[mask]
-            weights = ew[mask]
+            # YÖNSÜZ komşuluk: hem giden (src==node) hem gelen (dst==node) kenarları
+            # say. Eskiden yalnız giden kenarlar sayılıyordu → asimetrik knn_graph
+            # edge_index'inde komşu sayısı eksik raporlanıyordu.
+            out_mask = src == node
+            in_mask = dst == node
+            neighbors = np.concatenate([dst[out_mask], src[in_mask]])
+            weights = np.concatenate([ew[out_mask], ew[in_mask]])
             n_neigh = len(neighbors)
 
             if n_neigh == 0:

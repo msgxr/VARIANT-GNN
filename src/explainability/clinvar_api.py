@@ -31,7 +31,12 @@ import requests
 
 _logger = logging.getLogger(__name__)
 
-# Runtime safety flag — set to True during training/inference to block API calls
+# Runtime safety flag — set to True during training/inference to block API calls.
+# TASARIM: varsayılan False (AÇIK) yalnızca UI'daki EĞİTİMSEL ClinVar arama sayfası
+# için; o sayfa açık API ister ve Streamlit UI'ı InferencePipeline ile AYNI süreçte
+# çalışır (global kilit UI'ı bozardı). MODEL HATTI giriş noktaları (CLI runner,
+# ExternalValidationRunner) §3.2 gereği set_inference_mode(True) ile AÇIKÇA kilitler
+# (defense-in-depth). Yeni bir model-inference yolu eklerken set_inference_mode(True) ÇAĞIR.
 _INFERENCE_MODE: bool = False
 
 

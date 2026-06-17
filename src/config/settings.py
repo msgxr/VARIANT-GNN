@@ -182,7 +182,11 @@ class TrainingSettings:
 
 @dataclass
 class ThresholdSettings:
-    classification: float = 0.50  # TEKNOFEST §7.3: dengeli veri için F1-optimal eşik
+    # Kanonik karar eşiği θ=0.8415 (group-aware held-out kalibrasyon, %20-patojenik
+    # resmi prior, HAM olasılıkta). Yalnız models/threshold.json YOKSA fallback olarak
+    # kullanılır; dosya varsa o önceliklidir. (Eski 0.50 "dengeli veri" varsayımı
+    # geçersizdi — %20-patojenik test prior'ı dengesizdir.)
+    classification: float = 0.8415
     high_risk: float = 0.7
 
 

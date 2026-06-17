@@ -165,23 +165,22 @@ def fig_03():
 
 # ── 4. Confusion Matrix ───────────────────────────────────────────────────────
 def fig_04():
-    panel_sizes = {
-        "General": (430, 156),
-        "Hereditary_Cancer": (114, 24),
-        "PAH": (143, 12),
-        "CFTR": (18, 4),
-    }
+    # GERÇEK per-panel confusion sayılarını cv_report.json'dan oku. Eskiden panel_sizes
+    # HARDCODED'du (kanonik test boyutlarıyla uyumsuz) ve confusion recall/precision'dan
+    # YENİDEN KURULUYORDU → fabrike sayılar. Sayılar yoksa fabrike ETMEK yerine ATLA.
+    needed = ("tp", "fp", "fn", "tn")
+    if not all(all(k in panel_metrics.get(p, {}) for k in needed) for p in PANEL_ORDER):
+        print(
+            "04 SKIP — cv_report.json per-panel confusion sayıları (tp/fp/fn/tn) içermiyor. "
+            "Eğitim hattı (src/cli/modes/train.py) bunları yazmalı; fabrike sayı üretilmedi."
+        )
+        return
     fig, axes = plt.subplots(1, 4, figsize=(16, 4.5))
     for ax, p in zip(axes, PANEL_ORDER):
-        n_pos, n_neg = panel_sizes[p]
         m = panel_metrics[p]
-        tp = int(round(m["recall"] * n_pos))
-        fn = n_pos - tp
-        prec = m["precision"]
-        fp = int(round(tp * (1 - prec) / prec)) if prec > 0 else 0
-        tn = max(0, n_neg - fp)
+        tp, fp, fn, tn = int(m["tp"]), int(m["fp"]), int(m["fn"]), int(m["tn"])
         cm = np.array([[tn, fp], [fn, tp]])
-        total = cm.sum()
+        total = cm.sum() or 1
 
         from matplotlib.colors import LinearSegmentedColormap
 
@@ -393,92 +392,105 @@ def fig_07():
 
 # ── 8. SHAP ───────────────────────────────────────────────────────────────────
 def fig_08():
-    groups = [
-        "In-Silico Risk\nSkorlari",
-        "Evrimsel\nKorunmusluk",
-        "Populasyon\nFrekans",
-        "Biyokimyasal\n/ Yapisal",
-        "Sekans\nBaglami",
-        "Yerel Sekans\nOzellikleri",
-    ]
-    pat_contrib = [0.38, 0.29, 0.21, 0.11, 0.06, 0.03]
-    ben_contrib = [-0.20, -0.18, -0.35, -0.08, 0.04, 0.03]
+    # GERÇEK SHAP grup katkılarını reports/shap_group_contributions.json'dan oku
+    # (generate_explainability.py üretir). Eskiden değerler HARDCODED'du (fabrike).
+    shp = ROOT / "reports" / "shap_group_contributions.json"
+    if not shp.exists():
+        print(
+            "08 SKIP — reports/shap_group_contributions.json yok (generate_explainability.py çalıştırın); fabrike üretilmedi."
+        )
+        return
+    data = json.loads(shp.read_text(encoding="utf-8"))
+    ranked = data.get("ranked") or data.get("ranked_groups") or []
+    if not ranked:
+        print("08 SKIP — shap json 'ranked' içermiyor.")
+        return
 
-    x = np.arange(len(groups))
-    width = 0.35
-    fig, ax = plt.subplots(figsize=(11, 5.5))
+    labels = [r["label_tr"].replace(" ", "\n", 1) for r in ranked]
+    actual = [float(r["contribution_pct"]) for r in ranked]
+    expected = [float(r.get("expected_pct", 0.0)) for r in ranked]
+
+    x = np.arange(len(labels))
+    width = 0.38
+    fig, ax = plt.subplots(figsize=(12, 5.5))
     b1 = ax.bar(
-        x - width / 2, pat_contrib, width, label="Patojenik Katki (+)", color="#2563EB", alpha=0.88, edgecolor="white"
+        x - width / 2, actual, width, label="Ölçülen (mean |SHAP| %)", color="#2563EB", alpha=0.88, edgecolor="white"
     )
     b2 = ax.bar(
-        x + width / 2, ben_contrib, width, label="Benign Katki (-)", color="#DC2626", alpha=0.88, edgecolor="white"
+        x + width / 2, expected, width, label="PSR §4.4 Beklenti (%)", color="#16A34A", alpha=0.80, edgecolor="white"
     )
-    ax.axhline(0, color="black", linewidth=0.8)
 
-    for bar, v in zip(b1, pat_contrib):
+    for bar, v in zip(b1, actual):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            v + 0.005 if v >= 0 else v - 0.018,
-            f"+{v:.2f}",
+            v + 0.4,
+            f"%{v:.1f}",
             ha="center",
             va="bottom",
             fontsize=8,
             color="#1e40af",
         )
-    for bar, v in zip(b2, ben_contrib):
+    for bar, v in zip(b2, expected):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            v - 0.018 if v < 0 else v + 0.005,
-            f"{v:.2f}",
+            v + 0.4,
+            f"%{v:.1f}",
             ha="center",
-            va="top",
+            va="bottom",
             fontsize=8,
-            color="#991b1b",
+            color="#166534",
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(groups, fontsize=9)
-    ax.set_ylabel("Ortalama SHAP Katkisi")
-    ax.set_title("SHAP Ozellik Grubu Katki Analizi (Test Seti Ortalamasi)")
+    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_ylabel("Grup Katkısı (mean |SHAP|, %)")
+    ax.set_title(
+        "SHAP Özellik Grubu Katkıları — Ölçülen vs PSR §4.4 Beklentisi\n(gerçek: shap_group_contributions.json)"
+    )
     ax.legend(fontsize=10)
     ax.yaxis.grid(True, alpha=0.3)
     fig.tight_layout()
     fig.savefig(OUT_DIR / "08_shap_importance.png")
     plt.close(fig)
-    print("08 OK")
+    print("08 OK (gerçek SHAP json'dan)")
 
 
 # ── 9. Ablation ───────────────────────────────────────────────────────────────
 def fig_09():
-    baseline = cv["mean_cv_binary_f1"]
-    configs = [
-        ("Tam Ensemble\n(Baseline)", baseline, C["ensemble"], True),
-        ("XGBoost\nDev. Disi", baseline - 0.018, C["xgb"], False),
-        ("LightGBM\nDev. Disi", baseline - 0.022, C["lgbm"], False),
-        ("GATv2 GNN\nDev. Disi", baseline - 0.014, C["gnn"], False),
-        ("DNN\nDev. Disi", baseline - 0.008, C["dnn"], False),
-        ("SMOTE\nDev. Disi", baseline - 0.031, "#6B7280", False),
-        ("AutoEncoder\nDev. Disi", baseline - 0.012, "#9CA3AF", False),
-        ("SelectKBest\nDev. Disi", baseline - 0.007, "#D1D5DB", False),
-    ]
-    names = [c[0] for c in configs]
-    values = [c[1] for c in configs]
-    colors = [c[2] for c in configs]
+    # GERÇEK ablasyon delta'larını reports/ablation_report.json'dan oku. Eskiden
+    # delta'lar 'baseline - 0.018' gibi SENTETİK'ti ve kaldırılmış AE/SelectKBest
+    # satırları içeriyordu. Dosya _SUPERSEDED ise (sızıntı-öncesi) FABRİKE etme — atla.
+    abl = ROOT / "reports" / "ablation_report.json"
+    if not abl.exists():
+        print("09 SKIP — reports/ablation_report.json yok (scripts/run_ablation.py çalıştırın).")
+        return
+    data = json.loads(abl.read_text(encoding="utf-8"))
+    if data.get("_SUPERSEDED"):
+        print(
+            "09 SKIP — ablation_report.json SUPERSEDED (sızıntı-öncesi sayılar). "
+            "Group-aware run_ablation.py yeniden çalıştırılmalı; fabrike delta üretilmedi."
+        )
+        return
+    configs = data.get("configurations", [])
+    if not configs:
+        print("09 SKIP — ablation_report.json 'configurations' içermiyor.")
+        return
+    baseline = float(data.get("baseline_cv_f1", configs[0].get("cv_f1", 0.0)))
+    names = [c["name"].replace(" ", "\n", 1) for c in configs]
+    values = [float(c["cv_f1"]) for c in configs]
+    base_flags = [not c.get("components_disabled") for c in configs]
+    palette = [C["ensemble"], C["xgb"], C["lgbm"], C["gnn"], C["dnn"], "#6B7280", "#9CA3AF", "#D1D5DB"]
+    colors = [palette[i % len(palette)] for i in range(len(configs))]
 
     fig, ax = plt.subplots(figsize=(12, 5.5))
     bars = ax.bar(names, values, color=colors, alpha=0.88, edgecolor="white", linewidth=0.5, width=0.6)
     ax.axhline(
         baseline, color=C["ensemble"], linestyle="--", linewidth=2, label=f"Baseline F1 = {baseline:.3f}", zorder=5
     )
-
-    for bar, v, (_, _, _, is_base) in zip(bars, values, configs):
+    for bar, v, is_base in zip(bars, values, base_flags):
         delta = v - baseline
-        if is_base:
-            lbl = f"{v:.3f}"
-            col = "white"
-        else:
-            lbl = f"{v:.3f}\n({delta:+.3f})"
-            col = "#1e293b"
+        lbl = f"{v:.3f}" if is_base else f"{v:.3f}\n({delta:+.3f})"
+        col = "white" if is_base else "#1e293b"
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.001,
@@ -491,14 +503,17 @@ def fig_09():
         )
 
     ax.set_ylabel("CV Binary F1 (Patojenik)")
-    ax.set_title("Ablation Analizi — Bilesen Katkisi (PDR §4.5)\nDaha dusuk = o bilesen daha onemli")
-    ax.set_ylim(0.825, 0.885)
+    ax.set_title(
+        "Ablation Analizi — Bilesen Katkisi (PDR §4.5)\nDaha dusuk = o bilesen daha onemli (gercek: ablation_report.json)"
+    )
+    _lo, _hi = min(values + [baseline]), max(values + [baseline])
+    ax.set_ylim(max(0.0, _lo - 0.02), _hi + 0.02)
     ax.legend(fontsize=10)
     ax.yaxis.grid(True, alpha=0.3)
     fig.tight_layout()
     fig.savefig(OUT_DIR / "09_ablation_bar.png")
     plt.close(fig)
-    print("09 OK")
+    print("09 OK (gercek ablation_report.json'dan)")
 
 
 # ── 10. Augmentation ──────────────────────────────────────────────────────────

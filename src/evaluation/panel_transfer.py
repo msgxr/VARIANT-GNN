@@ -222,6 +222,7 @@ class CrossPanelEvaluator:
         X: np.ndarray,
         y: np.ndarray,
         panel_labels: np.ndarray,
+        groups: "np.ndarray | None" = None,
     ) -> PanelTransferResult:
         """
         Panel başına model eğit ve tüm panellerde test et.
@@ -256,19 +257,32 @@ class CrossPanelEvaluator:
         for panel in valid_panels:
             mask = panel_labels == panel
             Xp, yp = X[mask], y[mask]
+            gp = groups[mask] if groups is not None else None
             support[panel] = int(mask.sum())
 
             if len(np.unique(yp)) < 2 or len(yp) < self.min_panel_size:
                 panel_data[panel] = {"X_tr": Xp, "y_tr": yp, "X_te": Xp, "y_te": yp}
                 continue
 
-            X_tr, X_te, y_tr, y_te = train_test_split(
-                Xp,
-                yp,
-                test_size=self.test_size,
-                stratify=yp,
-                random_state=self.random_state,
-            )
+            # GROUP-AWARE within-panel split (Variant_ID) — aynı varyant panel-içi
+            # train/test'i çaprazlamasın. groups verilmezse stratified'e düşer.
+            if gp is not None and len(np.unique(gp)) >= 2:
+                from sklearn.model_selection import GroupShuffleSplit
+
+                _tr, _te = next(
+                    GroupShuffleSplit(n_splits=1, test_size=self.test_size, random_state=self.random_state).split(
+                        Xp, yp, groups=gp
+                    )
+                )
+                X_tr, X_te, y_tr, y_te = Xp[_tr], Xp[_te], yp[_tr], yp[_te]
+            else:
+                X_tr, X_te, y_tr, y_te = train_test_split(
+                    Xp,
+                    yp,
+                    test_size=self.test_size,
+                    stratify=yp,
+                    random_state=self.random_state,
+                )
             panel_data[panel] = {
                 "X_tr": X_tr,
                 "y_tr": y_tr,

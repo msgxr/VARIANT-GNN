@@ -199,7 +199,10 @@ class ACMGProxyFeatures:
     def _pm1(self, df: pd.DataFrame) -> pd.Series:
         domain = pd.to_numeric(df.get(_DOMAIN, pd.Series(0, index=df.index)), errors="coerce").fillna(0).clip(0, 1)
         protein = pd.to_numeric(df.get(_PROTEIN, pd.Series(0, index=df.index)), errors="coerce").fillna(0)
-        protein_norm = (protein - protein.min()) / (protein.max() - protein.min() + 1e-9)
+        # SABİT aralık (batch-bağımsız, deterministik, fit/transform-simetrik). Eskiden
+        # batch min/max ile normalize ediliyordu → aynı satır farklı inference batch'inde
+        # FARKLI değer alıyordu (Protein_Impact_Score [0,1] beklenen normalize skordur).
+        protein_norm = protein.clip(0.0, 1.0)
         return (domain * 0.6 + protein_norm * 0.4).clip(0, 1)
 
     # ── BA1: Yüksek populasyon frekansı (güçlü benign) ─────────────────────
