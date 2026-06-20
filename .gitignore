@@ -74,15 +74,16 @@ reports/*.json
 reports/*.bak
 # İstisna: PDR için referans olan eğitim raporları repoda kalsın
 !reports/cv_report.json
-!reports/cross_panel_eval.json
+# UNTRACKED 2026-06-20 (repo hijyeni): leakage-öncesi/geri-çekilmiş (0.8980/0.9269) — jüri-repodan çıkarıldı, §IX
+# !reports/cross_panel_eval.json
 !reports/seed_stability.json
-!reports/ablation_report.json
+# !reports/ablation_report.json   (UNTRACKED 2026-06-20 — _SUPERSEDED baseline 0.898; bkz. üstteki not)
 !reports/benchmark_comparison.json
-!reports/threshold_analysis.json
+# !reports/threshold_analysis.json   (UNTRACKED 2026-06-20 — eski θ=0.30, production_f1=0.9269; bkz. üstteki not)
 !reports/conformal_results.json
 !reports/shap_group_contributions.json
 !reports/conformal_coverage_report.json
-!reports/generalization_analysis.json
+# !reports/generalization_analysis.json   (UNTRACKED 2026-06-20 — Test F1=0.9269 anomali analizi, geri-çekildi)
 !reports/label_quality_report.json
 !reports/ensemble_diversity.json
 !reports/acmg_alignment.json

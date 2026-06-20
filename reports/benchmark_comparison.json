@@ -30,12 +30,12 @@
       "ours": false
     },
     {
-      "name": "MutPred2 [Sundaram 2018]",
+      "name": "PrimateAI [Sundaram 2018]",
       "f1": 0.8,
       "mcc": 0.42,
       "pr_auc": 0.83,
-      "note": "Protein fonksiyon bazlı; Macro-F1=0.86",
-      "reference": "Sundaram et al., Nat. Commun., 2018",
+      "note": "Primat varyantlarıyla yarı-denetimli derin öğrenme (PrimateAI)",
+      "reference": "Sundaram et al., Nat. Genet., 2018",
       "ours": false
     },
     {

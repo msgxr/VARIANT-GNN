@@ -56,8 +56,11 @@ mkdir -p "${PKG_DIR}/data/samples"
 echo "[4/5] Rapor figürleri kopyalanıyor..."
 mkdir -p "${PKG_DIR}/reports/figures/pdr"
 cp -r "${REPO}/reports/figures/pdr/"* "${PKG_DIR}/reports/figures/pdr/" 2>/dev/null || true
-for f in cv_report.json conformal_coverage_report.json threshold_analysis.json \
-          ablation_report.json benchmark_comparison.json cross_panel_eval.json \
+# NOT: threshold_analysis / ablation_report / cross_panel_eval 2026-06-20'de pakete
+# alınmıyor — leakage-öncesi/geri-çekilmiş (0.8980/0.9269) sayılar içeriyorlar (§IX).
+# Güncel kanıtlar: ablasyon→ensemble_weight_justification.json, domain-shift→dann_lopo_validation.json.
+for f in cv_report.json conformal_coverage_report.json benchmark_comparison.json \
+          ensemble_weight_justification.json dann_lopo_validation.json \
           seed_stability.json; do
     [ -f "${REPO}/reports/${f}" ] && cp "${REPO}/reports/${f}" "${PKG_DIR}/reports/"
 done

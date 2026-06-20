@@ -46,9 +46,9 @@
 | `submission/predict.py` çalışır durumda | ✅ Tamamlandı | Validation PASSED; canonical kolon seti = `src/scientific/submission_validator.py` `JURY_COLUMNS` (7 kolon) |
 | Jüri CSV formatı kod ile tek kaynaktan tanımlı | ✅ Tamamlandı | `JURY_COLUMNS` = `Variant_ID, prediction_label, pathogenic_probability, calibrated_risk, confidence_level, uncertainty_score, expert_review_flag`. Resmi format HENÜZ duyurulmadı (UNVERIFIED) → ÖNERİLEN güvenli mod `--jury_minimal` (opt-in flag; 2 kolon: `Variant_ID + prediction_label`). Bayrak verilmezse VARSAYILAN 7-kolon zengin format yazılır (iç analiz içindir). |
 | `data/samples/jury_blind_sample.csv` | ✅ Tamamlandı | Jüri format örneği (5 satır, etiketsiz) |
-| `reports/ablation_report.json` | ✅ Tamamlandı | 8 ablasyon konfigürasyonu, F1 etkileri |
+| `reports/ensemble_weight_justification.json` | ✅ Tamamlandı | Bileşen ablasyon/ağırlık gerekçesi (leakage-free). Eski `ablation_report.json` 2026-06-20'de geri-çekildi (baseline 0.898 = §IX) |
 | `reports/cv_report.json` MCC dahil | ✅ Tamamlandı | `test_mcc=0.5112`, `test_pr_auc=0.9267` |
-| `reports/cross_panel_eval.json` | ✅ Tamamlandı | LOPO cross-validation (domain shift kanıtı) |
+| `reports/dann_lopo_validation.json` | ✅ Tamamlandı | LOPO domain-shift kanıtı (DANN; ort +2.17pp). Eski `cross_panel_eval.json` geri-çekildi (production_f1=0.9269 = §IX) |
 | `reports/seed_stability.json` | ✅ Tamamlandı | 5 seed (42/123/456/789/2026), CV F1=0.8738 ± 0.0034 |
 | Model ağırlıkları `models/` altında | ✅ Tamamlandı | xgb, lgbm, gnn, dnn, ensemble, preprocessor |
 

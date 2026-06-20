@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -294,6 +295,35 @@ def main() -> int:
                 fail(f"PROVENANCE.panel_f1[{panel}]={pf1} != canonical {cf1}")
                 errors += 1
     if errors == 0:
+        print("   ok")
+
+    # 9. git-tracked reports/*.json'da CANLI geri-çekilmiş headline F1 (0.8980/0.9269).
+    #    Firewall kör-noktası kapatıldı (2026-06-20): bu JSON'lar JURY_DOCS'ta değildi,
+    #    leakage-öncesi 0.9269/0.898 tracked & jüri-görünür kalmıştı (threshold_analysis,
+    #    generalization_analysis, cross_panel_eval, ablation_report untrack edildi).
+    print("9. git-tracked reports/*.json geri-çekilmiş-sayı taraması")
+    HEADLINE_WITHDRAWN = ("0.9269", "0.8980", "0,9269", "0,8980")
+    try:
+        tracked = subprocess.run(
+            ["git", "ls-files", "reports"],
+            cwd=str(ROOT), capture_output=True, text=True, check=True,
+        ).stdout.splitlines()
+    except Exception as exc:  # pragma: no cover - git yoksa sessiz geç
+        tracked = []
+        print(f"   (git ls-files atlandı: {exc})")
+    drift = 0
+    for rel in (f for f in tracked if f.endswith(".json")):
+        p = ROOT / rel
+        if not p.exists():
+            continue
+        for ln, line in enumerate(p.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+            if any(w in line for w in HEADLINE_WITHDRAWN) and not re.search(
+                WITHDRAW_MARKERS, line, re.IGNORECASE
+            ):
+                fail(f"{rel}:{ln} canlı geri-çekilmiş sayı: {line.strip()[:90]}")
+                drift += 1
+                errors += 1
+    if drift == 0:
         print("   ok")
 
     print()
