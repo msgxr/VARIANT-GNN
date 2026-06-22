@@ -44,5 +44,6 @@
       "contribution_pct": 0.0,
       "expected_pct": 2.0
     }
-  ]
+  ],
+  "_note": "'in_silico_risk' grubu EK_ (Evrimsel Korunmuşluk) [0,1] skorlarından türetilen insilico_consensus/disagreement (PP3/BP4 proxy) özniteliklerinden oluşur; 'evolutionary_conservation' ham EK_/AL_ korunmuşluk sinyalidir (ikisi de EK_'ye dayanır, farklı ACMG eşlemeleri — bkz. reports/acmg_alignment.json). Kolon adları şartname §3.2 gereği gizli olduğundan grup-düzeyi yorum yapılır (Q&A-II). 'contribution_pct' = ÖLÇÜLEN SHAP; 'expected_pct' = ön-beklenti (README mindmap'i expected gösterir, ölçülen DEĞİL)."
 }

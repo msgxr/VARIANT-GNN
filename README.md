@@ -570,6 +570,8 @@ mindmap
       Flanking bolge
 ```
 
+> **Not (beklenen vs. ölçülen):** Yukarıdaki %38/%27 değerleri kategori **ön-beklentisidir** (expected profil). ÖLÇÜLEN gerçek SHAP grup katkıları farklıdır: in-silico-risk %58,33 / evrimsel-korunmuşluk %10,94 (`reports/shap_group_contributions.json`). 'In Silico Risk' grubu, şartname §3.2'deki **EK_ (Evrimsel Korunmuşluk)** [0,1] skorlarından türetilen PP3/BP4 uzlaşı öznitelikleridir; kolon adları gizli olduğundan yorum grup-düzeyidir (Q&A-II).
+
 ### Öznitelik Boyutu
 
 ```
