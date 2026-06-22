@@ -14,7 +14,7 @@
   "seed": 42,
   "cv_f1_mean": 0.8936,
   "cv_f1_std": 0.0004,
-  "_test_metrics_note": "Shipped karar eşiği θ=0.8415 (%20-patojenik test prior'a F1-optimal). Aşağıdaki test metrikleri %75-poz iç hold-out AYRIM gücüdür — jüri skoru DEĞİL. Resmi beklenen yarışma skoru = 4-panel %20-F1 ortalaması = 0.6202 (RESULTS_CANONICAL.json).",
+  "_test_metrics_note": "Shipped karar eşiği θ=0.8415 (%20-patojenik test prior'a F1-optimal). Aşağıdaki test metrikleri %75-poz iç hold-out AYRIM gücüdür — jüri skoru DEĞİL. Resmi beklenen yarışma skoru = 3-panel (CFTR hariç) %20-F1 ort. = 0.6202 (iç tahmin) (RESULTS_CANONICAL.json).",
   "test_f1": 0.8367,
   "test_precision": 0.9241,
   "test_recall": 0.7644,
