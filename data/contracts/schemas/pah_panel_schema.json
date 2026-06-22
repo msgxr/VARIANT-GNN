@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "PAH Panel — Varyant Girdi Şeması",
-  "description": "TEKNOFEST 2026 PAH (Pulmoner Arteriyel Hipertansiyon) Panel (200 Patojenik + 200 Benign eğitim)",
+  "description": "TEKNOFEST 2026 PAH (Fenilketonüri / PKU) Paneli — PAH (Fenilalanin Hidroksilaz) geni varyantları",
   "allOf": [
     {"$ref": "general_panel_schema.json"},
     {
@@ -10,14 +10,11 @@
       },
       "x-panel-info": {
         "name": "PAH",
-        "train_pathogenic": 200,
-        "train_benign": 200,
-        "test_pathogenic": 50,
-        "test_benign": 50,
-        "class_ratio": "1:1",
-        "disease_context": "Pulmoner arteriyel hipertansiyon (BMPR2, ACVRL1, ENG genleri)",
-        "threshold": 0.1380,
-        "note": "Düşük karar eşiği — yüksek sensitivite öncelikli; Benign FP riski daha yüksek"
+        "train_pathogenic": 310,
+        "train_benign": 62,
+        "class_ratio": "5.00:1 (fiili; RESULTS_CANONICAL.json)",
+        "disease_context": "Fenilketonüri (PKU); PAH = Fenilalanin Hidroksilaz geni (tek gen)",
+        "note": "Karar eşiği global θ=0.8415 (use_panel_thresholds=false); per-panel eşik kapalı — bkz. RESULTS_CANONICAL.json / PDR §3.3"
       }
     }
   ]

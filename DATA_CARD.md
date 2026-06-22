@@ -15,14 +15,16 @@
 
 ## Panel Yapısı
 
-### Şartname beklentisi (§3.2)
+### Şartname §3.2 ASİMETRİK tasarımı — "Klinik Stres Testi" (v2, 23.03.2026)
 
-| Panel | Eğitim Seti (şartname) | Test Seti (jüri günü gelecek) |
+Şartname EĞİTİM'i patojenik-ağırlıklı, TEST'i benign-baskın kurgular (50/50 DEĞİL):
+
+| Panel | Eğitim (şartname, ~) | Test (şartname, ~) |
 |---|---|---|
-| General (Genel) | 3000 (1500P + 1500B) | 2000 (1000P + 1000B) |
-| Hereditary Cancer | 400 (200P + 200B) | 200 (100P + 100B) |
-| PAH | 400 (200P + 200B) | 200 (100P + 100B) |
-| CFTR | 140 (70P + 70B) | 60 (30P + 30B) |
+| General (Master) | 2000P + 800B | 500P + 3000B |
+| Hereditary Cancer | 250P + 100B | 100P + 500B |
+| PAH (Fenilketonüri) | 300P + 50B | 100P + 250B |
+| CFTR (Kistik Fibrozis) | 100P + 20B | 20P + 100B |
 
 ### Gerçek TEKNOFEST verisi (14 Mayıs 2026'da alındı)
 
@@ -34,7 +36,7 @@
 | CFTR | 90 | 21 | 111 | 4.29:1 |
 | **Toplam** | **2817** | **985** | **3802** | **2.86:1** |
 
-> **Not:** Gerçek veri şartnamenin vaat ettiği 1:1 dengesinden farklı geldi. Bunu karşılamak için eğitim pipeline'ında SMOTE (sadece training fold içinde) ve sınıf-ağırlıklı kayıp fonksiyonu kullanıldı.
+> **Not:** Gerçek eğitim verimiz (General 2,75:1 patojenik-ağırlıklı) şartname §3.2'nin asimetrik tasarımıyla TUTARLIDIR (eğitim patojenik-ağırlıklı). Test benign-baskın olduğundan karar eşiği θ=0,8415 %20-patojenik resmi prior'a kalibre edildi; eğitimde SMOTE (yalnız training fold) + sınıf-ağırlıklı kayıp kullanıldı.
 >
 > **Augmentation (KAPALI):** Önceden materyalize edilmiş Gaussian jitter'lı `train_variants_aug.csv`
 > (3802→7604), near-twin kopyalarla satır-bazlı split'te **train/test sızıntısı** yaratıyordu →
@@ -51,8 +53,8 @@
 > Gerçek veri `data/raw/` klasöründe TEKNOFEST NDA kapsamında lokal olarak tutulmaktadır (GitHub'a yüklenmez).
 >
 > **Kolon yapısı:** Kimlik/etiket dışı **343 anonim öznitelik kolonu** (`reports/cv_report.json` →
-> `anonymous_columns: 343`). Kolon aileleri: `Variant_ID`, `Panel`, `AL_*` (anonim sayısal, §3.2),
-> `CAT_1..6` (popülasyon/bölge/genotip), `EK_*` (in-silico [0,1] skorları), `AA_1..2` (amino asit
+> `anonymous_columns: 343`). Kolon aileleri: `Variant_ID`, `Panel`, `AL_*` (Allel Frekansı / Popülasyon sıklığı — §3.2),
+> `CAT_1..6` (popülasyon/bölge/genotip), `EK_*` ([0,1] Evrimsel Korunmuşluk skorları — phyloP/GERP tipi filogenetik+popülasyon korunmuşluğu, §3.2), `AA_1..2` (amino asit
 > değişimi), `Label`. Bu ailelerden `CategoricalBioFeaturizer` 22 ek biyolojik öznitelik türetir (§9 README).
 > Genomik adres (chr/pos) mevcut değil, şartname gereği gizlenmiş.
 

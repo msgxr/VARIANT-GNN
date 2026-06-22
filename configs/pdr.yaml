@@ -118,28 +118,29 @@ schema:
     "0": 0
     "0.0": 0
 
-# §3.2: Panel sayıları şartname ile birebir uyumlu
+# §3.2 ASİMETRİK "Klinik Stres Testi" (yaklaşık; belge amaçlı — fiili dağılım RESULTS_CANONICAL.json)
+# Eğitim patojenik-ağırlıklı, test benign-baskın (50/50 DEĞİL).
 panels:
   General:
-    train_pathogenic: 1500
-    train_benign: 1500
-    test_pathogenic: 1000
-    test_benign: 1000
+    train_pathogenic: 2000
+    train_benign: 800
+    test_pathogenic: 500
+    test_benign: 3000
   Hereditary_Cancer:
-    train_pathogenic: 200
-    train_benign: 200
+    train_pathogenic: 250
+    train_benign: 100
     test_pathogenic: 100
-    test_benign: 100
-  PAH:
-    train_pathogenic: 200
-    train_benign: 200
+    test_benign: 500
+  PAH:            # Fenilketonüri (PAH = Fenilalanin Hidroksilaz geni)
+    train_pathogenic: 300
+    train_benign: 50
     test_pathogenic: 100
+    test_benign: 250
+  CFTR:           # Kistik Fibrozis (CFTR geni)
+    train_pathogenic: 100
+    train_benign: 20
+    test_pathogenic: 20
     test_benign: 100
-  CFTR:
-    train_pathogenic: 70
-    train_benign: 70
-    test_pathogenic: 30
-    test_benign: 30
 
 triage:
   enabled: true

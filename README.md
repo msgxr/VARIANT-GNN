@@ -151,7 +151,7 @@
     └── VARIANT-GNN → VUS'u Patojenik / Benign sınıfına çözer
 ```
 
-**Klinik bağlam:** Variants of Uncertain Significance (VUS), genetik testlerin en büyük yorumlama darboğazıdır. Bir varyantın patojenik mi benign mi olduğunu bilmek, hasta yönetiminden aile taramasına kadar her aşamayı etkiler. VARIANT-GNN, bu sınıflandırmayı **şartname §3.2'nin anonimleştirilmiş, koordinatsız** veri kısıtları altında — yani harici veri tabanı sorgusu olmadan — yapacak şekilde tasarlanmıştır.
+**Klinik bağlam:** Variants of Uncertain Significance (VUS), genetik testlerin en büyük yorumlama darboğazıdır. Bir varyantın patojenik mi benign mi olduğunu bilmek, hasta yönetiminden aile taramasına kadar her aşamayı etkiler. VARIANT-GNN, bu sınıflandırmayı **şartname §3.2'nin anonimleştirilmiş, koordinatsız** veri kısıtları altında — yani harici veri tabanı sorgusu olmadan — yapacak şekilde tasarlanmıştır. (Model çıktıları yalnız araştırma/eğitim amaçlıdır; klinik tanı/tedavi veya tıbbi karar-destek için kullanılamaz — §10.)
 
 ---
 
@@ -183,7 +183,7 @@ flowchart TD
 
     LFW --> SPLIT["✂️ GROUP-AWARE Split\nVariant_ID'ye göre · leakage guard\n(aynı varyant train+test'te olmaz)"]
     SPLIT --> P1["① ColumnAligner\nAnonim kolon hizalama · Dağılımsal eşleme"]
-    P1  --> P2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM · CAT pop/bölge · EK in-silico uzlaşı"]
+    P1  --> P2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM · CAT pop/bölge · EK_ korunmuşluk uzlaşı"]
     P2  --> P3["③ SimpleImputer — Median\nEksik değer (train medyanı)"]
     P3  --> P4["④ RobustScaler — IQR\nOutlier dayanıklı normalizasyon"]
     P4  --> P6["⑤ SMOTE\nSadece eğitim fold (azınlık dengeleme)"]
@@ -469,7 +469,7 @@ flowchart LR
     CAT12["CAT_1 / CAT_2\n(popülasyon/DB)"]
     CAT6["CAT_6\n(genomik bölge)"]
     CAT345["CAT_3/4/5\n(genotip)"]
-    EK["EK_* [0,1]\n(in-silico skorlar)"]
+    EK["EK_* [0,1]\n(evrimsel korunmuşluk)"]
 
     AA --> F1["Grantham · BLOSUM62\nΔhidropati · Δhacim · ΔMW\nΔpolarite · Δyük · charge_flip\nproline/glycine · stop_gain"]
     CAT12 --> F2["pop_breadth\n→ BA1/BS1 benign kanıtı"]
@@ -604,7 +604,7 @@ Veri seti dört bağımsız panelden oluşur. **Toplam 3802 satır / 3224 tekil 
 
 > OOF kalibrasyon havuzu n=3040, hold-out test n=762 (3040 + 762 = 3802). Eğitim dağılımı ~%74 pozitiftir; jüri §3.2 seti ise %20-patojenik (%20/%80) varsayılır — eşik stratejisi bu prior'a göre ayarlanır (§17).
 >
-> **İki panel sayısını ayırmak (çelişki değil):** `configs/pdr.yaml` `panels:` bloğu, şartname §3.2'nin **nominal/beyan edilen** panel tasarımını taşır (General 1500+1500 train / 1000+1000 test = 5000; 4-panel nominal toplam = 6400 referans hücre). Yukarıdaki tablo ise modelin **fiilen eğitildiği** `data/train_variants.csv` dosyasının gerçek bileşimidir (3802 satır / 3224 tekil varyant). Raporlanan **tüm sonuçlar** fiili 3802-satırlık veri üzerinden, group-aware bölme ile üretilmiştir.
+> **İki panel sayısını ayırmak (çelişki değil):** `configs/pdr.yaml` `panels:` bloğu, şartname §3.2'nin **asimetrik** tasarımını taşır (eğitim patojenik-ağırlıklı, ör. General 2000P/800B; test benign-baskın, ör. General 500P/3000B). Yukarıdaki tablo ise modelin **fiilen eğitildiği** `data/train_variants.csv` dosyasının gerçek bileşimidir (3802 satır / 3224 tekil varyant). Raporlanan **tüm sonuçlar** fiili 3802-satırlık veri üzerinden, group-aware bölme ile üretilmiştir.
 
 ### Panel Örnek Dağılımı
 
@@ -651,7 +651,7 @@ AUC ≈ 1.00  →  Ciddi domain shift var                ❌ genelleme zayif
 flowchart TD
     S0["✂️ GROUP-AWARE Split\nVariant_ID · leakage guard\n(panel-overlap + augmentation sızıntısı kapatıldı)"]
     S1["① ColumnAligner\nAnonim kolon hizalama\nDagilimsal eslesme"]
-    S2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM\nCAT popülasyon/bölge · EK in-silico"]
+    S2["② CategoricalBioFeaturizer\nAA_1→AA_2 Grantham/BLOSUM\nCAT popülasyon/bölge · EK_ korunmuşluk"]
     S3["③ SimpleImputer\nMedian · All-NaN koruma"]
     S4["④ RobustScaler\nIQR normalizasyon"]
     S6["⑤ SMOTE\nSadece egitim fold\n(azınlık dengeleme)"]

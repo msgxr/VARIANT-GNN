@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CFTR Panel — Varyant Girdi Şeması",
-  "description": "TEKNOFEST 2026 CFTR (Kistik Fibrozis) Panel (70 Patojenik + 70 Benign eğitim)",
+  "description": "TEKNOFEST 2026 CFTR (Kistik Fibrozis) Paneli — CFTR geni varyantları (tek gen)",
   "allOf": [
     {"$ref": "general_panel_schema.json"},
     {
@@ -10,13 +10,11 @@
       },
       "x-panel-info": {
         "name": "CFTR",
-        "train_pathogenic": 70,
-        "train_benign": 70,
-        "test_pathogenic": 18,
-        "test_benign": 4,
-        "class_ratio": "1:1",
+        "train_pathogenic": 90,
+        "train_benign": 21,
+        "class_ratio": "4.29:1 (fiili; RESULTS_CANONICAL.json)",
         "disease_context": "Kistik fibrozis transmembran iletkenlik düzenleyicisi (CFTR geni)",
-        "threshold": 0.1085,
+        "note_threshold": "global θ=0.8415 (use_panel_thresholds=false)",
         "note": "En küçük panel (n=140 eğitim); 5-fold CV küçük foldlar üretebilir; SMOTE uygulandı. Recall=1.0 hedeflendi."
       }
     }

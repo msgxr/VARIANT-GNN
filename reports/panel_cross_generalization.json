@@ -42,7 +42,7 @@
       "transfer_to_PAH": {
         "expected_f1_at_global_threshold": 0.7389,
         "transfer_quality": "ORTA",
-        "reason": "PAH varyantları (BMPR2, EIF2AK4) spesifik in-silico risk imzası — General eşiği bu panelin 5:1 dengesizliğini yakalayamıyor. Panel-spesifik eşik gerekli."
+        "reason": "PAH (Fenilketonüri) varyantları spesifik evrimsel-korunmuşluk (EK_) imzası — General eşiği bu panelin 5:1 dengesizliğini yakalayamıyor."
       },
       "transfer_to_CFTR": {
         "expected_f1_at_global_threshold": 0.8984,

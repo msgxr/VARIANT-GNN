@@ -14,6 +14,7 @@ ulaşmıyordu:
   • CAT_1, CAT_2 : popülasyon / veri tabanı gözlemleri (Popülasyon Verileri)
   • CAT_3/4/5    : nükleotid genotipi (Yerel Sekans Bağlamı)
   • CAT_6        : genomik bölge bağlamı — lcr/segdup/decoy (haritalanabilirlik)
+  • EK_*         : Evrimsel Korunmuşluk skorları [0,1] (phyloP/GERP tipi; §3.2)
 
 ÇÖZÜM
 -----
@@ -26,7 +27,7 @@ Türetilen öznitelikler ve ACMG karşılığı:
   d_polarity, proline_involved, glycine_involved, stop_gain, same_aa   → PP3/PM4 türü
   pop_breadth (CAT_1/2 genişliği)                                       → BA1/BS1 (benign)
   region_lcr / region_segdup / region_decoy                            → düşük güvenilirlik bağlamı
-  insilico_consensus (EK [0,1] skorlarının uzlaşısı)                    → PP3/BP4
+  insilico_consensus (EK_ [0,1] EVRİMSEL KORUNMUŞLUK skorlarının uzlaşısı) → PP3/BP4
   insilico_disagreement                                                → belirsizlik sinyali
 
 Doğrulama: 5-seed × 5-fold ablasyonda tek-model (LightGBM) havuzlanmış Binary F1
