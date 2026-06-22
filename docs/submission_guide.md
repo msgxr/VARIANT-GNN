@@ -252,6 +252,6 @@ UI bileşenleri:
 Bu sistemin sahibi takım:
 - **Takım Adı:** XYRA3
 - **Takım ID:** 909249
-- **Başvuru ID:** 4865399
+- **Başvuru ID:** 5200240
 
 Yarışma organizasyonel sorular için: `iletisim@teknofest.org` (§11).

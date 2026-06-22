@@ -12,7 +12,7 @@
 - **Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması
 - **Kategori:** Üniversite ve Üzeri
 - **Görev:** Missense genetik varyantların Patojenik (1) / Benign (0) binary sınıflandırması
-- **Takım:** XYRA3 | ID: 909249 | Başvuru ID: 4865399
+- **Takım:** XYRA3 | ID: 909249 | Başvuru ID: 5200240
 - **Git Kimliği (Bu PC):** msgxr <mgun345@icloud.com>
 
 ---

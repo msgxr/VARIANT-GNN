@@ -15,7 +15,7 @@
 ## PSR Durumu
 
 PSR aşaması **93.00 / 100** puanla geçilmiştir.
-Takım: XYRA3 (#909249) | Başvuru ID: #4865399
+Takım: XYRA3 (#909249) | Başvuru ID: #5200240
 
 ## PDR Teslim Checklist
 

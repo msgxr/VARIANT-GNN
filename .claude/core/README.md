@@ -2,7 +2,7 @@
 
 **Proje:** VARIANT-GNN — Missense Varyant Patojenite Tahmini  
 **Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
-**Takım:** XYRA3 | Takım ID: 909249 | Başvuru ID: 4865399  
+**Takım:** XYRA3 | Takım ID: 909249 | Başvuru ID: 5200240  
 **Git Kimliği (Bu PC):** msgxr <mgun345@icloud.com>
 
 ---

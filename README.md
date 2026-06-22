@@ -46,7 +46,7 @@
 ╠══════════════════╦═══════════════════════════════════════════════════════════════╣
 ║  Proje           ║  VARIANT-GNN — Missense Varyant Patojenisite Tahmini           ║
 ║  Gorev           ║  Binary Siniflandirma: Patojenik (1) / Benign (0)              ║
-║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #4865399                   ║
+║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #5200240                   ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri              ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                             ║
 ║  F1 §7.3 (juri)  ║  0.6202 3-panel ort. (CFTR hariç, iç tahmin) · 0.8367 ic hold-out · θ=0.8415   ║

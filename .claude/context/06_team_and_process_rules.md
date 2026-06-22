@@ -11,7 +11,7 @@
 |---|---|
 | Takım Adı | XYRA3 |
 | Takım ID | 909249 |
-| Başvuru ID | 4865399 |
+| Başvuru ID | 5200240 |
 | PSR Puanı | 93/100 |
 
 ---

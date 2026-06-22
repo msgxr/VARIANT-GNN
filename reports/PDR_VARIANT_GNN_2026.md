@@ -30,7 +30,7 @@
 ## Missense Varyant Patojenite Tahmini — Hibrit Graf Sinir Ağı Ensemble Sistemi
 ### TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması — Proje Detay Raporu (PDR)
 
-**Proje:** VARIANT-GNN · **Takım:** XYRA3 · **Takım ID:** 909249 · **Başvuru ID:** 4865399
+**Proje:** VARIANT-GNN · **Takım:** XYRA3 · **Takım ID:** 909249 · **Başvuru ID:** 5200240
 **Kategori:** Sağlıkta Yapay Zekâ — Üniversite ve Üzeri · Genetik Varyant Patojenite Tahmini
 **Rapor Tarihi:** 10 Haziran 2026
 
@@ -375,5 +375,5 @@ PDR gerçek-veri sonuçları PSR pilot sonuçlarından belirgin farklıdır; bu 
 
 ---
 
-**RAPOR SONU** · *Takım XYRA3 | Takım ID: 909249 | Başvuru ID: 4865399*
+**RAPOR SONU** · *Takım XYRA3 | Takım ID: 909249 | Başvuru ID: 5200240*
 *TEKNOFEST 2026 Sağlıkta Yapay Zekâ Yarışması — Proje Detay Raporu · 10 Haziran 2026*

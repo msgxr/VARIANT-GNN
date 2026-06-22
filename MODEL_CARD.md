@@ -31,7 +31,7 @@
 | Alan | Değer |
 |------|-------|
 | **Proje Adı** | VARIANT-GNN |
-| **Takım** | XYRA3 (909249) — Başvuru ID: 4865399 |
+| **Takım** | XYRA3 (909249) — Başvuru ID: 5200240 |
 | **Yarışma** | TEKNOFEST 2026 Sağlıkta Yapay Zeka — Üniversite ve Üzeri |
 | **Görev** | Missense genetik varyantların Patojenik / Benign ikili sınıflandırması (§3.2) |
 | **Birincil Metrik** | Binary F1 = 2·TP / (2·TP + FP + FN) — Patojenik sınıfı, pos_label=1 (§7.3) |
@@ -273,7 +273,7 @@ Ayrıntı: [`docs/architecture.md`](docs/architecture.md),
 
 - **Lisans:** TEKNOFEST 2026 Yarışma Lisansı (`LICENSE` dosyası)
 - **Repository:** https://github.com/msgxr/VARIANT-GNN
-- **Takım:** XYRA3 — Başvuru ID 4865399
+- **Takım:** XYRA3 — Başvuru ID 5200240
 - **İletişim:** TEKNOFEST KYS (`www.t3kys.com`) → Sağlıkta Yapay Zeka Yarışması
 - **Organizasyonel sorular:** `iletisim@teknofest.org` (§11)
 
