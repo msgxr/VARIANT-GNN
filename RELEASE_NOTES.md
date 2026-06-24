@@ -4,7 +4,7 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 
 ## 2026-06-05 (v4.1.0 — Q&A-II Doğrulaması + Anti-Drift Sertleştirme) ⭐
 
-- **Resmi doğrulama:** Test seti %20-patojenik/%80-benign dağılımı TEKNOFEST **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); 4-panel-ortalama skorlama kuralı teyit edildi; belirsizlik U-008 çözüldü. RESMİ headline **0.6202** değişmedi (`provenance_verified`).
+- **Resmi doğrulama:** Test seti %20-patojenik/%80-benign dağılımı TEKNOFEST **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); 4-panel-ortalama skorlama kuralı teyit edildi; belirsizlik U-008 çözüldü. RESMİ headline **0.631** (4-panel, CFTR dahil; 3-panel tanı CFTR hariç=0.6202) (`provenance_verified`).
 - **Anti-drift firewall genişletildi:** `check_results_consistency.py` **Check #8** — `models/PROVENANCE.json` canonical'a pinlendi (jeneratörsüz dosya sürüklenirse build fail). UI kör-noktası kapatıldı: `src/ui/about.py` ve `src/ui/performance.py` da taranır.
 - **Demo bütünlüğü:** geri çekilmiş leakage-şişik sayılar (0.8980/0.9269) Streamlit demosundan ve koddan kaldırıldı.
 - **Dürüstlük etiketi:** tek-koşu missing-indicator 4-panel/PAH deltaları "tek-koşu" olarak işaretlendi; yalnız ROC-AUC +0.34pp 5-seed doğrulandı.
@@ -16,7 +16,7 @@ Bu dosya, kısa “yayın özeti” niteliğindedir. Ayrıntılı değişiklik g
 
 - **Sızıntı giderildi (KRİTİK):** Eğitim artık `Variant_ID`'ye göre **group-aware** bölme kullanır (GroupShuffleSplit + StratifiedGroupKFold). Önceki satır-bazlı split, augmentation near-twin (369) + panel-overlap (578) yoluyla aynı varyantı train+test'e düşürerek **+3.71 pp** şişme yaratıyordu (`reports/leakage_quantification.json`).
 - **Geri çekilen sayılar:** Eski **0.8980 / 0.9269** (Test/ensemble F1), **0.5356** (MCC), **θ=0.241** ve panel eşikleri (0.281/0.138/0.108) **GEÇERSİZ** — leakage-şişik. Bu satırların hepsi supersede edilmiştir.
-- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291. **Resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
+- **CANONICAL sonuçlar (`RESULTS_CANONICAL.json`):** CV F1 = **0.8936 ± 0.0004** (OOF-stacking), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291. **Resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması, CFTR dahil) = 0.631; 3-panel tanı (CFTR hariç) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
 - **Panel F1 (test, θ=0.8415):** General 0.8185/MCC0.4951 · KANSER 0.9060/MCC0.7135 · PAH 0.9120/MCC0.5053 · CFTR 0.7143/MCC-tanımsız.
 - **Karar eşiği:** GLOBAL **θ = 0.8415** (%20-patojenik-OOF, canonical); panel eşikleri opt-in, jüri global θ kullanır.
 - **Pipeline:** SelectKBest(35)+AutoEncoder darboğazı kaldırıldı (≈+5.3 pp dürüst geri kazanım); CategoricalBioFeaturizer (ACMG-hizalı, +0.38pp) ve Domain-Adversarial DNN (LOPO +2.17pp) eklendi.

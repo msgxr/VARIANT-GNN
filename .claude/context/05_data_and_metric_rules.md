@@ -34,7 +34,7 @@ pos_label = 1 = Patojenik
 
 ## Mevcut Model Sonuçları (Gerçek Yarışma Verisi — 2026-06-02, canonical)
 
-⭐ **Jüri beklentisi (%20 patojenik — ✅ Q&A-II ile DOĞRULANDI 2026-06-03):** havuzlanmış balanced Binary F1 = **0.6042 ± 0.0324** (θ=0.8415); RESMİ headline = **0.6202** (4-panel %20-F1 ort.). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
+⭐ **Jüri beklentisi (%20 patojenik — ✅ Q&A-II ile DOĞRULANDI 2026-06-03):** havuzlanmış balanced Binary F1 = **0.6042 ± 0.0324** (θ=0.8415); RESMİ headline = **0.631** (4-panel %20-F1 ort., CFTR dahil; 3-panel tanı CFTR hariç = 0.6202). Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür, jüri skoru değildir.
 
 | Metrik | Değer |
 |---|---|

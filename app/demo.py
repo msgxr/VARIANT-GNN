@@ -156,7 +156,7 @@ elif page == "📊 Model Performansı":
 
         st.divider()
         st.subheader("Panel Bazlı Sonuçlar")
-        st.caption("Karar eşiği: GLOBAL θ=0.8415 (canonical, §3.2). Test prior: %20-patojenik. Resmi jüri skoru (4-panel %20-F1 ort.): 0.6202. Havuzlanmış: 0.6042±0.0324.")
+        st.caption("Karar eşiği: GLOBAL θ=0.8415 (canonical, §3.2). Test prior: %20-patojenik. Resmi jüri skoru (4-panel %20-F1 ort., CFTR dahil): 0.631 (3-panel tanı CFTR hariç: 0.6202). Havuzlanmış: 0.6042±0.0324.")
 
         panel_data = cv.get("panel_metrics", {})
         if panel_data:
@@ -421,4 +421,4 @@ elif page == "🕸️ GNN Graf Açıklaması":
 
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.divider()
-st.caption("VARIANT-GNN · Takım XYRA3 · TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması · Yalnızca araştırma ve eğitim amaçlıdır · Resmi jüri skoru: 0.6202 (%20-patojenik test prior, θ=0.8415)")
+st.caption("VARIANT-GNN · Takım XYRA3 · TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması · Yalnızca araştırma ve eğitim amaçlıdır · Resmi jüri skoru: 0.631 (4-panel, CFTR dahil; 3-panel tanı 0.6202; %20-patojenik test prior)")

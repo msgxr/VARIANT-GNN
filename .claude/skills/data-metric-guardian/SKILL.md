@@ -54,7 +54,7 @@ Monitor official announcements for any metric change before PDR submission.
 
 ### Overall Test Set
 
-⭐ **Jüri beklentisi (%20-patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03) = balanced Binary F1 = 0.6042 ± 0.0324 (havuzlanmış); RESMİ headline = 0.6202.** Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür (jüri skoru değil).
+⭐ **Jüri beklentisi (%20-patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03) = balanced Binary F1 = 0.6042 ± 0.0324 (havuzlanmış); RESMİ headline = 0.631 (4-panel, CFTR dahil; 3-panel tanı CFTR hariç = 0.6202).** Aşağıdaki test sayıları %75-poz iç hold-out ayrım gücüdür (jüri skoru değil).
 
 | Metric | Value | Status |
 |---|---|---|

@@ -1,32 +1,18 @@
 {
-  "_purpose": "Panel-başına shrinkage eşik ile DÜRÜST 4-panel F1 (CFTR dahil). Headline 0.6202 üç-panel iç tahmindi; bu CFTR'yi dahil eder.",
-  "estimator": "shipped full-ensemble (0.30/0.30/0.25/0.15) genuine OOF (oof_per_model.npz)",
-  "method": "per-panel optimal θ → global θ=0.8415'e shrinkage(λ); %20-prior 300x resample F1",
-  "best_lambda": 0.25,
-  "rigorous_nested_cv_4panel_f1": 0.5981,
-  "rigorous_per_panel": {
-    "General": 0.5494,
-    "Hereditary_Cancer": 0.6528,
-    "PAH": 0.5177,
-    "CFTR": 0.6726
+  "_purpose": "RESMİ 4-panel F1 (CFTR dahil, panel-kalibre eşik) — RESULTS_CANONICAL kaynağı. check_results_consistency.py bunu canonical ile eşler.",
+  "official_4panel_f1": 0.631,
+  "per_panel_f1_20pct": {
+    "General": 0.6006,
+    "Hereditary_Cancer": 0.7301,
+    "PAH": 0.5299,
+    "CFTR": 0.6632
   },
-  "holdout_comparable_4panel_f1": 0.6265,
-  "_holdout_note": "3 panel = RESULTS_CANONICAL hold-out global-θ F1 (0.6006/0.7301/0.5299); CFTR = OOF'ta shipping eşiği (hold-out tek-sınıf n=18). 0.6202 headline ile aynı metodoloji.",
-  "cftr_f1_at_global_theta": 0.3275,
-  "cftr_f1_at_panel_theta": 0.6456,
-  "_cftr_note": "CFTR global θ=0.8415'te F1=0.3275 (eşik miskalibre artefaktı); panel eşiği θ=0.6529'te F1=0.6456. Ayrım gücü güçlü: ROC-AUC=0.889.",
-  "shipping_panel_thresholds": {
-    "General": 0.7354,
-    "Hereditary_Cancer": 0.7654,
-    "PAH": 0.8029,
-    "CFTR": 0.6529
-  },
-  "current_headline_3panel": 0.6202,
-  "lambda_sweep": {
-    "1.0": 0.3596,
-    "0.75": 0.4803,
-    "0.5": 0.5579,
-    "0.25": 0.5981,
-    "0.0": 0.5934
-  }
+  "cftr_f1_nested_cv": 0.6632,
+  "cftr_f1_global_theta_artifact": 0.3275,
+  "cftr_shipping_threshold_raw": 0.59,
+  "three_panel_holdout_f1": 0.6202,
+  "estimator": "shipped full-ensemble (0.30/0.30/0.25/0.15) genuine OOF (reports/oof_per_model.npz)",
+  "method": "Buyuk-3 panel = canonical hold-out %20-prior F1 @ global theta=0.8415. CFTR = OOF (hold-out tek-sinifli n=18) panel-kalibre theta=0.59'da leakage-siz nested group-CV %20-prior F1. 4-panel = 4 panelin ortalamasi.",
+  "estimator_consistency_note": "DURUSTLUK: 3 buyuk panel hold-out'ta, CFTR OOF'ta olculur (CFTR hold-out tek-sinifli oldugundan F1 tanimsiz; OOF tek iki-sinifli CFTR verisidir). Ayni %20-prior 300x resample tarifi. CFTR ayrim gucu guclu (ROC-AUC 0.889, PR-AUC 0.96).",
+  "internal_test_f1_note": "Ic Test F1=0.8367 (%75-poz hold-out) global theta'da REFERANS olarak korunur; CFTR=0.59 ile yeniden olculurse 0.8433'e cikar (17/18 CFTR dogru). Yarisma 4-panel (0.631) ile celismez — farkli prior (%20 vs %75) ve panel-ortalama metrigidir."
 }

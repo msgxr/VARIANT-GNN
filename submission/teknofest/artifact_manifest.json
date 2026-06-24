@@ -33,7 +33,7 @@
     "test_ece": 0.0291,
     "threshold": 0.8415,
     "threshold_note": "F1-optimal on %20-patojenik (resmi test prior) HELD-OUT calibration set; global θ=0.8415; raw-probability (derivation==inference; src/cli/modes/train.py). NOT: %20-prior Q&A-II transkriptiyle DOĞRULANDI 2026-06-03 — bkz. RESULTS_CANONICAL.provenance_verified.",
-    "official_competition_score_4panel_avg": 0.6202,
+    "official_competition_score_4panel_avg": 0.631,
     "competition_jury_f1_pooled": 0.6042,
     "competition_jury_f1_pooled_std": 0.0324,
     "withdrawn": "Önceki 0.8980/0.9269 sayıları satır-bazlı split sızıntısı; ayrıca 0.8134/θ=0.6831 (50/50 dengeli) ve 0.8969@θ=0.6831 ESKİ/geçersiz — RESMİ test %20-patojenik."
@@ -126,8 +126,8 @@
       }
     ]
   },
-  "notes": "SHA256 2 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8936±0.0004 (OOF-stacking; fold-CV 0.8812±0.0113), Test F1=0.8367 @ θ=0.8415 (%75-poz iç hold-out AYRIM gücü, jüri skoru DEĞİL). YARIŞMA BEKLENTİSİ = resmi 4-panel %20-F1 ortalaması = 0.6202 (havuzlanmış jüri-F1 = 0.6042±0.0324). %20-prior Q&A-II ile DOĞRULANDI (RESULTS_CANONICAL.provenance_verified). NDA verisi lokal kaldı.",
-  "official_competition_score_4panel_avg": 0.6202,
+  "notes": "SHA256 2 Haziran 2026'da güncel modeller için hesaplandı. Sızıntısız group-aware split + bio + DANN. CV F1=0.8936±0.0004 (OOF-stacking; fold-CV 0.8812±0.0113), Test F1=0.8367 @ θ=0.8415 (%75-poz iç hold-out AYRIM gücü, jüri skoru DEĞİL). YARIŞMA BEKLENTİSİ = resmi 4-panel %20-F1 ortalaması = 0.631 (CFTR dahil, panel-kalibre eşik; 3-panel tanı CFTR hariç = 0.6202; havuzlanmış jüri-F1 = 0.6042±0.0324). %20-prior Q&A-II ile DOĞRULANDI (RESULTS_CANONICAL.provenance_verified). NDA verisi lokal kaldı.",
+  "official_competition_score_4panel_avg": 0.631,
   "competition_jury_f1_pooled": 0.6042,
   "competition_jury_f1_pooled_std": 0.0324
 }

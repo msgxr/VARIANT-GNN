@@ -170,7 +170,7 @@
 | ROC-AUC (test) | 0.8538 | Genel sınıf ayrımı |
 | Precision / Recall (test) | 0.9241 / 0.7644 | Patojenik sınıf |
 | Brier / ECE (test) | 0.1115 / 0.0291 | Kalibrasyon kalitesi/sapması |
-| **Jüri beklentisi (resmi 4-panel %20-F1 ort.)** | **0.6202** | %20-patojenik jüri seti; havuzlanmış 0.6042±0.0324 |
+| **Jüri beklentisi (resmi 4-panel %20-F1 ort., CFTR dahil)** | **0.631** | %20-patojenik jüri seti; 3-panel tanı (CFTR hariç)=0.6202; havuzlanmış 0.6042±0.0324 |
 
 **Panel Bazlı Sonuçlar (test, sızıntısız):**
 
@@ -182,8 +182,8 @@
 | CFTR | 0.7143 | tanımsız (0) | θ=0.8415; küçük n, MCC anlamsız |
 
 > **Not:** CFTR test n çok küçük (büyük çoğunluk patojenik) → MCC tanımsız/0; F1 daha anlamlı.
-> Resmi jüri skoru: 4-panel %20-F1 ortalaması = **0.6202** (%20-patojenik jüri seti);
-> havuzlanmış = 0.6042±0.0324. Tüm sayılar `RESULTS_CANONICAL.json`'dan üretilir.
+> Resmi jüri skoru: 4-panel %20-F1 ortalaması (CFTR dahil, panel-kalibre eşik) = **0.631** (%20-patojenik jüri seti);
+> 3-panel tanı (CFTR hariç) = **0.6202**; havuzlanmış = 0.6042±0.0324. Tüm sayılar `RESULTS_CANONICAL.json`'dan üretilir.
 
 ---
 

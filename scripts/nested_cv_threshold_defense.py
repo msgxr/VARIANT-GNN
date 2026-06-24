@@ -6,17 +6,25 @@ JÜRİ SAVUNMA ARTEFAKTI (skor kaldıracı DEĞİL): "Neden tek global eşik θ=
 panel-başı eşik değil?" sorusunu nested-CV + shrinkage ile FORMAL kapatır.
 
 Yöntem (train.py:282-307 ile BİREBİR aynı %20-patojenik 300x resample):
-  - Global (λ=0): tüm panellere θ_global → 4-panel(geçerli) %20-F1 ort. Bu, canonical
-    official_competition_score=0.6202'yi YENİDEN ÜRETMELİDİR (metodoloji öz-kontrolü).
+  - Global (λ=0): tüm panellere θ_global → geçerli (CFTR hariç) %20-F1 ort. Bu, 3-panel
+    hold-out tanısı=0.6202'yi YENİDEN ÜRETMELİDİR (metodoloji öz-kontrolü). DİKKAT: 0.6202
+    resmi skor DEĞİL; resmi 4-panel skoru (CFTR dahil) = 0.631 — aşağıdaki NOT'a bak.
   - Per-panel-OOF (λ=1): her panelin θ'sı OOF'ta F1-optimal türetilir (overfit riski).
   - Shrinkage λ: θ_panel(λ) = (1-λ)·θ_global + λ·θ_panel_oof. λ taranır.
   - Nested-CV: λ OOF üzerinde seçilir, HELD-OUT test'te değerlendirilir.
 
 Beklenen (workflow honest_reality): test-optimal λ ≈ 0; OOF-seçili λ ≈ 0; CFTR
-0-negatif → skorlanamaz. Sonuç: global θ optimal, per-panel θ onu GEÇMEZ.
+0-negatif → skorlanamaz. Sonuç: BÜYÜK-3 panel için global θ optimal, ÜNİFORM per-panel
+θ onu GEÇMEZ.
 
-NOT: F1 monoton dönüşüme değişmez; per-panel eşik yalnız küçük panellerde overfit
-ekler (mevcut free-per-panel zaten 0.5445<<0.6202 — competition_jury_f1.json).
+NOT (kapsam): Bu savunma ÜNİFORM per-panel θ'yı (tüm paneller OOF-optimal) reddeder —
+overfit eder, 3-panel 0.5445 << 0.6202 (nested-CV ile gösterilir) ve BÜYÜK-3 panel için
+global θ=0.8415 optimaldir. F1 monoton dönüşüme değişmez; per-panel eşik yalnız küçük
+panellerde overfit ekler. ANCAK CFTR bir İSTİSNADIR: iç hold-out'ta tek-sınıflı (n=18),
+global θ orada miskalibre (F1=0.33 artefaktı). CFTR'ye TARGETED kalibre eşik θ=0.59
+(büyük-3 global θ KALIR) resmi 4-panel skorunu 0.631'e çıkarır
+(reports/panel_threshold_4panel.json). Yani bu artefakt büyük-3'ün global θ'sını savunur;
+CFTR belgelenmiş, gerekçeli bir istisnadır.
 Çıktı: reports/nested_cv_threshold_defense.json (yalnız metrik; NDA veri sızmaz).
 """
 
@@ -89,7 +97,7 @@ def main() -> int:
 
     panels = sorted(set(test_pan))
 
-    # ── λ=0 (global) baseline — canonical 0.6202'yi YENİDEN ÜRETMELİ ──────────
+    # ── λ=0 (global) baseline — 3-panel hold-out tanısı 0.6202'yi YENİDEN ÜRETMELİ ──
     global_thr = {p: THETA_GLOBAL for p in panels}
     base_score, base_per = panel_avg(test_p, test_y, test_pan, global_thr)
 
@@ -127,11 +135,11 @@ def main() -> int:
         else "per-panel global'i geçti — incele"
     )
     if reproduces:
-        verdict = directional + " [canonical 0.6202 YENİDEN ÜRETİLDİ → CITABLE]"
+        verdict = directional + " [3-panel hold-out tanısı 0.6202 YENİDEN ÜRETİLDİ → CITABLE; resmi 4-panel skoru 0.631, CFTR dahil]"
     else:
         verdict = (
             f"⚠️ GİRDİ UYUŞMAZLIĞI: oof_probs.npz test_proba shipped stacked modeli "
-            f"YENİDEN ÜRETMİYOR (λ=0 baseline {base_score:.4f} ≠ canonical 0.6202; "
+            f"YENİDEN ÜRETMİYOR (λ=0 baseline {base_score:.4f} ≠ 3-panel tanı 0.6202; "
             f"tree-blend/eski snapshot). Sonuç YALNIZCA YÖNSEL, canonical-kesin DEĞİL → "
             f"jüriye sunulamaz. Yönsel: {directional}. CITABLE artefakt için shipped "
             f"ensemble'ın held-out ham olasılıklarını yeni eğitim koşusunda dök."
@@ -143,7 +151,8 @@ def main() -> int:
         "method": "train.py:294-304 ile birebir %20-patojenik 300x resample; F1 monoton-değişmez.",
         "oof_group_panel_join_unknown": n_unknown,
         "global_score_lambda0": round(base_score, 4),
-        "canonical_official_score": 0.6202,
+        "three_panel_holdout_f1": 0.6202,
+        "official_4panel_score_cftr_incl": 0.631,
         "reproduces_canonical": bool(abs(base_score - 0.6202) <= 0.01),
         "global_per_panel": {k: (round(v, 4) if v is not None else None) for k, v in base_per.items()},
         "theta_oof_per_panel": {k: round(v, 4) for k, v in theta_oof.items()},
@@ -153,17 +162,19 @@ def main() -> int:
         "nested_cv_test_score": round(nested_test_score, 4),
         "nested_cv_per_panel": {k: (round(v, 4) if v is not None else None) for k, v in nested_per.items()},
         "verdict": verdict,
-        "_note": "CFTR test'te 0 negatif → skorlanamaz (None), ortalama dışı (canonical ile aynı 3-panel). "
-        "free per-panel θ küçük panellerde overfit eder; nested-CV λ→0'a (global) yakınsar.",
+        "_note": "Bu baseline 3-panel hold-out tanısıdır (CFTR test'te 0 negatif → skorlanamaz, None). "
+        "ÜNİFORM per-panel θ küçük panellerde overfit eder; nested-CV λ→0'a (global) yakınsar → büyük-3 için global θ optimal. "
+        "Resmi 4-panel skoru (CFTR dahil) = 0.631: büyük-3 global θ KALIR, yalnız CFTR'ye targeted kalibre θ=0.59 "
+        "uygulanır (global-θ miskalibrasyonunu düzeltir, F1 0.33→0.66; reports/panel_threshold_4panel.json).",
     }
     out_path = ROOT / "reports" / "nested_cv_threshold_defense.json"
     json.dump(out, open(out_path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
     print(f"OOF→panel join unknown: {n_unknown}/{len(oof_g)}")
-    print(f"GLOBAL (λ=0)  score = {base_score:.4f}  (canonical 0.6202 ; reproduces={out['reproduces_canonical']})")
+    print(f"GLOBAL (λ=0)  score = {base_score:.4f}  (3-panel hold-out tanısı 0.6202 ; reproduces={out['reproduces_canonical']})")
     print(f"  per-panel: {out['global_per_panel']}")
     print(f"λ-sweep (test): {lam_curve}")
-    print(f"FREE per-panel (λ=1) = {free_per_panel}  (mevcut competition_jury_f1 ~0.5445 ile uyumlu beklenir)")
+    print(f"UNIFORM per-panel (λ=1) = {free_per_panel}  (uniform per-panel 0.5445 << 3-panel tanı 0.6202 ile uyumlu beklenir)")
     print(f"NESTED-CV seçili λ = {lam_selected} → test score = {nested_test_score:.4f}")
     print(f"VERDICT: {verdict}")
     print(f"→ {out_path}")

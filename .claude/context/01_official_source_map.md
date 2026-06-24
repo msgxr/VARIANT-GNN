@@ -57,5 +57,5 @@ Durum: Birincil — tüm kural kararları bu belgeden alınır.
 **TEKNOFEST resmi Q&A-II (Üniversite) — "test seti ~%20-patojenik / %80-benign; 50/50 ESKİ/geçersiz".**
 
 - **Durum: DOĞRULANDI.** Toplantı transkripti edinildi ve okundu (yerel artefakt: `docs/qa/2026_QA_Universite_transkript.md`). Hakem ifadesi NET ve TEKRARLI (07:13, 07:48, 08:54, 09:26, 23:37). Şartmanenin 1000/1000'i organizatör tarafından **hata** olarak kabul edildi (26:23).
-- **Sonuç:** `RESULTS_CANONICAL.json` içindeki **θ=0.8415**, jüri-F1 **0.6042** ve **resmi 4-panel skor 0.6202** artık resmi dayanağa sahiptir. U-008 → Çözülmüş. `provenance_unverified` → güncellendi.
+- **Sonuç:** `RESULTS_CANONICAL.json` içindeki **θ=0.8415**, jüri-F1 **0.6042** ve **resmi 4-panel skor (CFTR dahil) 0.631** (3-panel tanı CFTR hariç 0.6202) artık resmi dayanağa sahiptir. U-008 → Çözülmüş. `provenance_unverified` → güncellendi.
 - **Aynı transkriptle ayrıca doğrulandı:** F1 patojenik-odaklı + per-panel + ortalama (34:10); ikili 0/1 çıktı (08:12); 4 ayrı model (31:30); komşu sekans/AA paylaşılmıyor (21:47); missing≠0 (17:25).

@@ -49,14 +49,14 @@
 ║  Takim           ║  XYRA3  ·  ID: #909249  ·  Basvuru: #5200240                   ║
 ║  Yarisma         ║  TEKNOFEST 2026 Saglikta YZ — Universite ve Uzeri              ║
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                             ║
-║  F1 §7.3 (juri)  ║  0.6202 3-panel ort. (CFTR hariç, iç tahmin) · 0.8367 ic hold-out · θ=0.8415   ║
+║  F1 §7.3 (juri)  ║  0.631 4-panel ort. (CFTR dahil) · 0.6202 3-panel tani (CFTR haric) · 0.8367 ic hold-out   ║
 ║  Veri            ║  3802 satir · 3224 tekil varyant · 4 panel (NDA)               ║
 ║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00               ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi             ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
 ```
 
-> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A-II** (Üniversite, transkript 2026-06-02; ✅ DOĞRULANDI 2026-06-03): jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; %20-patojenik resmi prior). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **3 değerlendirilebilen panel (CFTR hariç, n=18 tek-sınıf) %20-F1 ort. = 0.6202 (resmi etiketli testten ÖLÇÜLMEMİŞ iç tahmin)** (HEADLINE); havuzlanmış = **0.6042 ± 0.0324** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.8367** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
+> **🎯 YARIŞMA METRİĞİ (dürüst):** TEKNOFEST **resmi Q&A-II** (Üniversite, transkript 2026-06-02; ✅ DOĞRULANDI 2026-06-03): jüri/test seti **%20 patojenik / %80 benign** (eğitimin TERSİ; %20-patojenik resmi prior). F1 patojenik-odaklı ve patojenik **azınlık** sınıf → beklenen asıl yarışma skorumuz **4-panel (CFTR dahil, panel-kalibre eşik) %20-F1 ort. = 0.631 (HEADLINE)**; muhafazakâr 3-panel tanı (CFTR hariç, n=18 tek-sınıf) %20-F1 ort. = **0.6202**; havuzlanmış = **0.6042 ± 0.0324** (θ=0.8415, %20-patojenik-OOF türevli — `reports/competition_jury_f1.json`). İç %75-poz hold-out'taki **0.8367** modelin *ayrım gücüdür*, jüri skoru **değildir**. Eşiği %74-poz dağılımda ayarlamak %20-test'te ~5pp kaybettirir; biz eşiği resmi prior'a göre türettik.
 >
 > **⚠️ KLİNİK UYARI:** Model çıktıları **yalnızca araştırma, eğitim ve yarışma değerlendirmesi** amaçlıdır. Klinik tanı, tedavi veya tıbbi karar desteği için **kullanılamaz**.
 
@@ -117,7 +117,8 @@
 
 | Metrik | Değer | Protokol | Kaynak |
 |:---|:---:|:---|:---:|
-| 🎯 **Jüri F1 — iç tahmin (3-panel ort., CFTR hariç)** | **0.6202** | %20-patojenik resmi prior, 3-panel (CFTR hariç) %20-F1 ortalaması — HEADLINE | `reports/competition_jury_f1.json` |
+| 🎯 **Jüri F1 — 4-panel ort. (CFTR dahil)** | **0.631** | %20-patojenik resmi prior, 4-panel (CFTR dahil, panel-kalibre eşik) %20-F1 ortalaması — HEADLINE | `reports/panel_threshold_4panel.json` |
+| **Jüri F1 — 3-panel tanı (CFTR hariç)** | **0.6202** | %20-patojenik resmi prior, 3-panel (CFTR hariç) %20-F1 ortalaması — muhafazakâr iç değer | `reports/competition_jury_f1.json` |
 | 🎯 **Jüri F1 — havuzlanmış** | **0.6042 ± 0.0324** | %20-patojenik resmi prior, θ=0.8415, 300× resample | `reports/competition_jury_f1.json` |
 | **CV Binary F1** | **0.8936 ± 0.0004** | OOF-stacking, nested StratifiedGroupKFold (5 seed) | `RESULTS_CANONICAL.json` |
 | **Test Binary F1** | **0.8367** | Group-aware %75-poz iç hold-out (ayrım gücü, JÜRİ SKORU DEĞİL) | `reports/cv_report.json` |
@@ -792,7 +793,8 @@ Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🎯 JÜRİ BEKLENTİSİ  =  3-panel (CFTR hariç) %20-F1 ort. = 0.6202 (iç tahmin)  (HEADLINE)        │
+│  🎯 JÜRİ BEKLENTİSİ  =  4-panel (CFTR dahil) %20-F1 ort. = 0.631  (HEADLINE)                     │
+│     3-panel tanı (CFTR hariç) = 0.6202 (muhafazakâr iç değer)                │
 │     havuzlanmış = 0.6042 ± 0.0324 · §3.2 %20-patojenik resmi prior           │
 │     θ=0.8415 %20-patojenik-OOF · 300× resample                             │
 │     → GERÇEK beklenen yarışma skorumuz                                     │
@@ -1077,7 +1079,7 @@ python scripts/check_results_consistency.py   # ✅ PASS beklenir
 3. Geri çekilmiş leaky sayılar (0.8980, 0.9269, 0.5356, θ=0.241 …) jüri belgelerinde **güncel iddia olarak görünemez** (jüri-görünür `src/ui/about.py` ve `performance.py` demo UI dahil).
 4. Jüri-görünür raporlarda "sentetik/synthetic proxy" dili yok.
 5. Eşik tek-kaynak: shipped `models/threshold.json` == canonical `global_threshold` (0.8415), rakip θ yok.
-6. Resmi jüri-F1 başlığı (4-panel %20-F1 ort. = 0.6202, havuzlanmış = 0.6042 ± 0.0324) == `reports/competition_jury_f1.json`.
+6. Resmi jüri-F1 başlığı (4-panel %20-F1 ort. = 0.631, CFTR dahil == `reports/panel_threshold_4panel.json`; 3-panel tanı 0.6202 == `reports/competition_jury_f1.json`; havuzlanmış = 0.6042 ± 0.0324).
 7. Canonical panel F1'leri == `reports/cv_report.json` `panel_metrics`.
 8. `models/PROVENANCE.json` metrikleri == canonical (jeneratörsüz dosyanın yeniden sürüklenmesine karşı anti-drift pini).
 
@@ -1353,7 +1355,8 @@ flowchart LR
 ### PDR Metrik Kontrol Listesi (canonical)
 
 ```
-✅  Jüri F1 — RESMİ headline       =  0.6202   (3-panel (CFTR hariç) %20-F1 ortalaması)
+✅  Jüri F1 — RESMİ headline       =  0.631    (4-panel (CFTR dahil) %20-F1 ortalaması)
+✅  Jüri F1 — 3-panel tanı         =  0.6202   (CFTR hariç, muhafazakâr iç değer)
 ✅  Jüri F1 — havuzlanmış         =  0.6042 ± 0.0324   (%20-patojenik resmi prior)
 ✅  Test Binary F1 (ayrım gücü)   =  0.8367
 ✅  CV F1 (OOF-stacking)          =  0.8936 ± 0.0004
@@ -1431,7 +1434,7 @@ flowchart LR
 **VARIANT-GNN** — Missense Varyant Patojenitesi için Hibrit GATv2 + DANN Ensemble Sistemi
 
 ```
-Jüri F1 (%20-patojenik) headline: 0.6202  ·  havuzlanmış: 0.6042 ± 0.0324  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.8367  ·  MCC: 0.5112  ·  θ: 0.8415
+Jüri F1 (%20-patojenik) headline: 0.631 (4-panel, CFTR dahil)  ·  3-panel tanı: 0.6202  ·  havuzlanmış: 0.6042 ± 0.0324  ·  CV F1: 0.8936 ± 0.0004  ·  Test F1: 0.8367  ·  MCC: 0.5112  ·  θ: 0.8415
 GATv2Conv × 3  ·  XGBoost  ·  LightGBM  ·  DANN-DNN  ·  OOF-Stacking  ·  İsotonik Kalibrasyon  ·  Conformal  ·  SWA
 Tüm sayılar RESULTS_CANONICAL.json ile tutarlı · scripts/check_results_consistency.py ile zorlanır
 ```

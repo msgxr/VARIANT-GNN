@@ -28,7 +28,7 @@
 | C-003 | PDR teslim tarihi | 29 Haziran 2026, 17:00 | Şartname / Takvim |
 | C-004 | Veri dağıtım tarihi | 5 Mayıs 2026 | Takvim |
 | C-005 | Pilot MCC vs gerçek MCC farkı | Açıklandı — veri kalitesi ve denge farkı | PDR §4.2 |
-| C-006 | Gizli test seti dağılımı (50/50 mı, %20-patojenik mi?) | **Test ~%20 patojenik / %80 benign** (eğitim ~%80/%20'nin tersi). Şartnamedeki 50/50 organizatör tarafından eski/hatalı kabul edildi. θ=0.8415 + 0.6202 dayanağı RESMİ. | Q&A-II transkripti (`docs/qa/2026_QA_Universite_transkript.md`, 07:13/23:37/26:23); `01_official_source_map.md` Tier-4 |
+| C-006 | Gizli test seti dağılımı (50/50 mı, %20-patojenik mi?) | **Test ~%20 patojenik / %80 benign** (eğitim ~%80/%20'nin tersi). Şartnamedeki 50/50 organizatör tarafından eski/hatalı kabul edildi. θ=0.8415 + headline 0.631 (4-panel, CFTR dahil; 3-panel tanı 0.6202) dayanağı RESMİ. | Q&A-II transkripti (`docs/qa/2026_QA_Universite_transkript.md`, 07:13/23:37/26:23); `01_official_source_map.md` Tier-4 |
 | C-007 | Skorlama: per-panel F1 + ortalama; çıktı 0/1; 4 ayrı model | Hepsi doğrulandı (per-panel F1→ortalama 34:10; ikili 0/1 08:12; 4 model 31:30) | Q&A-II transkripti |
 | C-008 | Komşu nükleotit/aminoasit (yerel sekans bağlamı) verilecek mi? | **Verilmiyor** — şartname §3.2'deki ±5 nt/±5 aa bilim kurulu kararıyla kaldırıldı | Q&A-II transkripti (21:47, 23:57) |
 | C-009 | PDR sayfa limiti (tam sayı) — eski U-001 | **≤10 içerik sayfası** (resmi PDR şablonu DOCX). PDR bu limite kesildi (2026-06-03, Word COM ölçümü). | Resmi PDR şablonu DOCX; `report-template-checker` SKILL |

@@ -14,7 +14,7 @@
   "seed": 42,
   "cv_f1_mean": 0.8936,
   "cv_f1_std": 0.0004,
-  "_test_metrics_note": "Shipped karar eşiği θ=0.8415 (%20-patojenik test prior'a F1-optimal). Aşağıdaki test metrikleri %75-poz iç hold-out AYRIM gücüdür — jüri skoru DEĞİL. Resmi beklenen yarışma skoru = 3-panel (CFTR hariç) %20-F1 ort. = 0.6202 (iç tahmin) (RESULTS_CANONICAL.json).",
+  "_test_metrics_note": "Shipped karar eşiği θ=0.8415 (%20-patojenik test prior'a F1-optimal). Aşağıdaki test metrikleri %75-poz iç hold-out AYRIM gücüdür — jüri skoru DEĞİL. Resmi beklenen yarışma skoru = 4-panel (CFTR dahil, panel-kalibre eşik) %20-F1 ort. = 0.631; 3-panel tanı (CFTR hariç) %20-F1 ort. = 0.6202 (RESULTS_CANONICAL.json).",
   "test_f1": 0.8367,
   "test_precision": 0.9241,
   "test_recall": 0.7644,
@@ -48,7 +48,7 @@
   "global_threshold_strategy": "F1-optimal on %20-patojenik test prior (Q&A-II ile dogrulandi); group-aware HELD-OUT calibration set'te HAM olasilikta turetildi (derivation==inference).",
   "global_threshold": 0.8415,
   "panel_thresholds_optin": {
-    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Per-panel tuning kucuk panellerde overfit edip DAHA DUSUK skorladi (4-panel 0.5445 < 0.6202).",
+    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Per-panel tuning kucuk panellerde overfit edip DAHA DUSUK skorladi (4-panel 0.5445 < 3-panel tani 0.6202).",
     "General": 0.399,
     "Hereditary_Cancer": 0.4532,
     "PAH": 0.4434,

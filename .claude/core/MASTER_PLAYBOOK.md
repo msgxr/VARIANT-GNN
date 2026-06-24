@@ -46,7 +46,7 @@ Prediction: python main.py --mode predict --test_file <file>
 ## 3. VERIFIED PERFORMANCE (Real Competition Data — 2026-06-02, canonical: RESULTS_CANONICAL.json)
 
 ### Overall
-⭐ **Jüri beklentisi (%20 patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03) = havuzlanmış Binary F1 = 0.6042 ± 0.0324** (θ=0.8415); **RESMİ headline = 0.6202** (4-panel %20-F1 ort.). İç ayrım gücü aşağıda:
+⭐ **Jüri beklentisi (%20 patojenik — ✅ resmi Q&A-II ile DOĞRULANDI 2026-06-03) = havuzlanmış Binary F1 = 0.6042 ± 0.0324** (θ=0.8415); **RESMİ headline = 0.631** (4-panel %20-F1 ort., CFTR dahil; 3-panel tanı CFTR hariç = 0.6202). İç ayrım gücü aşağıda:
 
 | CV F1 (OOF-stacking) | Test F1 | MCC | PR-AUC | ROC-AUC | Precision | Recall | Threshold |
 |---|---|---|---|---|---|---|---|

@@ -203,18 +203,44 @@ def main() -> int:
     if errors == 0:
         print("   ok")
 
-    # 6. canonical jury-F1 block == reports/competition_jury_f1.json
-    #    The official-score headline (4-panel %20-prior avg + pooled jury F1) is the
-    #    number the jury actually scores on; it must trace 1:1 to its source artefact.
-    print("6. Canonical jury-F1 headline vs reports/competition_jury_f1.json")
+    # 6. Canonical official scores trace 1:1 to their source artefacts:
+    #    - 4-panel headline (CFTR DAHİL, panel-kalibre θ)  → reports/panel_threshold_4panel.json
+    #      (üretici scripts/panel_threshold_4panel.py; CFTR OOF nested-CV @ θ=0.59).
+    #    - 3-panel hold-out tanısı (CFTR hariç) + havuzlanmış jüri-F1 → reports/competition_jury_f1.json
+    #      (üretici src/cli/modes/train.py; CFTR hold-out tek-sınıf → null).
+    print("6. Canonical 4-panel headline vs panel_threshold_4panel.json + 3-panel tanı vs competition_jury_f1.json")
+    p4_path = ROOT / "reports" / "panel_threshold_4panel.json"
+    if p4_path.exists():
+        p4 = json.loads(p4_path.read_text(encoding="utf-8"))
+        cval, jval = h.get("official_competition_score_4panel_avg"), p4.get("official_4panel_f1")
+        if cval is None or jval is None:
+            fail(f"official_competition_score_4panel_avg: missing (canonical={cval}, panel_threshold_4panel={jval})")
+            errors += 1
+        elif abs(cval - jval) > TOL:
+            fail(f"official_competition_score_4panel_avg: canonical {cval} != panel_threshold_4panel.json {jval}")
+            errors += 1
+        # per-panel official F1 at the 20% prior (CFTR DAHİL) — panel_threshold_4panel.json kaynağı
+        cpanel = h.get("official_per_panel_f1_20pct", {})
+        jpanel = p4.get("per_panel_f1_20pct", {})
+        for panel in sorted(set(cpanel) | set(jpanel)):
+            cv, jv = cpanel.get(panel), jpanel.get(panel)
+            if cv is None or jv is None:
+                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != panel_threshold_4panel.json {jv}")
+                errors += 1
+            elif abs(cv - jv) > TOL:
+                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != panel_threshold_4panel.json {jv}")
+                errors += 1
+    else:
+        fail("reports/panel_threshold_4panel.json yok (4-panel headline kaynağı)")
+        errors += 1
     jf1_path = ROOT / "reports" / "competition_jury_f1.json"
     if jf1_path.exists():
         jf1 = json.loads(jf1_path.read_text(encoding="utf-8"))
-        # (canonical headline key, jury-json key)
+        # (canonical key, jury-json key) — 3-panel tanı + havuzlanmış jüri-F1
         scalar_map = [
             ("competition_jury_f1", "competition_jury_f1"),
             ("competition_jury_f1_std", "competition_jury_f1_std"),
-            ("official_competition_score_4panel_avg", "official_competition_score"),
+            ("three_panel_holdout_f1", "official_competition_score"),
         ]
         for ckey, jkey in scalar_map:
             cval, jval = h.get(ckey), jf1.get(jkey)
@@ -223,19 +249,6 @@ def main() -> int:
                 errors += 1
             elif abs(cval - jval) > TOL:
                 fail(f"{ckey}: canonical {cval} != competition_jury_f1.json {jval}")
-                errors += 1
-        # per-panel official F1 at the 20% prior — allow None==null (e.g. CFTR small-n)
-        cpanel = h.get("official_per_panel_f1_20pct", {})
-        jpanel = jf1.get("official_per_panel_f1_20pct", {})
-        for panel in sorted(set(cpanel) | set(jpanel)):
-            cv, jv = cpanel.get(panel), jpanel.get(panel)
-            if cv is None and jv is None:
-                continue
-            if cv is None or jv is None:
-                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != jury_json {jv}")
-                errors += 1
-            elif abs(cv - jv) > TOL:
-                fail(f"official_per_panel_f1_20pct[{panel}]: canonical {cv} != jury_json {jv}")
                 errors += 1
     if errors == 0:
         print("   ok")

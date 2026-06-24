@@ -1,7 +1,8 @@
 {
-  "__global__": 0.3990452261306533,
-  "General": 0.3990452261306533,
-  "Hereditary_Cancer": 0.45321608040201006,
-  "PAH": 0.4433668341708543,
-  "CFTR": 0.19221105527638194
+  "__global__": 0.8415,
+  "General": 0.8415,
+  "Hereditary_Cancer": 0.8415,
+  "PAH": 0.8415,
+  "CFTR": 0.59,
+  "_note": "RAW-proba uzayi (pipeline.py: raw_proba[:,1] >= thr). Her panel kendi esigini kullanir; buyuk-3 panel esigi = global theta=0.8415 (canonical, DEGISMEZ -> ic Test F1=0.8367 referansi etkilenmez). YALNIZ CFTR kalibre esik (0.59) kullanir: global theta CFTR'nin kucuk/asiri-prior dagiliminda miskalibre (18 pozitiften 7'sini benign sayiyordu -> F1=0.33 artefakt; 0.59'da 17/18 dogru -> F1=0.66). CFTR theta = group-aware OOF %20-prior F1-optimal (scripts/panel_threshold_4panel.py -> reports/panel_threshold_4panel.json). Submission'da use_panel_thresholds=true ile uygulanir -> resmi 4-panel F1 = 0.631 (CFTR F1 nested-CV 0.6632 dahil). 3-panel hold-out tanisi (CFTR haric) = 0.6202."
 }

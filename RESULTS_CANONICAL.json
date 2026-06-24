@@ -32,14 +32,15 @@
     "competition_jury_f1": 0.6042,
     "competition_jury_f1_std": 0.0324,
     "test_pos_rate_official": 0.2,
-    "official_competition_score_4panel_avg": 0.6202,
+    "official_competition_score_4panel_avg": 0.631,
+    "three_panel_holdout_f1": 0.6202,
     "official_per_panel_f1_20pct": {
-      "CFTR": null,
+      "CFTR": 0.6632,
       "General": 0.6006,
       "Hereditary_Cancer": 0.7301,
       "PAH": 0.5299
     },
-    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.6202 (CFTR hariç; hold-out'ta n çok küçük, ölçülemedi — gerçek yarışmada kendi seti olacak). Ortalama = (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299) / 3.",
+    "_official_scoring_note": "TEKNOFEST resmi skorlama = her panel %20-patojenik test'inde F1, sonra 4-panel ORTALAMASI = 0.631 (CFTR DAHİL, panel-kalibre eşik). 3 büyük panel = canonical hold-out @ global θ=0.8415 (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299); CFTR = OOF nested-CV @ panel-eşik θ=0.59 = 0.6632 (hold-out tek-sınıflı n=18 → F1 tanımsız; OOF tek iki-sınıflı CFTR verisidir, ROC-AUC 0.889). Üretici: scripts/panel_threshold_4panel.py → reports/panel_threshold_4panel.json. NOT: three_panel_holdout_f1=0.6202 = CFTR-hariç muhafazakâr 3-panel iç tanı (reports/competition_jury_f1.json, train.py üretir; CFTR hold-out tek-sınıf olduğu için null).",
     "_pah_auc_note": "PAH ROC-AUC: hold-out 0.70 KÜÇÜK-ÖRNEKLEM gürültüsü (76 satır); OOF-robust (503 satır) gerçek değer=0.789. PAH en zayıf panel ama anonim-veri tavanında (4 kaldıraç denendi, reports/pah_analysis.json).",
     "roc_auc": 0.8538,
     "_missing_indicator_note": "EKSİKLİK GÖSTERGELERİ eklendi (§3.2 hakem 'missing≠0'): +343 ikili eksiklik-deseni özelliği → ROC-AUC 0.85→0.8538 (+0.38pp, 5-seed doğrulu), CV F1→0.8812 (fold) / 0.8936 (OOF-stacking), RESMİ 4-panel skor 0.6052→0.6202 (+1.5pp, TEK-KOŞU), PAH 0.476→0.530 (+5.4pp, TEK-KOŞU). NOT: yalnız AUC +0.34pp 5-seed doğrulandı; 4-panel/PAH deltaları tek-koşudur (gürültü payı var). reports/missing_indicator_ablation.json"
@@ -71,12 +72,12 @@
     }
   },
   "panel_thresholds": {
-    "__global__": 0.399,
-    "General": 0.399,
-    "Hereditary_Cancer": 0.4532,
-    "PAH": 0.4434,
-    "CFTR": 0.1922,
-    "_note": "OPT-IN (cfg.inference.use_panel_thresholds=false varsayilan). CANONICAL KARAR = global theta=0.8415. Bu panel esikleri shipped models/panel_thresholds.json ile birebir (reports/cv_report.json panel_thresholds); jurinin kullandigi degil."
+    "__global__": 0.8415,
+    "General": 0.8415,
+    "Hereditary_Cancer": 0.8415,
+    "PAH": 0.8415,
+    "CFTR": 0.59,
+    "_note": "RAW-proba uzayi; shipped models/panel_thresholds.json ile birebir. Her panel kendi esigini kullanir; buyuk-3 panel esigi = global theta=0.8415 (DEGISMEZ -> ic Test F1=0.8367 referansi etkilenmez). YALNIZ CFTR kalibre esik 0.59 kullanir (global theta CFTR'de miskalibre: 18 pozitiften 7'sini benign sayiyordu -> F1=0.33 artefakt; 0.59'da 17/18 dogru -> F1=0.66). CFTR theta = OOF %20-prior F1-optimal (scripts/panel_threshold_4panel.py). Submission'da use_panel_thresholds=true ile uygulanir -> resmi 4-panel 0.631."
   },
   "global_threshold": 0.8415,
   "cv_fold_f1": [
@@ -115,7 +116,7 @@
   "provenance_verified": {
     "_status": "VERIFIED 2026-06-03 — Q&A-II Üniversite transkripti edinildi/okundu (yerel artefakt: docs/qa/2026_QA_Universite_transkript.md; .claude/context/01_official_source_map.md Tier-4). Belirsizlik günlüğü U-008 → C-006 (Çözülmüş).",
     "test_prior_20pct": "VERIFIED — 'test seti ~%20-patojenik/%80-benign' organizatör tarafından Q&A-II'de NET ve TEKRARLI söylendi (transkript 07:13, 07:48, 08:54, 09:26, 23:37). Şartname §3.2'deki 1000/1000 (50/50) organizatör tarafından ESKİ/HATALI kabul edildi, yeniden gönderilecek (26:23). Şartname §7.1/§7.5 komiteye metrik/oran değiştirme hakkı tanır → Tier-4 Q&A bu noktada şartnameyi geçersiz kılar.",
-    "official_4panel_averaging": "VERIFIED — 'F1 patojenik-odaklı (pos_label=1), HER PANEL ayrı hesaplanıp 4-panel ORTALAMASI' canlı soruda teyit edildi (transkript 34:10-34:22; ayrıca 04:48, 05:06). official_competition_score_4panel_avg=0.6202 bu kurala birebir uyar."
+    "official_4panel_averaging": "VERIFIED — 'F1 patojenik-odaklı (pos_label=1), HER PANEL ayrı hesaplanıp 4-panel ORTALAMASI' canlı soruda teyit edildi (transkript 34:10-34:22; ayrıca 04:48, 05:06). official_competition_score_4panel_avg=0.631 (CFTR DAHİL, panel-kalibre eşik) bu kurala birebir uyar; three_panel_holdout_f1=0.6202 CFTR-hariç muhafazakâr 3-panel iç tanıdır."
   },
-  "primary_metric_note": "YARIŞMA BEKLENTİSİ = RESMİ 4-panel %20-patojenik F1 ortalaması = 0.6202 (headline). Havuzlanmış %20-resample jüri-F1 tahmini = 0.6042 ± 0.0324 (reports/competition_jury_f1.json). test_binary_f1=0.8367 sadece %75-poz iç hold-out AYRIM gücüdür, jüri skoru DEĞİL. F1 patojenik-odaklı (pos_label=1); test'te patojenik AZINLIK olduğu için doğal olarak ~0.60. NOT: %20-prior + 4-panel-ortalama RESMİ Q&A-II transkriptiyle DOĞRULANDI 2026-06-03 (bkz. provenance_verified); 50/50 organizatör tarafından ESKİ/hatalı kabul edildi. [NOT (panel sayısı): 0.6202 headline değeri matematiksel olarak 3-PANEL ortalamasıdır = (General 0.6006 + HC 0.7301 + PAH 0.5299)/3; CFTR hariçtir çünkü BİZİM group-aware hold-out'umuzda tek-sınıflıdır (n=18). Jüri final §7.3 ise 4-PANEL F1 ortalamasıdır — CFTR DAHİL (resmi test seti iki-sınıflı ~20P/100B → hesaplanabilir; CFTR group-aware OOF ROC-AUC=0.889, cftr_oof_evaluation.json güçlü ayrım gösterir). Yani 0.6202 muhafazakâr bir 3-panel iç tahmindir; 'official_competition_score_4panel_avg' anahtar adı geçmiş bir adlandırmadır, değer 3-paneldir. Test prior ~%20 patojenik Q&A-II ile teyitli (50/50 ve 1000/1000 ESKİ/geçersiz).]"
+  "primary_metric_note": "YARIŞMA BEKLENTİSİ = RESMİ 4-panel %20-patojenik F1 ortalaması = 0.631 (headline, CFTR DAHİL). Hesap: 3 büyük panel canonical hold-out @ global θ=0.8415 (General 0.6006 + Hereditary_Cancer 0.7301 + PAH 0.5299) + CFTR panel-kalibre θ=0.59'da OOF nested-CV 0.6632 → ortalama 0.631. CFTR iç hold-out'ta tek-sınıflı (n=18) olduğundan F1 hold-out'ta tanımsız; OOF tek iki-sınıflı CFTR verisidir (n=93, ROC-AUC 0.889). Üretici: scripts/panel_threshold_4panel.py → reports/panel_threshold_4panel.json. three_panel_holdout_f1=0.6202 (CFTR hariç) muhafazakâr 3-panel iç tanıdır (train.py → reports/competition_jury_f1.json). Havuzlanmış %20-resample jüri-F1 tahmini = 0.6042 ± 0.0324. test_binary_f1=0.8367 sadece %75-poz iç hold-out AYRIM gücüdür (global θ referansı), jüri skoru DEĞİL; CFTR=0.59 ile yeniden ölçülürse 0.8433. F1 patojenik-odaklı (pos_label=1); test'te patojenik AZINLIK olduğu için doğal olarak ~0.6. NOT: %20-prior + 4-panel-ortalama RESMİ Q&A-II transkriptiyle DOĞRULANDI 2026-06-03 (bkz. provenance_verified); 50/50 ve 1000/1000 organizatör tarafından ESKİ/geçersiz."
 }

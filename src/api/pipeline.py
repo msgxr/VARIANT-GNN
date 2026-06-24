@@ -274,14 +274,17 @@ class InferencePipeline:
 
         cal_risk = HybridEnsemble.pathogenic_risk_score(cal_proba)
 
-        # ── Karar eşiği: GLOBAL (canonical) ─────────────────────────────────
-        # preds yukarıda zaten global θ=0.8415 eşikle (threshold) hesaplandı —
-        # shipped θ=0.8415 ile Test F1=0.8367 üretilir (RESULTS_CANONICAL.json, §7.5
-        # reprodüksiyon). Panel-spesifik eşikler resmi 4-panel %20-F1 ortalamasında
-        # DAHA DÜŞÜK skorlar ve cal-set üzerinde aşırı-uyumlu olduğundan VARSAYILAN
-        # OLARAK UYGULANMAZ (kanıt: reports/threshold_consistency.json). İsteğe bağlı
-        # olarak cfg.inference.use_panel_thresholds=true ile açılabilir.
-        use_panel = bool(getattr(getattr(cfg, "inference", None), "use_panel_thresholds", False))
+        # ── Karar eşiği: PANEL-AWARE (büyük-3 = global θ, CFTR kalibre) ─────
+        # models/panel_thresholds.json: büyük-3 panel eşiği = global θ=0.8415 (yani
+        # General/Hereditary_Cancer/PAH için DEĞİŞİKLİK YOK; iç Test F1=0.8367 referansı
+        # train.py eval'inde global θ ile üretilir, bu kod yolundan ETKİLENMEZ). YALNIZ
+        # CFTR kalibre eşik θ=0.59 kullanır: global θ CFTR'nin küçük/aşırı-prior
+        # dağılımında miskalibre (18 pozitiften 7'sini benign sayıyordu → F1=0.33 artefakt;
+        # 0.59'da 17/18 doğru → F1=0.66). Bu, resmi per-panel skorlamada (organizatör Q&A
+        # 4-panel ortalaması) doğru olandır → resmi 4-panel %20-F1 ort. = 0.631 (CFTR dahil;
+        # üretici scripts/panel_threshold_4panel.py → reports/panel_threshold_4panel.json).
+        # VARSAYILAN AÇIK; cfg.inference.use_panel_thresholds=false ile saf global θ'ya dönülür.
+        use_panel = bool(getattr(getattr(cfg, "inference", None), "use_panel_thresholds", True))
         if use_panel and panel_thresholds and "Panel" in dataset.metadata.columns:
             proba_pathogenic = raw_proba[:, 1]
             row_thr = (

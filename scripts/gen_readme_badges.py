@@ -133,7 +133,7 @@ BADGES = [
 
 TYPING_LINES = [
     "PSR ASAMASI  →  93.00 / 100 PUAN",
-    "JURI F1 (resmi 4-panel) = 0.6202   |   ic hold-out 0.8367",
+    "JURI F1 (resmi 4-panel, CFTR dahil) = 0.631   |   ic hold-out 0.8367",
     "Missense Varyant Patojenitesi Tahmini",
     "GATv2Conv + XGBoost + LightGBM + DANN-DNN Ensemble",
     "PDR Teslimi  →  29 Haziran 2026",

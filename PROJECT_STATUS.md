@@ -19,7 +19,7 @@ PSR aşaması 93/100 puanla geçilmiştir. PDR teslim tarihi: 29 Haziran 2026, 1
 > ✅ Gerçek TEKNOFEST 2026 yarışma verisi 14 Mayıs 2026'da alınmıştır.
 > Model 1 Haziran 2026'da **sızıntısız (leakage-free, group-aware) protokol** ile yeniden eğitilmiştir.
 > CV F1 = **0.8936 ± 0.0004** (production OOF-stacking) | Test F1 = **0.8367** @ θ=0.8415 | MCC = 0.5112
-> Jüri beklentisi (%20-patojenik): havuzlanmış F1 = **0.6042 ± 0.0324** | resmi 4-panel ort. = **0.6202**
+> Jüri beklentisi (%20-patojenik): havuzlanmış F1 = **0.6042 ± 0.0324** | resmi 4-panel ort. (CFTR dahil) = **0.631** | 3-panel tanı (CFTR hariç) = **0.6202**
 > ⚠️ Önceki 0.8980/0.9269 sayıları geri çekildi — satır-bazlı split sızıntısıyla şişikti (RESULTS_CANONICAL.json).
 
 ## Olgunluk Seviyesi

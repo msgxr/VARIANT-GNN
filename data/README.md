@@ -48,7 +48,7 @@ tahmin eden bir sınıflandırma modelinin eğitim ve değerlendirmesi için kul
 > ⚠️ **Test prior notu:** Yukarıdaki **50/50 test bölüşmesi (1000/1000 …)** §3.2'nin İLK metnidir;
 > organizatör Q&A-II'de (2026-06-03) bunu **ESKİ/hatalı** kabul edip yeniden göndereceğini açıkladı.
 > Operasyonel gerçek test prior'ı **~%20-patojenik/%80-benign**'dir (canonical; `RESULTS_CANONICAL.json
-> → provenance_verified`). Karar eşiği θ=0.8415 ve resmi 4-panel %20-F1 ortalaması (0.6202) bu doğrulanmış
+> → provenance_verified`). Karar eşiği θ=0.8415 ve resmi 4-panel %20-F1 ortalaması (0.631, CFTR dahil; 3-panel tanı 0.6202) bu doğrulanmış
 > %20-prior'a göre türetilmiştir.
 
 ## Patojenik/Benign Sınıf Tanımı

@@ -6,7 +6,7 @@ scripts/generate_explainability.py
 1. DOĞRU THRESHOLD'DA METRİK GÜNCELLEMESİ
    - cv_report.json'daki panel metriklerini üretim threshold'larıyla yeniden hesaplar.
    - Canonical eşik: θ=0.8415 (RESULTS_CANONICAL.json).
-   - Test prior: %20-patojenik. Resmi jüri skoru: 0.6202 (4-panel %20-F1 ort.).
+   - Test prior: %20-patojenik. Resmi jüri skoru: 0.631 (4-panel %20-F1 ort., CFTR dahil; 3-panel tanı 0.6202).
    - İç hold-out: F1=0.8367, MCC=0.5112.
 
 2. SHAP GROUP EXPLAINABILITY

@@ -7,7 +7,7 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 ## [4.1.0] — 5 Haziran 2026 (Q&A-II Doğrulaması + Anti-Drift Sertleştirme + Demo Bütünlüğü)
 
 ### Doğrulandı (resmi kaynak)
-- **Test dağılımı:** Test setinin %20-patojenik/%80-benign olduğu, TEKNOFEST resmi **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); belirsizlik U-008 → çözüldü. F1'in panel-bazlı hesaplanıp **4-panel ortalaması** alındığı da teyit edildi. RESMİ headline **0.6202** (4-panel %20-F1 ort.) değişmedi (`RESULTS_CANONICAL.json → provenance_verified`).
+- **Test dağılımı:** Test setinin %20-patojenik/%80-benign olduğu, TEKNOFEST resmi **Q&A-II Üniversite transkriptiyle DOĞRULANDI** (2026-06-03); belirsizlik U-008 → çözüldü. F1'in panel-bazlı hesaplanıp **4-panel ortalaması** alındığı da teyit edildi. RESMİ headline **0.631** (4-panel %20-F1 ort., CFTR dahil; 3-panel tanı CFTR hariç=0.6202) (`RESULTS_CANONICAL.json → provenance_verified`).
 
 ### Eklendi
 - **PROVENANCE anti-drift firewall (Check #8):** `scripts/check_results_consistency.py`, jeneratörü olmayan `models/PROVENANCE.json` metriklerini canonical'a pinler — eski sürüklenmiş değerlerin (önceki θ=0.59 / 0.9069) geri dönmesi artık build-failing.
@@ -37,7 +37,7 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) formatını ta
 - Test/ensemble F1 **0.8980 / 0.9269**, MCC **0.5356**, global eşik **θ=0.241** ve panel eşikleri **0.281/0.138/0.108**. Bu sayılar hiçbir güncel belgede iddia edilemez (CI kapısı zorlar).
 
 ### Eklendi / Değişti (CANONICAL — `RESULTS_CANONICAL.json`)
-- **CV F1 = 0.8936 ± 0.0004** (OOF-stacking, Wolpert), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291; **resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
+- **CV F1 = 0.8936 ± 0.0004** (OOF-stacking, Wolpert), Test F1 = **0.8367**, MCC = **0.5112**, PR-AUC = 0.9267, ROC-AUC = 0.8538, Brier = 0.1115, ECE = 0.0291; **resmi jüri headline (%20-patojenik, 4-panel %20-F1 ortalaması, CFTR dahil) = 0.631; 3-panel tanı (CFTR hariç) = 0.6202; havuzlanmış = 0.6042 ± 0.0324**.
 - Global karar eşiği **θ = 0.8415** (%20-patojenik-OOF); panel eşikleri opt-in.
 - `CategoricalBioFeaturizer` (ACMG-hizalı bio sinyal kurtarma, +0.38pp) ve **Domain-Adversarial DNN** (LOPO +2.17pp) eklendi.
 - Eğitilmiş model artefaktları (<7MB) jüri tekrar-üretimi için repoya dahil edildi; `REPRODUCE.md` + `RESULTS_CANONICAL.json` eklendi.
