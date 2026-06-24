@@ -67,6 +67,20 @@ class ExternalValidationRunner:
         self._ensemble = loader.load_ensemble()
         self._calibrator = loader.load_calibrator()
         self._threshold = loader.load_threshold(default=0.8415)  # kanonik θ fallback (0.5 değil)
+        # Panel-aware eşik: büyük-3 panel = global θ; YALNIZ CFTR kalibre (0.59) — resmi
+        # 4-panel skor 0.631 (CFTR dahil) submission'da reproducible olsun (§7.5). Dosya
+        # yoksa global θ'ya düşer (geriye-uyumlu).
+        self._panel_thresholds: Optional[dict] = None
+        _pt_path = self.model_dir / "panel_thresholds.json"
+        if _pt_path.exists():
+            try:
+                import json as _json
+
+                _raw = _json.load(open(_pt_path, encoding="utf-8"))
+                self._panel_thresholds = {k: float(v) for k, v in _raw.items() if isinstance(v, (int, float))}
+                logger.info("Panel-aware eşikler yüklendi: %s", self._panel_thresholds)
+            except Exception as _pt_exc:
+                logger.warning("panel_thresholds.json okunamadı (%s); global θ kullanılır.", _pt_exc)
         self._feature_names: Optional[list[str]] = loader.load_feature_names()
         self._model_version: str = loader.load_model_version()
 
@@ -293,6 +307,7 @@ class ExternalValidationRunner:
             uncertainty=uncertainty,
             clinical_flags=clinical_flags,
             threshold=self._threshold,
+            panel_thresholds=self._panel_thresholds,
             model_version=self._model_version,
             ood_scores=ood_scores,
             ood_flags=ood_flags,

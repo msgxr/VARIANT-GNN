@@ -488,8 +488,23 @@ class SubmissionValidator:
         # çelişkiler işaretlenir (örn. label=1 ama prob çok düşük).
         theta = _load_decision_threshold()
         margin = 0.10
+        # Panel-aware: label=1 alt-sınırı EN DÜŞÜK panel eşiğine (CFTR 0.59), label=0 üst-sınırı
+        # EN YÜKSEK panel eşiğine (büyük-3 0.8415) göredir — böylece CFTR'nin panel-kalibre
+        # eşikte verdiği doğru kararlar (label=1, prob~0.6) yanlışlıkla çelişki sayılmaz.
+        lo_thr, hi_thr = theta, theta
+        try:
+            import json as _json
+            from pathlib import Path as _P
+
+            _pt = _P(__file__).resolve().parents[2] / "models" / "panel_thresholds.json"
+            if _pt.exists():
+                _vals = [float(v) for v in _json.load(open(_pt, encoding="utf-8")).values() if isinstance(v, (int, float))]
+                if _vals:
+                    lo_thr, hi_thr = min(_vals), max(_vals)
+        except Exception:
+            pass
         inconsistent = int(
-            (((labels == 1) & (probs < theta - margin)) | ((labels == 0) & (probs > theta + margin))).sum()
+            (((labels == 1) & (probs < lo_thr - margin)) | ((labels == 0) & (probs > hi_thr + margin))).sum()
         )
 
         report.checks.append(

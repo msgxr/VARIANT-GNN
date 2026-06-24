@@ -47,6 +47,7 @@ def build_prediction_frame(
     model_version: str = "unknown",
     ood_scores: Optional[np.ndarray] = None,
     ood_flags: Optional[np.ndarray] = None,
+    panel_thresholds: Optional[dict] = None,
 ) -> pd.DataFrame:
     """
     Construct a prediction DataFrame conforming to PREDICTION_COLUMNS.
@@ -84,7 +85,17 @@ def build_prediction_frame(
     )
     _ood_flags = np.asarray(ood_flags, dtype=bool) if ood_flags is not None else np.zeros(n, dtype=bool)
 
-    predictions = np.where(pathogenic_prob >= threshold, "Pathogenic", "Benign")
+    # Panel-aware karar eşiği: büyük-3 panel = global θ; YALNIZ CFTR kalibre eşik (0.59)
+    # — global θ CFTR'nin küçük/aşırı-prior dağılımında miskalibre (RESULTS_CANONICAL,
+    # panel_threshold_4panel.json). panel_thresholds verilmezse skaler θ'ya düşer.
+    if panel_thresholds:
+        row_thr = np.array(
+            [float(panel_thresholds.get(str(p), threshold)) for p in np.asarray(panels)],
+            dtype=float,
+        )
+    else:
+        row_thr = threshold
+    predictions = np.where(pathogenic_prob >= row_thr, "Pathogenic", "Benign")
 
     ts = _now_utc()
     df = pd.DataFrame(
