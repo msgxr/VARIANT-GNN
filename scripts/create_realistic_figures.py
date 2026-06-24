@@ -65,7 +65,7 @@ for idx, (panel_name, metrics) in enumerate(panels.items()):
 
 plt.tight_layout()
 plt.savefig(
-    "/Users/seymanur/Desktop/VARIANT-GNN/reports/confusion_matrices_realistic.png", dpi=300, bbox_inches="tight"
+    "reports/confusion_matrices_realistic.png", dpi=300, bbox_inches="tight"
 )
 print("✅ Confusion matrices kaydedildi: confusion_matrices_realistic.png")
 
@@ -127,7 +127,7 @@ plt.xlim([-0.02, 1.02])
 plt.ylim([-0.02, 1.02])
 
 plt.tight_layout()
-plt.savefig("/Users/seymanur/Desktop/VARIANT-GNN/reports/roc_curves_realistic.png", dpi=300, bbox_inches="tight")
+plt.savefig("reports/roc_curves_realistic.png", dpi=300, bbox_inches="tight")
 print("✅ ROC curves kaydedildi: roc_curves_realistic.png")
 
 # =============================================================================

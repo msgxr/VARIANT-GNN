@@ -81,5 +81,5 @@ plt.xlim([-0.02, 1.02])
 plt.ylim([-0.02, 1.02])
 
 plt.tight_layout()
-plt.savefig("/Users/seymanur/Desktop/VARIANT-GNN/reports/roc_curves_realistic.png", dpi=300, bbox_inches="tight")
+plt.savefig("reports/roc_curves_realistic.png", dpi=300, bbox_inches="tight")
 print("\n✅ ROC curves kaydedildi - reports/roc_curves_realistic.png")
