@@ -1,0 +1,19 @@
+{
+  "_purpose": "Group-aware ayar DOĞRULAMASI — ayar-içi CV group-aware-değilliğinin yarattığı iyimserlik ölçülür (jüri/dış-değerlendirme #1).",
+  "_method": "XGBoost proxy (en güçlü baz model); StratifiedGroupKFold(5, Variant_ID) group-aware CV; scale_pos_weight (SMOTE yerine, fold-içi sızıntısız); F1@0.5. Mevcut configs/pdr.yaml hiperparametreleri vs Optuna-TPE 40-trial group-aware yeniden-ayar. seed=42. Reproduce: scripts/groupaware_tuning_verification.py",
+  "_note": "Mutlak değerler (0.8751/0.8787) bu proxy-kuruluma aittir (XGB-only, scale_pos_weight) → canonical XGB CV F1=0.8876 ile DOĞRUDAN kıyaslanamaz; ANLAMLI olan DELTA'dır.",
+  "current_config_groupaware_cv_f1": 0.8751,
+  "groupaware_retuned_cv_f1": 0.8787,
+  "delta_cv_f1": 0.0035,
+  "conclusion": "Tam group-aware yeniden-ayar mevcut seçimi yalnız +0.35 pp (gürültü içinde) geçer → ayar-içi iyimserlik İHMAL EDİLEBİLİR; hiperparametre seçimi group-aware ayar altında KARARLI.",
+  "groupaware_best_params": {
+    "max_depth": 5,
+    "learning_rate": 0.07,
+    "n_estimators": 247,
+    "subsample": 0.914,
+    "colsample_bytree": 0.803,
+    "min_child_weight": 2,
+    "reg_alpha": 0.27,
+    "reg_lambda": 0.981
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "_purpose": "Panel-başına shrinkage eşik ile DÜRÜST 4-panel F1 (CFTR dahil). Headline 0.6202 üç-panel iç tahmindi; bu CFTR'yi dahil eder.",
+  "estimator": "shipped full-ensemble (0.30/0.30/0.25/0.15) genuine OOF (oof_per_model.npz)",
+  "method": "per-panel optimal θ → global θ=0.8415'e shrinkage(λ); %20-prior 300x resample F1",
+  "best_lambda": 0.25,
+  "rigorous_nested_cv_4panel_f1": 0.5981,
+  "rigorous_per_panel": {
+    "General": 0.5494,
+    "Hereditary_Cancer": 0.6528,
+    "PAH": 0.5177,
+    "CFTR": 0.6726
+  },
+  "holdout_comparable_4panel_f1": 0.6265,
+  "_holdout_note": "3 panel = RESULTS_CANONICAL hold-out global-θ F1 (0.6006/0.7301/0.5299); CFTR = OOF'ta shipping eşiği (hold-out tek-sınıf n=18). 0.6202 headline ile aynı metodoloji.",
+  "cftr_f1_at_global_theta": 0.3275,
+  "cftr_f1_at_panel_theta": 0.6456,
+  "_cftr_note": "CFTR global θ=0.8415'te F1=0.3275 (eşik miskalibre artefaktı); panel eşiği θ=0.6529'te F1=0.6456. Ayrım gücü güçlü: ROC-AUC=0.889.",
+  "shipping_panel_thresholds": {
+    "General": 0.7354,
+    "Hereditary_Cancer": 0.7654,
+    "PAH": 0.8029,
+    "CFTR": 0.6529
+  },
+  "current_headline_3panel": 0.6202,
+  "lambda_sweep": {
+    "1.0": 0.3596,
+    "0.75": 0.4803,
+    "0.5": 0.5579,
+    "0.25": 0.5981,
+    "0.0": 0.5934
+  }
+}

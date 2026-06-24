@@ -90,6 +90,8 @@ reports/*.bak
 !reports/uncertainty_profile.json
 !reports/feature_stability.json
 !reports/panel_cross_generalization.json
+!reports/groupaware_tuning_verification.json
+!reports/panel_threshold_4panel.json
 # Sızıntısız retrain kanıt raporları (RESULTS_CANONICAL + dökümanlar atıf yapıyor)
 !reports/leakage_quantification.json
 !reports/preprocessing_diagnostic.json
