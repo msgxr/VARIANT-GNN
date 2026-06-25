@@ -155,6 +155,7 @@ data/train_variants_aug.csv
 data/test_variants.csv
 data/test_variants_blind.csv
 data/jury_*.csv
+!data/jury_test_template.csv
 submission/predictions.csv
 
 # submission/ büyük çıktılar
@@ -219,3 +220,7 @@ build_notebook.py
 !reports/panel_model_comparison.json
 !reports/pah_analysis.json
 !reports/missing_indicator_ablation.json
+!reports/cpu_benchmark.json
+!reports/column_permutation_robustness.json
+!reports/lime_shap_concordance.json
+!reports/gnn_explainer_results.json

@@ -1,0 +1,64 @@
+{
+  "experiment": "column_aligner_permutation_robustness",
+  "claim": "Tahminler kolon-sirasi/adlandirmadan bagimsiz (ColumnAligner 4-asamali hizalama)",
+  "seed": 42,
+  "model_dir": "models/ (shipped, read-only)",
+  "input": "data/jury_simulation.csv",
+  "n_rows": 200,
+  "n_feature_cols": 351,
+  "aligner_engaged_in_shipped_path": true,
+  "method": "uctan-uca predict_from_csv (load_predict_csv -> ColumnAligner); MC-dropout her rejimden once set_global_seed(42) ile sifirlandi -> Delta_p yalniz hizalamadan",
+  "regimes": {
+    "R1_shuffle_only": {
+      "n_matched_variants": 200,
+      "max_abs_delta_prob": 0.0,
+      "mean_abs_delta_prob": 0.0,
+      "prediction_agreement_pct": 100.0,
+      "aligner_stages": {
+        "exact": 343,
+        "case": 0,
+        "fuzzy": 0,
+        "positional": 8,
+        "unmatched_expected": 18,
+        "is_clean": false
+      }
+    },
+    "R2_anonymous_rename": {
+      "n_matched_variants": 200,
+      "max_abs_delta_prob": 0.607,
+      "mean_abs_delta_prob": 0.072714,
+      "prediction_agreement_pct": 85.5,
+      "aligner_stages": {
+        "exact": 0,
+        "case": 0,
+        "fuzzy": 0,
+        "positional": 351,
+        "unmatched_expected": 18,
+        "is_clean": false
+      }
+    },
+    "R3_shuffle_rename_noise": {
+      "n_matched_variants": 200,
+      "max_abs_delta_prob": 0.8073,
+      "mean_abs_delta_prob": 0.320703,
+      "prediction_agreement_pct": 40.0,
+      "aligner_stages": {
+        "exact": 0,
+        "case": 0,
+        "fuzzy": 0,
+        "positional": 369,
+        "unmatched_expected": 0,
+        "is_clean": false
+      }
+    }
+  },
+  "headline_scenario": "R1_shuffle_only (gercekci: ayni yarisma kolon adlari, farkli sira)",
+  "headline_max_abs_delta_prob": 0.0,
+  "headline_prediction_agreement_pct": 100.0,
+  "worst_max_abs_delta_prob": 0.8073,
+  "worst_prediction_agreement_pct": 40.0,
+  "verdict": "ROBUST",
+  "include_in_report": true,
+  "fix_note": "models/expected_feature_columns.json + loader.py fallback ile ColumnAligner shipped predict yolunda DEVREYE alindi (xgb feature_names=None oldugundan once devre disiydi). Standart girdide NO-OP (tahminler birebir ayni, F1 degismez; A/B kanitli).",
+  "note": "GERCEKCI senaryo R1 (yarisma kolonlari AL_*/CAT_* SABIT, yalniz sira degisir) -> max|dp|=0, agreement %100. R2/R3 tamamen anonim COL_* adlandirma = yarisma formatinda GERCEKLESMEZ (asiri stres); positional fallback isim+sira birlikte bozulunca sinirli."
+}

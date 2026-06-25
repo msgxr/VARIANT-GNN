@@ -31,6 +31,14 @@ tahmin eden bir sınıflandırma modelinin eğitim ve değerlendirmesi için kul
 |---|---|---|
 | `train_variants.csv` (gerçek, NDA) | Eğitim verisi — 4 panel, anonim kolonlar, group-aware split | 3.802 (canonical) |
 | `test_variants_blind.csv` | Kör test — Label yok (yarışma tahmin formatı) | — |
+| `jury_test_template.csv` | **Jüri girdi FORMAT örneği** (5 sentetik satır; gerçek veri değil) — beklenen şema | 5 (şablon) |
+
+> **Jüri girdi şeması (§7.5 tek-komut re-run):** CSV başlığı `Variant_ID, Panel` + anonim öznitelik
+> kolonları (`AL_*`, `CAT_*`, `EK_*`, `AA_*`). `python submission/predict.py --input <CSV> --output <CSV>`
+> çalıştırılır. `ColumnAligner` (loader.py + `models/expected_feature_columns.json`) kolon **sırasından
+> ve adlandırma sapmalarından bağımsızdır** (4-aşamalı eşleştirme; aynı yarışma kolonlarında tahmin
+> uyumu %100, max|Δp|=0 — `reports/column_permutation_robustness.json`). Eksik kolonlar NaN→imputer
+> ile, fazla kolonlar sessizce düşülür.
 | `train_general.csv` | Genel panel — sentetik pilot | 3000 örnek |
 | `train_hereditary_cancer.csv` | Kalıtsal kanser — sentetik pilot | 400 örnek |
 | `train_pah.csv` | PAH (Fenilketonüri) — sentetik pilot | 400 örnek |

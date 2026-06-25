@@ -1,0 +1,14 @@
+{
+  "experiment": "cpu_inference_benchmark",
+  "device": "cpu",
+  "mps_disabled": true,
+  "n_samples": 500,
+  "inference_seconds": 1.27,
+  "seconds_per_sample": 0.0025,
+  "model_load_seconds": 1.28,
+  "mc_dropout_n_iter": 10,
+  "method": "InferencePipeline.predict_from_csv (PyTorch+sklearn, MC-dropout n_iter=10), CPU-forced, seed=42",
+  "onnx": "YOK — repoda ONNX artefakti/kodu bulunmuyor; rapor iddiasi PyTorch CPU ile degistirilmeli",
+  "machine": "macOS-14.6-arm64-arm-64bit",
+  "source": "data/jury_simulation.csv x replicate -> 500 satir (timing; etiket onemsiz)"
+}
