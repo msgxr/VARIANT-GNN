@@ -52,6 +52,7 @@ models_safety_*/
 !models/panel_thresholds.json
 !models/gnn_arch.json
 !models/ensemble_config.json
+!models/expected_feature_columns.json
 !models/preprocessor.pkl
 !models/ensemble.pkl
 !models/meta_learner.pkl

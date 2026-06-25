@@ -284,6 +284,28 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
             pass
 
         if expected_features is None:
+            # Fallback: serialized XGBoost booster has feature_names=None, which
+            # previously disabled ColumnAligner (incoming column ORDER/name
+            # deviations went uncorrected → permuted columns broke predictions).
+            # Load the saved training-time feature column ORDER so the 4-stage
+            # aligner re-engages. NORMAL case (identical columns/order) → aligner
+            # is a no-op (exact match → identity) → predictions byte-identical
+            # (empirically verified); only deviating inputs are corrected.
+            _fcol = Path(cfg.paths.models_dir) / "expected_feature_columns.json"
+            if _fcol.exists():
+                try:
+                    import json as _json
+
+                    expected_features = list(_json.loads(_fcol.read_text()))
+                    logger.info(
+                        "ColumnAligner: using %d saved training feature columns "
+                        "(models/expected_feature_columns.json)",
+                        len(expected_features),
+                    )
+                except Exception as _fc_exc:
+                    logger.warning("expected_feature_columns.json okunamadi: %s", _fc_exc)
+
+        if expected_features is None:
             preprocessor = store.load_preprocessor()
             if (
                 hasattr(preprocessor, "_imputer")

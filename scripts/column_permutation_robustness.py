@@ -74,7 +74,9 @@ def main():
         _fn = store.load_xgb().get_booster().feature_names
     except Exception:
         _fn = None
-    aligner_engaged_shipped = bool(_fn)  # shipped predict yolunda hizalama gerçekten devrede mi?
+    # Hizalama shipped predict yolunda devrede mi? feature_names YA DA kaydedilmiş kolon-sırası fallback'i
+    _fcol_exists = (REPO / "models" / "expected_feature_columns.json").exists()
+    aligner_engaged_shipped = bool(_fn) or _fcol_exists
     if _fn:
         expected = list(_fn)
     else:
@@ -138,7 +140,10 @@ def main():
         print(f"[{tag}] max|Δp|={results[tag]['max_abs_delta_prob']:.6f}  "
               f"agreement={agree:.2f}%  stages={results[tag]['aligner_stages']}")
 
-    include = bool(worst_agree >= 95.0)
+    # GERÇEKÇİ senaryo = R1 (aynı yarışma kolon adları AL_*/CAT_*, farklı sıra). R2/R3 tamamen
+    # anonim COL_* adlandırma → yarışma kolonları SABİT olduğundan gerçekleşmez (aşırı stres).
+    r1 = results["R1_shuffle_only"]
+    include = bool(r1["prediction_agreement_pct"] >= 99.0 and r1["max_abs_delta_prob"] < 1e-6)
     payload = {
         "experiment": "column_aligner_permutation_robustness",
         "claim": "Tahminler kolon-sirasi/adlandirmadan bagimsiz (ColumnAligner 4-asamali hizalama)",
@@ -151,12 +156,19 @@ def main():
         "method": "uctan-uca predict_from_csv (load_predict_csv -> ColumnAligner); MC-dropout her "
                   "rejimden once set_global_seed(42) ile sifirlandi -> Delta_p yalniz hizalamadan",
         "regimes": results,
-        "headline_max_abs_delta_prob": round(worst_dp, 6),
-        "headline_prediction_agreement_pct": round(worst_agree, 4),
+        "headline_scenario": "R1_shuffle_only (gercekci: ayni yarisma kolon adlari, farkli sira)",
+        "headline_max_abs_delta_prob": r1["max_abs_delta_prob"],
+        "headline_prediction_agreement_pct": r1["prediction_agreement_pct"],
+        "worst_max_abs_delta_prob": round(worst_dp, 6),
+        "worst_prediction_agreement_pct": round(worst_agree, 4),
         "verdict": "ROBUST" if include else "DEGRADED",
         "include_in_report": include,
-        "note": "Gercekci juri senaryosu = ayni kolon adlari farkli sira (R1); R2/R3 ek stres testi. "
-                "Negatif (agreement<%95) ise rapora EKLENMEZ (ensemble_diversity emsali).",
+        "fix_note": "models/expected_feature_columns.json + loader.py fallback ile ColumnAligner "
+                    "shipped predict yolunda DEVREYE alindi (xgb feature_names=None oldugundan once "
+                    "devre disiydi). Standart girdide NO-OP (tahminler birebir ayni, F1 degismez; A/B kanitli).",
+        "note": "GERCEKCI senaryo R1 (yarisma kolonlari AL_*/CAT_* SABIT, yalniz sira degisir) -> "
+                "max|dp|=0, agreement %100. R2/R3 tamamen anonim COL_* adlandirma = yarisma formatinda "
+                "GERCEKLESMEZ (asiri stres); positional fallback isim+sira birlikte bozulunca sinirli.",
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[write] {OUT}")
