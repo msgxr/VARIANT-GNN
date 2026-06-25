@@ -192,7 +192,7 @@ XGB/LGBM için deterministik TreeSHAP [7]; GNN/DNN için KernelSHAP (200 örnek 
 
 ![Şekil 8 [2-UP]: Bireysel SHAP waterfall — patojenik ve benign örnek karşılaştırması.](reports/figures/pdr/19_shap_waterfall.png)
 
-**GNNExplainer** [12]: patojenik varyantlar ort. 6,2 ± 1,4 komşulu, komşuların %84'ü patojenik (kenar ağırlığı 0,71); benign 7,1 ± 1,8 komşulu, %79 benign. **LIME tutarlılığı:** 150 örnekte LIME ↔ TreeSHAP Spearman $\rho = 0{,}89$ → açıklamalar yöntem-bağımsız. **MC Dropout belirsizliği** ($T=10$ ileri geçiş): tahmin varyansı
+**GNNExplainer** [12] (n=30 örnek, k=10): grafın en yüksek-önemli öznitelikleri biyokimyasaldır — bio_grantham, bio_blosum62, hacim/MW farkları; kenar-önem ort. 0,29 (maks 0,84) → koordinatsız biyokimyasal-benzerlik komşuluğu doğrulanır (`reports/gnn_explainer_results.json`). **LIME tutarlılığı:** 150 örnekte LIME ↔ TreeSHAP baskın özniteliklerde örtüşür (küresel Spearman $\rho = 0{,}56$; `reports/lime_shap_concordance.json`). **MC Dropout belirsizliği** ($T=10$ ileri geçiş): tahmin varyansı
 
 $$\bar{p} = \tfrac{1}{T}\sum_{t=1}^{T} p_t, \qquad \sigma^2 = \tfrac{1}{T}\sum_{t=1}^{T}(p_t - \bar{p})^2 \tag{7}$$
 
