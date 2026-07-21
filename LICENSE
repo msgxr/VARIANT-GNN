@@ -1,4 +1,5 @@
 VARIANT-GNN — YAZILIM VE MODEL KULLANIM LİSANSI
+TEKNOFEST 2026 SAĞLIKTA YAPAY ZEKA YARIŞMASI — ŞARTNAME UYUMLU LİSANS
 
 Telif Hakkı (c) 2026 XYRA3 Takımı. Tüm hakları saklıdır.
 
@@ -6,7 +7,7 @@ Proje       : VARIANT-GNN — Missense Varyant Patojenite Tahmini
 Yarışma     : TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması,
               Üniversite ve Üzeri Kategorisi
 Takım       : XYRA3
-Referans    : 2026 Sağlıkta Yapay Zeka Türkçe Şartname — v2 son versiyon-2
+Şartname    : 2026 Sağlıkta Yapay Zeka Türkçe Şartname — v2 son versiyon-2
               (resmî yarışma sayfasında yayımlanan güncel sürüm)
 Resmî sayfa : https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
 İletişim    : GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues
@@ -15,152 +16,461 @@ Resmî sayfa : https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi
 ÖNSÖZ
 
 İşbu Lisans; XYRA3 Takımı tarafından TEKNOFEST 2026 Sağlıkta Yapay Zeka
-Yarışması kapsamında geliştirilen VARIANT-GNN projesine ait kaynak kodun,
-eğitilmiş modellerin ve belgelerin kullanım koşullarını düzenler. Koşullar,
-yukarıda anılan yarışma şartnamesinin ilgili hükümlerine dayanır ve bu
-hükümlerle birlikte yorumlanır. Şartname ile işbu Lisans arasında çelişki
-bulunması hâlinde yarışma şartnamesi esas alınır.
+Yarışması (Üniversite ve Üzeri Kategorisi) kapsamında geliştirilen VARIANT-GNN
+projesine ait kaynak kodun, eğitilmiş modellerin ve belgelerin kullanım
+koşullarını düzenler.
+
+Bu Lisans, yukarıda anılan yarışma şartnamesinin ilgili hükümlerine dayanır ve
+bu hükümlerle birlikte yorumlanır. Aşağıdaki maddelerde, her koşulun dayandığı
+şartname maddesi belirtilmiş, ilgili metin birebir alıntılanmış ve hükmün ne
+anlama geldiği ile projenin bu hükme nasıl uyduğu açıklanmıştır.
+
+Lisan metni ile yarışma şartnamesi arasında herhangi bir çelişki bulunması
+hâlinde, yarışma şartnamesi esas alınır. Şartnamedeki alıntılar bilgi ve
+uyum amaçlıdır; şartnamenin bağlayıcı asıl metni resmî yarışma sayfasında
+yayımlanan güncel belgedir.
 
 Projeyi kısmen veya tamamen kullanan, çoğaltan, dağıtan ya da uyarlayan her
 gerçek veya tüzel kişi, işbu Lisans koşullarını okumuş ve kabul etmiş sayılır.
 
 
+İÇİNDEKİLER
+
+  MADDE  1 — Tanımlar
+  MADDE  2 — Lisansın Amacı ve Kapsamı
+  MADDE  3 — Mülkiyet ve Eser Sahipliği (Şartname §5)
+  MADDE  4 — Kullanım İzni, Haklar ve Sınırlar
+  MADDE  5 — Atıf ve Referans Yükümlülüğü
+  MADDE  6 — Klinik Kullanım Yasağı (Şartname §10)
+  MADDE  7 — Yarışma Verisi ve Gizlilik Sözleşmesi (Şartname §1, §4)
+  MADDE  8 — Genomik Adres Kısıtı ve Sızıntı Yasağı (Şartname §3.2)
+  MADDE  9 — Veri Kaynakları, Biyoetik ve İkincil Kullanım (Şartname §10)
+  MADDE 10 — Kişisel Verilerin Korunması: KVKK ve GDPR (Şartname §10, §12.1)
+  MADDE 11 — Değerlendirme Metriği ve Puanlama (Şartname §7.3, §7.4)
+  MADDE 12 — Tekrar Üretilebilirlik ve Jüri Yetkisi (Şartname §7.5, §4)
+  MADDE 13 — Üçüncü Taraf Açık Kaynak Bileşenler
+  MADDE 14 — Garanti Reddi
+  MADDE 15 — Sorumluluğun Sınırlandırılması (Şartname §12)
+  MADDE 16 — Uygulanacak Hukuk, Yürürlük ve Değişiklik (Şartname §12)
+  MADDE 17 — Kabul Beyanı
+
+
+═════════════════════════════════════════════════════════════════════════════
 MADDE 1 — TANIMLAR
+═════════════════════════════════════════════════════════════════════════════
 
-1.1. "Proje": VARIANT-GNN kaynak kodu, eğitilmiş model dosyaları, yapılandırma
-     dosyaları ve belgelerinin tamamını ifade eder.
-1.2. "Yarışma Verisi": TEKNOFEST ve paydaş kurumlar tarafından yarışmacılara
-     model eğitimi ve/veya testi amacıyla sağlanan, gizlilik taahhütnamesine
-     tabi anonimleştirilmiş veri kümesini ifade eder.
-1.3. "Gizlilik Sözleşmesi (NDA)": Yarışmacıların, sağlanan verilere erişebilmek
-     için imzaladıkları Kurumsal Gizlilik Taahhütnamesi'ni ifade eder.
+İşbu Lisansta geçen başlıca terimler aşağıdaki anlamları taşır:
+
+1.1. "Proje" / "VARIANT-GNN": Bu depoda yer alan kaynak kodun, eğitilmiş model
+     dosyalarının, yapılandırma dosyalarının, betiklerin ve belgelerin tamamını
+     ifade eder.
+
+1.2. "Takım" / "XYRA3": Projeyi geliştiren yarışmacı öğrenci ekibini ifade eder.
+
+1.3. "Yarışma Verisi": TEKNOFEST ve paydaş kurumlar (T.C. Sağlık Bakanlığı /
+     TÜSEB) tarafından yarışmacılara, modellerini eğitmek ve/veya test etmek
+     amacıyla sağlanan, gizlilik taahhütnamesine tabi, anonimleştirilmiş veri
+     kümesini ifade eder.
+
+1.4. "Gizlilik Sözleşmesi (NDA)": Yarışmacıların, sağlanan Yarışma Verisine
+     erişebilmek için imzaladıkları "Kurumsal Gizlilik Taahhütnamesi"ni ifade
+     eder. Şartname §1'de birebir şu şekilde tanımlanmıştır:
+
+         "Gizlilik Sözleşmesi: Sağlıkta Yapay Zekâ Yarışması kapsamında T.C.
+          Sağlık Bakanlığı/TÜSEB tarafından yarışmacıların modellerini eğitmek
+          ve/veya test etmek amacıyla paylaşılan anonimleştirilmiş
+          bilgi/belge/veriyi kullanabilmeleri için yarışmacıların imzaladıkları
+          'Kurumsal Gizlilik Taahhütnamesi'ni"
+
+1.5. "Kullanıcı": İşbu Lisans kapsamında Projeyi kullanan, inceleyen, çoğaltan
+     veya uyarlayan her gerçek ya da tüzel kişiyi ifade eder.
 
 
-MADDE 2 — MÜLKİYET VE ESER SAHİPLİĞİ
+═════════════════════════════════════════════════════════════════════════════
+MADDE 2 — LİSANSIN AMACI VE KAPSAMI
+═════════════════════════════════════════════════════════════════════════════
 
-2.1. Proje, XYRA3 Takımı üyelerinin eseridir. Yarışma şartnamesi §5 uyarınca,
-     yarışmanın her aşamasında üretilen model, kod ve raporlar takım üyelerinin
-     hususiyetini yansıtır; danışman eser sahibi olarak kabul edilmez.
-2.2. Projenin telif hakkı XYRA3 Takımı'na aittir (© 2026).
+2.1. İşbu Lisansın amacı; Projenin akademik ve bilimsel amaçlarla, yarışma
+     şartnamesiyle tam uyumlu biçimde ve etik sınırlar içinde kullanılmasını
+     sağlamaktır.
 
+2.2. Lisans; kaynak kodu, eğitilmiş model dosyalarını, yapılandırmaları ve
+     belgeleri kapsar. Yarışma Verisi bu Lisansın konusu DEĞİLDİR; Yarışma
+     Verisi yalnızca Gizlilik Sözleşmesi hükümlerine tabidir (bkz. MADDE 7).
 
-MADDE 3 — KULLANIM İZNİ VE KAPSAMI
-
-3.1. Proje; akademik araştırma, eğitim, teknik inceleme ve yarışma
-     değerlendirmesi amaçlarıyla kullanılabilir.
-3.2. Ticari amaç taşımayan model geliştirme ile biyoinformatik ve makine
-     öğrenmesi araştırmaları bu kapsamdadır.
-3.3. Üçüncü taraflarca kullanım, MADDE 4'te düzenlenen atıf koşuluna uyulması
-     hâlinde serbesttir.
-3.4. İşbu izin; MADDE 5 (Klinik Kullanım Yasağı) ve MADDE 6 (Yarışma Verisi ve
-     Gizlilik) hükümleri saklı kalmak kaydıyla geçerlidir.
+2.3. Bu Lisans, aşağıdaki maddelerde belirtilen şartname hükümleriyle bir bütün
+     olarak yorumlanır; hükümler birbirini tamamlar ve hiçbiri diğerini
+     geçersiz kılacak şekilde yorumlanamaz.
 
 
-MADDE 4 — ATIF YÜKÜMLÜLÜĞÜ
+═════════════════════════════════════════════════════════════════════════════
+MADDE 3 — MÜLKİYET VE ESER SAHİPLİĞİ (Şartname §5)
+═════════════════════════════════════════════════════════════════════════════
 
-4.1. Projeden yararlanan çalışmalarda aşağıdaki unsurlar açıkça belirtilir:
+3.1. Hüküm: Proje kapsamında üretilen kod, model ve raporlar, XYRA3 Takımı
+     öğrenci üyelerinin eseridir. Danışman, eser sahibi olarak kabul edilmez.
+
+3.2. Dayanak — Şartname §5 (birebir alıntı):
+
+         "Yarışmanın her aşamasında üretilen model, kod ve her türlü rapor,
+          takımda yer alan yarışmacı/yarışmacıların emeğinin neticesinde
+          oluşmuş olmakla birlikte takım üyelerinin hususiyetini yansıtmakta
+          olup Danışman, eser sahibi olarak kabul edilmeyecektir."
+
+3.3. Açıklama: Bu hüküm gereği Projenin telif hakkı XYRA3 Takımı'na aittir
+     (© 2026). Danışmanın katkısı akademik rehberlik niteliğindedir; danışman
+     eser sahipliği iddia edemez ve etmemektedir. Telif satırında yalnızca
+     "XYRA3 Takımı" ibaresi kullanılır; hiçbir üçüncü şirket, marka ya da tüzel
+     kişi telif sahibi olarak gösterilmez.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 4 — KULLANIM İZNİ, HAKLAR VE SINIRLAR
+═════════════════════════════════════════════════════════════════════════════
+
+4.1. İzin verilen kullanımlar: Proje aşağıdaki amaçlarla kullanılabilir:
+     (a) akademik araştırma ve yayın,
+     (b) eğitim ve öğretim,
+     (c) teknik inceleme ve değerlendirme,
+     (d) TEKNOFEST 2026 yarışması kapsamında doğrulama ve jüri değerlendirmesi,
+     (e) ticari amaç taşımayan model geliştirme ve bilimsel araştırma,
+     (f) biyoinformatik, makine öğrenmesi ve açıklanabilir yapay zeka
+         araştırmaları.
+
+4.2. Kullanım hakkı; MADDE 5'te düzenlenen atıf koşuluna uyulması hâlinde
+     üçüncü taraflara da tanınır.
+
+4.3. Sınırlar: İşbu izin;
+     (a) MADDE 6 (Klinik Kullanım Yasağı),
+     (b) MADDE 7 (Yarışma Verisi ve Gizlilik),
+     (c) MADDE 8 (Genomik Adres Kısıtı ve Sızıntı Yasağı) ve
+     (d) MADDE 10 (Kişisel Verilerin Korunması)
+     hükümleri saklı kalmak kaydıyla geçerlidir. Bu sınırlara aykırı her
+     kullanım, işbu Lisansın ihlali sayılır ve verilen izni kendiliğinden
+     sona erdirir.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 5 — ATIF VE REFERANS YÜKÜMLÜLÜĞÜ
+═════════════════════════════════════════════════════════════════════════════
+
+5.1. Projeden yararlanan her çalışmada aşağıdaki unsurlar açıkça belirtilir:
      (a) VARIANT-GNN proje adı,
      (b) XYRA3 Takımı,
      (c) TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması bağlamı,
-     (d) yararlanılan açık kaynak bileşenler ve bilimsel referanslar.
-4.2. Önerilen atıf biçimi:
-     "Bu çalışma, XYRA3 Takımı tarafından TEKNOFEST 2026 Sağlıkta Yapay Zeka
-      Yarışması (Üniversite ve Üzeri Kategorisi) kapsamında geliştirilen
-      VARIANT-GNN projesinden yararlanılarak hazırlanmıştır."
+     (d) yararlanılan açık kaynak bileşenler ve bilimsel referanslar
+         (bkz. MADDE 13).
+
+5.2. Önerilen atıf biçimi:
+
+         "Bu çalışma, XYRA3 Takımı tarafından TEKNOFEST 2026 Sağlıkta Yapay
+          Zeka Yarışması (Üniversite ve Üzeri Kategorisi) kapsamında
+          geliştirilen VARIANT-GNN projesinden yararlanılarak hazırlanmıştır."
+
+5.3. Açıklama: Atıf yükümlülüğü, projenin akademik izlenebilirliğini ve bilimsel
+     dürüstlüğü sağlar. Türetilmiş çalışmalarda kaynak gizlenemez veya eser
+     başka bir kişi/kuruma mal edilemez.
 
 
-MADDE 5 — KLİNİK KULLANIM YASAĞI
+═════════════════════════════════════════════════════════════════════════════
+MADDE 6 — KLİNİK KULLANIM YASAĞI (Şartname §10)
+═════════════════════════════════════════════════════════════════════════════
 
-5.1. Yarışma şartnamesi §10 uyarınca, Proje kapsamında geliştirilen modeller ve
-     elde edilen çıktılar herhangi bir klinik tanı, tedavi veya tıbbi karar
-     destek amacıyla kullanılamaz; bu çıktılar yalnızca araştırma ve eğitim
-     amaçlıdır.
-5.2. Bu doğrultuda Proje aşağıdaki amaçlarla kullanılamaz:
+6.1. Hüküm: Proje ve çıktıları hiçbir klinik amaçla kullanılamaz. Bu yasak
+     mutlaktır.
+
+6.2. Dayanak — Şartname §10 (birebir alıntı):
+
+         "Yarışma kapsamında geliştirilen modeller ve elde edilen çıktılar,
+          herhangi bir klinik tanı, tedavi veya tıbbi karar destek amacıyla
+          kullanılamaz. Bu çıktılar yalnızca araştırma ve eğitim amaçlıdır."
+
+6.3. Kapsam: Bu hüküm doğrultusunda Proje aşağıdaki amaçlarla kullanılamaz:
      (a) klinik tanı koymak,
      (b) tedavi önermek veya desteklemek,
      (c) hasta yönetimi veya yönlendirmesi yapmak,
      (d) klinik karar destek sistemi olarak işletilmek,
      (e) genetik test raporunun veya hekim değerlendirmesinin yerine geçmek,
-     (f) tıbbi cihaz veya regülasyon onaylı ürün olarak pazarlanmak.
-5.3. Bu yasak mutlaktır ve işbu Lisansın diğer hiçbir hükmüyle
-     sınırlandırılamaz.
+     (f) tıbbi cihaz veya regülasyon onaylı ürün olarak pazarlanmak ya da
+         dağıtılmak.
+
+6.4. Açıklama: VARIANT-GNN bir araştırma ve yarışma prototipidir. Model
+     çıktıları (patojenite olasılığı, risk skoru, belirsizlik, uzman bayrağı)
+     yalnızca bilimsel değerlendirme amaçlıdır ve hekim kararının yerine geçmez.
+     Herhangi bir klinik kullanım; bağımsız prospektif validasyon, ilgili
+     regülasyon (ör. CE/FDA) uygunluğu ve uzman hekim değerlendirmesi gerektirir.
 
 
-MADDE 6 — YARIŞMA VERİSİ VE GİZLİLİK
+═════════════════════════════════════════════════════════════════════════════
+MADDE 7 — YARIŞMA VERİSİ VE GİZLİLİK SÖZLEŞMESİ (Şartname §1, §4)
+═════════════════════════════════════════════════════════════════════════════
 
-6.1. Yarışma Verisi, imzalı Gizlilik Sözleşmesi kapsamında sağlanmıştır
-     (Şartname §1 ve §4).
-6.2. Yarışma Verisi; depoya eklenemez, üçüncü kişilerle paylaşılamaz ve kamuya
-     açık platformlarda yayımlanamaz.
-6.3. Gizlenmiş genomik adreslerin elde edilmesi, test etiketlerinin harici
-     kaynaklardan bulunması veya veri sızıntısı (leakage) yöntemleri
-     kullanılması yasaktır (Şartname §3.2).
+7.1. Hüküm: Yarışma Verisi, imzalı Gizlilik Sözleşmesi (NDA) kapsamındadır;
+     depoya eklenemez, paylaşılamaz veya yayımlanamaz.
 
+7.2. Dayanak — Şartname §4 (birebir alıntı):
 
-MADDE 7 — VERİ KAYNAKLARI, KVKK VE GDPR
+         "Yarışmacılar, yarışmada paydaşlar tarafından sağlanacak verilere
+          ancak 'Gizlilik Sözleşmesini' imzalı olarak sunmaları halinde erişim
+          sağlayabilecek ve yarışmaya katılabileceklerdir."
 
-7.1. Yarışma şartnamesi §10 uyarınca, kullanılan genetik veriler ClinVar,
-     ClinGen ve gnomAD gibi kamuya açık ve anonimleştirilmiş veri tabanlarından
-     temin edilmiş olup ikincil veri kullanımı statüsündedir; Helsinki
-     Bildirgesi ve ilgili onam süreçlerine uygundur.
-7.2. Veriler; KVKK ve GDPR standartlarına uygun olarak kişisel tanımlayıcı
-     bilgi içermez. Varyantların genomik adres bilgisi kaldırılarak yeniden
-     kimliklendirme riski teknik olarak ortadan kaldırılmıştır. Veri sorumlusu
-     TEKNOFEST organizasyonudur.
-7.3. Kullanıcı; Proje kapsamında hiçbir kişisel veriyi (TCKN, iletişim bilgisi,
-     doğum tarihi vb.) depoya ekleyemez veya işleyemez (Şartname §12.1).
+7.3. Kapsam: NDA kapsamındaki Yarışma Verisi:
+     (a) bu depoya veya herhangi bir kamuya açık depoya eklenemez,
+     (b) üçüncü kişilerle paylaşılamaz,
+     (c) kamuya açık platformlarda yayımlanamaz,
+     (d) yalnızca organizasyonun belirlediği kapsamda ve "veri işleyen"
+         sıfatıyla kullanılabilir; ticari amaçla kullanılamaz.
 
-
-MADDE 8 — ÜÇÜNCÜ TARAF BİLEŞENLER
-
-Proje, aşağıdaki açık kaynak bileşenleri kullanır. Her bileşen kendi lisansına
-tabidir:
-
-     PyTorch             BSD 3-Clause
-     PyTorch Geometric   MIT
-     XGBoost             Apache-2.0
-     LightGBM            MIT
-     scikit-learn        BSD 3-Clause
-     imbalanced-learn    MIT
-     SHAP                MIT
-     Optuna              MIT
-     pandas / NumPy      BSD 3-Clause
-     Streamlit           Apache-2.0
+7.4. Açıklama: Bu depo Yarışma Verisini İÇERMEZ. Sıfırdan eğitim yalnızca
+     Gizlilik Sözleşmesini imzalamış ve veriye yetkili erişimi olan kişilerce
+     yapılabilir. Depoda yer alan eğitilmiş modeller ve örnek/sentetik dosyalar
+     ise NDA kapsamındaki ham veriyi ifşa etmez.
 
 
-MADDE 9 — GARANTİ REDDİ
+═════════════════════════════════════════════════════════════════════════════
+MADDE 8 — GENOMİK ADRES KISITI VE SIZINTI YASAĞI (Şartname §3.2)
+═════════════════════════════════════════════════════════════════════════════
 
-9.1. Proje "OLDUĞU GİBİ" (AS IS) sunulmaktadır. XYRA3 Takımı; açık veya zımni
-     hiçbir garanti vermez. Bu ret, başta model doğruluğu, belirli bir amaca
-     uygunluk, klinik geçerlilik, yarışmada belirli bir derece elde edilmesi ve
-     regülasyon/tıbbi cihaz uygunluğu olmak üzere her türlü garantiyi kapsar.
+8.1. Hüküm: Gizlenmiş genomik adreslerin veya test etiketlerinin harici
+     kaynaklardan elde edilmeye çalışılması yasaktır.
+
+8.2. Dayanak — Şartname §3.2 (birebir alıntı):
+
+         "Yarışma veri setinde varyantların genomik adres (kromozom ve pozisyon)
+          bilgileri, katılımcıların dış veri kaynaklarına başvurarak etiketi
+          doğrudan bulmalarını engellemek amacıyla tamamen gizlenmiştir."
+
+         "Bu kısıtlamanın amacı; yarışmacıların patojenite tahminlerini harici
+          veri kaynaklarına başvurmaksızın, yalnızca yarışma komitesi tarafından
+          sağlanan varyant profilleri üzerinden yapmalarını sağlamak..."
+
+8.3. Yasak işlemler:
+     (a) gizlenmiş genomik adresleri (kromozom/pozisyon) elde etmeye çalışmak,
+     (b) test seti etiketlerini dış kaynaklardan (ör. ClinVar sorgusu) bulmaya
+         çalışmak,
+     (c) herhangi bir veri sızıntısı (leakage) yöntemi kullanmak.
+
+8.4. Açıklama: VARIANT-GNN bu kısıta uyacak şekilde tasarlanmıştır. Model,
+     genomik adrese değil, öznitelik-uzayı benzerliğine dayalı koordinatsız bir
+     yapı kullanır; harici veri tabanı sorgusu yapmaz. Böylece §3.2'nin amacı
+     olan "yalnızca sağlanan varyant profilleri üzerinden tahmin" ilkesi
+     korunur.
 
 
-MADDE 10 — SORUMLULUĞUN SINIRLANDIRILMASI
+═════════════════════════════════════════════════════════════════════════════
+MADDE 9 — VERİ KAYNAKLARI, BİYOETİK VE İKİNCİL KULLANIM (Şartname §10)
+═════════════════════════════════════════════════════════════════════════════
 
-10.1. Yarışma şartnamesi §12 uyarınca TEKNOFEST ve paydaş kurumlar,
-      yarışmacıların teslim ettiği üründen kaynaklanan hiçbir zarardan sorumlu
-      değildir.
-10.2. XYRA3 Takımı; Projenin kullanımı, hatalı kullanımı veya işbu Lisansa
+9.1. Hüküm: Yarışma verileri, kamuya açık ve anonimleştirilmiş bilimsel veri
+     tabanlarından, ikincil kullanım statüsünde ve biyoetik standartlara uygun
+     olarak temin edilmiştir.
+
+9.2. Dayanak — Şartname §10 (birebir alıntılar):
+
+         "Yarışma kapsamında kullanılan tüm genetik veriler, ClinVar, ClinGen
+          ve gnomAD gibi uluslararası bilimsel konsorsiyumlar tarafından
+          yönetilen, kamuya açık ve anonimleştirilmiş veri tabanlarından temin
+          edilmektedir."
+
+         "Kullanılan genetik veriler, birincil toplayıcı kurumlar (NCBI, Broad
+          Institute vb.) tarafından halihazırda uluslararası biyoetik
+          standartlara (Helsinki Bildirgesi) ve ilgili hasta onam süreçlerine
+          uygun olarak toplanmış verilerdir. Yarışma kapsamında yapılan işlem,
+          'ikincil veri kullanımı' statüsündedir."
+
+9.3. Açıklama: Kullanılan veriler birincil hasta verisi değil, halka açık
+     konsorsiyum kayıtlarının ikincil kullanımıdır. Bu nedenle Projenin
+     kullanımı ek bir onam süreci gerektirmez; ancak MADDE 6 (klinik yasak) ve
+     MADDE 10 (KVKK/GDPR) her hâlükârda geçerlidir.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 10 — KİŞİSEL VERİLERİN KORUNMASI: KVKK VE GDPR (Şartname §10, §12.1)
+═════════════════════════════════════════════════════════════════════════════
+
+10.1. Hüküm: Veri setleri kişisel tanımlayıcı bilgi içermez; Kullanıcı da Proje
+      kapsamında kişisel veri işleyemez.
+
+10.2. Dayanak — Şartname §10 (birebir alıntılar):
+
+          "Yarışmacılara sunulan veri setleri, Kişisel Verilerin Korunması
+           Kanunu (KVKK) ve uluslararası GDPR standartlarına uygun olarak,
+           katılımcıların kimliğini ifşa edebilecek (ad, soyad, doğum tarihi
+           vb.) hiçbir Kişisel Tanımlayıcı Bilgi (PII) içermemektedir."
+
+          "Varyantların genomik adres bilgileri de kaldırılarak
+           're-identification' (yeniden kimliklendirme) riski teknik olarak
+           elimine edilmiştir."
+
+          "Yarışma kapsamında sağlanan veri setlerine ilişkin VERİ SORUMLUSU
+           TEKNOFEST organizasyonudur."
+
+10.3. Dayanak — Şartname §12.1 (birebir alıntı):
+
+          "Yarışmaya başvuran kişilerin kişisel verileri (TCKN, e-posta,
+           telefon no, IBAN, Nüfus Kayıt Örneği), ödül ödemesi ve tanıtım
+           faaliyetleri kapsamında yürütülen iş ve işlemlerle ilgili olarak
+           TÜSEB tarafından işlenebilir ve aktarılabilir."
+
+10.4. Kullanıcı yükümlülükleri:
+      (a) Kullanıcı, kişisel veri içeren hiçbir dosyayı depoya ekleyemez.
+      (b) Hasta veya genetik kişisel veriyi izinsiz paylaşamaz.
+      (c) TCKN, iletişim bilgisi, doğum tarihi gibi hassas verileri işleyemez.
+
+10.5. Açıklama: Bu depo, ekip üyelerinin kişisel iletişim bilgilerini (özel
+      e-posta, telefon vb.) içermez; iletişim yalnızca GitHub Issues kanalı
+      üzerinden yürütülür. Veri sorumlusu TEKNOFEST organizasyonudur.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 11 — DEĞERLENDİRME METRİĞİ VE PUANLAMA (Şartname §7.3, §7.4)
+═════════════════════════════════════════════════════════════════════════════
+
+11.1. Bilgilendirme: Bu madde, Projenin hangi ölçütle değerlendirildiğini
+      şeffaflık amacıyla belgeler; bir kullanım kısıtı içermez.
+
+11.2. Dayanak — Şartname §7.3 (birebir alıntı):
+
+          "Yarışma sıralamasını belirleyecek temel metrik, TP (Doğru Pozitif),
+           FP (Yanlış Pozitif) ve FN (Yanlış Negatif) değerleri üzerinden
+           hesaplanan F1 Skoru olacaktır."
+
+11.3. Projenin uygulaması (yorum): Yukarıdaki tanıma göre birincil metrik,
+      patojenik sınıf için (pos_label = 1) hesaplanan ikili (binary) F1
+      skorudur: F1 = 2·TP / (2·TP + FP + FN). Bu formül, §7.3'teki TP/FP/FN
+      tabanlı F1 tanımının doğrudan karşılığıdır; formül ifadesi XYRA3 Takımı'na
+      ait bir yorum olup şartnamenin birebir metni değildir.
+
+11.4. Dayanak — Şartname §7.4: Görev (final yarışma) puanı %90, sunum puanı %10
+      olarak belirlenmiştir.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 12 — TEKRAR ÜRETİLEBİLİRLİK VE JÜRİ YETKİSİ (Şartname §7.5, §4)
+═════════════════════════════════════════════════════════════════════════════
+
+12.1. Hüküm: Kodlar, jürinin yeniden çalıştırıp beyan edilen sonuçları
+      doğrulayabileceği biçimde tekrar üretilebilir ve dokümante edilmiştir.
+
+12.2. Dayanak — Şartname §7.5 (birebir alıntı):
+
+          "Yarışma jürisi, finale kalan takımların kodlarını tekrar
+           çalıştırmasını ve beyan ettikleri sonuçları bulmalarını isteme
+           yetkisine sahiptir."
+
+12.3. Dayanak — Şartname §4 (birebir alıntı):
+
+          "Kodların çalışabilir, yeniden üretilebilir ve açık bir şekilde
+           dokümante edilmiş olması beklenmektedir."
+
+12.4. Açıklama: Proje bu gereklilikleri karşılamak üzere şu güvenceleri sunar:
+      (a) tüm rastgelelik kaynaklarında sabit tohum (random_state = 42),
+      (b) sabit sürümlü bağımlılıklar (requirements.txt),
+      (c) veri gerektirmeyen, eğitilmiş modellerle tekrar üretim yolu:
+              python submission/predict.py --input <juri_test.csv> \
+                     --output submission/predictions.csv
+      (d) veriye yetkili erişimi olanlar için sıfırdan eğitim yolu:
+              python main.py --mode train --config configs/pdr.yaml \
+                     --data_file data/train_variants.csv
+      Ayrıntılı yeniden üretim adımları REPRODUCE.md dosyasında yer alır.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 13 — ÜÇÜNCÜ TARAF AÇIK KAYNAK BİLEŞENLER
+═════════════════════════════════════════════════════════════════════════════
+
+13.1. Proje, aşağıdaki açık kaynak bileşenleri kullanır. Her bileşen kendi
+      lisansına tabidir ve ilgili lisans koşulları saklıdır:
+
+          PyTorch             BSD 3-Clause
+          PyTorch Geometric   MIT
+          XGBoost             Apache-2.0
+          LightGBM            MIT
+          scikit-learn        BSD 3-Clause
+          imbalanced-learn    MIT
+          SHAP                MIT
+          Optuna              MIT
+          pandas / NumPy      BSD 3-Clause
+          Streamlit           Apache-2.0
+
+13.2. Açıklama: Yukarıdaki bileşenlerin kullanımı, ilgili üçüncü taraf
+      lisanslarının koşullarına tabidir. İşbu Lisans, bu bileşenlerin kendi
+      lisanslarını değiştirmez veya sınırlamaz.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 14 — GARANTİ REDDİ
+═════════════════════════════════════════════════════════════════════════════
+
+14.1. Proje "OLDUĞU GİBİ" (AS IS) ve "MEVCUT HÂLİYLE" sunulmaktadır. XYRA3
+      Takımı, açık veya zımni hiçbir garanti vermez.
+
+14.2. Bu ret; başta model doğruluğu, belirli bir amaca uygunluk, klinik
+      geçerlilik, kesintisiz veya hatasız çalışma, yarışmada belirli bir puan
+      veya derece elde edilmesi ve regülasyon/tıbbi cihaz uygunluğu olmak üzere
+      her türlü garantiyi kapsar.
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 15 — SORUMLULUĞUN SINIRLANDIRILMASI (Şartname §12)
+═════════════════════════════════════════════════════════════════════════════
+
+15.1. Dayanak — Şartname §12 (birebir alıntılar):
+
+          "TEKNOFEST ve Paydaş Kurumlar, yarışmacıların teslim etmiş olduğu
+           herhangi bir üründen veya yarışmacıdan kaynaklanan herhangi bir
+           yaralanma veya hasardan hiçbir şekilde sorumlu değildir."
+
+          "TEKNOFEST ve Paydaş Kurumlar, takımların kendi sistemlerini Türkiye
+           Cumhuriyeti yasaları çerçevesinde hazırlamalarını ve uygulamalarını
+           sağlamaktan sorumlu değildir."
+
+15.2. XYRA3 Takımı; Projenin kullanımı, hatalı kullanımı veya işbu Lisansa
       aykırı kullanımı nedeniyle doğabilecek klinik yanlış yorumlama, veri
-      ihlali ve ticari kayıp dâhil hiçbir dolaylı veya dolaysız zarardan
-      sorumlu tutulamaz.
+      ihlali, ticari kayıp dâhil hiçbir dolaylı veya dolaysız zarardan sorumlu
+      tutulamaz.
+
+15.3. Açıklama: Projeyi kullanan kişi, kullanım riskini tümüyle üstlenir ve
+      kullanımının ilgili mevzuata uygunluğundan bizzat sorumludur.
 
 
-MADDE 11 — YÜRÜRLÜK, KABUL VE DEĞİŞİKLİK
+═════════════════════════════════════════════════════════════════════════════
+MADDE 16 — UYGULANACAK HUKUK, YÜRÜRLÜK VE DEĞİŞİKLİK (Şartname §12)
+═════════════════════════════════════════════════════════════════════════════
 
-11.1. Projeyi kullanan her kişi, işbu Lisans koşullarının tamamını kabul etmiş
-      sayılır.
-11.2. Türkiye Teknoloji Takımı Vakfı, yarışma şartnamesinde değişiklik yapma
-      hakkını saklı tutar (Şartname §12); şartnamedeki değişiklikler işbu
-      Lisansın ilgili hükümlerini de etkiler.
-11.3. İşbu Lisans, Türkiye Cumhuriyeti mevzuatına tabidir.
+16.1. İşbu Lisans, Türkiye Cumhuriyeti mevzuatına tabidir ve ona göre yorumlanır.
+
+16.2. Dayanak — Şartname §12 (birebir alıntı):
+
+          "Türkiye Teknoloji Takımı Vakfı işbu şartnamede her türlü değişiklik
+           yapma hakkını saklı tutar."
+
+16.3. Açıklama: Yarışma şartnamesinde yapılacak değişiklikler, işbu Lisansın
+      ilgili hükümlerini de doğrudan etkiler. Şartname ile Lisans arasında
+      çelişki hâlinde şartname esas alınır (bkz. ÖNSÖZ).
+
+
+═════════════════════════════════════════════════════════════════════════════
+MADDE 17 — KABUL BEYANI
+═════════════════════════════════════════════════════════════════════════════
+
+17.1. Projeyi kullanan, çoğaltan, dağıtan veya uyarlayan her kişi, işbu Lisans
+      koşullarının tamamını kabul etmiş sayılır.
+
+17.2. Dayanak — Şartname §12.1 (birebir alıntı):
+
+          "Yarışmaya başvuranların şartnamedeki koşulların tamamını kabul etmiş
+           oldukları sayılmaktadır."
 
 
 ─────────────────────────────────────────────────────────────────────────────
 
 VARIANT-GNN — XYRA3 Takımı
-Telif Hakkı (c) 2026 XYRA3 Takımı
-İletişim: GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues
-Resmî yarışma sayfası:
-https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
+Telif Hakkı (c) 2026 XYRA3 Takımı. Tüm hakları saklıdır.
+
+İletişim              : GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues
+Resmî yarışma sayfası : https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
+
+Not: Şartnameden yapılan alıntılar, resmî 2026 Sağlıkta Yapay Zeka Türkçe
+Şartname (v2 son versiyon-2) belgesine dayanır ve bilgilendirme amaçlıdır.
+Bağlayıcı asıl metin, resmî yarışma sayfasında yayımlanan güncel şartnamedir.
