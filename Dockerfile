@@ -9,7 +9,7 @@
 # =============================================================================
 FROM python:3.10-slim
 
-LABEL maintainer="XYRA3 <sinagun93@gmail.com>"
+LABEL maintainer="XYRA3 Takımı — https://github.com/msgxr/VARIANT-GNN"
 LABEL competition="TEKNOFEST 2026 Sağlıkta Yapay Zeka — Üniversite ve Üzeri"
 LABEL repository="https://github.com/msgxr/VARIANT-GNN"
 

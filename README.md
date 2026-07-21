@@ -51,7 +51,7 @@
 ║  PSR             ║  93.00 / 100  ✅  On Eleme Gecildi                             ║
 ║  F1 §7.3 (juri)  ║  0.631 4-panel ort. (CFTR dahil) · 0.6202 3-panel tani (CFTR haric) · 0.8367 ic hold-out   ║
 ║  Veri            ║  3802 satir · 3224 tekil varyant · 4 panel (NDA)               ║
-║  Asama           ║  PDR Gelistirme → Teslim: 29 Haziran 2026, 17:00               ║
+║  Asama           ║  PDR teslim edildi  ·  Final: Agustos-Eylul 2026               ║
 ║  Guvenlik        ║  KVKK · GDPR · TEKNOFEST NDA · Helsinki Bildirgesi             ║
 ╚══════════════════╩═══════════════════════════════════════════════════════════════╝
 ```
@@ -764,7 +764,7 @@ Ağaç modelleri Optuna ile **grup-farkında** çapraz doğrulama altında ayarl
 ```
 Protokol : StratifiedGroupKFold 3-fold · XGB+LGB 0.5/0.5 blend · F1-optimal eşik
 Deneme   : 50 trial
-Baseline F1 : 0.8338   →   Best F1 : 0.8993   (Δ = +0.15 pp)
+Baseline F1 : 0.8978   →   Best F1 : 0.8993   (Δ = +0.15 pp)
 ```
 
 <div align="center">
@@ -1392,6 +1392,42 @@ flowchart LR
 | [10] | Rentzsch et al. (2019) — CADD | Koordinatsız skorlama | §3.2 uyumlu çalışma |
 
 </div>
+
+---
+
+## Takım
+
+<div align="center">
+
+| İsim | Rol |
+|:---|:---|
+| Şeyma Nur Çebi | Kaptan · İletişim Sorumlusu |
+| Muhammed Sina Gün | Üye |
+| Şahin Kara | Üye |
+| Burak Küçükcengiz | Üye |
+| Pınar Karadayı Ataş | Danışman |
+
+</div>
+
+> Başvuru: **XYRA3** · TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri Kategorisi.
+> Şartname §5 uyarınca üretilen kod ve model takım üyelerine aittir; danışman eser sahibi olarak kabul edilmez.
+
+---
+
+## Lisans
+
+Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız. Özetle: bu proje **akademik, araştırma,
+eğitim ve yarışma değerlendirmesi** amaçlı, **atıf koşuluyla** kullanılabilir; **klinik tanı /
+tedavi / tıbbi karar desteği amaçlı kullanılamaz** (Şartname §10); yarışma verileri **NDA**
+kapsamındadır ve paylaşılamaz (Şartname §1, §4). Telif Hakkı © 2026 XYRA3 Takımı.
+
+---
+
+## İletişim
+
+Soru, hata bildirimi ve katkı için **[GitHub Issues](https://github.com/msgxr/VARIANT-GNN/issues)**
+kanalını kullanın. Güvenlik açıkları için [SECURITY.md](SECURITY.md) (GitHub Security Advisory)
+prosedürünü izleyin. Yarışmayla ilgili resmi konular TEKNOFEST kanalları üzerinden yürütülür.
 
 ---
 

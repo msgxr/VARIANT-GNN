@@ -17,7 +17,7 @@
 
 | Kanal | Adres |
 |:---|:---|
-| E-posta (tercih edilen) | sinagun93@gmail.com |
+| GitHub Security Advisory (özel, tercih edilen) | github.com/msgxr/VARIANT-GNN/security/advisories/new |
 | GitHub özel mesaj | @msgxr |
 
 Bildiriminizde şunlar bulunmalıdır:
@@ -309,4 +309,4 @@ XYRA3 Takımı ve katkı sağlayıcıları sorumlu tutulamaz.
 ---
 
 *Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*  
-*İletişim: sinagun93@gmail.com*
+*İletişim: GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues*

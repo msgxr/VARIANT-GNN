@@ -325,7 +325,7 @@ best_thr = optimize_threshold(y_test, preds_test)
 Güvenlik açığı tespit ederseniz `SECURITY.md` dosyasındaki prosedürü izleyin.  
 **Güvenlik açıklarını herkese açık Issue olarak açmayın.**
 
-Doğrudan iletişim: **sinagun93@gmail.com**
+Doğrudan güvenlik iletişimi: **SECURITY.md → GitHub Security Advisory**
 
 ---
 

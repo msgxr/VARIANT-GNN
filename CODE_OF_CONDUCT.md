@@ -171,9 +171,9 @@ değerlendirme yetkisine sahiptir.
 
 | Konu | Kanal |
 |:---|:---|
-| Güvenlik açığı | `SECURITY.md` → sinagun93@gmail.com |
+| Güvenlik açığı | `SECURITY.md` → GitHub Security Advisory |
 | Katkı süreci | `CONTRIBUTING.md` |
-| Davranış ihlali | sinagun93@gmail.com |
+| Davranış ihlali | GitHub özel mesaj (@msgxr) |
 | Yarışma soruları | TEKNOFEST resmi mail grubu (Şartname §11) |
 
 ---

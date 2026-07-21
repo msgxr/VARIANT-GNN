@@ -2,12 +2,13 @@ VARIANT-GNN — TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması
 Şartname Uyumlu Lisans
 ============================================================
 
-Geliştiren  : XYRA3 Takımı — Muhammed Sina Gün ve Katkı Sağlayıcıları
-İletişim    : sinagun93@gmail.com
+Geliştiren  : XYRA3 Takımı
+İletişim    : GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues
 Yarışma     : TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması
               Üniversite ve Üzeri Seviyesi
 Kaynak      : https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
-Şartname    : 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4
+Şartname    : 2026 Sağlıkta Yapay Zeka Türkçe Şartname — v2 son versiyon-2
+              (resmi yarışma sayfasında yayımlanan güncel sürüm)
 
 ─────────────────────────────────────────────────────────────────────────────
 
@@ -185,7 +186,10 @@ BÖLÜM 7 — JÜRİ TEKRAR ÇALIŞTIRMA — Şartname §7.5
 Bu gerekliliği karşılamak için bu proje şu garantileri sunar:
 
   ✅  Sabit seed (random_state=42) — tüm RNG kaynaklarında
-  ✅  Tek komutla çalıştırma: python main.py --mode train
+  ✅  Fresh-clone tekrar üretim (veri gerektirmez; eğitilmiş modeller repoda):
+        python submission/predict.py --input <juri_test.csv> --output submission/predictions.csv
+  ✅  Sıfırdan eğitim (yalnızca NDA verisine sahip olanlar; data/train_variants.csv gerekir):
+        python main.py --mode train --config configs/pdr.yaml --data_file data/train_variants.csv
   ✅  Sabit versiyonlu requirements.txt
   ✅  CV F1 = 0.8936 ± 0.0004 (OOF-stacking)  |  Test F1 = 0.8367  |  θ = 0.8415
 
@@ -323,8 +327,8 @@ oldukları sayılmaktadır. (Şartname §12 — son madde)
 ─────────────────────────────────────────────────────────────────────────────
 
 VARIANT-GNN — XYRA3 Takımı
-Telif Hakkı (c) 2026 Muhammed Sina Gün ve Katkı Sağlayıcıları
-İletişim: sinagun93@gmail.com
+Telif Hakkı (c) 2026 XYRA3 Takımı
+İletişim: GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues
 
 Resmi Yarışma Sayfası:
 https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/
