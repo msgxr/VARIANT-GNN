@@ -1,3 +1,9 @@
+# VARIANT-GNN — Missense Varyant Patojenite Tahmini
+# Telif Hakkı (c) 2026 XYRA3 Takımı. Tüm hakları saklıdır.
+# TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması (Üniversite ve Üzeri).
+# Lisans: depo kökündeki LICENSE. Yalnızca araştırma/eğitim/yarışma amaçlıdır;
+# klinik tanı/tedavi için kullanılamaz (Şartname §10).
+
 # ============================================================================
 # ⛔ DEPRECATED / GERİ ÇEKİLDİ (2026-06-10) — KULLANMAYIN / DO NOT USE
 # Bu betik FABRİKE, canonical-DIŞI SENTETİK-DEMO sayılar üretir (Makro F1≈0.9998–1.0,

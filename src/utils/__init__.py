@@ -1,3 +1,9 @@
+# VARIANT-GNN — Missense Varyant Patojenite Tahmini
+# Telif Hakkı (c) 2026 XYRA3 Takımı. Tüm hakları saklıdır.
+# TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması (Üniversite ve Üzeri).
+# Lisans: depo kökündeki LICENSE. Yalnızca araştırma/eğitim/yarışma amaçlıdır;
+# klinik tanı/tedavi için kullanılamaz (Şartname §10).
+
 from .artifact_manifest import build_manifest, load_manifest, save_manifest
 from .fingerprinting import config_fingerprint, dataframe_fingerprint, file_fingerprint
 from .logging_cfg import setup_logging
