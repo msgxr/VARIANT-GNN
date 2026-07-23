@@ -100,7 +100,7 @@ def build_prediction_frame(
             dtype=float,
         )
     else:
-        row_thr = threshold
+        row_thr = np.full(n, float(threshold), dtype=float)
     predictions = np.where(pathogenic_prob >= row_thr, "Pathogenic", "Benign")
 
     ts = _now_utc()
