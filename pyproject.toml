@@ -73,6 +73,16 @@ timeout = 120
 [tool.ruff]
 target-version = "py310"
 line-length = 120
+# DEPRECATED fabrike figür/rapor betikleri (banner'lı, Şeyma'ya devredildi):
+# lint/format kapsamı dışı — içerikleri kasıtlı olarak dondurulmuştur.
+extend-exclude = [
+    "scripts/create_authentic_report_figures.py",
+    "scripts/create_realistic_figures.py",
+    "scripts/create_roc_final.py",
+    "scripts/create_roc_manual.py",
+    "scripts/reporting/generate_report_pdf.py",
+    "scripts/reporting/generate_competition_plots.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -86,6 +96,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["F401", "F811", "E402"]
 "tests/**/*.py" = ["F401", "F811", "E402"]
+# scripts/ standalone çalıştırılır: yerel `src` importlarından önce sys.path/PYTHONPATH
+# ayarı gerektiğinden E402 (module import not at top) kaçınılmazdır — tests/ ile aynı gerekçe.
+"scripts/**" = ["E402"]
 "conftest.py" = ["F401"]
 "src/*/__init__.py" = ["F401"]
 "data_contracts/__init__.py" = ["F401"]

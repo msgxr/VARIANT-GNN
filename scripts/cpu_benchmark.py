@@ -11,8 +11,15 @@ CPU inference benchmark (§7.5) — shipped modeli SALT-OKUR, retrain YOK.
 NOT: Repo'da ONNX artefaktı/kodu YOKTUR; rapor PyTorch+sklearn CPU yolunu ölçer.
 Çalıştır: venv/bin/python scripts/cpu_benchmark.py
 """
+
 from __future__ import annotations
-import sys, json, time, os, platform, warnings
+
+import json
+import os
+import platform
+import sys
+import time
+import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
@@ -20,14 +27,16 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 os.environ["CUDA_VISIBLE_DEVICES"] = ""  # GPU kapat (evrensel CPU re-run)
 import torch
+
 try:
     torch.backends.mps.is_available = lambda: False  # MPS'i devre dışı bırak → CPU ölç
 except Exception:
     pass
 import numpy as np
 import pandas as pd
-from src.utils.seeds import set_global_seed
+
 from src.api.pipeline import InferencePipeline
+from src.utils.seeds import set_global_seed
 
 SEED, N = 42, 500
 SCRATCH = Path("/private/tmp")  # geçici timing CSV (repo dışı)
@@ -57,7 +66,9 @@ def main():
 
     payload = {
         "experiment": "cpu_inference_benchmark",
-        "device": dev, "mps_disabled": True, "seed": SEED,
+        "device": dev,
+        "mps_disabled": True,
+        "seed": SEED,
         "n_samples": int(len(out)),
         "inference_seconds": round(t_infer, 2),
         "seconds_per_sample": round(t_infer / max(1, len(out)), 4),
@@ -68,8 +79,15 @@ def main():
         "machine": platform.platform(),
     }
     (REPO / "reports" / "cpu_benchmark.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2))
-    print(json.dumps({k: payload[k] for k in
-          ["device", "n_samples", "inference_seconds", "seconds_per_sample", "model_load_seconds"]}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                k: payload[k]
+                for k in ["device", "n_samples", "inference_seconds", "seconds_per_sample", "model_load_seconds"]
+            },
+            ensure_ascii=False,
+        )
+    )
 
 
 if __name__ == "__main__":

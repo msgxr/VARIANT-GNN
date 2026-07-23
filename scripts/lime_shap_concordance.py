@@ -19,8 +19,12 @@ Metrik: örnek-başına Spearman ρ (712-boyutlu |önem| vektörleri) + top-10 J
 Çıktı: reports/lime_shap_concordance.json
 Çalıştır: venv/bin/python scripts/lime_shap_concordance.py
 """
+
 from __future__ import annotations
-import json, sys, warnings
+
+import json
+import sys
+import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
@@ -42,9 +46,15 @@ SEED = 42
 N_SAMPLES = 150
 LIME_NUM_SAMPLES = 1000
 OUT = REPO / "reports" / "lime_shap_concordance.json"
-PANEL_MAP = {"General": "General", "MASTER": "General", "": "General",
-             "Hereditary_Cancer": "Hereditary_Cancer", "KANSER": "Hereditary_Cancer",
-             "PAH": "PAH", "CFTR": "CFTR"}
+PANEL_MAP = {
+    "General": "General",
+    "MASTER": "General",
+    "": "General",
+    "Hereditary_Cancer": "Hereditary_Cancer",
+    "KANSER": "Hereditary_Cancer",
+    "PAH": "PAH",
+    "CFTR": "CFTR",
+}
 
 
 def panel_key(p):
@@ -57,8 +67,9 @@ def top_jaccard(a, b, k=10):
 
 
 def main():
-    import shap
     import lime as _lime
+    import shap
+
     reset_settings()
     cfg = get_settings(str(REPO / "configs" / "pdr.yaml"))
     set_global_seed(SEED)
@@ -70,8 +81,7 @@ def main():
     panel_all = raw.get("Panel", pd.Series(["General"] * len(y_all))).values
     vid = raw.get("Variant_ID", pd.Series([f"v{i}" for i in range(len(y_all))])).astype(str)
     base_ids = vid.str.replace(r"_aug\d*$", "", regex=True).to_numpy()
-    tr, te = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED)
-                  .split(X_all, y_all, groups=base_ids))
+    tr, te = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED).split(X_all, y_all, groups=base_ids))
     assert len(set(base_ids[tr]) & set(base_ids[te])) == 0, "Group-aware split sızıntısı!"
 
     store = ModelStore(cfg.paths.models_dir)
@@ -100,37 +110,41 @@ def main():
     def predict_fn(Z):
         return xgb.predict_proba(np.asarray(Z, dtype=np.float32))
 
-    lime_ex = LIMEExplainer(training_data=Xtr_p,
-                            feature_names=[f"f{i}" for i in range(F)],
-                            predict_fn=predict_fn, random_state=SEED)
+    lime_ex = LIMEExplainer(
+        training_data=Xtr_p, feature_names=[f"f{i}" for i in range(F)], predict_fn=predict_fn, random_state=SEED
+    )
 
     rhos, jaccs, panels_used, n_skip = [], [], [], 0
-    lime_mat = np.zeros((n, F))           # küresel/alt-küme metrikleri için sakla
+    lime_mat = np.zeros((n, F))  # küresel/alt-küme metrikleri için sakla
     valid_mask = np.zeros(n, dtype=bool)
     print(f"[lime] {n} örnek açıklanıyor (num_samples={LIME_NUM_SAMPLES}) ...")
     for j, idx in enumerate(sel):
         exp = lime_ex.explain_instance(Xte_p[idx], num_features=F, num_samples=LIME_NUM_SAMPLES)
         if exp is None:
-            n_skip += 1; continue
+            n_skip += 1
+            continue
         try:
             amap = exp.as_map()[1]
         except Exception:
-            n_skip += 1; continue
+            n_skip += 1
+            continue
         limp = np.zeros(F)
         for fi, w in amap:
             limp[int(fi)] = abs(w)
         lime_mat[j] = limp
         rho, _ = spearmanr(shap_imp[j], limp)
         if np.isnan(rho):
-            n_skip += 1; continue
+            n_skip += 1
+            continue
         valid_mask[j] = True
         rhos.append(float(rho))
         jaccs.append(float(top_jaccard(shap_imp[j], limp, k=10)))
         panels_used.append(panel_key(pan_te[idx]))
         if (j + 1) % 25 == 0:
-            print(f"  {j+1}/{n}  ρ_running(full)={np.mean(rhos):.4f}")
+            print(f"  {j + 1}/{n}  ρ_running(full)={np.mean(rhos):.4f}")
 
-    rhos = np.array(rhos); jaccs = np.array(jaccs)
+    rhos = np.array(rhos)
+    jaccs = np.array(jaccs)
 
     # ── RAFİNE METRİKLER (yüksek-boyutta tam-vektör Spearman gürültülü) ──────────
     # 1) Küresel ρ: özellik-başına ORTALAMA |önem| (örnekler üzerinden) iki yöntem için → tek ρ.
@@ -147,8 +161,10 @@ def main():
         if not np.isnan(r):
             sub_rhos.append(float(r))
     sub_rho_mean = float(np.mean(sub_rhos)) if sub_rhos else float("nan")
-    print(f"[refined] küresel ρ={global_rho:.4f}  küresel top10-Jaccard={global_top10_jacc:.4f}  "
-          f"top30-altküme örnek-ρ={sub_rho_mean:.4f}")
+    print(
+        f"[refined] küresel ρ={global_rho:.4f}  küresel top10-Jaccard={global_top10_jacc:.4f}  "
+        f"top30-altküme örnek-ρ={sub_rho_mean:.4f}"
+    )
     per_panel = {}
     for pk in ("General", "Hereditary_Cancer", "PAH", "CFTR"):
         m = np.array([p == pk for p in panels_used])
@@ -159,7 +175,9 @@ def main():
         "experiment": "lime_shap_concordance",
         "claim": "LIME ve TreeSHAP ozellik-onem siralamasi uyumlu (yontem-bagimsiz aciklama)",
         "seed": SEED,
-        "n_samples_requested": n, "n_valid": int(len(rhos)), "n_skipped": int(n_skip),
+        "n_samples_requested": n,
+        "n_valid": int(len(rhos)),
+        "n_skipped": int(n_skip),
         "rho_mean": round(float(rhos.mean()), 4),
         "rho_std": round(float(rhos.std()), 4),
         "rho_median": round(float(np.median(rhos)), 4),
@@ -174,23 +192,24 @@ def main():
         "n_features": int(F),
         "lime_num_samples": LIME_NUM_SAMPLES,
         "method": "per-sample Spearman rho | LIME(num_samples=1000, xgb-only predict_fn) abs-weight "
-                  "vs TreeSHAP abs-value | scaled 712-dim feature space | apples-to-apples (ayni XGB)",
+        "vs TreeSHAP abs-value | scaled 712-dim feature space | apples-to-apples (ayni XGB)",
         "split": "group-aware hold-out (GroupShuffleSplit test_size=0.2 random_state=42, Variant_ID _aug strip)",
         "source_model": "models/ (shipped XGBClassifier, read-only)",
-        "library_versions": {"lime": getattr(_lime, "__version__", "?"),
-                             "shap": getattr(shap, "__version__", "?")},
+        "library_versions": {"lime": getattr(_lime, "__version__", "?"), "shap": getattr(shap, "__version__", "?")},
         # Dürüstlük kapısı: küresel uyum makul (≥0,5) ya da önemli-altküme ρ makul ise savunulabilir.
         "include_in_report": bool(global_rho >= 0.5 or (sub_rho_mean == sub_rho_mean and sub_rho_mean >= 0.5)),
         "note": "Eski 'rho=0,89' (PDR_VARIANT_GNN_2026.md) DAYANAKSIZDI. Tam-712-vektor per-ornek "
-                "Spearman yuksek-boyutta gurultu-baskin (cogu ozellik ~0 onem). Anlamli metrik = "
-                "kuresel onem korelasyonu + onemli-altkume. Deger NE ISE PDR'ye o yazilir; uyum "
-                "zayifsa §2.4 'ortusur' iddiasi YUMUSATILIR (uydurma 0,89 ASLA kullanilmaz).",
+        "Spearman yuksek-boyutta gurultu-baskin (cogu ozellik ~0 onem). Anlamli metrik = "
+        "kuresel onem korelasyonu + onemli-altkume. Deger NE ISE PDR'ye o yazilir; uyum "
+        "zayifsa §2.4 'ortusur' iddiasi YUMUSATILIR (uydurma 0,89 ASLA kullanilmaz).",
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[write] {OUT}")
-    print(f"[result] full-per-sample ρ={payload['rho_mean']}±{payload['rho_std']} | "
-          f"GLOBAL ρ={payload['global_rho']} | global-top10-Jaccard={payload['global_top10_jaccard']} | "
-          f"n_valid={payload['n_valid']} | include={payload['include_in_report']}")
+    print(
+        f"[result] full-per-sample ρ={payload['rho_mean']}±{payload['rho_std']} | "
+        f"GLOBAL ρ={payload['global_rho']} | global-top10-Jaccard={payload['global_top10_jaccard']} | "
+        f"n_valid={payload['n_valid']} | include={payload['include_in_report']}"
+    )
     print(f"[per-panel] {per_panel}")
 
 

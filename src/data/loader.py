@@ -304,8 +304,7 @@ def load_predict_csv(csv_path: str | Path, separator: str = ",") -> LoadedDatase
 
                     expected_features = list(_json.loads(_fcol.read_text()))
                     logger.info(
-                        "ColumnAligner: using %d saved training feature columns "
-                        "(models/expected_feature_columns.json)",
+                        "ColumnAligner: using %d saved training feature columns (models/expected_feature_columns.json)",
                         len(expected_features),
                     )
                 except Exception as _fc_exc:

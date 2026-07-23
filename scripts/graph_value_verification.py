@@ -22,8 +22,12 @@ Shipped model/canonical/models DOKUNULMAZ — tek-kullanımlık proxy GNN eğiti
 Çıktı: reports/graph_value_verification.json
 Çalıştır: venv/bin/python scripts/graph_value_verification.py
 """
+
 from __future__ import annotations
-import json, sys, warnings
+
+import json
+import sys
+import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
@@ -32,12 +36,12 @@ sys.path.insert(0, str(REPO))
 
 import numpy as np
 import torch
-from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold
 from sklearn.metrics import f1_score
+from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold
 
+from src.core.gnn import VariantGATv2GNN
 from src.data.loader import load_csv
 from src.features.preprocessing import VariantPreprocessor
-from src.core.gnn import VariantGATv2GNN
 from src.training.trainer import WeightedBCELoss, _gatv2_epoch, _gatv2_eval
 from src.utils.seeds import set_global_seed
 
@@ -129,7 +133,8 @@ def main():
     paired = np.array(paired)
     paired_mean_pp = round(float(paired.mean() * 100), 2)
     paired_std_pp = round(float(paired.std() * 100), 2)
-    wins = int((paired > 0).sum()); nf = len(paired)
+    wins = int((paired > 0).sum())
+    nf = len(paired)
     # Sağlam-pozitif YALNIZCA: eşleşmeli ortalama > std VE cosine ≥4/5 fold'da kazanırsa.
     include = bool(paired_mean_pp > 0 and paired_mean_pp > paired_std_pp and wins >= 4)
     if include:
@@ -142,9 +147,19 @@ def main():
     payload = {
         "experiment": "coordinate_free_graph_value",
         "claim": "Cosine k-NN graf YAPISI rastgele/grafsizdan ustun (graf-topolojisinin degeri)",
-        "seed": SEED, "device": "cpu", "deterministic": True, "gnn_only_proxy": True,
-        "config": {"knn_k": K, "epochs": EPOCHS, "early_stopping": False, "hidden_dim": HID,
-                   "lr": LR, "use_multimodal": False, "cv": "StratifiedGroupKFold-5"},
+        "seed": SEED,
+        "device": "cpu",
+        "deterministic": True,
+        "gnn_only_proxy": True,
+        "config": {
+            "knn_k": K,
+            "epochs": EPOCHS,
+            "early_stopping": False,
+            "hidden_dim": HID,
+            "lr": LR,
+            "use_multimodal": False,
+            "cv": "StratifiedGroupKFold-5",
+        },
         "conditions": {c: {"mean_f1": means[c], "std_f1": stds[c], "fold_f1": fold_f1[c]} for c in CONDITIONS},
         "graph_contribution_pp_meanofmeans": contrib,
         "contribution_vs_random_pp": contrib_vs_random,
@@ -155,16 +170,18 @@ def main():
         "verdict": verdict,
         "include_in_report": include,
         "note": "GNN-only proxy; tam-ensemble retrain DEGIL; canonical/models DOKUNULMADI. "
-                "Mean-of-means +1,2pp ALDATICI: fold-basina eslesmeli farkta cosine kontrolden "
-                "ortalama dusuk ve 5 fold'un sadece bir kisminda kazaniyor -> graf-TOPOLOJISININ "
-                "standalone GNN-F1'e robust katkisi YOK. Bu, grafin TAM-ENSEMBLE'deki degerini "
-                "(cesitlilik/anti-korelasyon r=-0,18, GNNExplainer biyokimyasal sinyal) CURUTMEZ; "
-                "ama 'graf +X pp' diye SAYI iddia edilemez -> rapora EKLENMEZ (durustluk).",
+        "Mean-of-means +1,2pp ALDATICI: fold-basina eslesmeli farkta cosine kontrolden "
+        "ortalama dusuk ve 5 fold'un sadece bir kisminda kazaniyor -> graf-TOPOLOJISININ "
+        "standalone GNN-F1'e robust katkisi YOK. Bu, grafin TAM-ENSEMBLE'deki degerini "
+        "(cesitlilik/anti-korelasyon r=-0,18, GNNExplainer biyokimyasal sinyal) CURUTMEZ; "
+        "ama 'graf +X pp' diye SAYI iddia edilemez -> rapora EKLENMEZ (durustluk).",
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[write] {OUT}")
-    print(f"[result] cosine={means['cosine_knn']} random={means['random_graph']} none={means['no_graph']} "
-          f"| katkı(vs max)={contrib}pp | verdict={payload['verdict']} | include={include}")
+    print(
+        f"[result] cosine={means['cosine_knn']} random={means['random_graph']} none={means['no_graph']} "
+        f"| katkı(vs max)={contrib}pp | verdict={payload['verdict']} | include={include}"
+    )
 
 
 if __name__ == "__main__":

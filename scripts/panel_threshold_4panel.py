@@ -20,7 +20,9 @@ eşikte (θ=0.59), leakage-siz nested-CV ile ölçülür.
 Estimator: shipped full-ensemble (0.30 XGB + 0.30 LGBM + 0.25 GNN + 0.15 DNN).
 Metrik   : %20-patojenik (resmi prior) F1, 300x resample — train.py:294-304 ile aynı tarif.
 """
+
 import json
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold
@@ -88,7 +90,7 @@ def main():
         f = f1_20pct(ce[tei], cy[tei], t, seeds=200)
         if f is not None:
             fs.append(f)
-    cftr_f1 = round(float(np.mean(fs)), 4)            # 0.6632
+    cftr_f1 = round(float(np.mean(fs)), 4)  # 0.6632
     cftr_global = round(f1_20pct(ce, cy, GLOBAL), 4)  # 0.3275 (global-θ artefakt)
 
     per_panel = {**{k: round(v, 4) for k, v in HOLDOUT_GLOBAL.items()}, "CFTR": cftr_f1}

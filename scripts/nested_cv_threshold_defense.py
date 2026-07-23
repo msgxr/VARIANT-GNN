@@ -141,7 +141,10 @@ def main() -> int:
         else "per-panel global'i geçti — incele"
     )
     if reproduces:
-        verdict = directional + " [3-panel hold-out tanısı 0.6202 YENİDEN ÜRETİLDİ → CITABLE; resmi 4-panel skoru 0.631, CFTR dahil]"
+        verdict = (
+            directional
+            + " [3-panel hold-out tanısı 0.6202 YENİDEN ÜRETİLDİ → CITABLE; resmi 4-panel skoru 0.631, CFTR dahil]"
+        )
     else:
         verdict = (
             f"⚠️ GİRDİ UYUŞMAZLIĞI: oof_probs.npz test_proba shipped stacked modeli "
@@ -177,10 +180,14 @@ def main() -> int:
     json.dump(out, open(out_path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
     print(f"OOF→panel join unknown: {n_unknown}/{len(oof_g)}")
-    print(f"GLOBAL (λ=0)  score = {base_score:.4f}  (3-panel hold-out tanısı 0.6202 ; reproduces={out['reproduces_canonical']})")
+    print(
+        f"GLOBAL (λ=0)  score = {base_score:.4f}  (3-panel hold-out tanısı 0.6202 ; reproduces={out['reproduces_canonical']})"
+    )
     print(f"  per-panel: {out['global_per_panel']}")
     print(f"λ-sweep (test): {lam_curve}")
-    print(f"UNIFORM per-panel (λ=1) = {free_per_panel}  (uniform per-panel 0.5445 << 3-panel tanı 0.6202 ile uyumlu beklenir)")
+    print(
+        f"UNIFORM per-panel (λ=1) = {free_per_panel}  (uniform per-panel 0.5445 << 3-panel tanı 0.6202 ile uyumlu beklenir)"
+    )
     print(f"NESTED-CV seçili λ = {lam_selected} → test score = {nested_test_score:.4f}")
     print(f"VERDICT: {verdict}")
     print(f"→ {out_path}")

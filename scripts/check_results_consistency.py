@@ -325,7 +325,10 @@ def main() -> int:
     try:
         tracked = subprocess.run(
             ["git", "ls-files", "reports"],
-            cwd=str(ROOT), capture_output=True, text=True, check=True,
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.splitlines()
     except Exception as exc:  # pragma: no cover - git yoksa sessiz geç
         tracked = []
@@ -336,9 +339,7 @@ def main() -> int:
         if not p.exists():
             continue
         for ln, line in enumerate(p.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
-            if any(w in line for w in HEADLINE_WITHDRAWN) and not re.search(
-                WITHDRAW_MARKERS, line, re.IGNORECASE
-            ):
+            if any(w in line for w in HEADLINE_WITHDRAWN) and not re.search(WITHDRAW_MARKERS, line, re.IGNORECASE):
                 fail(f"{rel}:{ln} canlı geri-çekilmiş sayı: {line.strip()[:90]}")
                 drift += 1
                 errors += 1

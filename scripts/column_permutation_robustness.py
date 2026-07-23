@@ -18,8 +18,12 @@ girdi = aynı çıktı; herhangi bir Δp YALNIZCA hizalama farkından gelir.
 Çıktı: reports/column_permutation_robustness.json (include_in_report dürüstlük kapılı).
 Çalıştır: venv/bin/python scripts/column_permutation_robustness.py
 """
+
 from __future__ import annotations
-import json, sys, warnings
+
+import json
+import sys
+import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
@@ -29,14 +33,15 @@ sys.path.insert(0, str(REPO))
 import numpy as np
 import pandas as pd
 
-from src.utils.seeds import set_global_seed
 from src.api.pipeline import InferencePipeline
 from src.data.column_aligner import ColumnAligner
+from src.utils.seeds import set_global_seed
 from src.utils.serialization import ModelStore
 
 SEED = 42
-SCRATCH = Path("/private/tmp/claude-501/-Users-seymanur-Desktop-VARIANT-GNN/"
-               "c0d086dd-8cdd-4b00-8846-dca237a1f94e/scratchpad")
+SCRATCH = Path(
+    "/private/tmp/claude-501/-Users-seymanur-Desktop-VARIANT-GNN/c0d086dd-8cdd-4b00-8846-dca237a1f94e/scratchpad"
+)
 SCRATCH.mkdir(parents=True, exist_ok=True)
 INPUT = REPO / "data" / "jury_simulation.csv"
 OUT = REPO / "reports" / "column_permutation_robustness.json"
@@ -70,7 +75,7 @@ def aligner_stage_report(expected, incoming_cols, df_feats):
 
 def main():
     set_global_seed(SEED)
-    print(f"[load] InferencePipeline({REPO/'models'}) ...")
+    print(f"[load] InferencePipeline({REPO / 'models'}) ...")
     pipe = InferencePipeline(REPO / "models").load()
 
     store = ModelStore(REPO / "models")
@@ -87,10 +92,13 @@ def main():
         expected = list(_fn)
     else:
         from src.data.loader import load_predict_csv as _lpc
+
         expected = list(_lpc(INPUT).features.columns)  # loader'ın isimle saptadığı öznitelikler
-    print(f"[aligner] shipped feature_names {'VAR' if _fn else 'YOK(None)'} → "
-          f"hizalama shipped-yolunda {'DEVREDE' if aligner_engaged_shipped else 'DEVRE DIŞI'}; "
-          f"expected={len(expected)} kolon")
+    print(
+        f"[aligner] shipped feature_names {'VAR' if _fn else 'YOK(None)'} → "
+        f"hizalama shipped-yolunda {'DEVREDE' if aligner_engaged_shipped else 'DEVRE DIŞI'}; "
+        f"expected={len(expected)} kolon"
+    )
 
     df0 = pd.read_csv(INPUT)
     meta = [c for c in META_CANDIDATES if c in df0.columns]
@@ -143,8 +151,10 @@ def main():
         }
         worst_dp = max(worst_dp, results[tag]["max_abs_delta_prob"])
         worst_agree = min(worst_agree, agree)
-        print(f"[{tag}] max|Δp|={results[tag]['max_abs_delta_prob']:.6f}  "
-              f"agreement={agree:.2f}%  stages={results[tag]['aligner_stages']}")
+        print(
+            f"[{tag}] max|Δp|={results[tag]['max_abs_delta_prob']:.6f}  "
+            f"agreement={agree:.2f}%  stages={results[tag]['aligner_stages']}"
+        )
 
     # GERÇEKÇİ senaryo = R1 (aynı yarışma kolon adları AL_*/CAT_*, farklı sıra). R2/R3 tamamen
     # anonim COL_* adlandırma → yarışma kolonları SABİT olduğundan gerçekleşmez (aşırı stres).
@@ -160,7 +170,7 @@ def main():
         "n_feature_cols": int(len(feat_cols)),
         "aligner_engaged_in_shipped_path": aligner_engaged_shipped,
         "method": "uctan-uca predict_from_csv (load_predict_csv -> ColumnAligner); MC-dropout her "
-                  "rejimden once set_global_seed(42) ile sifirlandi -> Delta_p yalniz hizalamadan",
+        "rejimden once set_global_seed(42) ile sifirlandi -> Delta_p yalniz hizalamadan",
         "regimes": results,
         "headline_scenario": "R1_shuffle_only (gercekci: ayni yarisma kolon adlari, farkli sira)",
         "headline_max_abs_delta_prob": r1["max_abs_delta_prob"],
@@ -170,16 +180,18 @@ def main():
         "verdict": "ROBUST" if include else "DEGRADED",
         "include_in_report": include,
         "fix_note": "models/expected_feature_columns.json + loader.py fallback ile ColumnAligner "
-                    "shipped predict yolunda DEVREYE alindi (xgb feature_names=None oldugundan once "
-                    "devre disiydi). Standart girdide NO-OP (tahminler birebir ayni, F1 degismez; A/B kanitli).",
+        "shipped predict yolunda DEVREYE alindi (xgb feature_names=None oldugundan once "
+        "devre disiydi). Standart girdide NO-OP (tahminler birebir ayni, F1 degismez; A/B kanitli).",
         "note": "GERCEKCI senaryo R1 (yarisma kolonlari AL_*/CAT_* SABIT, yalniz sira degisir) -> "
-                "max|dp|=0, agreement %100. R2/R3 tamamen anonim COL_* adlandirma = yarisma formatinda "
-                "GERCEKLESMEZ (asiri stres); positional fallback isim+sira birlikte bozulunca sinirli.",
+        "max|dp|=0, agreement %100. R2/R3 tamamen anonim COL_* adlandirma = yarisma formatinda "
+        "GERCEKLESMEZ (asiri stres); positional fallback isim+sira birlikte bozulunca sinirli.",
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[write] {OUT}")
-    print(f"[verdict] {payload['verdict']}  include_in_report={include}  "
-          f"worst max|Δp|={worst_dp:.6f}  worst agreement={worst_agree:.2f}%")
+    print(
+        f"[verdict] {payload['verdict']}  include_in_report={include}  "
+        f"worst max|Δp|={worst_dp:.6f}  worst agreement={worst_agree:.2f}%"
+    )
 
 
 if __name__ == "__main__":

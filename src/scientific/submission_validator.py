@@ -504,7 +504,9 @@ class SubmissionValidator:
 
             _pt = _P(__file__).resolve().parents[2] / "models" / "panel_thresholds.json"
             if _pt.exists():
-                _vals = [float(v) for v in _json.load(open(_pt, encoding="utf-8")).values() if isinstance(v, (int, float))]
+                _vals = [
+                    float(v) for v in _json.load(open(_pt, encoding="utf-8")).values() if isinstance(v, (int, float))
+                ]
                 if _vals:
                     lo_thr, hi_thr = min(_vals), max(_vals)
         except Exception:
