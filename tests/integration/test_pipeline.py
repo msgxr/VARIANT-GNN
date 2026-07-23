@@ -189,6 +189,10 @@ class TestSchemaLoaderIntegration:
         assert original_ids == loaded_ids, "Variant_ID must be preserved unchanged"
 
     def test_predict_csv_no_labels(self, synthetic_dataset, tmp_path):
+        import json
+        from pathlib import Path
+
+        from src.config import get_settings
         from src.data.loader import load_predict_csv
 
         df_no_label = synthetic_dataset.drop(columns=["Label"])
@@ -197,4 +201,12 @@ class TestSchemaLoaderIntegration:
 
         loaded = load_predict_csv(str(csv_path))
         assert loaded.labels is None
-        assert loaded.features.shape[1] == 15  # 15 feature cols
+        assert loaded.features.shape[0] == len(df_no_label)  # tüm satırlar korunur
+
+        # load_predict_csv, ColumnAligner ile ham girdiyi eğitim-zamanı özellik
+        # şemasına hizalar (§3.2 anonim/permüte jüri kolonları için). Shipped artefakt
+        # varsa (models/expected_feature_columns.json) özellik sayısı o şemaya eşitlenir;
+        # artefakt yoksa ham 15 özellik korunur. Loader ile aynı kaynaktan okunur.
+        _fcol = Path(get_settings().paths.models_dir) / "expected_feature_columns.json"
+        expected_n = len(json.loads(_fcol.read_text())) if _fcol.exists() else 15
+        assert loaded.features.shape[1] == expected_n
