@@ -3,7 +3,8 @@
 **Proje:** VARIANT-GNN — Missense Varyant Patojenisite Tahmini  
 **Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
 **Resmi Kaynak:** https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/  
-**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4
+**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4  
+**Dokümantasyon:** https://github.com/msgxr/VARIANT-GNN/wiki (60 sayfa teknik wiki)
 
 > Bu belgede yer alan tüm kısıtlamalar ve yükümlülükler, yukarıdaki resmi
 > TEKNOFEST şartnamesinden doğrudan alınmıştır. Çelişki durumunda şartname
@@ -283,12 +284,13 @@ fi
 
 Bu proje TEKNOFEST 2026 yarışma takvimi kapsamında geliştirilmektedir:
 
-| Aşama | Tarih | Güvenlik Garantisi |
+| Aşama | Tarih | Durum |
 |:---|:---:|:---|
-| PSR | 25.03.2026 | ✅ Tamamlandı |
-| Veri Paylaşımı | 05.05.2026 | ✅ NDA imzalandı |
-| **PDR** | **29.06.2026** | 🔄 Aktif geliştirme |
-| Final | Ağu–Eyl 2026 | — |
+| PSR | 25.03.2026 | ✅ Tamamlandı (93/100) |
+| Veri Paylaşımı / NDA | 05.05.2026 | ✅ İmzalandı |
+| PDR | 29.06.2026 | ✅ Teslim tarihi geçti |
+| **Final öncesi hazırlık** | **Tem–Ağu 2026** | 🔄 Aktif |
+| Final | Ağu–Eyl 2026 @ Şanlıurfa | — |
 
 Sürüm geçmişi: `CHANGELOG.md`
 
@@ -309,4 +311,5 @@ XYRA3 Takımı ve katkı sağlayıcıları sorumlu tutulamaz.
 ---
 
 *Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*  
-*İletişim: GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues*
+*İletişim: GitHub Issues — https://github.com/msgxr/VARIANT-GNN/issues*  
+*Aşama: PDR teslim tarihi (29.06.2026) geçti → final öncesi hazırlık | Son güncelleme: 23.07.2026*

@@ -3,7 +3,8 @@
 **Proje:** VARIANT-GNN — Missense Varyant Patojenisite Tahmini  
 **Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
 **Resmi Kaynak:** https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/  
-**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4
+**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4  
+**Dokümantasyon:** https://github.com/msgxr/VARIANT-GNN/wiki (60 sayfa teknik wiki)
 
 > Bu belgede yer alan tüm yükümlülükler, yukarıdaki resmi TEKNOFEST şartnamesinden
 > doğrudan alınmıştır. Çelişki durumunda şartname geçerlidir.
@@ -35,7 +36,9 @@ Bu yükümlülükler gereği:
 ✗  Pilot veya sentetik veri sonuçları gerçek yarışma başarısı gibi gösterilemez
 ✗  Tekrar üretilemeyen metrik veya sonuç beyan edilemez
 ✗  "Kesin başarı", "%100 doğru", "mükemmel sonuç" gibi ifadeler kullanılamaz
-✅  Beyan edilen sonuçlar: CV F1=0.8936±0.0004 (OOF-stacking) | Test F1=0.8367 | θ=0.8415 (global)
+✅  Yarışma beklentisi (jüri, %20-patojenik): resmi 4-panel %20-F1 ort. = 0.631 (CFTR dâhil, panel-kalibre eşik)
+✅  İç ayrım gücü (jüri skoru DEĞİL, %75-poz hold-out): Test F1=0.8367 · CV F1=0.8936±0.0004 (OOF-stacking) · θ=0.8415
+    (Tek doğruluk kaynağı: RESULTS_CANONICAL.json — iki rejim asla karıştırılmaz)
 ```
 
 ### 1.2. Klinik İddia Yasağı — Şartname §10
@@ -174,8 +177,10 @@ değerlendirme yetkisine sahiptir.
 | Güvenlik açığı | `SECURITY.md` → GitHub Security Advisory |
 | Katkı süreci | `CONTRIBUTING.md` |
 | Davranış ihlali | GitHub özel mesaj (@msgxr) |
+| Teknik dokümantasyon | GitHub Wiki (60 sayfa) → github.com/msgxr/VARIANT-GNN/wiki |
 | Yarışma soruları | TEKNOFEST resmi mail grubu (Şartname §11) |
 
 ---
 
-*Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*
+*Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*  
+*Aşama: PDR teslim tarihi (29.06.2026) geçti → final öncesi hazırlık | Son güncelleme: 23.07.2026*

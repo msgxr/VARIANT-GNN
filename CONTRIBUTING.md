@@ -3,7 +3,8 @@
 **Proje:** VARIANT-GNN — Missense Varyant Patojenisite Tahmini  
 **Yarışma:** TEKNOFEST 2026 Sağlıkta Yapay Zeka Yarışması — Üniversite ve Üzeri  
 **Resmi Kaynak:** https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/  
-**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4
+**Şartname:** 2026 Sağlıkta Yapay Zeka Türkçe Şartname v4  
+**Dokümantasyon:** https://github.com/msgxr/VARIANT-GNN/wiki (60 sayfa teknik wiki)
 
 > Bu belgede yer alan tüm kısıtlamalar, yukarıdaki resmi TEKNOFEST şartnamesinden
 > doğrudan alınmıştır. Çelişki durumunda şartname geçerlidir.
@@ -77,8 +78,9 @@ Her katkı bu garantiyi korumalıdır:
 ```
 ✅  random_state=42 — tüm stokastik işlemlerde sabit seed
 ✅  python main.py --mode train — tek komutla çalıştırılabilir
-✅  requirements.txt — sabit versiyonlarla kilitli
-✅  CV F1 = 0.8936 ± 0.0004 (OOF-stacking)  |  Test F1 = 0.8367 @ θ=0.8415
+✅  requirements.txt — sabit versiyonlarla kilitli (torch==2.2.1, torch-geometric==2.5.3)
+✅  İç ayrım (jüri skoru DEĞİL): CV F1=0.8936±0.0004 (OOF-stacking) | Test F1=0.8367 @ θ=0.8415
+✅  Yarışma beklentisi (jüri, %20-patojenik): resmi 4-panel %20-F1 ort. = 0.631 → RESULTS_CANONICAL.json
 ```
 
 ---
@@ -329,4 +331,17 @@ Doğrudan güvenlik iletişimi: **SECURITY.md → GitHub Security Advisory**
 
 ---
 
-*Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*
+## 11. Ek Kaynaklar
+
+| Kaynak | Konum |
+|:---|:---|
+| Teknik wiki (60 sayfa) | https://github.com/msgxr/VARIANT-GNN/wiki |
+| Kanonik sonuçlar (tek doğruluk kaynağı) | `RESULTS_CANONICAL.json` |
+| Sürüm geçmişi | `CHANGELOG.md` |
+| Güvenlik politikası | `SECURITY.md` |
+| Davranış kuralları | `CODE_OF_CONDUCT.md` |
+
+---
+
+*Resmi kaynak: https://teknofest.org/tr/yarismalar/saglikta-yapay-zeka-yarismasi/*  
+*Aşama: PDR teslim tarihi (29.06.2026) geçti → final öncesi hazırlık | Son güncelleme: 23.07.2026*
