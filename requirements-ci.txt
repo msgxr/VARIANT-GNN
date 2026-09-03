@@ -39,4 +39,4 @@ networkx==3.3
 tqdm==4.66.4
 lime==0.2.0.1
 optuna==3.6.1
-fpdf2==2.7.9
+fpdf2==2.8.7
