@@ -69,7 +69,7 @@ jobs:
           cache: pip
 
       - name: Restore pip cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: pip-typecheck-${{ hashFiles('requirements-ci.txt') }}
@@ -189,7 +189,7 @@ jobs:
 
       # ── Torch wheels cache (heavy, ~1 GB) ──────────────────────────────
       - name: Cache torch wheels
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: torch-cache
         with:
           path: ~/.cache/pip/wheels
@@ -337,7 +337,7 @@ jobs:
           cache: pip
 
       - name: Cache torch wheels
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip/wheels
           key: torch-cpu-3.11-${{ env.TORCH_VERSION }}
